@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -18,7 +19,7 @@ export default function AdminSkills() {
   const skillsOwned = useRef(false)
   useEffect(() => {
     if (!skillsOwned.current) setSkills(data.skills)
-  }, [data.skills]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.skills])
 
   const persist = (updated: Skill[]) => { skillsOwned.current = true; setSkills(updated); updateSkills(updated) }
   // eslint-disable-next-line react-hooks/purity
@@ -46,7 +47,7 @@ export default function AdminSkills() {
     toast(`${c} catégorie(s) supprimée(s)`, 'error')
   }
 
-  const toggleSelect = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleSelect = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id) } else { n.add(id) }; return n })
 
   const updateCatName = (id: string, category: string) => {
     persist(skills.map((s) => s.id === id ? { ...s, category } : s))
@@ -243,7 +244,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                     className="flex-shrink-0 rounded transition-opacity hover:opacity-70"
                     style={{ lineHeight: 0 }}
                   >
-                    <img src={icon} alt="" aria-hidden="true" className="w-4 h-4 rounded object-contain" />
+                    <Image src={icon} alt="" aria-hidden="true" width={16} height={16} className="w-4 h-4 rounded object-contain" />
                   </button>
                 ) : (
                   <button
@@ -335,7 +336,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
               </div>
             ) : newItemIcon ? (
               <>
-                <img src={newItemIcon} alt="" aria-hidden="true" className="w-full h-full object-contain rounded-md" style={{ padding: '2px' }} />
+                <Image src={newItemIcon} alt="" aria-hidden="true" fill sizes="36px" className="object-contain rounded-md" style={{ padding: '2px' }} />
                 <div
                   className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
                   style={{ background: 'rgba(0,0,0,0.5)' }}

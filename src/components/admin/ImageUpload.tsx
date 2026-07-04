@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Image from 'next/image'
 import { compressImage, uploadFile, deleteUploadedFile } from '@/lib/upload'
 
 interface Props {
@@ -98,10 +99,12 @@ export default function ImageUpload({
             </div>
           ) : value ? (
             <>
-              <img
+              <Image
                 src={value}
                 alt="preview"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: radius }}
+                fill
+                sizes={`${dim}px`}
+                style={{ objectFit: 'cover', borderRadius: radius }}
               />
               <div
                 className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"

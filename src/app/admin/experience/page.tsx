@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -43,10 +44,10 @@ export default function AdminExperience() {
   const eduOwned = useRef(false)
   useEffect(() => {
     if (!expOwned.current) setExperiences(data.experiences)
-  }, [data.experiences]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.experiences])
   useEffect(() => {
     if (!eduOwned.current) setEducations(data.educations)
-  }, [data.educations]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.educations])
 
   const uid = () => Date.now().toString()
   const persistExp = (u: Experience[]) => { expOwned.current = true; setExperiences(u); updateExperiences(u) }
@@ -211,7 +212,7 @@ export default function AdminExperience() {
                 <div key={exp.id} className="admin-row grid items-center gap-4 px-5 py-3.5" style={{ gridTemplateColumns: GRID, borderBottom: last ? 'none' : '1px solid var(--border)' }}>
                   <input type="checkbox" checked={selectedExp.has(exp.id)} onChange={() => toggleExp(exp.id)} aria-label={`Sélectionner ${exp.role}`} className="w-4 h-4 cursor-pointer" style={{ accentColor: 'var(--accent)' }} />
                   {exp.companyLogo
-                    ? <img src={exp.companyLogo} alt="" aria-hidden="true" className="w-9 h-9 rounded-full object-cover" />
+                    ? <Image src={exp.companyLogo} alt="" aria-hidden="true" width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
                     : <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }} aria-hidden="true">{(exp.company || exp.role).charAt(0).toUpperCase()}</div>
                   }
                   <div className="min-w-0">
@@ -268,7 +269,7 @@ export default function AdminExperience() {
                 <div key={edu.id} className="admin-row grid items-center gap-4 px-5 py-3.5" style={{ gridTemplateColumns: GRID, borderBottom: last ? 'none' : '1px solid var(--border)' }}>
                   <input type="checkbox" checked={selectedEdu.has(edu.id)} onChange={() => toggleEdu(edu.id)} aria-label={`Sélectionner ${edu.degree}`} className="w-4 h-4 cursor-pointer" style={{ accentColor: 'var(--accent)' }} />
                   {edu.schoolLogo
-                    ? <img src={edu.schoolLogo} alt="" aria-hidden="true" className="w-9 h-9 rounded-lg object-cover" />
+                    ? <Image src={edu.schoolLogo} alt="" aria-hidden="true" width={36} height={36} className="w-9 h-9 rounded-lg object-cover" />
                     : <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }} aria-hidden="true">{(edu.school || edu.degree).charAt(0).toUpperCase()}</div>
                   }
                   <div className="min-w-0">

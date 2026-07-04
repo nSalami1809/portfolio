@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import { fetchPortfolio } from '@/actions/portfolio'
@@ -112,12 +113,13 @@ export default async function HomePage() {
                               className="flex items-center justify-center rounded-md flex-shrink-0"
                               style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.92)' }}
                             >
-                              <img
+                              <Image
                                 src={icon}
                                 alt=""
                                 aria-hidden="true"
+                                width={20}
+                                height={20}
                                 loading="lazy"
-                                decoding="async"
                                 className="w-5 h-5 object-contain"
                               />
                             </span>
@@ -168,11 +170,12 @@ export default async function HomePage() {
 
                     <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
                       {t.avatar ? (
-                        <img
+                        <Image
                           src={t.avatar}
                           alt={t.name}
+                          width={40}
+                          height={40}
                           loading="lazy"
-                          decoding="async"
                           className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (

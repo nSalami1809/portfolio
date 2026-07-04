@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { PersonalInfo, SocialLinks } from '@/types'
@@ -48,6 +49,7 @@ export default function HeroSection({ personal, socials }: Props) {
   const [typed, setTyped] = useState(0)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTyped(0)
     const startDelay = 700
     const speed = 45
@@ -107,9 +109,12 @@ export default function HeroSection({ personal, socials }: Props) {
         <motion.div variants={container} initial="hidden" animate="show">
           {personal.photo && (
             <motion.div variants={item} className="mb-6">
-              <img
+              <Image
                 src={personal.photo}
                 alt={personal.name}
+                width={80}
+                height={80}
+                priority
                 className="w-20 h-20 rounded-full object-cover"
                 style={{ border: '2px solid var(--accent)', boxShadow: '0 0 0 4px var(--accent-glow)' }}
               />

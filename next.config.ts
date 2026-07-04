@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 86400,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // User-uploaded photos/logos/icons live on Vercel Blob — next/image
+    // refuses to load remote images whose host isn't explicitly allow-listed.
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
+    ],
   },
 
   async headers() {

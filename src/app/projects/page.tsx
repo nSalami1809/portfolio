@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
@@ -107,13 +108,14 @@ export default function ProjectsPage() {
 
                 {/* Image */}
                 {project.image ? (
-                  <div className="w-full aspect-video rounded-xl mb-5 overflow-hidden">
-                    <img
+                  <div className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden">
+                    <Image
                       src={project.image}
                       alt={project.title}
+                      fill
                       loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
+                      sizes="(min-width: 640px) 50vw, 100vw"
+                      className="object-cover"
                     />
                   </div>
                 ) : (
