@@ -65,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="fr"
       className={`dark ${inter.variable} ${poppins.variable} ${spaceGrotesk.variable}`}
+      data-scroll-behavior="smooth"
     >
       <head>
         <link rel="preconnect" href="https://prod.spline.design" />
