@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -30,8 +30,14 @@ export default function AdminTestimonials() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
 
+  // Adopt the shared context's testimonials until this page makes its own edit
+  const localOwned = useRef(false)
+  useEffect(() => {
+    if (!localOwned.current) setTestimonials(data.testimonials)
+  }, [data.testimonials]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const uid = () => Date.now().toString()
-  const persist = (updated: Testimonial[]) => { setTestimonials(updated); updateTestimonials(updated) }
+  const persist = (updated: Testimonial[]) => { localOwned.current = true; setTestimonials(updated); updateTestimonials(updated) }
 
   const startNew = () => { setEditingId('__new__'); setForm({ ...EMPTY }) }
   const startEdit = (t: Testimonial) => { setEditingId(t.id); const { id: _, ...rest } = t; setForm(rest) }

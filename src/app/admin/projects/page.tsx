@@ -64,12 +64,10 @@ export default function AdminProjects() {
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('')
 
-  // Sync once after localStorage hydrates (same pattern as blog/skills/experience)
+  // Adopt the shared context's projects until this page makes its own edit
   const localOwned = useRef(false)
   useEffect(() => {
-    if (!localOwned.current && data.projects.length > projects.length) {
-      setProjects(data.projects)
-    }
+    if (!localOwned.current) setProjects(data.projects)
   }, [data.projects]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const persist = (updated: Project[]) => {

@@ -42,10 +42,10 @@ export default function AdminExperience() {
   const expOwned = useRef(false)
   const eduOwned = useRef(false)
   useEffect(() => {
-    if (!expOwned.current && data.experiences.length > experiences.length) setExperiences(data.experiences)
+    if (!expOwned.current) setExperiences(data.experiences)
   }, [data.experiences]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!eduOwned.current && data.educations.length > educations.length) setEducations(data.educations)
+    if (!eduOwned.current) setEducations(data.educations)
   }, [data.educations]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const uid = () => Date.now().toString()
