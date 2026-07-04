@@ -67,15 +67,9 @@ const PortfolioContext = createContext<PortfolioContextValue>({
 
 type Key = keyof PortfolioData
 
-export function PortfolioProvider({
-  children,
-  initialData,
-}: {
-  children: React.ReactNode
-  initialData?: PortfolioData | null
-}) {
-  const [data, setData] = useState<PortfolioData>(initialData ?? defaultData)
-  const hydratedFromMongo = useRef(!!initialData)
+export function PortfolioProvider({ children }: { children: React.ReactNode }) {
+  const [data, setData] = useState<PortfolioData>(defaultData)
+  const hydratedFromMongo = useRef(false)
   const publishTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestData = useRef<PortfolioData>(defaultData)
   // Top-level fields edited locally since the last successful publish.
@@ -191,18 +185,6 @@ export function PortfolioProvider({
   }, [schedulePublish])
 
   useEffect(() => {
-    // The root layout already fetched MongoDB server-side and seeded this
-    // provider with it (see layout.tsx), so the very first paint on every
-    // page — not just `/` — already shows real, current content instead of
-    // hardcoded placeholders or a stale local cache. Nothing left to do but
-    // keep the offline cache in sync.
-    if (initialData) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData)) } catch { /* quota */ }
-      return
-    }
-
-    // Fallback path — only reached if the server-side fetch failed (e.g.
-    // MongoDB briefly unavailable at request time).
     // 1 — localStorage first paint only (avoids a flash of default content
     // while the network request below is in flight). It never has the final word.
     try {
@@ -228,7 +210,6 @@ export function PortfolioProvider({
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch { /* quota */ }
       })
       .catch(() => {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const updatePersonal     = useCallback((personal: PersonalInfo)      => persist('personal', personal), [persist])
