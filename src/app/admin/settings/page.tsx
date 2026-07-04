@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -14,9 +14,16 @@ export default function AdminSettings() {
   const toast = useToast()
   const [settings, setSettings] = useState(data.settings)
 
+  // Adopt the shared context's settings until this page makes its own edit
+  const localOwned = useRef(false)
+  useEffect(() => {
+    if (!localOwned.current) setSettings(data.settings)
+  }, [data.settings]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const [pwState, pwAction, pwPending] = useActionState<ChangePasswordResult | null, FormData>(changePassword, null)
 
   const save = () => {
+    localOwned.current = true
     updateSettings(settings)
     toast('Paramètres sauvegardés')
   }

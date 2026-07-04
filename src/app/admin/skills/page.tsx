@@ -17,7 +17,7 @@ export default function AdminSkills() {
 
   const skillsOwned = useRef(false)
   useEffect(() => {
-    if (!skillsOwned.current && data.skills.length > skills.length) setSkills(data.skills)
+    if (!skillsOwned.current) setSkills(data.skills)
   }, [data.skills]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const persist = (updated: Skill[]) => { skillsOwned.current = true; setSkills(updated); updateSkills(updated) }

@@ -66,12 +66,10 @@ export default function AdminBlog() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
-  // Sync local state once context finishes hydrating from localStorage
+  // Adopt the shared context's posts until this page makes its own edit
   const localOwned = useRef(false)
   useEffect(() => {
-    if (!localOwned.current && data.blog.length > posts.length) {
-      setPosts(data.blog)
-    }
+    if (!localOwned.current) setPosts(data.blog)
   }, [data.blog]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const persist = (updated: BlogPost[]) => {
