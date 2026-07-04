@@ -1,0 +1,47 @@
+[
+  {
+    "slug": "portfolio-personnel",
+    "title": "Portfolio Personnel",
+    "description": "Ce site — portfolio fullstack avec Next.js, Tailwind et Framer Motion.",
+    "longDescription": "Conception et développement de mon portfolio personnel, vitrine de mes compétences en développement web fullstack et DevOps. Architecture Next.js 14 App Router, animations Framer Motion, déploiement Vercel.",
+    "category": "Web",
+    "tags": ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "Vercel"],
+    "year": "2025",
+    "status": "completed",
+    "githubUrl": "https://github.com/",
+    "image": "/images/projects/portfolio.jpg"
+  },
+  {
+    "slug": "devops-pipeline",
+    "title": "Pipeline CI/CD Automatisé",
+    "description": "Mise en place d'un pipeline CI/CD complet avec GitHub Actions, Docker et Kubernetes.",
+    "longDescription": "Architecture complète de déploiement continu : containerisation Docker multi-stage, orchestration Kubernetes, monitoring Prometheus/Grafana, notifications Slack.",
+    "category": "DevOps",
+    "tags": ["Docker", "Kubernetes", "GitHub Actions", "Terraform", "Prometheus"],
+    "year": "2024",
+    "status": "completed",
+    "image": "/images/projects/devops.jpg"
+  },
+  {
+    "slug": "api-rest-node",
+    "title": "API REST Node.js",
+    "description": "API RESTful scalable avec authentification JWT, rate limiting et documentation Swagger.",
+    "longDescription": "Développement d'une API REST robuste : Express.js, PostgreSQL, authentification JWT, middleware de validation, tests unitaires Jest, documentation Swagger auto-générée.",
+    "category": "Backend",
+    "tags": ["Node.js", "Express", "PostgreSQL", "JWT", "Jest", "Swagger"],
+    "year": "2024",
+    "status": "completed",
+    "image": "/images/projects/api.jpg"
+  },
+  {
+    "slug": "dashboard-analytics",
+    "title": "Dashboard Analytics",
+    "description": "Interface de visualisation de données en temps réel avec React et D3.js.",
+    "longDescription": "Dashboard interactif pour la visualisation de métriques business : graphiques D3.js, websockets pour le temps réel, filtres dynamiques, export PDF.",
+    "category": "Frontend",
+    "tags": ["React", "D3.js", "WebSockets", "TypeScript", "Chart.js"],
+    "year": "2023",
+    "status": "completed",
+    "image": "/images/projects/dashboard.jpg"
+  }
+]
