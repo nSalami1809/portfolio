@@ -122,18 +122,6 @@ function SocialItem({
         {icon}
       </span>
       <span>{label}</span>
-      {external && (
-        <span
-          className="ml-auto transition-all duration-200"
-          style={{
-            color: hovered ? color : 'var(--text-subtle)',
-            opacity: hovered ? 1 : 0.4,
-            transform: hovered ? 'translate(2px, -2px)' : 'translate(0,0)',
-          }}
-        >
-          ↗
-        </span>
-      )}
     </a>
   )
 }
@@ -233,11 +221,10 @@ export default function Footer() {
         </div>
 
         <div
-          className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
+          className="pt-8 flex justify-center text-xs"
           style={{ borderTop: '1px solid var(--border)', color: 'var(--text-subtle)' }}
         >
           <p>&copy; {year} {data.personal.name}. Tous droits réservés.</p>
-          <p>Conçu &amp; développé avec Next.js + Tailwind CSS</p>
         </div>
       </div>
     </footer>
