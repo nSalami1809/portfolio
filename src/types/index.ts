@@ -65,7 +65,6 @@ export interface Testimonial {
 }
 
 export interface SiteSettings {
-  defaultTheme: 'light' | 'dark'
   accentColor: string
   favicon: string
   logo: string

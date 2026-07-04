@@ -26,7 +26,7 @@ export default async function HomePage() {
       <HeroSection personal={personal} socials={socials} />
 
       {/* ── À PROPOS ── */}
-      <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+      <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <FadeIn>

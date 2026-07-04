@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import FadeIn from '@/components/animations/FadeIn'
 import ContactForm from '@/components/sections/ContactForm'
-import SignalPulseClient from '@/components/scene/SignalPulseClient'
+import StarsCanvasClient from '@/components/scene/StarsCanvasClient'
 
 export const metadata: Metadata = { title: 'Contact' }
 
 export default function ContactPage() {
   return (
     <div className="relative">
-      <SignalPulseClient />
+      <StarsCanvasClient className="z-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-20">
         <FadeIn>

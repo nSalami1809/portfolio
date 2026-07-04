@@ -125,7 +125,6 @@ export const defaultSkills: Skill[] = [
 export const defaultTestimonials: Testimonial[] = []
 
 export const defaultSettings: SiteSettings = {
-  defaultTheme: 'dark',
   accentColor: '#8B5CF6',
   favicon: '',
   logo: '',

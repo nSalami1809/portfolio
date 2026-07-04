@@ -1,12 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
-import { motion } from 'framer-motion'
-import FadeIn from '@/components/animations/FadeIn'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { PersonalInfo, SocialLinks } from '@/types'
-
-const HeroRobot = dynamic(() => import('@/components/hero/HeroRobot'), { ssr: false })
 
 const container = {
   hidden: {},
@@ -22,17 +19,91 @@ interface Props {
   socials: SocialLinks
 }
 
+function TypingCursor() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block align-middle animate-pulse"
+      style={{ width: 3, height: '0.85em', marginLeft: 3, background: 'var(--accent)' }}
+    />
+  )
+}
+
 export default function HeroSection({ personal, socials }: Props) {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 80)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const line1 = 'Bonjour, je suis'
+  const lastName = personal.name.split(' ').slice(-1)[0]
+  const firstNames = personal.name.split(' ').slice(0, -1).join(' ')
+  const boundary1 = line1.length
+  const boundary2 = boundary1 + lastName.length
+  const fullLength = boundary2 + firstNames.length
+
+  const [typed, setTyped] = useState(0)
+
+  useEffect(() => {
+    setTyped(0)
+    const startDelay = 700
+    const speed = 45
+    let interval: ReturnType<typeof setInterval> | undefined
+    const timeout = setTimeout(() => {
+      let i = 0
+      interval = setInterval(() => {
+        i++
+        setTyped(i)
+        if (i >= fullLength) clearInterval(interval)
+      }, speed)
+    }, startDelay)
+    return () => {
+      clearTimeout(timeout)
+      if (interval) clearInterval(interval)
+    }
+  }, [fullLength, personal.name])
+
+  const t1 = line1.slice(0, Math.max(0, Math.min(line1.length, typed)))
+  const t2 = lastName.slice(0, Math.max(0, Math.min(lastName.length, typed - boundary1)))
+  const t3 = firstNames.slice(0, Math.max(0, Math.min(firstNames.length, typed - boundary2)))
+
   return (
     <section className="relative min-h-[80vh] flex items-center overflow-hidden">
       {/* Background glow */}
       <div
         className="pointer-events-none absolute inset-0 opacity-30"
-        style={{ background: 'radial-gradient(ellipse 60% 60% at 70% 50%, var(--accent-glow), transparent)' }}
+        style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 40%, var(--accent-glow), transparent)' }}
       />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full py-16 grid lg:grid-cols-2 gap-12 items-center">
-        {/* Left — text */}
+      {/* Drifting gradient blobs */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute rounded-full"
+        style={{
+          width: 480, height: 480, top: '-10%', left: '-8%',
+          background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)',
+          filter: 'blur(60px)',
+        }}
+        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute rounded-full"
+        style={{
+          width: 420, height: 420, bottom: '-15%', right: '-10%',
+          background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)',
+          filter: 'blur(70px)',
+        }}
+        animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
+        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 w-full py-16">
+        {/* Text */}
         <motion.div variants={container} initial="hidden" animate="show">
           {personal.photo && (
             <motion.div variants={item} className="mb-6">
@@ -45,6 +116,20 @@ export default function HeroSection({ personal, socials }: Props) {
             </motion.div>
           )}
 
+          <motion.div
+            variants={item}
+            className="inline-flex items-center gap-2 mb-5 px-3.5 py-1.5 rounded-full"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#10B981' }} />
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#10B981' }} />
+            </span>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+              Disponible pour de nouvelles missions
+            </span>
+          </motion.div>
+
           <motion.p variants={item} className="section-label mb-5">
             Développeur Fullstack & DevOps
           </motion.p>
@@ -54,11 +139,29 @@ export default function HeroSection({ personal, socials }: Props) {
             className="font-display font-bold leading-[1.05] mb-6"
             style={{ fontSize: 'clamp(2.8rem, 7vw, 5.5rem)', letterSpacing: '-0.03em' }}
           >
-            <span style={{ color: 'var(--text)' }}>Bonjour, je suis</span>
+            <span style={{ color: 'var(--text)' }}>
+              {t1}
+              {typed < boundary1 && <TypingCursor />}
+            </span>
             <br />
-            <span className="gradient-text">{personal.name.split(' ').slice(-1)[0]}</span>
+            <span className="relative inline-block">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 select-none"
+                style={{ color: 'var(--accent)', opacity: 0.4, filter: 'blur(28px)' }}
+              >
+                {lastName}
+              </span>
+              <span className="gradient-text">
+                {t2}
+                {typed >= boundary1 && typed < boundary2 && <TypingCursor />}
+              </span>
+            </span>
             <br />
-            <span style={{ color: 'var(--text)' }}>{personal.name.split(' ').slice(0, -1).join(' ')}</span>
+            <span style={{ color: 'var(--text)' }}>
+              {t3}
+              {typed >= boundary2 && <TypingCursor />}
+            </span>
           </motion.h1>
 
           <motion.p
@@ -141,30 +244,47 @@ export default function HeroSection({ personal, socials }: Props) {
             )}
           </motion.div>
         </motion.div>
-
-        {/* Right — 3D Robot */}
-        <FadeIn direction="left" delay={0.2} className="w-full h-[220px] sm:h-[320px] md:h-[400px] lg:h-[480px]">
-          <HeroRobot />
-        </FadeIn>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-      >
-        <span className="text-xs tracking-widest" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-          SCROLL
-        </span>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-px h-8"
-          style={{ background: 'linear-gradient(to bottom, var(--accent), transparent)' }}
-        />
-      </motion.div>
+      <AnimatePresence>
+        {!scrolled && (
+          <motion.a
+            href="#apropos"
+            aria-label="Défiler vers la section À propos"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 cursor-pointer group z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, y: [0, 8, 0] }}
+            exit={{ opacity: 0, transition: { duration: 0.25 } }}
+            transition={{
+              opacity: { delay: 1.5 },
+              y: { delay: 1.5, duration: 2, repeat: Infinity, ease: 'easeInOut' },
+            }}
+          >
+            <span
+              className="text-xs font-semibold tracking-widest transition-colors duration-200 group-hover:opacity-100"
+              style={{ color: 'var(--accent-light)', fontFamily: 'var(--font-poppins)' }}
+            >
+              SCROLL
+            </span>
+            <div
+              className="relative w-7 h-11 rounded-full flex justify-center pt-2.5 transition-transform duration-200 group-hover:scale-110"
+              style={{
+                border: '2px solid var(--accent)',
+                background: 'var(--glass-bg)',
+                boxShadow: '0 0 20px var(--accent-glow), inset 0 1px 0 var(--glass-highlight)',
+              }}
+            >
+              <motion.div
+                animate={{ y: [0, 14, 0], opacity: [1, 0, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: 'var(--accent)' }}
+              />
+            </div>
+          </motion.a>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
