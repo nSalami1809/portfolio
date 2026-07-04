@@ -14,7 +14,7 @@ import {
   defaultVision,
   defaultBlogPosts,
 } from '@/data/defaultData'
-import { publishPortfolio } from '@/actions/portfolio'
+import { publishPortfolio, fetchPortfolio } from '@/actions/portfolio'
 
 const STORAGE_KEY = 'portfolio-data'
 
@@ -96,9 +96,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
     let base = local
     try {
-      const res = await fetch('/api/portfolio', { cache: 'no-store' })
-      const json: { data: PortfolioData | null } | null = res.ok ? await res.json() : null
-      if (json?.data) base = json.data
+      // Calls the server action directly (never the ISR-cached /api/portfolio
+      // route) so the merge base is always truly current, not up to 15s stale.
+      const fresh = await fetchPortfolio()
+      if (fresh) base = fresh
     } catch { /* offline — fall back to publishing local state as-is */ }
 
     const merged: PortfolioData = { ...base }
@@ -134,11 +135,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const refreshIfIdle = useCallback(async () => {
     if (dirtyKeys.current.size > 0 || syncing.current) return
     try {
-      const res = await fetch('/api/portfolio', { cache: 'no-store' })
-      const json: { data: PortfolioData | null } | null = res.ok ? await res.json() : null
-      if (json?.data) {
-        setData(json.data)
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data)) } catch { /* quota */ }
+      const fresh = await fetchPortfolio()
+      if (fresh) {
+        setData(fresh)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch { /* quota */ }
       }
     } catch { /* offline — keep current state */ }
   }, [])
@@ -190,13 +190,14 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     // loads. A local draft can silently desync from what was actually
     // published (e.g. localStorage quota exceeded while saving large
     // uploaded images), so it must never permanently hide real changes.
-    fetch('/api/portfolio', { cache: 'no-store' })
-      .then((r) => r.ok ? r.json() : null)
-      .then((json: { data: PortfolioData | null } | null) => {
-        if (!json?.data || hydratedFromMongo.current) return
+    // Uses the server action directly (never the ISR-cached /api/portfolio
+    // route) so this is always the true current state, not stale by design.
+    fetchPortfolio()
+      .then((fresh) => {
+        if (!fresh || hydratedFromMongo.current) return
         hydratedFromMongo.current = true
-        setData(json.data)
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data)) } catch { /* quota */ }
+        setData(fresh)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch { /* quota */ }
       })
       .catch(() => {})
   }, [])
