@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePortfolio } from '@/providers/PortfolioContext'
 
 export default function AdminDashboard() {
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
         <p className="section-label mb-4">Profil actuel</p>
         <div className="flex items-center gap-4">
           {data.personal.photo ? (
-            <img src={data.personal.photo} alt={data.personal.name} className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+            <Image src={data.personal.photo} alt={data.personal.name} width={56} height={56} className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
           ) : (
             <div
               className="w-14 h-14 rounded-full flex items-center justify-center font-display font-bold text-xl flex-shrink-0"

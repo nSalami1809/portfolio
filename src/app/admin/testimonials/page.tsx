@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -34,7 +35,7 @@ export default function AdminTestimonials() {
   const localOwned = useRef(false)
   useEffect(() => {
     if (!localOwned.current) setTestimonials(data.testimonials)
-  }, [data.testimonials]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.testimonials])
 
   const uid = () => Date.now().toString()
   const persist = (updated: Testimonial[]) => { localOwned.current = true; setTestimonials(updated); updateTestimonials(updated) }
@@ -61,7 +62,7 @@ export default function AdminTestimonials() {
     const c = selected.size; persist(testimonials.filter((x) => !selected.has(x.id))); setSelected(new Set()); toast(`${c} supprimé(s)`, 'error')
   }
 
-  const toggleSelect = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleSelect = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id) } else { n.add(id) }; return n })
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -166,7 +167,7 @@ export default function AdminTestimonials() {
 
                   {/* Avatar */}
                   {t.avatar
-                    ? <img src={t.avatar} alt="" aria-hidden="true" className="w-10 h-10 rounded-full object-cover" />
+                    ? <Image src={t.avatar} alt="" aria-hidden="true" width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                     : <div className="w-10 h-10 rounded-full flex items-center justify-center font-display font-bold text-base flex-shrink-0" style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }} aria-hidden="true">{t.name.charAt(0).toUpperCase()}</div>
                   }
 

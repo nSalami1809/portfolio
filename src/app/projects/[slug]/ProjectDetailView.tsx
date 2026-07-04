@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Project } from '@/types'
 import FadeIn from '@/components/animations/FadeIn'
 
@@ -71,7 +72,7 @@ export default function ProjectDetailView({ project }: { project: Project }) {
           {/* Image / placeholder */}
           <FadeIn delay={0.2}>
             <div
-              className="w-full rounded-2xl overflow-hidden mb-10"
+              className="relative w-full rounded-2xl overflow-hidden mb-10"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
@@ -79,10 +80,13 @@ export default function ProjectDetailView({ project }: { project: Project }) {
               }}
             >
               {project.image ? (
-                <img
+                <Image
                   src={project.image}
                   alt={project.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 800px, 100vw"
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3">

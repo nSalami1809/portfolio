@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import ParticleWaveClient from '@/components/scene/ParticleWaveClient'
@@ -58,14 +59,20 @@ export default function BlogPage() {
                 >
                   <div className="sm:w-32 shrink-0 flex sm:flex-col items-start sm:items-end gap-3">
                     {post.coverImage && (
-                      <img
-                        src={post.coverImage}
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        className="w-20 h-20 sm:w-full sm:h-20 rounded-lg object-cover flex-shrink-0"
+                      <div
+                        className="relative w-20 h-20 sm:w-full sm:h-20 rounded-lg overflow-hidden flex-shrink-0"
                         style={{ border: '1px solid var(--border)' }}
-                      />
+                      >
+                        <Image
+                          src={post.coverImage}
+                          alt=""
+                          aria-hidden="true"
+                          fill
+                          loading="lazy"
+                          sizes="128px"
+                          className="object-cover"
+                        />
+                      </div>
                     )}
                     <span className="tag text-xs">{post.category}</span>
                   </div>

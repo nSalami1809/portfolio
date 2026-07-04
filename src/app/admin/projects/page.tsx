@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -68,7 +69,7 @@ export default function AdminProjects() {
   const localOwned = useRef(false)
   useEffect(() => {
     if (!localOwned.current) setProjects(data.projects)
-  }, [data.projects]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.projects])
 
   const persist = (updated: Project[]) => {
     localOwned.current = true
@@ -115,7 +116,7 @@ export default function AdminProjects() {
   }
 
   const toggleSelect = (slug: string) =>
-    setSelected((s) => { const n = new Set(s); n.has(slug) ? n.delete(slug) : n.add(slug); return n })
+    setSelected((s) => { const n = new Set(s); if (n.has(slug)) { n.delete(slug) } else { n.add(slug) }; return n })
 
   const move = (slug: string, dir: -1 | 1) => {
     const idx = projects.findIndex((p) => p.slug === slug)
@@ -344,7 +345,7 @@ export default function AdminProjects() {
 
                   {/* Thumb */}
                   {p.image ? (
-                    <img src={p.image} alt="" aria-hidden="true" className="w-10 h-10 rounded-lg object-cover" />
+                    <Image src={p.image} alt="" aria-hidden="true" width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
                   ) : (
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-glow)' }} aria-hidden="true">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--accent)' }} aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
