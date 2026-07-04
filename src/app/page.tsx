@@ -100,25 +100,30 @@ export default async function HomePage() {
                       return (
                         <div
                           key={item}
-                          className="flex items-center gap-1.5 rounded-lg"
+                          className="flex items-center gap-2 rounded-lg"
                           style={{
                             background: 'var(--surface-hover)',
                             border: '1px solid var(--border)',
-                            padding: '0.3rem 0.6rem',
+                            padding: '0.4rem 0.8rem',
                           }}
                         >
                           {icon && (
-                            <img
-                              src={icon}
-                              alt=""
-                              aria-hidden="true"
-                              loading="lazy"
-                              decoding="async"
-                              className="w-4 h-4 object-contain flex-shrink-0"
-                            />
+                            <span
+                              className="flex items-center justify-center rounded-md flex-shrink-0"
+                              style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.92)' }}
+                            >
+                              <img
+                                src={icon}
+                                alt=""
+                                aria-hidden="true"
+                                loading="lazy"
+                                decoding="async"
+                                className="w-5 h-5 object-contain"
+                              />
+                            </span>
                           )}
                           <span
-                            className="text-xs font-medium"
+                            className="text-sm font-medium"
                             style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
                           >
                             {item}
