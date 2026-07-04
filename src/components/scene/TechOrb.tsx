@@ -9,7 +9,7 @@ import * as THREE from 'three'
 /* ── Mouse-reactive group ────────────────────────────────────────── */
 function Scene() {
   const groupRef = useRef<THREE.Group>(null)
-  const { viewport, mouse } = useThree()
+  const { mouse } = useThree()
   const target = useRef(new THREE.Vector2())
 
   useFrame(() => {

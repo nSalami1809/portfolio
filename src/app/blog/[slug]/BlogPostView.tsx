@@ -30,7 +30,6 @@ function renderContent(content: string) {
     if (videoMatch) {
       const [, src] = videoMatch
       return (
-        // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
           key={i}
           src={src}
