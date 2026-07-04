@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface FadeInProps {
   children: React.ReactNode
@@ -23,6 +23,19 @@ export default function FadeIn({
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once, margin: '-60px' })
 
+  // Safety net: some mobile browsers miss the IntersectionObserver's initial
+  // read (e.g. a web font swapping in right after it fires reflows the
+  // layout it just measured), which would otherwise leave content stuck at
+  // opacity:0 forever since `once` never gives it a second chance. Force
+  // visibility after a short delay so content is never permanently hidden.
+  const [forceVisible, setForceVisible] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setForceVisible(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
+  const visible = isInView || forceVisible
+
   const offsets = {
     up: { y: 20, x: 0 },
     down: { y: -20, x: 0 },
@@ -38,7 +51,7 @@ export default function FadeIn({
       suppressHydrationWarning
       style={{ willChange: 'transform, opacity' }}
       initial={{ opacity: 0, ...offsets[direction] }}
-      animate={isInView ? { opacity: 1, x: 0, y: 0 } : {}}
+      animate={visible ? { opacity: 1, x: 0, y: 0 } : {}}
       transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}

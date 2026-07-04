@@ -2,10 +2,17 @@ import type { Metadata } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { PortfolioProvider } from '@/providers/PortfolioContext'
+import { fetchPortfolio } from '@/actions/portfolio'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
 import AdminGate from '@/components/AdminGate'
+
+// Regenerate at most once every 30s; invalidated instantly on admin publish
+// via revalidatePath('/'). Only runs on a full page load (layouts persist
+// across client-side navigation), so this seeds every entry page — not just
+// `/` — with real MongoDB content instead of hardcoded placeholders.
+export const revalidate = 30
 
 const inter = Inter({
   variable: '--font-inter',
@@ -60,7 +67,9 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const initialData = await fetchPortfolio().catch(() => null)
+
   return (
     <html
       lang="fr"
@@ -74,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://unpkg.com" />
       </head>
       <body>
-        <PortfolioProvider>
+        <PortfolioProvider initialData={initialData}>
           <Navbar />
           <PageTransition>
             <main className="pt-20">{children}</main>
