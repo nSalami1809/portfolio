@@ -7,7 +7,6 @@ import * as THREE from 'three'
 const COUNT  = 1400
 const RADIUS = 2.2
 
-/* eslint-disable react-hooks/refs */
 function Particles() {
   const pointsRef = useRef<THREE.Points>(null)
   const matRef    = useRef<THREE.PointsMaterial>(null)
@@ -47,7 +46,7 @@ function Particles() {
       <pointsMaterial
         ref={matRef}
         size={0.028}
-        color="#8B5CF6"
+        color="#ffffff"
         sizeAttenuation
         transparent
         opacity={0.75}
@@ -88,7 +87,7 @@ function Ring() {
       </bufferGeometry>
       <pointsMaterial
         size={0.018}
-        color="#a78bfa"
+        color="#ffffff"
         sizeAttenuation
         transparent
         opacity={0.35}
@@ -97,7 +96,6 @@ function Ring() {
     </points>
   )
 }
-/* eslint-enable react-hooks/refs */
 
 export default function ParticleSphere() {
   return (
