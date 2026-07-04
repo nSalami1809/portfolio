@@ -111,7 +111,8 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   }, [schedulePublish])
 
   useEffect(() => {
-    // 1 — localStorage (sync, fast)
+    // 1 — localStorage first paint only (avoids a flash of default content
+    // while the network request below is in flight). It never has the final word.
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
@@ -121,18 +122,17 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       }
     } catch { /* unavailable / invalid */ }
 
-    // 2 — MongoDB (source de vérité pour les visiteurs publics sans localStorage)
+    // 2 — MongoDB is the single source of truth and always wins once it
+    // loads. A local draft can silently desync from what was actually
+    // published (e.g. localStorage quota exceeded while saving large
+    // uploaded images), so it must never permanently hide real changes.
     fetch('/api/portfolio', { cache: 'no-store' })
       .then((r) => r.ok ? r.json() : null)
       .then((json: { data: PortfolioData | null } | null) => {
         if (!json?.data || hydratedFromMongo.current) return
         hydratedFromMongo.current = true
-        // N'applique MongoDB que si localStorage est vide (visiteur sans draft admin)
-        let hasLocal = false
-        try { hasLocal = !!localStorage.getItem(STORAGE_KEY) } catch {}
-        if (!hasLocal) setData(json.data)
-        // Ne jamais réécrire localStorage depuis MongoDB :
-        // localStorage appartient au flux admin et ne doit pas être écrasé par du cache serveur
+        setData(json.data)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data)) } catch { /* quota */ }
       })
       .catch(() => {})
   }, [])
