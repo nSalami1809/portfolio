@@ -27,7 +27,7 @@ const spaceGrotesk = Space_Grotesk({
   display: 'swap',
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawaf.dev'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawafsalami-itech.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
