@@ -67,9 +67,15 @@ const PortfolioContext = createContext<PortfolioContextValue>({
 
 type Key = keyof PortfolioData
 
-export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<PortfolioData>(defaultData)
-  const hydratedFromMongo = useRef(false)
+export function PortfolioProvider({
+  children,
+  initialData,
+}: {
+  children: React.ReactNode
+  initialData?: PortfolioData | null
+}) {
+  const [data, setData] = useState<PortfolioData>(initialData ?? defaultData)
+  const hydratedFromMongo = useRef(!!initialData)
   const publishTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestData = useRef<PortfolioData>(defaultData)
   // Top-level fields edited locally since the last successful publish.
@@ -144,9 +150,19 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const onVisibility = () => { document.hidden ? flushImmediate() : refreshIfIdle() }
+    // Tabs going hidden (backgrounding the app, switching apps, locking the
+    // screen — extremely frequent on mobile) are not the same as the page
+    // actually being destroyed: there's time for a real network round trip.
+    // Route this through the same fetch-fresh-then-merge path as the
+    // debounced publish so a backgrounded tab can never stomp fields it
+    // never touched — flushImmediate's raw publish would reintroduce that
+    // exact bug, just triggered by visibilitychange instead of the timer.
+    const onVisibility = () => { if (document.hidden) { syncAndPublish() } else { refreshIfIdle() } }
     const onFocus = () => refreshIfIdle()
     document.addEventListener('visibilitychange', onVisibility)
+    // beforeunload is the true last-resort case: the page may be gone before
+    // any async merge could complete, so a synchronous best-effort raw
+    // publish is the only option left here.
     window.addEventListener('beforeunload', flushImmediate)
     window.addEventListener('focus', onFocus)
     // Safety net for long uninterrupted sessions that never blur/hide
@@ -157,7 +173,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('focus', onFocus)
       clearInterval(interval)
     }
-  }, [flushImmediate, refreshIfIdle])
+  }, [flushImmediate, refreshIfIdle, syncAndPublish])
 
   const schedulePublish = useCallback(() => {
     if (publishTimer.current) clearTimeout(publishTimer.current)
@@ -175,6 +191,18 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   }, [schedulePublish])
 
   useEffect(() => {
+    // The root layout already fetched MongoDB server-side and seeded this
+    // provider with it (see layout.tsx), so the very first paint on every
+    // page — not just `/` — already shows real, current content instead of
+    // hardcoded placeholders or a stale local cache. Nothing left to do but
+    // keep the offline cache in sync.
+    if (initialData) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData)) } catch { /* quota */ }
+      return
+    }
+
+    // Fallback path — only reached if the server-side fetch failed (e.g.
+    // MongoDB briefly unavailable at request time).
     // 1 — localStorage first paint only (avoids a flash of default content
     // while the network request below is in flight). It never has the final word.
     try {
@@ -200,6 +228,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch { /* quota */ }
       })
       .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const updatePersonal     = useCallback((personal: PersonalInfo)      => persist('personal', personal), [persist])

@@ -1,5 +1,6 @@
 'use server'
 
+import { cache } from 'react'
 import { revalidatePath } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import type { PortfolioData } from '@/types'
@@ -17,10 +18,13 @@ export async function publishPortfolio(data: PortfolioData): Promise<void> {
   revalidatePath('/')
 }
 
-export async function fetchPortfolio(): Promise<PortfolioData | null> {
+// React.cache dedupes this within a single request — the root layout and a
+// page (e.g. `/`) both call this to seed their initial render, and without
+// memoization that would mean two MongoDB round trips per request.
+export const fetchPortfolio = cache(async (): Promise<PortfolioData | null> => {
   const db = await getDb()
   const doc = await db.collection('portfolio').findOne({ _id: DOC_ID as unknown as never })
   if (!doc) return null
   const { _id: _docId, updatedAt: _updatedAt, ...data } = doc
   return data as PortfolioData
-}
+})
