@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { fetchPortfolio } from '@/actions/portfolio'
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawaf.dev'
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawafsalami-itech.vercel.app'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const portfolio = await fetchPortfolio().catch(() => null)
