@@ -56,7 +56,17 @@ export default function BlogPage() {
                   className="group flex flex-col sm:flex-row gap-6 py-8 transition-colors duration-200"
                   style={{ borderTop: '1px solid var(--border)' }}
                 >
-                  <div className="sm:w-32 sm:text-right shrink-0">
+                  <div className="sm:w-32 shrink-0 flex sm:flex-col items-start sm:items-end gap-3">
+                    {post.coverImage && (
+                      <img
+                        src={post.coverImage}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        className="w-20 h-20 sm:w-full sm:h-20 rounded-lg object-cover flex-shrink-0"
+                        style={{ border: '1px solid var(--border)' }}
+                      />
+                    )}
                     <span className="tag text-xs">{post.category}</span>
                   </div>
                   <div className="flex-1 min-w-0">

@@ -81,6 +81,7 @@ export interface BlogPost {
   published: boolean
   externalUrl?: string
   author?: string
+  coverImage?: string
 }
 
 export interface VisionData {

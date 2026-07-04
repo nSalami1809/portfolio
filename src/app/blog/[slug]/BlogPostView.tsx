@@ -4,8 +4,43 @@ import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
 import type { BlogPost } from '@/types'
 
+const IMAGE_RE = /^!\[(.*?)\]\((.+?)\)$/
+const VIDEO_RE = /^\[video\]\((.+?)\)$/
+
 function renderContent(content: string) {
   return content.split('\n').map((line, i) => {
+    const trimmed = line.trim()
+
+    const imageMatch = trimmed.match(IMAGE_RE)
+    if (imageMatch) {
+      const [, alt, src] = imageMatch
+      return (
+        <img
+          key={i}
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className="w-full rounded-xl my-6"
+          style={{ border: '1px solid var(--border)' }}
+        />
+      )
+    }
+
+    const videoMatch = trimmed.match(VIDEO_RE)
+    if (videoMatch) {
+      const [, src] = videoMatch
+      return (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <video
+          key={i}
+          src={src}
+          controls
+          className="w-full rounded-xl my-6"
+          style={{ border: '1px solid var(--border)' }}
+        />
+      )
+    }
+
     if (line.startsWith('# '))
       return <h2 key={i} className="font-display font-bold text-3xl mt-10 mb-4" style={{ color: 'var(--text)' }}>{line.slice(2)}</h2>
     if (line.startsWith('## '))
@@ -88,6 +123,17 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
           </p>
         </div>
       </FadeIn>
+
+      {post.coverImage && (
+        <FadeIn delay={0.18}>
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            className="w-full rounded-2xl mb-12 object-cover"
+            style={{ border: '1px solid var(--border)', maxHeight: 480 }}
+          />
+        </FadeIn>
+      )}
 
       <div style={{ height: 1, background: 'var(--border)', marginBottom: '3rem' }} />
 
