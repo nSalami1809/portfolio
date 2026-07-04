@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const links = [
   {
@@ -87,10 +86,11 @@ export default function Navbar() {
     <>
       <header
         style={{
-          background: scrolled ? 'var(--bg)' : 'transparent',
-          borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
-          backdropFilter: scrolled ? 'blur(20px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+          background: scrolled ? 'var(--glass-bg)' : 'transparent',
+          borderBottom: scrolled ? '1px solid var(--glass-border)' : '1px solid transparent',
+          backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
+          boxShadow: scrolled ? 'inset 0 1px 0 var(--glass-highlight)' : 'none',
         }}
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       >
@@ -161,8 +161,6 @@ export default function Navbar() {
 
           {/* Right controls */}
           <div className="flex items-center gap-2">
-            <ThemeToggle />
-
             {/* Hamburger */}
             <button
               onClick={() => setOpen(!open)}

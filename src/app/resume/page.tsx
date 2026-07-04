@@ -4,15 +4,15 @@ import dynamic from 'next/dynamic'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 
-const TechOrb = dynamic(() => import('@/components/scene/TechOrb'), { ssr: false })
+const StarsCanvas = dynamic(() => import('@/components/scene/StarsCanvas').then((m) => m.StarsCanvas), { ssr: false })
 
 export default function ResumePage() {
   const { data } = usePortfolio()
 
   return (
     <div className="relative">
-      {/* Full-page 3D background */}
-      <TechOrb fullscreen />
+      {/* Full-page starfield background */}
+      <StarsCanvas hue={260} className="z-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-20">
       {/* Hero */}

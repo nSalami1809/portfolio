@@ -1,14 +1,11 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
-import Script from 'next/script'
 import './globals.css'
-import { ThemeProvider } from '@/providers/ThemeProvider'
 import { PortfolioProvider } from '@/providers/PortfolioContext'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
 import AdminGate from '@/components/AdminGate'
-import { fetchPortfolio } from '@/actions/portfolio'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -63,39 +60,27 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Read admin-configured default theme (cached 60s) — used as fallback for new visitors
-  const portfolio = await fetchPortfolio().catch(() => null)
-  const defaultTheme = portfolio?.settings?.defaultTheme === 'light' ? 'light' : 'dark'
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="fr"
       className={`dark ${inter.variable} ${poppins.variable} ${spaceGrotesk.variable}`}
-      suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://prod.spline.design" />
+        <link rel="dns-prefetch" href="https://prod.spline.design" />
+        <link rel="preconnect" href="https://unpkg.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://unpkg.com" />
+      </head>
       <body>
-        {/*
-          Runs synchronously before first paint → no FOUC.
-          Priority: 1) user's explicit localStorage choice  2) admin defaultTheme  3) dark
-        */}
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `try{var s=localStorage.getItem('portfolio-theme');var d='${defaultTheme}';var t=s==='light'?'light':s==='dark'?'dark':d;document.documentElement.classList.remove('dark','light');document.documentElement.classList.add(t);}catch(e){}`,
-          }}
-        />
-        <ThemeProvider defaultTheme={defaultTheme}>
-          <PortfolioProvider>
-            <Navbar />
-            <PageTransition>
-              <main className="pt-20">{children}</main>
-            </PageTransition>
-            <Footer />
-            <AdminGate />
-          </PortfolioProvider>
-        </ThemeProvider>
+        <PortfolioProvider>
+          <Navbar />
+          <PageTransition>
+            <main className="pt-20">{children}</main>
+          </PageTransition>
+          <Footer />
+          <AdminGate />
+        </PortfolioProvider>
       </body>
     </html>
   )
