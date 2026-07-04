@@ -54,9 +54,18 @@ export default function AdminSkills() {
     toast('Catégorie renommée')
   }
 
-  const addItem = (id: string, item: string) => {
-    if (!item.trim()) return
-    persist(skills.map((s) => s.id === id ? { ...s, items: [...s.items, item.trim()] } : s))
+  // Adds the item and (optionally) its icon in a single persist call — doing
+  // these as two separate calls (add, then set icon) reads the same
+  // pre-update `skills` closure twice, so the second call's persist would
+  // overwrite the first before React re-rendered, silently dropping the
+  // newly added item.
+  const addItem = (id: string, item: string, icon?: string) => {
+    const trimmed = item.trim()
+    if (!trimmed) return
+    persist(skills.map((s) => s.id === id
+      ? { ...s, items: [...s.items, trimmed], icons: icon ? { ...(s.icons ?? {}), [trimmed]: icon } : s.icons }
+      : s
+    ))
   }
 
   const removeItem = (id: string, item: string) => {
@@ -126,7 +135,7 @@ export default function AdminSkills() {
             selected={selected.has(skill.id)}
             onToggleSelect={() => toggleSelect(skill.id)}
             onUpdateCatName={(name) => updateCatName(skill.id, name)}
-            onAddItem={(item) => addItem(skill.id, item)}
+            onAddItem={(item, icon) => addItem(skill.id, item, icon)}
             onRemoveItem={(item) => removeItem(skill.id, item)}
             onRemoveCat={() => removeCategory(skill.id, skill.category)}
             onSetIcon={(name, icon) => setIcon(skill.id, name, icon)}
@@ -142,7 +151,7 @@ interface SkillCardProps {
   selected: boolean
   onToggleSelect: () => void
   onUpdateCatName: (name: string) => void
-  onAddItem: (item: string) => void
+  onAddItem: (item: string, icon?: string) => void
   onRemoveItem: (item: string) => void
   onRemoveCat: () => void
   onSetIcon: (name: string, icon: string) => void
@@ -185,8 +194,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
   const handleAdd = () => {
     const name = newItem.trim()
     if (!name) return
-    onAddItem(name)
-    if (newItemIcon) onSetIcon(name, newItemIcon)
+    onAddItem(name, newItemIcon || undefined)
     setNewItem('')
     setNewItemIcon('')
   }
