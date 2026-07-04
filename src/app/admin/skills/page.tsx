@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
+import { compressImage, uploadFile } from '@/lib/upload'
 import type { Skill } from '@/types'
 
 export default function AdminSkills() {
@@ -150,6 +151,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
   const [catName, setCatName] = useState(skill.category)
   const [newItem, setNewItem] = useState('')
   const [newItemIcon, setNewItemIcon] = useState('')
+  const [iconUploading, setIconUploading] = useState(false)
   const [iconTarget, setIconTarget] = useState<string | null>(null)
   const iconInputRef = useRef<HTMLInputElement>(null)
 
@@ -162,14 +164,21 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
     else setCatName(skill.category)
   }
 
-  const handleNewItemIconFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewItemIconFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !file.type.startsWith('image/')) return
-    if (file.size > 1 * 1024 * 1024) return
-    const reader = new FileReader()
-    reader.onload = () => setNewItemIcon(reader.result as string)
-    reader.readAsDataURL(file)
     e.target.value = ''
+    if (!file || !file.type.startsWith('image/')) return
+    if (file.size > 2 * 1024 * 1024) return
+    setIconUploading(true)
+    try {
+      const compressed = await compressImage(file, 256)
+      const url = await uploadFile(compressed, file.name.replace(/\.[^.]+$/, '.jpg'))
+      setNewItemIcon(url)
+    } catch {
+      /* silently ignored — icon stays empty, user can retry */
+    } finally {
+      setIconUploading(false)
+    }
   }
 
   const handleAdd = () => {
@@ -308,7 +317,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
         <div className="flex-shrink-0">
           <button
             type="button"
-            onClick={() => iconInputRef.current?.click()}
+            onClick={() => !iconUploading && iconInputRef.current?.click()}
             aria-label="Ajouter un logo pour cette compétence"
             title={newItemIcon ? 'Changer le logo' : 'Ajouter un logo (optionnel)'}
             className="relative overflow-hidden rounded-lg transition-all group"
@@ -317,10 +326,14 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
               height: 36,
               border: newItemIcon ? '2px solid var(--accent)' : '2px dashed var(--border)',
               background: newItemIcon ? 'transparent' : 'var(--surface)',
-              cursor: 'pointer',
+              cursor: iconUploading ? 'wait' : 'pointer',
             }}
           >
-            {newItemIcon ? (
+            {iconUploading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="w-3.5 h-3.5 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
+              </div>
+            ) : newItemIcon ? (
               <>
                 <img src={newItemIcon} alt="" aria-hidden="true" className="w-full h-full object-contain rounded-md" style={{ padding: '2px' }} />
                 <div

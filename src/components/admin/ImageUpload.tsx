@@ -1,10 +1,11 @@
-﻿'use client'
+'use client'
 
 import { useRef, useState } from 'react'
+import { compressImage, uploadFile, deleteUploadedFile } from '@/lib/upload'
 
 interface Props {
   value?: string
-  onChange: (base64: string) => void
+  onChange: (url: string) => void
   label?: string
   size?: 'sm' | 'md' | 'lg'
   shape?: 'square' | 'circle'
@@ -13,29 +14,7 @@ interface Props {
   maxSide?: number
 }
 
-const MAX_DEFAULT_MB = 5
-
-function compressImage(file: File, maxSide: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      const scale = Math.min(1, maxSide / Math.max(img.width, img.height))
-      const w = Math.round(img.width * scale)
-      const h = Math.round(img.height * scale)
-      const canvas = document.createElement('canvas')
-      canvas.width = w
-      canvas.height = h
-      const ctx = canvas.getContext('2d')
-      if (!ctx) { reject(new Error('canvas')); return }
-      ctx.drawImage(img, 0, 0, w, h)
-      resolve(canvas.toDataURL('image/jpeg', 0.85))
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load')) }
-    img.src = url
-  })
-}
+const MAX_DEFAULT_MB = 8
 
 export default function ImageUpload({
   value,
@@ -73,12 +52,21 @@ export default function ImageUpload({
     setLoading(true)
     try {
       const compressed = await compressImage(file, maxSide)
-      onChange(compressed)
+      const url = await uploadFile(compressed, file.name.replace(/\.[^.]+$/, '.jpg'))
+      // Best-effort cleanup of the previous uploaded file
+      if (value) deleteUploadedFile(value)
+      onChange(url)
     } catch {
-      setError('Erreur de traitement de l\'image.')
+      setError('Erreur lors de l\'upload de l\'image.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRemove = () => {
+    if (value) deleteUploadedFile(value)
+    onChange('')
+    setError(null)
   }
 
   const buttonLabel = value ? 'Changer l\'image' : `Uploader ${label ?? 'une image'}`
@@ -143,7 +131,7 @@ export default function ImageUpload({
           {value && !loading && (
             <button
               type="button"
-              onClick={() => { onChange(''); setError(null) }}
+              onClick={handleRemove}
               aria-label="Supprimer l'image"
               className="btn-danger btn-xs"
             >

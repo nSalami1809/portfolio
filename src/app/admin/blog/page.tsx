@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
+import ImageUpload from '@/components/admin/ImageUpload'
+import { compressImage, uploadFile } from '@/lib/upload'
 import type { BlogPost } from '@/types'
 
 const CATEGORIES = ['DevOps', 'Frontend', 'Backend', 'Architecture', 'Carrière', 'Autre']
@@ -18,6 +20,7 @@ const EMPTY: Omit<BlogPost, 'slug'> = {
   published: false,
   externalUrl: '',
   author: '',
+  coverImage: '',
 }
 
 function slugify(str: string) {
@@ -58,6 +61,10 @@ export default function AdminBlog() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'hidden'>('all')
+  const [mediaUploading, setMediaUploading] = useState<'image' | 'video' | null>(null)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   // Sync local state once context finishes hydrating from localStorage
   const localOwned = useRef(false)
@@ -92,6 +99,62 @@ export default function AdminBlog() {
       setCustomCategory(p.category === 'Autre' ? '' : p.category)
     }
     setCustomSlug(slug)
+  }
+
+  const insertAtCursor = (snippet: string) => {
+    const el = contentRef.current
+    if (!el) {
+      setForm((p) => ({ ...p, content: p.content ? `${p.content}\n\n${snippet}` : snippet }))
+      return
+    }
+    const start = el.selectionStart ?? el.value.length
+    const end = el.selectionEnd ?? el.value.length
+    const before = el.value.slice(0, start)
+    const after = el.value.slice(end)
+    const needsNewlineBefore = before.length > 0 && !before.endsWith('\n')
+    const insertion = `${needsNewlineBefore ? '\n\n' : ''}${snippet}\n\n`
+    const next = `${before}${insertion}${after}`
+    setForm((p) => ({ ...p, content: next }))
+    requestAnimationFrame(() => {
+      const pos = before.length + insertion.length
+      el.focus()
+      el.setSelectionRange(pos, pos)
+    })
+  }
+
+  const handleInsertImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !file.type.startsWith('image/')) return
+    setMediaUploading('image')
+    try {
+      const compressed = await compressImage(file, 1600)
+      const url = await uploadFile(compressed, file.name.replace(/\.[^.]+$/, '.jpg'))
+      insertAtCursor(`![${file.name.replace(/\.[^.]+$/, '')}](${url})`)
+    } catch {
+      toast("Échec de l'upload de l'image", 'error')
+    } finally {
+      setMediaUploading(null)
+    }
+  }
+
+  const handleInsertVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !file.type.startsWith('video/')) return
+    if (file.size > 30 * 1024 * 1024) {
+      toast('Vidéo trop lourde (max 30 Mo)', 'error')
+      return
+    }
+    setMediaUploading('video')
+    try {
+      const url = await uploadFile(file, file.name)
+      insertAtCursor(`[video](${url})`)
+    } catch {
+      toast("Échec de l'upload de la vidéo", 'error')
+    } finally {
+      setMediaUploading(null)
+    }
   }
 
   const autoSlug = slugify(form.title)
@@ -319,6 +382,18 @@ export default function AdminBlog() {
               </div>
             </div>
 
+            {/* Cover image */}
+            <div>
+              <ImageUpload
+                label="Image de couverture (optionnel)"
+                value={form.coverImage}
+                onChange={(url) => setForm((p) => ({ ...p, coverImage: url }))}
+                size="lg"
+                shape="square"
+                placeholder="Image de couverture"
+              />
+            </div>
+
             {/* Author */}
             <div>
               <F label="Auteur" />
@@ -378,19 +453,55 @@ export default function AdminBlog() {
 
             {/* Content */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
                 <F label="Contenu (Markdown)" />
                 <span className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                   # h1 &nbsp; ## h2 &nbsp; **gras** &nbsp; ---
                 </span>
               </div>
+
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => mediaUploading === null && imageInputRef.current?.click()}
+                  disabled={mediaUploading !== null}
+                  className="btn-secondary btn-xs"
+                >
+                  {mediaUploading === 'image' ? (
+                    <span className="w-3 h-3 rounded-full border-2 animate-spin inline-block" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  )}
+                  Insérer une image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => mediaUploading === null && videoInputRef.current?.click()}
+                  disabled={mediaUploading !== null}
+                  className="btn-secondary btn-xs"
+                >
+                  {mediaUploading === 'video' ? (
+                    <span className="w-3 h-3 rounded-full border-2 animate-spin inline-block" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                  )}
+                  Insérer une vidéo
+                </button>
+                <input ref={imageInputRef} type="file" accept="image/*" onChange={handleInsertImage} className="sr-only" tabIndex={-1} aria-label="Insérer une image dans le contenu" />
+                <input ref={videoInputRef} type="file" accept="video/*" onChange={handleInsertVideo} className="sr-only" tabIndex={-1} aria-label="Insérer une vidéo dans le contenu" />
+              </div>
+
               <textarea
+                ref={contentRef}
                 value={form.content}
                 onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
                 rows={14}
                 className="input resize-y font-mono text-sm"
                 placeholder="# Introduction&#10;&#10;Votre contenu en Markdown…"
               />
+              <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                Les images/vidéos insérées apparaissent dans l&apos;article à l&apos;endroit où le curseur se trouvait dans le texte. Vidéo : 30 Mo max.
+              </p>
             </div>
 
             {/* Published + actions */}

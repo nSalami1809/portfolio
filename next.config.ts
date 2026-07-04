@@ -42,12 +42,14 @@ const nextConfig: NextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
           // Framer Motion + Tailwind write inline styles at runtime
           "style-src 'self' 'unsafe-inline'",
-          // base64 profile photos (data:) + Spline textures/blobs
-          "img-src 'self' data: blob: https://*.spline.design",
+          // Vercel Blob-hosted uploads (images) + Spline textures/blobs
+          "img-src 'self' data: blob: https://*.spline.design https://*.public.blob.vercel-storage.com",
+          // Vercel Blob-hosted uploads (video clips)
+          "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
           // next/font self-hosts — no external font CDN
           "font-src 'self' data:",
           // Spline loads scene + assets from CDN; server actions/API same-origin
-          "connect-src 'self' https://*.spline.design",
+          "connect-src 'self' https://*.spline.design https://*.public.blob.vercel-storage.com",
           // Spline uses Web Workers + WASM via blob: URLs
           "worker-src blob: 'self'",
           "child-src blob: 'self'",
