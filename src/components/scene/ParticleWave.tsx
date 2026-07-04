@@ -13,7 +13,7 @@ const SPACING = 0.32
 function Wave() {
   const ref = useRef<THREE.Points>(null)
 
-  const { positions, count } = useMemo(() => {
+  const positions = useMemo(() => {
     const count = COLS * ROWS
     const positions = new Float32Array(count * 3)
     for (let i = 0; i < COLS; i++) {
@@ -24,7 +24,7 @@ function Wave() {
         positions[idx + 2] = (j - ROWS / 2) * SPACING
       }
     }
-    return { positions, count }
+    return positions
   }, [])
 
   const posRef = useRef(positions.slice())

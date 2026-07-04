@@ -18,7 +18,7 @@ export default function AdminSettings() {
   const localOwned = useRef(false)
   useEffect(() => {
     if (!localOwned.current) setSettings(data.settings)
-  }, [data.settings]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.settings])
 
   const [pwState, pwAction, pwPending] = useActionState<ChangePasswordResult | null, FormData>(changePassword, null)
 

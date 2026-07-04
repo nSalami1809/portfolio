@@ -70,7 +70,7 @@ export default function AdminBlog() {
   const localOwned = useRef(false)
   useEffect(() => {
     if (!localOwned.current) setPosts(data.blog)
-  }, [data.blog]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.blog])
 
   const persist = (updated: BlogPost[]) => {
     localOwned.current = true

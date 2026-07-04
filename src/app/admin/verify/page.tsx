@@ -23,7 +23,6 @@ export default function VerifyPage() {
     if (state && 'error' in state) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShake(true)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDigits(Array(LENGTH).fill(''))
       inputRefs.current[0]?.focus()
       setTimeout(() => setShake(false), 500)
