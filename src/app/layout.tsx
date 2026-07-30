@@ -6,7 +6,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
 import AdminGate from '@/components/AdminGate'
-import ChatWidget from '@/components/chat/ChatWidget'
+import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -82,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </PageTransition>
           <Footer />
           <AdminGate />
-          <ChatWidget />
+          <ChatWidgetLoader />
         </PortfolioProvider>
       </body>
     </html>
