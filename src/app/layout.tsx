@@ -7,7 +7,6 @@ import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
 import AdminGate from '@/components/AdminGate'
 import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
-import CustomCursor from '@/components/CustomCursor'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -84,7 +83,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <AdminGate />
           <ChatWidgetLoader />
-          <CustomCursor />
         </PortfolioProvider>
       </body>
     </html>
