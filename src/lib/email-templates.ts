@@ -372,7 +372,7 @@ export function quoteClientCopyEmail(data: {
   tva: number
   totalTTC: number
   validiteJours: number
-}) {
+}, adminEmail: string) {
   const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
   const safeNom = esc(data.clientNom)
   const safeSociete = data.clientSociete ? esc(data.clientSociete) : undefined
@@ -424,7 +424,7 @@ export function quoteClientCopyEmail(data: {
       </table>
 
       ${ctaButton(SITE_URL, 'Voir le portfolio')}
-      ${secondaryLink(`mailto:${process.env.ADMIN_EMAIL ?? ''}?subject=${encodeURIComponent(`Question sur le devis ${data.numero}`)}`, 'Une question sur ce devis ?')}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Question sur le devis ${data.numero}`)}`, 'Une question sur ce devis ?')}
     `),
   }
 }

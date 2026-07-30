@@ -8,10 +8,11 @@ import { getDb } from '@/lib/mongodb'
 import { generateOTP, storeOTP, consumeOTP } from '@/lib/otp'
 import { getTransporter } from '@/lib/mailer'
 import { otpEmail } from '@/lib/email-templates'
+import { getAdminEmail } from '@/lib/admin-config'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 const getSecret   = () => new TextEncoder().encode(process.env.JWT_SECRET!)
 const COOKIE      = 'admin-token'
+const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 
 function hashPassword(pw: string): string {
   const salt = randomBytes(16).toString('hex')
@@ -65,7 +66,8 @@ export async function loginWithCredentials(
   const email    = formData.get('email')?.toString().trim() ?? ''
   const password = formData.get('password')?.toString() ?? ''
 
-  if (email !== ADMIN_EMAIL) return { error: 'Identifiants incorrects.' }
+  const adminEmail = await getAdminEmail()
+  if (email.toLowerCase() !== adminEmail.toLowerCase()) return { error: 'Identifiants incorrects.' }
 
   // Rate-limit by IP before hitting the DB for password check
   const hdrs = await headers()
@@ -97,11 +99,11 @@ export async function loginWithCredentials(
   // Generate + send OTP
   const otp = generateOTP()
   try {
-    await storeOTP(ADMIN_EMAIL, otp)
+    await storeOTP(adminEmail, otp)
     const { subject, html } = otpEmail(otp)
     await getTransporter().sendMail({
       from: `"Portfolio NS · Admin" <${process.env.GMAIL_USER}>`,
-      to: ADMIN_EMAIL,
+      to: adminEmail,
       subject,
       html,
     })
@@ -134,7 +136,8 @@ export async function verifyOTPAction(
   const otp = formData.get('otp')?.toString().trim() ?? ''
   if (!/^\d{6}$/.test(otp)) return { error: 'Code invalide.' }
 
-  const valid = await consumeOTP(ADMIN_EMAIL, otp)
+  const adminEmail = await getAdminEmail()
+  const valid = await consumeOTP(adminEmail, otp)
   if (!valid) return { error: 'Code incorrect ou expiré.' }
 
   const token = await new SignJWT({ role: 'admin' })
@@ -191,6 +194,41 @@ export async function changePassword(
   )
 
   return { ok: true }
+}
+
+// ── Change email ───────────────────────────────────────────────────────────
+
+export type ChangeEmailResult = { ok: true; email: string } | { error: string }
+
+export async function changeEmail(
+  _: ChangeEmailResult | null,
+  formData: FormData,
+): Promise<ChangeEmailResult> {
+  const password      = formData.get('password')?.toString() ?? ''
+  const nextEmail      = formData.get('email')?.toString().trim() ?? ''
+  const confirmEmail   = formData.get('confirmEmail')?.toString().trim() ?? ''
+
+  // Check password — MongoDB override takes priority over env var
+  const db = await getDb()
+  const cfg = await db.collection('admin_config').findOne({ _id: 'password' as unknown as import('mongodb').ObjectId })
+  const storedHash = (cfg?.hash as string | undefined) ?? process.env.ADMIN_PASSWORD_HASH ?? ''
+  if (!verifyPassword(password, storedHash)) {
+    return { error: 'Mot de passe incorrect.' }
+  }
+  if (!EMAIL_RE.test(nextEmail) || nextEmail.length > 254) {
+    return { error: 'Adresse email invalide.' }
+  }
+  if (nextEmail.toLowerCase() !== confirmEmail.toLowerCase()) {
+    return { error: 'Les adresses email ne correspondent pas.' }
+  }
+
+  await db.collection('admin_config').updateOne(
+    { _id: 'email' as unknown as import('mongodb').ObjectId },
+    { $set: { email: nextEmail, updatedAt: new Date() } },
+    { upsert: true },
+  )
+
+  return { ok: true, email: nextEmail }
 }
 
 // ── Logout ─────────────────────────────────────────────────────────────────

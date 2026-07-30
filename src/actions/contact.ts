@@ -6,6 +6,7 @@ import { promises as dns } from 'dns'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { contactNotificationEmail, contactAutoReplyEmail } from '@/lib/email-templates'
+import { getAdminEmail } from '@/lib/admin-config'
 
 const MAX_PER_HOUR = 3
 
@@ -116,7 +117,7 @@ export async function submitContact(payload: ContactPayload): Promise<ContactRes
     await Promise.all([
       transporter.sendMail({
         from: `"Portfolio NS · Contact" <${process.env.GMAIL_USER}>`,
-        to: process.env.ADMIN_EMAIL,
+        to: await getAdminEmail(),
         subject: notification.subject,
         html: notification.html,
       }),
