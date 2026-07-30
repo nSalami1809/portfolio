@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import QuoteView from './QuoteView'
 import type { Quote } from '@/actions/quotes'
+import { usePortfolio } from '@/providers/PortfolioContext'
 
 type BotMood = 'idle' | 'thinking' | 'happy' | 'excited' | 'confused'
 
@@ -149,8 +150,50 @@ function BotAvatar({ mood }: { mood: BotMood }) {
   )
 }
 
+function QuoteCard({ quote, onView, adminEmail }: { quote: Quote; onView: () => void; adminEmail?: string }) {
+  const callHref = adminEmail
+    ? `mailto:${adminEmail}?subject=${encodeURIComponent(`Rendez-vous — devis ${quote.numero}`)}&body=${encodeURIComponent(`Bonjour,\n\nJe souhaite convenir d'un appel au sujet du devis ${quote.numero} (${quote.clientNom}).\n\nMes disponibilités :\n\nMerci !`)}`
+    : undefined
+
+  return (
+    <div
+      className="rounded-xl p-3.5"
+      style={{ maxWidth: '85%', background: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(91,33,182,0.1))', border: '1px solid var(--accent)' }}
+    >
+      <p className="text-xs font-bold mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
+        Devis {quote.numero}
+      </p>
+      <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{quote.clientNom}</p>
+      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>
+        Total TTC : {quote.totalTTC.toLocaleString('fr-FR')} FCFA
+      </p>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>
+        Code de suivi : <strong style={{ color: 'var(--text)', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
+      </p>
+      <div className="flex items-center gap-3 flex-wrap">
+        <button onClick={onView} className="btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}>
+          Voir et imprimer le devis
+        </button>
+        {callHref && (
+          <a href={callHref} className="text-xs font-medium hover:underline" style={{ color: 'var(--accent)' }}>
+            Demander un appel
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const SUGGESTIONS: { label: string; text: string }[] = [
+  { label: 'Voir les projets', text: 'Quels sont tes projets les plus intéressants ?' },
+  { label: 'Compétences & stack', text: 'Quelles sont tes compétences techniques ?' },
+  { label: 'Combien coûte un site vitrine ?', text: 'Combien coûterait un site vitrine simple ?' },
+  { label: 'Demander un devis', text: "J'aimerais obtenir un devis pour mon projet." },
+]
+
 export default function ChatWidget() {
   const pathname = usePathname()
+  const { data: { personal } } = usePortfolio()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
@@ -196,9 +239,9 @@ export default function ChatWidget() {
     setInput('')
   }
 
-  const startQuoteRequest = () => {
+  const quickSend = (text: string) => {
     if (busy) return
-    sendMessage({ text: "J'aimerais obtenir un devis pour mon projet." })
+    sendMessage({ text })
   }
 
   if (pathname?.startsWith('/admin')) return null
@@ -308,18 +351,23 @@ export default function ChatWidget() {
                       Bonjour ! Posez-moi une question sur le parcours, les projets ou les compétences de Nawaf. Je peux aussi <strong style={{ color: 'var(--text)' }}>générer un devis personnalisé</strong> pour votre projet, directement dans la conversation !
                     </div>
                   </div>
-                  <button
-                    onClick={startQuoteRequest}
-                    className="text-xs font-medium rounded-full transition-colors"
-                    style={{
-                      background: 'var(--accent-glow)',
-                      color: 'var(--accent)',
-                      border: '1px solid var(--accent)',
-                      padding: '0.45rem 0.9rem',
-                    }}
-                  >
-                    Demander un devis
-                  </button>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SUGGESTIONS.map(({ label, text }) => (
+                      <button
+                        key={label}
+                        onClick={() => quickSend(text)}
+                        className="text-xs font-medium rounded-full transition-colors"
+                        style={{
+                          background: 'var(--accent-glow)',
+                          color: 'var(--accent)',
+                          border: '1px solid var(--accent)',
+                          padding: '0.45rem 0.9rem',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               {messages.map((message) => {
@@ -363,25 +411,7 @@ export default function ChatWidget() {
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="excited" />
-                              <div
-                                className="rounded-xl p-3.5"
-                                style={{ maxWidth: '85%', background: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(91,33,182,0.1))', border: '1px solid var(--accent)' }}
-                              >
-                                <p className="text-xs font-bold mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
-                                  Devis {quote.numero}
-                                </p>
-                                <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{quote.clientNom}</p>
-                                <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>
-                                  Total TTC : {quote.totalTTC.toLocaleString('fr-FR')} FCFA
-                                </p>
-                                <button
-                                  onClick={() => setViewingQuote(quote)}
-                                  className="btn-primary btn-sm"
-                                  style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
-                                >
-                                  Voir et imprimer le devis
-                                </button>
-                              </div>
+                              <QuoteCard quote={quote} onView={() => setViewingQuote(quote)} adminEmail={personal.email} />
                             </div>
                           )
                         }
@@ -394,6 +424,76 @@ export default function ChatWidget() {
                                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
                               >
                                 Génération du devis…
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
+                      if (part.type === 'tool-lookupQuote') {
+                        if (part.state === 'output-available') {
+                          const output = part.output as Quote | { error: string }
+                          if ('error' in output) {
+                            return (
+                              <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                                <BotAvatar mood="confused" />
+                                <div
+                                  className="rounded-xl px-3.5 py-2.5 text-sm"
+                                  style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                                >
+                                  {output.error}
+                                </div>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="happy" />
+                              <QuoteCard quote={output} onView={() => setViewingQuote(output)} adminEmail={personal.email} />
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="thinking" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                Recherche du devis…
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
+                      if (part.type === 'tool-sendQuoteEmail') {
+                        if (part.state === 'output-available') {
+                          const output = part.output as { ok: boolean; message: string }
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood={output.ok ? 'excited' : 'confused'} />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-sm"
+                                style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                              >
+                                {output.message}
+                              </div>
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="thinking" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                Envoi de l&rsquo;email…
                               </div>
                             </div>
                           )

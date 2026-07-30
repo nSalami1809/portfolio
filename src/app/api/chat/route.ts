@@ -4,7 +4,7 @@ import { google } from '@ai-sdk/google'
 import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
 import { fetchPortfolio } from '@/actions/portfolio'
-import { submitQuote } from '@/actions/quotes'
+import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import type { PortfolioData } from '@/types'
 
 const MAX_ATTEMPTS = 20
@@ -110,7 +110,11 @@ Déroulé à suivre :
    - Maintenance mensuelle : 50 000 – 150 000 / mois
    - Formation / prise en main : 50 000 – 100 000
    Choisis un montant réaliste dans la fourchette adaptée à la complexité décrite — jamais de prix absurdement bas ou élevé, jamais de centimes.
-4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt.`
+4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt. Indique-lui aussi le code d'accès du devis (fourni dans le résultat de l'outil) et précise qu'il peut le redonner plus tard pour retrouver ce devis sans tout redemander. Mentionne aussi qu'un bouton "Demander un appel" sous le devis lui permet de proposer directement un créneau par email s'il préfère en discuter de vive voix.
+5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
+
+Retrouver un devis déjà généré :
+Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis.`
 }
 
 export async function POST(req: NextRequest) {
@@ -163,6 +167,26 @@ export async function POST(req: NextRequest) {
             .max(6),
         }),
         execute: async (input) => submitQuote(input),
+      }),
+      lookupQuote: tool({
+        description:
+          "Retrouve un devis déjà généré à partir de son numéro (ex: DEV-2026-002) ou de son code d'accès, quand le visiteur souhaite consulter un devis obtenu précédemment.",
+        inputSchema: z.object({
+          reference: z.string().describe("Numéro de devis (ex: DEV-2026-002) ou code d'accès fourni par le visiteur"),
+        }),
+        execute: async ({ reference }) => {
+          const quote = await lookupQuote(reference)
+          return quote ?? { error: 'Aucun devis trouvé pour cette référence.' }
+        },
+      }),
+      sendQuoteEmail: tool({
+        description:
+          "Envoie (ou renvoie) une copie d'un devis par email au client. À utiliser quand le client fournit son email après la génération du devis alors qu'il ne l'avait pas donné, ou demande explicitement à recevoir une copie.",
+        inputSchema: z.object({
+          reference: z.string().describe("Numéro de devis (ex: DEV-2026-002) ou code d'accès"),
+          email: z.string().describe('Adresse email du client'),
+        }),
+        execute: async ({ reference, email }) => sendQuoteEmail(reference, email),
       }),
     },
   })

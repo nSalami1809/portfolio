@@ -358,3 +358,73 @@ export function quoteNotificationEmail(data: {
     `),
   }
 }
+
+// ── Quote copy (client) ────────────────────────────────────────────────────
+
+export function quoteClientCopyEmail(data: {
+  numero: string
+  accessCode: string
+  clientNom: string
+  clientSociete?: string
+  descriptionProjet: string
+  items: { designation: string; quantite: number; prixUnitaireHT: number }[]
+  totalHT: number
+  tva: number
+  totalTTC: number
+  validiteJours: number
+}) {
+  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
+  const safeNom = esc(data.clientNom)
+  const safeSociete = data.clientSociete ? esc(data.clientSociete) : undefined
+
+  const itemsRows = data.items.map((it) => `
+    <tr>
+      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#26262E">${esc(it.designation)}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#9A9AA6;text-align:center">${it.quantite}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#9A9AA6;text-align:right">${fmt(it.prixUnitaireHT)}</td>
+    </tr>`).join('')
+
+  return {
+    subject: `Votre devis ${data.numero} — Nawaf Nemrod SALAMI`,
+    html: base('Votre devis', `Votre devis ${data.numero} est pr&ecirc;t — ${fmt(data.totalTTC)} TTC`, `
+      ${badge(`Devis ${esc(data.numero)}`)}
+      ${heading(`Votre devis est pr&ecirc;t, ${safeNom.split(' ')[0]}&nbsp;!`)}
+      ${intro(`Merci pour les d&eacute;tails de votre projet${safeSociete ? ` chez <strong style="color:#26262E">${safeSociete}</strong>` : ''}. Voici le devis correspondant, valable <strong style="color:#26262E">${data.validiteJours} jours</strong>.`)}
+
+      ${infoBox(`
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
+        <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+        <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">Conservez ce code : donnez-le au chatbot du portfolio pour retrouver ce devis &agrave; tout moment, sans tout redemander.</p>
+      `)}
+
+      ${infoBox(`
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Votre projet</p>
+        <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${esc(data.descriptionProjet)}</p>
+      `)}
+
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:24px">
+        <tr>
+          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase">D&eacute;signation</td>
+          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase;text-align:center">Qt&eacute;</td>
+          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase;text-align:right">Prix unit. HT</td>
+        </tr>
+        ${itemsRows}
+        <tr>
+          <td colspan="2" style="padding:12px 0 0;font-size:13px;color:#9A9AA6">Total HT</td>
+          <td style="padding:12px 0 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.totalHT)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding:6px 0;font-size:13px;color:#9A9AA6">TVA (18%)</td>
+          <td style="padding:6px 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.tva)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318;border-radius:10px 0 0 10px">Total TTC</td>
+          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318;border-radius:0 10px 10px 0">${fmt(data.totalTTC)}</td>
+        </tr>
+      </table>
+
+      ${ctaButton(SITE_URL, 'Voir le portfolio')}
+      ${secondaryLink(`mailto:${process.env.ADMIN_EMAIL ?? ''}?subject=${encodeURIComponent(`Question sur le devis ${data.numero}`)}`, 'Une question sur ce devis ?')}
+    `),
+  }
+}

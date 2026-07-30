@@ -83,8 +83,13 @@ export default function QuoteView({ quote, onClose }: Props) {
               <p style={{ fontSize: '0.8rem', color: '#555' }}>{personal.role}</p>
             </div>
           </div>
-          <div style={{ background: '#111111', color: '#fff', padding: '0.35rem 0.9rem', borderRadius: 4, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-            N° {quote.numero}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ background: '#111111', color: '#fff', padding: '0.35rem 0.9rem', borderRadius: 4, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              N° {quote.numero}
+            </div>
+            <p style={{ fontSize: '0.7rem', color: '#888', marginTop: 4 }}>
+              Code de suivi : <strong style={{ color: '#333', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
+            </p>
           </div>
         </div>
 
