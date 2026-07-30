@@ -2,15 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
-import QuoteView from './QuoteView'
 import type { Quote } from '@/actions/quotes'
 import { usePortfolio } from '@/providers/PortfolioContext'
+
+// Only needed once a visitor actually opens a generated devis (QR code lib
+// included) — keep it split out of the widget's own chunk until then.
+const QuoteView = dynamic(() => import('./QuoteView'), { ssr: false })
 
 type BotMood = 'idle' | 'thinking' | 'happy' | 'excited' | 'confused'
 

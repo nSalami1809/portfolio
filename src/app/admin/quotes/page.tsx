@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { listQuotes, markQuoteRead, deleteQuote } from '@/actions/quotes'
 import type { AdminQuote } from '@/actions/quotes'
-import QuoteView from '@/components/chat/QuoteView'
+
+const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
 type Filter = 'tous' | 'unread' | 'read'
 
