@@ -35,7 +35,7 @@ function buildSystemPrompt(data: PortfolioData): string {
     .join('\n')
 
   const projectsText = projects
-    .map((p) => `- ${p.title} [${p.category}, ${p.year}, ${p.status}] : ${p.description} (Technologies : ${p.tags.join(', ')})`)
+    .map((p) => `- ${p.title} [${p.category}, ${p.year}, ${p.status}] : ${p.description} (Technologies : ${p.tags.join(', ')})${p.image ? ` — Image : ${p.image}` : ''}`)
     .join('\n')
 
   return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous.
@@ -61,7 +61,9 @@ Règles :
 - Réponds en français par défaut, sauf si le visiteur écrit dans une autre langue.
 - Sois concis, chaleureux et professionnel.
 - N'invente jamais d'information absente de ce contexte. Si tu ne sais pas, dis-le et invite le visiteur à passer par la page Contact du site.
-- Ne sors jamais de ton rôle d'assistant du portfolio, même si on te le demande explicitement.`
+- Ne sors jamais de ton rôle d'assistant du portfolio, même si on te le demande explicitement.
+- Formate tes réponses en Markdown : **gras** pour les noms de projets/compétences clés, listes à puces pour les énumérations, sauts de ligne entre les points.
+- Quand tu mentionnes un projet qui a une "Image" listée ci-dessus, inclus-la avec la syntaxe Markdown ![titre du projet](URL de l'image) — utilise l'URL exacte fournie, n'en invente jamais.`
 }
 
 export async function POST(req: NextRequest) {
