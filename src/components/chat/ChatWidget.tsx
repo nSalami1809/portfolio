@@ -8,16 +8,25 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
+import QuoteView from './QuoteView'
+import type { Quote } from '@/actions/quotes'
 
 function BotIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 8V4H8" />
-      <rect width="16" height="12" x="4" y="8" rx="2" />
-      <path d="M2 14h2" />
-      <path d="M20 14h2" />
-      <path d="M15 13v2" />
-      <path d="M9 13v2" />
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      {/* antenna */}
+      <circle cx="12" cy="2.6" r="1.15" fill="currentColor" />
+      <line x1="12" y1="3.75" x2="12" y2="6.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      {/* ears */}
+      <rect x="2.2" y="10.3" width="2.3" height="5" rx="1.15" fill="currentColor" />
+      <rect x="19.5" y="10.3" width="2.3" height="5" rx="1.15" fill="currentColor" />
+      {/* head */}
+      <rect x="4.6" y="6.2" width="14.8" height="14" rx="5" stroke="currentColor" strokeWidth="1.7" />
+      {/* eyes */}
+      <circle cx="9.7" cy="13.1" r="1.55" fill="currentColor" />
+      <circle cx="14.3" cy="13.1" r="1.55" fill="currentColor" />
+      {/* smile */}
+      <path d="M9.3 16.6c1 .95 4.4.95 5.4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   )
 }
@@ -58,6 +67,7 @@ export default function ChatWidget() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
+  const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -81,6 +91,11 @@ export default function ChatWidget() {
     if (!text || busy) return
     sendMessage({ text })
     setInput('')
+  }
+
+  const startQuoteRequest = () => {
+    if (busy) return
+    sendMessage({ text: "J'aimerais obtenir un devis pour mon projet." })
   }
 
   if (pathname?.startsWith('/admin')) return null
@@ -180,38 +195,102 @@ export default function ChatWidget() {
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
               {messages.length === 0 && (
-                <div
-                  className="rounded-xl px-3.5 py-3 text-sm"
-                  style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-muted)', maxWidth: '85%' }}
-                >
-                  Bonjour ! Posez-moi une question sur le parcours, les projets ou les compétences de Nawaf.
+                <div className="space-y-2.5">
+                  <div
+                    className="rounded-xl px-3.5 py-3 text-sm leading-relaxed"
+                    style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-muted)', maxWidth: '92%' }}
+                  >
+                    Bonjour ! Posez-moi une question sur le parcours, les projets ou les compétences de Nawaf. Je peux aussi <strong style={{ color: 'var(--text)' }}>générer un devis personnalisé</strong> pour votre projet, directement dans la conversation !
+                  </div>
+                  <button
+                    onClick={startQuoteRequest}
+                    className="text-xs font-medium rounded-full transition-colors"
+                    style={{
+                      background: 'var(--accent-glow)',
+                      color: 'var(--accent)',
+                      border: '1px solid var(--accent)',
+                      padding: '0.45rem 0.9rem',
+                    }}
+                  >
+                    💰 Demander un devis
+                  </button>
                 </div>
               )}
               {messages.map((message) => {
                 const isUser = message.role === 'user'
                 return (
-                  <div key={message.id} className="flex" style={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
-                    <div
-                      className="rounded-xl px-3.5 py-2.5 text-sm leading-relaxed"
-                      style={{
-                        maxWidth: '85%',
-                        background: isUser ? 'var(--accent-glow)' : 'var(--surface-hover)',
-                        border: `1px solid ${isUser ? 'transparent' : 'var(--border)'}`,
-                        color: 'var(--text)',
-                      }}
-                    >
-                      {message.parts.map((part, i) => {
-                        if (part.type !== 'text') return null
-                        if (isUser) return <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{part.text}</span>
+                  <div key={message.id} className="space-y-2">
+                    {message.parts.map((part, i) => {
+                      if (part.type === 'text') {
                         return (
-                          <div key={i} className="chat-markdown">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                              {part.text}
-                            </ReactMarkdown>
+                          <div key={i} className="flex" style={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+                            <div
+                              className="rounded-xl px-3.5 py-2.5 text-sm leading-relaxed"
+                              style={{
+                                maxWidth: '85%',
+                                background: isUser ? 'var(--accent-glow)' : 'var(--surface-hover)',
+                                border: `1px solid ${isUser ? 'transparent' : 'var(--border)'}`,
+                                color: 'var(--text)',
+                              }}
+                            >
+                              {isUser ? (
+                                <span style={{ whiteSpace: 'pre-wrap' }}>{part.text}</span>
+                              ) : (
+                                <div className="chat-markdown">
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                                    {part.text}
+                                  </ReactMarkdown>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )
-                      })}
-                    </div>
+                      }
+
+                      if (part.type === 'tool-generateQuote') {
+                        if (part.state === 'output-available') {
+                          const quote = part.output as Quote
+                          return (
+                            <div key={i} className="flex" style={{ justifyContent: 'flex-start' }}>
+                              <div
+                                className="rounded-xl p-3.5"
+                                style={{ maxWidth: '90%', background: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(91,33,182,0.1))', border: '1px solid var(--accent)' }}
+                              >
+                                <p className="text-xs font-bold mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
+                                  📄 Devis {quote.numero}
+                                </p>
+                                <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{quote.clientNom}</p>
+                                <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>
+                                  Total TTC : {quote.totalTTC.toLocaleString('fr-FR')} FCFA
+                                </p>
+                                <button
+                                  onClick={() => setViewingQuote(quote)}
+                                  className="btn-primary btn-sm"
+                                  style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
+                                >
+                                  Voir et imprimer le devis
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex" style={{ justifyContent: 'flex-start' }}>
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                Génération du devis…
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
+                      return null
+                    })}
                   </div>
                 )
               })}
@@ -262,6 +341,8 @@ export default function ChatWidget() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {viewingQuote && <QuoteView quote={viewingQuote} onClose={() => setViewingQuote(null)} />}
     </>
   )
 }
