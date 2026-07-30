@@ -5,22 +5,25 @@ function esc(s: string): string {
 // ── SVG Icons ──────────────────────────────────────────────────────────────
 
 const icon = {
-  shield: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  shield: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
   user: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
   mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
   tag: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.28-8.28a1 1 0 0 0 0-1.42Z"/><path d="M7 7h.01"/></svg>`,
   message: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
-  clock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B6B7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  clock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9A9AA6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
   check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
-  reply: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
   alert: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
 }
 
-// ── Base layout ────────────────────────────────────────────────────────────
+const phone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawafsalami-itech.vercel.app'
+
+// ── Base layout — light, centered, boutique-agency style ────────────────────
 
 const base = (title: string, preheader: string, body: string) => {
-const year = new Date().getFullYear()
-return `<!DOCTYPE html>
+  const year = new Date().getFullYear()
+  return `<!DOCTYPE html>
 <html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8"/>
@@ -29,66 +32,38 @@ return `<!DOCTYPE html>
   <title>${title}</title>
   <style>
     @media only screen and (max-width:600px){
-      .wrapper{padding:24px 12px!important}
-      .card{padding:28px 20px!important;border-radius:16px!important}
-      .otp-box{width:38px!important;height:48px!important;font-size:22px!important}
-      .meta-row td{display:block!important;padding:8px 16px!important}
+      .wrapper{padding:32px 12px!important}
+      .card{padding:36px 22px!important;border-radius:20px!important}
+      .otp-box{width:36px!important;height:46px!important;font-size:20px!important}
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#07070B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+<body style="margin:0;padding:0;background:#F2F2F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
 
-  <div style="display:none;max-height:0;overflow:hidden;color:#07070B">${preheader}&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;</div>
+  <div style="display:none;max-height:0;overflow:hidden;color:#F2F2F6">${preheader}&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;</div>
 
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
     <tr>
-      <td class="wrapper" style="padding:48px 16px 64px">
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;margin:0 auto">
+      <td class="wrapper" style="padding:56px 16px">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:480px;margin:0 auto">
 
-          <!-- Wordmark -->
           <tr>
-            <td style="padding-bottom:32px;text-align:center">
-              <table cellpadding="0" cellspacing="0" role="presentation" style="display:inline-table">
-                <tr>
-                  <td style="padding-right:12px;vertical-align:middle">
-                    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%);text-align:center;line-height:40px">
-                      <span style="color:#fff;font-size:18px">${icon.shield}</span>
-                    </div>
-                  </td>
-                  <td style="vertical-align:middle;text-align:left">
-                    <p style="margin:0;font-size:15px;font-weight:700;color:#FFFFFF;letter-spacing:-0.3px">Nawaf Nemrod SALAMI</p>
-                    <p style="margin:2px 0 0;font-size:10px;color:#3A3A4A;letter-spacing:0.12em;text-transform:uppercase">Portfolio &middot; Libreville, Gabon</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+            <td class="card" style="background:#FFFFFF;border:1px solid #E8E8EF;border-radius:26px;padding:48px 42px;text-align:center">
 
-          <!-- Card -->
-          <tr>
-            <td>
-              <table class="card" width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                style="background:#0E0E18;border:1px solid rgba(139,92,246,0.16);border-radius:22px;overflow:hidden">
-                <!-- Gradient top bar -->
-                <tr><td style="height:2px;background:linear-gradient(90deg,transparent 0%,#8B5CF6 30%,#3B82F6 70%,transparent 100%)"></td></tr>
-                <tr>
-                  <td class="card" style="padding:40px 36px">
-                    ${body}
-                  </td>
-                </tr>
-                <!-- Gradient bottom bar -->
-                <tr><td style="height:1px;background:linear-gradient(90deg,transparent 0%,rgba(139,92,246,0.3) 50%,transparent 100%)"></td></tr>
-              </table>
+              <img src="${SITE_URL}/logo.png" width="52" height="52" alt="Nawaf Nemrod SALAMI" style="display:block;margin:0 auto 22px;width:52px;height:52px"/>
+
+              ${body}
+
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
             <td style="padding-top:28px;text-align:center">
-              <p style="margin:0 0 6px;font-size:11px;color:#252530;letter-spacing:0.06em">
-                &copy; ${year} &nbsp;&middot;&nbsp; Nawaf Nemrod SALAMI &nbsp;&middot;&nbsp; Libreville, Gabon
+              <p style="margin:0 0 6px;font-size:12px;color:#9A9AA6;letter-spacing:0.02em">
+                &copy; ${year} Nawaf Nemrod SALAMI &nbsp;&middot;&nbsp; Libreville, Gabon
               </p>
-              <p style="margin:0;font-size:10px;color:#1E1E28">
+              <p style="margin:0;font-size:11px;color:#C0C0CB">
                 Cet e-mail est g&eacute;n&eacute;r&eacute; automatiquement &mdash; merci de ne pas y r&eacute;pondre directement.
               </p>
             </td>
@@ -102,32 +77,60 @@ return `<!DOCTYPE html>
 </html>`
 }
 
-// ── Shared helpers ─────────────────────────────────────────────────────────
+// ── Shared components ────────────────────────────────────────────────────────
 
-const sectionDivider = `
-<tr><td style="padding:20px 0">
-  <div style="height:1px;background:linear-gradient(90deg,transparent,#16161F 20%,#16161F 80%,transparent)"></div>
-</td></tr>`
+const badge = (label: string, color = '#8B5CF6', bg = 'rgba(139,92,246,0.1)', border = 'rgba(139,92,246,0.25)') => `
+  <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 18px">
+    <tr>
+      <td style="background:${bg};border:1px solid ${border};color:${color};font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;border-radius:99px">
+        ${label}
+      </td>
+    </tr>
+  </table>`
 
-const iconRow = (ico: string, label: string, value: string, color = '#8B5CF6') => `
-  <tr>
-    <td style="padding:0 0 0 0">
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-        style="background:#07070B;border:1px solid #16161F;border-radius:12px;margin-bottom:10px;overflow:hidden">
-        <tr>
-          <td style="width:44px;padding:16px 0 16px 16px;vertical-align:middle">
-            <div style="width:28px;height:28px;border-radius:7px;background:rgba(${color === '#8B5CF6' ? '139,92,246' : color === '#3B82F6' ? '59,130,246' : color === '#10B981' ? '16,185,129' : '245,158,11'},0.12);text-align:center;line-height:28px">
-              ${ico}
-            </div>
-          </td>
-          <td style="padding:14px 16px 14px 10px;vertical-align:middle">
-            <p style="margin:0 0 2px;font-size:10px;font-weight:600;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">${label}</p>
-            <p style="margin:0;font-size:13px;color:#E2E2F0;line-height:1.4">${value}</p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>`
+const heading = (text: string) => `
+  <p style="margin:0 0 12px;font-size:24px;font-weight:800;color:#131318;letter-spacing:-0.4px;line-height:1.25">${text}</p>`
+
+const intro = (html: string) => `
+  <p style="margin:0 0 28px;font-size:14.5px;color:#6B6B76;line-height:1.7">${html}</p>`
+
+// Rounded light-gray box for structured, left-aligned content (data, message
+// bodies, tables) — the screenshot's aesthetic is centered marketing copy,
+// but real transactional data reads better left-aligned inside the box.
+const infoBox = (contentHtml: string, extraStyle = '') => `
+  <div style="background:#F9F9FB;border:1px solid #ECECF1;border-radius:16px;padding:22px 24px;text-align:left;margin-bottom:24px;${extraStyle}">
+    ${contentHtml}
+  </div>`
+
+const ctaButton = (href: string, label: string) => `
+  <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 8px;width:100%">
+    <tr>
+      <td>
+        <a href="${href}"
+          style="display:block;text-align:center;background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%);color:#FFFFFF;font-size:14px;font-weight:700;letter-spacing:0.01em;padding:15px 24px;border-radius:12px;text-decoration:none">
+          ${label}
+        </a>
+      </td>
+    </tr>
+  </table>`
+
+const secondaryLink = (href: string, label: string) => `
+  <p style="margin:14px 0 0;text-align:center">
+    <a href="${href}" style="font-size:12.5px;color:#9A9AA6;text-decoration:underline">${label}</a>
+  </p>`
+
+const dataRow = (ico: string, label: string, value: string) => `
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:12px">
+    <tr>
+      <td style="width:26px;vertical-align:top;padding-top:1px">${ico}</td>
+      <td style="vertical-align:top">
+        <p style="margin:0 0 1px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">${label}</p>
+        <p style="margin:0;font-size:13.5px;color:#26262E;line-height:1.5">${value}</p>
+      </td>
+    </tr>
+  </table>`
+
+const divider = `<div style="height:1px;background:#ECECF1;margin:22px 0"></div>`
 
 // ── OTP Login ──────────────────────────────────────────────────────────────
 
@@ -135,8 +138,8 @@ export function otpEmail(otp: string) {
   const now = new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Africa/Libreville' })
 
   const boxes = otp.split('').map((d) => `
-    <td style="padding:0 5px">
-      <div class="otp-box" style="width:52px;height:64px;line-height:64px;border-radius:14px;background:#07070B;border:1.5px solid rgba(139,92,246,0.45);text-align:center;font-size:30px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#FFFFFF;letter-spacing:0">
+    <td style="padding:0 4px">
+      <div class="otp-box" style="width:46px;height:58px;line-height:58px;border-radius:12px;background:#F9F9FB;border:1.5px solid #DCC9FA;text-align:center;font-size:26px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#131318">
         ${d}
       </div>
     </td>`).join('')
@@ -144,80 +147,28 @@ export function otpEmail(otp: string) {
   return {
     subject: `[${otp}] Code de connexion — Portfolio NS`,
     html: base('Code de connexion', `Votre code OTP est ${otp} — valable 10 min`, `
+      ${badge('&#128274; Authentification')}
+      ${heading('Votre code de connexion')}
+      ${intro('Une tentative de connexion a &eacute;t&eacute; d&eacute;tect&eacute;e sur votre panneau d&rsquo;administration. Saisissez ce code pour confirmer votre identit&eacute;.')}
 
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-
-        <!-- Header badge -->
-        <tr>
-          <td style="padding-bottom:8px">
-            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#A78BFA;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:99px">
-              ${icon.shield}&nbsp; Authentification
-            </span>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding-bottom:8px">
-            <h1 style="margin:0;font-size:24px;font-weight:800;color:#FFFFFF;letter-spacing:-0.5px;line-height:1.2">Code de connexion</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding-bottom:32px">
-            <p style="margin:0;font-size:14px;color:#6B6B7A;line-height:1.7">
-              Une tentative de connexion a &eacute;t&eacute; d&eacute;tect&eacute;e sur votre panneau d&rsquo;administration.<br/>
-              Saisissez ce code pour confirmer votre identit&eacute;.
-            </p>
-          </td>
-        </tr>
-
-        <!-- OTP display -->
-        <tr>
-          <td style="padding-bottom:28px">
-            <div style="background:#07070B;border:1px solid rgba(139,92,246,0.2);border-radius:18px;padding:32px 24px;text-align:center">
-              <p style="margin:0 0 6px;font-size:10px;font-weight:600;color:#3A3A4A;letter-spacing:0.16em;text-transform:uppercase">Code &agrave; usage unique</p>
-              <p style="margin:0 0 24px;font-size:11px;color:#4A4A5A">Saisissez les 6 chiffres ci-dessous</p>
-              <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto">
-                <tr>${boxes}</tr>
-              </table>
-            </div>
-          </td>
-        </tr>
-
-        <!-- Metadata grid -->
-        <tr>
-          <td>
-            <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-              style="background:#07070B;border:1px solid #16161F;border-radius:14px;overflow:hidden">
-              <tr class="meta-row">
-                <td style="padding:14px 20px;border-right:1px solid #16161F;border-bottom:1px solid #16161F;width:50%">
-                  <p style="margin:0 0 3px;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">${icon.clock}&nbsp; Expiration</p>
-                  <p style="margin:0;font-size:12px;color:#E2E2F0;font-weight:600">10 minutes</p>
-                </td>
-                <td style="padding:14px 20px;border-bottom:1px solid #16161F">
-                  <p style="margin:0 0 3px;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">${icon.clock}&nbsp; Horodatage</p>
-                  <p style="margin:0;font-size:12px;color:#E2E2F0;font-weight:600">${now}</p>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="2" style="padding:14px 20px">
-                  <table cellpadding="0" cellspacing="0" role="presentation">
-                    <tr>
-                      <td style="padding-right:8px;vertical-align:top;padding-top:1px">${icon.alert}</td>
-                      <td>
-                        <p style="margin:0;font-size:12px;color:#6B6B7A;line-height:1.6">
-                          Si vous n&rsquo;&ecirc;tes pas &agrave; l&rsquo;origine de cette demande,&nbsp;
-                          <strong style="color:#F59E0B">ignorez cet e-mail</strong>. Personne d&rsquo;autre n&rsquo;a acc&egrave;s &agrave; votre compte.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
+      <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 24px">
+        <tr>${boxes}</tr>
       </table>
+
+      ${infoBox(`
+        ${dataRow(icon.clock, 'Expiration', '<strong>10 minutes</strong>')}
+        ${dataRow(icon.clock, 'Horodatage', now)}
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:6px;padding-top:14px;border-top:1px solid #ECECF1">
+          <tr>
+            <td style="width:22px;vertical-align:top;padding-top:2px">${icon.alert}</td>
+            <td>
+              <p style="margin:0;font-size:12.5px;color:#6B6B76;line-height:1.6">
+                Si vous n&rsquo;&ecirc;tes pas &agrave; l&rsquo;origine de cette demande, <strong style="color:#B45309">ignorez cet e-mail</strong>. Personne d&rsquo;autre n&rsquo;a acc&egrave;s &agrave; votre compte.
+              </p>
+            </td>
+          </tr>
+        </table>
+      `)}
     `),
   }
 }
@@ -238,8 +189,6 @@ const SUBJECT_COLORS: Record<string, string> = {
   autre: '#F59E0B',
 }
 
-const phone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
-
 export function contactNotificationEmail(data: {
   name: string; email: string; phone?: string; subject: string; customSubject?: string; message: string
 }) {
@@ -249,7 +198,6 @@ export function contactNotificationEmail(data: {
   const label = esc(rawLabel)
   const accent = SUBJECT_COLORS[data.subject] ?? '#8B5CF6'
   const now = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
-  const wordCount = data.message.trim().split(/\s+/).length
   const safeName    = esc(data.name)
   const safeEmail   = esc(data.email)
   const safePhone   = data.phone ? esc(data.phone) : undefined
@@ -258,115 +206,32 @@ export function contactNotificationEmail(data: {
   return {
     subject: `✉️ Nouveau message — ${rawLabel} — ${data.name}`,
     html: base('Nouveau message de contact', `${data.name} vous a envoyé un message via votre portfolio`, `
+      ${badge('&#128233; Formulaire de contact', '#3B82F6', 'rgba(59,130,246,0.1)', 'rgba(59,130,246,0.25)')}
+      ${heading('Nouveau message re&ccedil;u')}
+      ${intro(`<strong style="color:#26262E">${safeName}</strong> a utilis&eacute; votre formulaire de contact le ${now}.`)}
 
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+      ${infoBox(`
+        ${dataRow(icon.user, 'Nom', `<strong>${safeName}</strong>`)}
+        ${dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#3B82F6;text-decoration:none;font-weight:600">${safeEmail}</a>`)}
+        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#8B5CF6;text-decoration:none;font-weight:600">${safePhone}</a>`) : ''}
+        <table cellpadding="0" cellspacing="0" role="presentation" style="margin-top:2px">
+          <tr>
+            <td style="width:26px;vertical-align:top;padding-top:1px">${icon.tag}</td>
+            <td>
+              <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Sujet</p>
+              <span style="display:inline-block;background:${accent}14;border:1px solid ${accent}33;color:${accent};font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:0.04em">${label}</span>
+            </td>
+          </tr>
+        </table>
+      `)}
 
-        <!-- Header badge -->
-        <tr>
-          <td style="padding-bottom:8px">
-            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#60A5FA;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:99px">
-              ${icon.mail}&nbsp; Formulaire de contact
-            </span>
-          </td>
-        </tr>
+      ${infoBox(`
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">${icon.message}&nbsp;&nbsp;Message</p>
+        <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${safeMessage}</p>
+      `, `border-left:3px solid ${accent}`)}
 
-        <tr>
-          <td style="padding-bottom:6px">
-            <h1 style="margin:0;font-size:24px;font-weight:800;color:#FFFFFF;letter-spacing:-0.5px;line-height:1.2">Nouveau message re&ccedil;u</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding-bottom:28px">
-            <p style="margin:0;font-size:14px;color:#6B6B7A;line-height:1.7">
-              <strong style="color:#9CA3AF">${safeName}</strong> a utilis&eacute; votre formulaire de contact le ${now}.
-            </p>
-          </td>
-        </tr>
-
-        <!-- Stats row -->
-        <tr>
-          <td style="padding-bottom:24px">
-            <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-              style="background:#07070B;border:1px solid #16161F;border-radius:14px;overflow:hidden">
-              <tr>
-                <td style="padding:16px 20px;border-right:1px solid #16161F;text-align:center">
-                  <p style="margin:0 0 3px;font-size:22px;font-weight:800;color:#FFFFFF">1</p>
-                  <p style="margin:0;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">message</p>
-                </td>
-                <td style="padding:16px 20px;border-right:1px solid #16161F;text-align:center">
-                  <p style="margin:0 0 3px;font-size:22px;font-weight:800;color:#FFFFFF">${wordCount}</p>
-                  <p style="margin:0;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">mots</p>
-                </td>
-                <td style="padding:16px 20px;text-align:center">
-                  <p style="margin:0 0 3px">
-                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;margin-right:4px;vertical-align:middle"></span>
-                    <span style="font-size:11px;font-weight:700;color:#10B981">Non lu</span>
-                  </p>
-                  <p style="margin:0;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">statut</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Sender info -->
-        <tr>
-          <td style="padding-bottom:8px">
-            <p style="margin:0;font-size:10px;font-weight:600;color:#3A3A4A;letter-spacing:0.12em;text-transform:uppercase">Informations de l&rsquo;exp&eacute;diteur</p>
-          </td>
-        </tr>
-
-        ${iconRow(icon.user, 'Nom', `<strong style="color:#E2E2F0">${safeName}</strong>`)}
-        ${iconRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#60A5FA;text-decoration:none;font-weight:500">${safeEmail}</a>`, '#3B82F6')}
-        ${safePhone ? iconRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#A78BFA;text-decoration:none;font-weight:500">${safePhone}</a>`, '#8B5CF6') : ''}
-        ${iconRow(icon.tag, 'Sujet', `
-          <span style="display:inline-block;background:${accent}1A;border:1px solid ${accent}33;color:${accent};font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;letter-spacing:0.06em;text-transform:uppercase">
-            ${label}
-          </span>`, '#10B981')}
-
-        <!-- Message -->
-        ${sectionDivider}
-        <tr>
-          <td style="padding-bottom:12px">
-            <table cellpadding="0" cellspacing="0" role="presentation">
-              <tr>
-                <td style="padding-right:8px;vertical-align:middle">${icon.message}</td>
-                <td><p style="margin:0;font-size:10px;font-weight:600;color:#3A3A4A;letter-spacing:0.12em;text-transform:uppercase">Message</p></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding-bottom:32px">
-            <div style="background:#07070B;border:1px solid #16161F;border-left:3px solid ${accent};border-radius:0 12px 12px 0;padding:20px 24px">
-              <p style="margin:0;font-size:14px;color:#C8C8D8;line-height:1.85;white-space:pre-wrap">${safeMessage}</p>
-            </div>
-          </td>
-        </tr>
-
-        <!-- CTA -->
-        <tr>
-          <td>
-            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-              <tr>
-                <td style="padding-right:8px">
-                  <a href="mailto:${safeEmail}?subject=Re%3A+${encodeURIComponent(rawLabel)}&body=Bonjour+${encodeURIComponent(data.name)}%2C%0A%0A"
-                    style="display:block;text-align:center;background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%);color:#FFFFFF;font-size:13px;font-weight:700;letter-spacing:0.04em;padding:14px 24px;border-radius:10px;text-decoration:none">
-                    ${icon.reply}&nbsp;&nbsp;R&eacute;pondre &agrave; ${safeName}
-                  </a>
-                </td>
-                <td style="width:140px">
-                  <a href="mailto:${safeEmail}"
-                    style="display:block;text-align:center;background:transparent;border:1px solid #2A2A35;color:#9CA3AF;font-size:13px;font-weight:600;padding:13px 16px;border-radius:10px;text-decoration:none">
-                    Copier l&rsquo;email
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-      </table>
+      ${ctaButton(`mailto:${safeEmail}?subject=Re%3A+${encodeURIComponent(rawLabel)}&body=Bonjour+${encodeURIComponent(data.name)}%2C%0A%0A`, `R&eacute;pondre &agrave; ${safeName}`)}
+      ${secondaryLink(`mailto:${safeEmail}`, "Copier l'email")}
     `),
   }
 }
@@ -381,113 +246,121 @@ export function contactAutoReplyEmail(data: {
     : (SUBJECT_LABELS[data.subject] ?? data.subject)
   const label = esc(rawLabel)
   const safeName = esc(data.name)
-  const preview = esc(data.message.length > 120 ? data.message.slice(0, 120).trimEnd() + '…' : data.message)
+  const preview = esc(data.message.length > 140 ? data.message.slice(0, 140).trimEnd() + '…' : data.message)
 
   return {
     subject: `Votre message a bien été reçu — Nawaf Nemrod SALAMI`,
     html: base('Message reçu', `Merci ${data.name}, votre message a bien été reçu. Je vous répondrai sous 48h.`, `
+      ${badge('&#9989; Message re&ccedil;u', '#10B981', 'rgba(16,185,129,0.1)', 'rgba(16,185,129,0.25)')}
+      ${heading(`Merci, ${safeName}&nbsp;! &#128075;`)}
+      ${intro(`Votre message a bien &eacute;t&eacute; re&ccedil;u et je m&rsquo;engage &agrave; vous r&eacute;pondre dans les <strong style="color:#26262E">48 heures ouvr&eacute;es</strong>. En attendant, n&rsquo;h&eacute;sitez pas &agrave; consulter mes projets sur le portfolio.`)}
 
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+      ${infoBox(`
+        <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Sujet</p>
+        <p style="margin:0 0 16px;font-size:13.5px;font-weight:600;color:#26262E">${label}</p>
+        <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Votre message</p>
+        <p style="margin:0;font-size:13.5px;color:#6B6B76;line-height:1.7;font-style:italic">&ldquo;${preview}&rdquo;</p>
+      `)}
 
-        <!-- Success badge -->
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:8px">
         <tr>
-          <td style="padding-bottom:8px">
-            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34D399;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:99px">
-              ${icon.check}&nbsp; Message re&ccedil;u
-            </span>
+          <td style="width:24px;vertical-align:top;padding-top:2px">
+            <div style="width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,0.12);border:1.5px solid #10B981;text-align:center;line-height:18px">${icon.check}</div>
+          </td>
+          <td style="padding-bottom:14px">
+            <p style="margin:0;font-size:13px;font-weight:600;color:#26262E">Message envoy&eacute;</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#9A9AA6">Votre demande est bien enregistr&eacute;e.</p>
           </td>
         </tr>
-
         <tr>
-          <td style="padding-bottom:8px">
-            <h1 style="margin:0;font-size:24px;font-weight:800;color:#FFFFFF;letter-spacing:-0.5px;line-height:1.2">Merci, ${safeName}&nbsp;!</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding-bottom:32px">
-            <p style="margin:0;font-size:14px;color:#6B6B7A;line-height:1.8">
-              Votre message a bien &eacute;t&eacute; re&ccedil;u et je m&rsquo;engage &agrave; vous r&eacute;pondre dans les <strong style="color:#9CA3AF">48 heures ouvr&eacute;es</strong>.<br/>
-              En attendant, n&rsquo;h&eacute;sitez pas &agrave; consulter mes projets sur le portfolio.
-            </p>
-          </td>
-        </tr>
-
-        <!-- Confirmation card -->
-        <tr>
-          <td style="padding-bottom:28px">
-            <div style="background:#07070B;border:1px solid #16161F;border-radius:16px;overflow:hidden">
-              <div style="padding:14px 20px;border-bottom:1px solid #16161F;background:rgba(139,92,246,0.05)">
-                <p style="margin:0;font-size:10px;font-weight:700;color:#8B5CF6;letter-spacing:0.14em;text-transform:uppercase">${icon.tag}&nbsp;&nbsp;R&eacute;capitulatif de votre demande</p>
-              </div>
-              <div style="padding:20px">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-                  <tr>
-                    <td style="padding-bottom:14px">
-                      <p style="margin:0 0 3px;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">Sujet</p>
-                      <p style="margin:0;font-size:13px;font-weight:600;color:#E2E2F0">${label}</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p style="margin:0 0 8px;font-size:10px;color:#3A3A4A;letter-spacing:0.1em;text-transform:uppercase">Votre message</p>
-                      <p style="margin:0;font-size:13px;color:#8A8A9A;line-height:1.7;font-style:italic">&ldquo;${preview}&rdquo;</p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
+          <td style="width:24px;vertical-align:top;padding-top:2px">
+            <div style="width:20px;height:20px;border-radius:50%;background:#F4F4F7;border:1.5px solid #DADAE2;text-align:center;line-height:18px">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#B0B0BB" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
             </div>
           </td>
-        </tr>
-
-        <!-- Timeline -->
-        <tr>
-          <td style="padding-bottom:32px">
-            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-              <tr>
-                <td style="width:20px;padding-right:12px;vertical-align:top;padding-top:2px">
-                  <div style="width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,0.15);border:1.5px solid #10B981;text-align:center;line-height:18px">${icon.check}</div>
-                </td>
-                <td style="padding-bottom:16px">
-                  <p style="margin:0;font-size:13px;font-weight:600;color:#E2E2F0">Message envoy&eacute;</p>
-                  <p style="margin:2px 0 0;font-size:12px;color:#6B6B7A">Votre demande est bien enregistr&eacute;e.</p>
-                </td>
-              </tr>
-              <tr>
-                <td style="width:20px;padding-right:12px;vertical-align:top;padding-top:2px">
-                  <div style="width:20px;height:20px;border-radius:50%;background:#16161F;border:1.5px solid #2A2A35;text-align:center;line-height:18px">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3A3A4A" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
-                  </div>
-                </td>
-                <td>
-                  <p style="margin:0;font-size:13px;font-weight:600;color:#6B6B7A">R&eacute;ponse sous 48h ouvr&eacute;es</p>
-                  <p style="margin:2px 0 0;font-size:12px;color:#4A4A5A">Je reviendrai vers vous par e-mail.</p>
-                </td>
-              </tr>
-            </table>
+          <td>
+            <p style="margin:0;font-size:13px;font-weight:600;color:#9A9AA6">R&eacute;ponse sous 48h ouvr&eacute;es</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#B0B0BB">Je reviendrai vers vous par e-mail.</p>
           </td>
         </tr>
-
-        <!-- Signature -->
-        ${sectionDivider}
-        <tr>
-          <td style="padding-top:4px">
-            <table cellpadding="0" cellspacing="0" role="presentation">
-              <tr>
-                <td style="padding-right:14px;vertical-align:middle">
-                  <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%);text-align:center;line-height:42px">
-                    <span style="font-size:18px;color:#fff;font-weight:800">N</span>
-                  </div>
-                </td>
-                <td style="vertical-align:middle">
-                  <p style="margin:0;font-size:13px;font-weight:700;color:#FFFFFF">Nawaf Nemrod SALAMI</p>
-                  <p style="margin:2px 0 0;font-size:11px;color:#6B6B7A">D&eacute;veloppeur Web Fullstack &amp; DevOps &nbsp;&middot;&nbsp; Libreville, Gabon</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
       </table>
+
+      ${divider}
+      <p style="margin:0;font-size:13px;font-weight:700;color:#26262E">Nawaf Nemrod SALAMI</p>
+      <p style="margin:2px 0 0;font-size:12px;color:#9A9AA6">D&eacute;veloppeur Web Fullstack &amp; DevOps &nbsp;&middot;&nbsp; Libreville, Gabon</p>
+    `),
+  }
+}
+
+// ── Quote notification (admin) ─────────────────────────────────────────────
+
+export function quoteNotificationEmail(data: {
+  numero: string
+  clientNom: string
+  clientSociete?: string
+  clientEmail?: string
+  clientTelephone?: string
+  descriptionProjet: string
+  items: { designation: string; quantite: number; prixUnitaireHT: number }[]
+  totalHT: number
+  tva: number
+  totalTTC: number
+}) {
+  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
+  const now = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
+  const safeNom = esc(data.clientNom)
+  const safeSociete = data.clientSociete ? esc(data.clientSociete) : undefined
+  const safeEmail = data.clientEmail ? esc(data.clientEmail) : undefined
+  const safePhone = data.clientTelephone ? esc(data.clientTelephone) : undefined
+  const safeDescription = esc(data.descriptionProjet)
+
+  const itemsRows = data.items.map((it) => `
+    <tr>
+      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#26262E">${esc(it.designation)}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#9A9AA6;text-align:center">${it.quantite}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#9A9AA6;text-align:right">${fmt(it.prixUnitaireHT)}</td>
+    </tr>`).join('')
+
+  return {
+    subject: `💰 Devis généré par le chatbot — ${data.numero} — ${data.clientNom}`,
+    html: base('Nouveau devis généré', `Le chatbot a généré un devis pour ${data.clientNom}`, `
+      ${badge(`&#128176; Devis ${esc(data.numero)}`, '#10B981', 'rgba(16,185,129,0.1)', 'rgba(16,185,129,0.25)')}
+      ${heading('Nouveau devis g&eacute;n&eacute;r&eacute; par le chatbot')}
+      ${intro(`<strong style="color:#26262E">${safeNom}</strong>${safeSociete ? ` (${safeSociete})` : ''} a discut&eacute; avec l&rsquo;assistant le ${now} et un devis a &eacute;t&eacute; g&eacute;n&eacute;r&eacute; automatiquement.`)}
+
+      ${infoBox(`
+        ${dataRow(icon.user, 'Client', `<strong>${safeNom}</strong>${safeSociete ? ` &mdash; ${safeSociete}` : ''}`)}
+        ${safeEmail ? dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#3B82F6;text-decoration:none;font-weight:600">${safeEmail}</a>`) : ''}
+        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#8B5CF6;text-decoration:none;font-weight:600">${safePhone}</a>`) : ''}
+      `)}
+
+      ${infoBox(`
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Description du projet</p>
+        <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${safeDescription}</p>
+      `, 'border-left:3px solid #10B981')}
+
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:24px">
+        <tr>
+          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase">D&eacute;signation</td>
+          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase;text-align:center">Qt&eacute;</td>
+          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase;text-align:right">Prix unit. HT</td>
+        </tr>
+        ${itemsRows}
+        <tr>
+          <td colspan="2" style="padding:12px 0 0;font-size:13px;color:#9A9AA6">Total HT</td>
+          <td style="padding:12px 0 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.totalHT)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding:6px 0;font-size:13px;color:#9A9AA6">TVA (18%)</td>
+          <td style="padding:6px 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.tva)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318;border-radius:10px 0 0 10px">Total TTC</td>
+          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#6EE7B7;text-align:right;background:#131318;border-radius:0 10px 10px 0">${fmt(data.totalTTC)}</td>
+        </tr>
+      </table>
+
+      ${safeEmail ? ctaButton(`mailto:${safeEmail}?subject=${encodeURIComponent(`Suite à votre devis ${data.numero}`)}`, `Contacter ${safeNom}`) : ''}
     `),
   }
 }

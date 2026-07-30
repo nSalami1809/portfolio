@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -96,14 +97,8 @@ export default function Navbar() {
       >
         <nav aria-label="Navigation principale" className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
-          <Link
-            href="/"
-            className="font-display font-bold text-xl tracking-tight transition-colors duration-200"
-            style={{ color: 'var(--text)' }}
-          >
-            <span style={{ color: 'var(--accent)' }}>N</span>
-            <span style={{ color: 'var(--text-muted)' }}>·</span>
-            <span>S</span>
+          <Link href="/" aria-label="Accueil" className="flex items-center">
+            <Image src="/logo.png" alt="Nawaf Nemrod SALAMI" width={34} height={34} priority style={{ width: 34, height: 34 }} />
           </Link>
 
           {/* Desktop nav */}
