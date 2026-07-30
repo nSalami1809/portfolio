@@ -17,7 +17,7 @@ export default function QuoteView({ quote, onClose }: Props) {
   const { personal, socials } = data
   const [qrDataUrl, setQrDataUrl] = useState('')
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawafsalami-itech.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
   useEffect(() => {
     QRCode.toDataURL(siteUrl, { margin: 1, width: 200, color: { dark: '#111111', light: '#ffffff' } })
@@ -67,7 +67,7 @@ export default function QuoteView({ quote, onClose }: Props) {
           <button
             onClick={() => window.print()}
             className="text-sm font-semibold rounded-lg"
-            style={{ background: '#111111', color: '#fff', padding: '0.5rem 1.1rem' }}
+            style={{ background: '#111111', color: '#fff', padding: '0.5rem 1.1rem', cursor: 'pointer' }}
           >
             Imprimer / Télécharger en PDF
           </button>
@@ -77,7 +77,7 @@ export default function QuoteView({ quote, onClose }: Props) {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- fixed local asset, print context */}
-            <img src="/logo.png" alt="" width={40} height={40} style={{ width: 40, height: 40 }} />
+            <img src="/logo.png" alt="" width={60} height={60} style={{ width: 60, height: 60 }} />
             <div>
               <p style={{ fontWeight: 700, fontSize: '1.15rem' }}>{personal.name}</p>
               <p style={{ fontSize: '0.8rem', color: '#555' }}>{personal.role}</p>
