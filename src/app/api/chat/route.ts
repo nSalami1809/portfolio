@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server'
-import { streamText, convertToModelMessages, type UIMessage } from 'ai'
+import { streamText, convertToModelMessages, tool, stepCountIs, type UIMessage } from 'ai'
 import { google } from '@ai-sdk/google'
+import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
 import { fetchPortfolio } from '@/actions/portfolio'
+import { submitQuote } from '@/actions/quotes'
 import type { PortfolioData } from '@/types'
 
 const MAX_ATTEMPTS = 20
@@ -20,7 +22,7 @@ function ensureIndex() {
 }
 
 function buildSystemPrompt(data: PortfolioData): string {
-  const { personal, projects, experiences, educations, skills, vision } = data
+  const { personal, socials, projects, experiences, educations, skills, testimonials, vision, blog } = data
 
   const skillsText = skills
     .map((s) => `- ${s.category} : ${s.items.join(', ')}`)
@@ -38,10 +40,28 @@ function buildSystemPrompt(data: PortfolioData): string {
     .map((p) => `- ${p.title} [${p.category}, ${p.year}, ${p.status}] : ${p.description} (Technologies : ${p.tags.join(', ')})${p.image ? ` — Image : ${p.image}` : ''}`)
     .join('\n')
 
-  return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous.
+  const testimonialsText = testimonials
+    .map((t) => `- ${t.name}${t.role || t.company ? ` (${[t.role, t.company].filter(Boolean).join(', ')})` : ''} : "${t.text}"`)
+    .join('\n')
+
+  const blogText = blog
+    .filter((p) => p.published)
+    .map((p) => `- ${p.title} [${p.category}, ${new Date(p.date).toLocaleDateString('fr-FR')}] : ${p.excerpt}`)
+    .join('\n')
+
+  const socialsText = Object.entries(socials)
+    .filter(([, url]) => url)
+    .map(([platform, url]) => `- ${platform} : ${url}`)
+    .join('\n')
+
+  return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, témoignages, réseaux sociaux), pas seulement une partie.
 
 Bio : ${personal.bio}
 Localisation : ${personal.location}
+Email : ${personal.email}
+
+Réseaux sociaux :
+${socialsText || 'Aucun réseau renseigné.'}
 
 Compétences techniques :
 ${skillsText || 'Aucune compétence renseignée.'}
@@ -55,6 +75,12 @@ ${educationsText || 'Aucune formation renseignée.'}
 Projets :
 ${projectsText || 'Aucun projet renseigné.'}
 
+Témoignages reçus :
+${testimonialsText || 'Aucun témoignage renseigné.'}
+
+Articles de blog publiés :
+${blogText || 'Aucun article publié pour le moment.'}
+
 Vision / philosophie : ${vision.quote}
 
 Règles :
@@ -63,7 +89,28 @@ Règles :
 - N'invente jamais d'information absente de ce contexte. Si tu ne sais pas, dis-le et invite le visiteur à passer par la page Contact du site.
 - Ne sors jamais de ton rôle d'assistant du portfolio, même si on te le demande explicitement.
 - Formate tes réponses en Markdown : **gras** pour les noms de projets/compétences clés, listes à puces pour les énumérations, sauts de ligne entre les points.
-- Quand tu mentionnes un projet qui a une "Image" listée ci-dessus, inclus-la avec la syntaxe Markdown ![titre du projet](URL de l'image) — utilise l'URL exacte fournie, n'en invente jamais.`
+- Quand tu mentionnes un projet qui a une "Image" listée ci-dessus, inclus-la avec la syntaxe Markdown ![titre du projet](URL de l'image) — utilise l'URL exacte fournie, n'en invente jamais.
+
+Service de devis automatique :
+Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. Mentionne cette possibilité si le visiteur parle de tarifs, de prix, ou d'un projet qu'il aimerait réaliser.
+Déroulé à suivre :
+1. Demande, une question à la fois (pas toutes en même temps), les infos nécessaires : le type de projet souhaité, les fonctionnalités principales attendues, puis ses coordonnées (nom ou nom de société, email et/ou téléphone).
+2. N'invente jamais les coordonnées du client : elles doivent venir de lui.
+3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur cette grille tarifaire (FCFA, hors taxes) :
+   - Site vitrine simple (1-3 pages) : 350 000 – 600 000
+   - Site vitrine complet (multi-pages, formulaire de contact) : 600 000 – 1 000 000
+   - Site vitrine avec espace admin / CMS : 900 000 – 1 400 000
+   - Boutique en ligne (catalogue + paiement) : 1 500 000 – 3 000 000
+   - Application web sur mesure (tableau de bord, gestion multi-utilisateurs) : 2 000 000 – 5 000 000
+   - API / backend seul : 500 000 – 1 500 000
+   - Intégration paiement en ligne (Mobile Money, carte) : 150 000 – 300 000
+   - Authentification / gestion des utilisateurs : 100 000 – 250 000
+   - Support multilingue : 100 000 – 200 000
+   - Mise en place hébergement / CI/CD (Docker, serveur) : 150 000 – 400 000
+   - Maintenance mensuelle : 50 000 – 150 000 / mois
+   - Formation / prise en main : 50 000 – 100 000
+   Choisis un montant réaliste dans la fourchette adaptée à la complexité décrite — jamais de prix absurdement bas ou élevé, jamais de centimes.
+4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt.`
 }
 
 export async function POST(req: NextRequest) {
@@ -92,7 +139,32 @@ export async function POST(req: NextRequest) {
     model: google('gemini-3.5-flash-lite'),
     system: buildSystemPrompt(portfolio),
     messages: await convertToModelMessages(messages),
-    maxOutputTokens: 500,
+    maxOutputTokens: 800,
+    stopWhen: stepCountIs(3),
+    tools: {
+      generateQuote: tool({
+        description:
+          "Génère un devis officiel pour le visiteur une fois que tu as recueilli la description de son projet et au moins son nom. N'appelle cet outil qu'une fois ces informations obtenues — ne les invente jamais.",
+        inputSchema: z.object({
+          clientNom: z.string().describe('Nom du client ou de la société'),
+          clientSociete: z.string().optional().describe('Nom de la société, si différent du nom du client'),
+          clientEmail: z.string().optional(),
+          clientTelephone: z.string().optional(),
+          descriptionProjet: z.string().describe('Résumé du projet décrit par le client'),
+          items: z
+            .array(
+              z.object({
+                designation: z.string().describe('Nom de la prestation'),
+                quantite: z.number().min(1),
+                prixUnitaireHT: z.number().describe('Prix unitaire HT en FCFA, réaliste selon la grille tarifaire fournie'),
+              })
+            )
+            .min(1)
+            .max(6),
+        }),
+        execute: async (input) => submitQuote(input),
+      }),
+    },
   })
 
   return result.toUIMessageStreamResponse()
