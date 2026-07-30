@@ -5,6 +5,54 @@ import { usePathname } from 'next/navigation'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { motion, AnimatePresence } from 'framer-motion'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import type { Components } from 'react-markdown'
+
+function BotIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 8V4H8" />
+      <rect width="16" height="12" x="4" y="8" rx="2" />
+      <path d="M2 14h2" />
+      <path d="M20 14h2" />
+      <path d="M15 13v2" />
+      <path d="M9 13v2" />
+    </svg>
+  )
+}
+
+const markdownComponents: Components = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }) => <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{children}</strong>,
+  em: ({ children }) => <em>{children}</em>,
+  ul: ({ children }) => <ul className="mb-2 last:mb-0 pl-4 space-y-1" style={{ listStyle: 'disc' }}>{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 last:mb-0 pl-4 space-y-1" style={{ listStyle: 'decimal' }}>{children}</ol>,
+  li: ({ children }) => <li>{children}</li>,
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+      {children}
+    </a>
+  ),
+  code: ({ children }) => (
+    <code
+      className="text-xs rounded"
+      style={{ background: 'var(--surface)', padding: '0.1rem 0.35rem', fontFamily: 'monospace' }}
+    >
+      {children}
+    </code>
+  ),
+  img: ({ src, alt }) => (
+    // eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded images, unknown aspect ratio
+    <img
+      src={typeof src === 'string' ? src : undefined}
+      alt={alt ?? ''}
+      loading="lazy"
+      className="rounded-lg mt-1 mb-2"
+      style={{ maxWidth: '100%', border: '1px solid var(--border)' }}
+    />
+  ),
+}
 
 export default function ChatWidget() {
   const pathname = usePathname()
@@ -69,16 +117,15 @@ export default function ChatWidget() {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </motion.svg>
           ) : (
-            <motion.svg
-              key="chat"
+            <motion.div
+              key="bot"
               initial={{ opacity: 0, rotate: 45 }}
               animate={{ opacity: 1, rotate: 0 }}
               exit={{ opacity: 0, rotate: -45 }}
               transition={{ duration: 0.15 }}
-              width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
             >
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </motion.svg>
+              <BotIcon width={26} height={26} aria-hidden="true" />
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.button>
@@ -118,9 +165,7 @@ export default function ChatWidget() {
                 style={{ background: 'linear-gradient(135deg,#8B5CF6,#5B21B6)' }}
                 aria-hidden="true"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                </svg>
+                <BotIcon width={17} height={17} color="white" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
@@ -150,15 +195,22 @@ export default function ChatWidget() {
                       className="rounded-xl px-3.5 py-2.5 text-sm leading-relaxed"
                       style={{
                         maxWidth: '85%',
-                        whiteSpace: 'pre-wrap',
                         background: isUser ? 'var(--accent-glow)' : 'var(--surface-hover)',
                         border: `1px solid ${isUser ? 'transparent' : 'var(--border)'}`,
                         color: 'var(--text)',
                       }}
                     >
-                      {message.parts.map((part, i) =>
-                        part.type === 'text' ? <span key={i}>{part.text}</span> : null
-                      )}
+                      {message.parts.map((part, i) => {
+                        if (part.type !== 'text') return null
+                        if (isUser) return <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{part.text}</span>
+                        return (
+                          <div key={i} className="chat-markdown">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                              {part.text}
+                            </ReactMarkdown>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )
