@@ -98,7 +98,7 @@ export default function Navbar() {
         <nav aria-label="Navigation principale" className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" aria-label="Accueil" className="flex items-center">
-            <Image src="/logo.png" alt="Nawaf Nemrod SALAMI" width={34} height={34} priority style={{ width: 34, height: 34 }} />
+            <Image src="/logo.png" alt="Nawaf Nemrod SALAMI" width={50} height={50} priority style={{ width: 50, height: 50 }} />
           </Link>
 
           {/* Desktop nav */}

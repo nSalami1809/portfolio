@@ -2,24 +2,27 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
-// ── SVG Icons ──────────────────────────────────────────────────────────────
+// ── SVG Icons — single ink color, no per-category colors ────────────────────
+
+const INK = '#26262E'
+const MUTED = '#9A9AA6'
 
 const icon = {
-  shield: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-  user: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-  mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
-  tag: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.28-8.28a1 1 0 0 0 0-1.42Z"/><path d="M7 7h.01"/></svg>`,
-  message: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
-  clock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9A9AA6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
-  alert: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  shield: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  user: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
+  tag: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.28-8.28a1 1 0 0 0 0-1.42Z"/><path d="M7 7h.01"/></svg>`,
+  message: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  clock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${MUTED}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  check: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  alert: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
 }
 
-const phone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
+const phone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nawafsalami-itech.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
-// ── Base layout — light, centered, boutique-agency style ────────────────────
+// ── Base layout — light, centered, monochrome boutique-agency style ─────────
 
 const base = (title: string, preheader: string, body: string) => {
   const year = new Date().getFullYear()
@@ -77,12 +80,12 @@ const base = (title: string, preheader: string, body: string) => {
 </html>`
 }
 
-// ── Shared components ────────────────────────────────────────────────────────
+// ── Shared components — monochrome only ──────────────────────────────────────
 
-const badge = (label: string, color = '#8B5CF6', bg = 'rgba(139,92,246,0.1)', border = 'rgba(139,92,246,0.25)') => `
+const badge = (label: string) => `
   <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 18px">
     <tr>
-      <td style="background:${bg};border:1px solid ${border};color:${color};font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;border-radius:99px">
+      <td style="background:#131318;color:#FFFFFF;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 15px;border-radius:99px">
         ${label}
       </td>
     </tr>
@@ -95,10 +98,9 @@ const intro = (html: string) => `
   <p style="margin:0 0 28px;font-size:14.5px;color:#6B6B76;line-height:1.7">${html}</p>`
 
 // Rounded light-gray box for structured, left-aligned content (data, message
-// bodies, tables) — the screenshot's aesthetic is centered marketing copy,
-// but real transactional data reads better left-aligned inside the box.
-const infoBox = (contentHtml: string, extraStyle = '') => `
-  <div style="background:#F9F9FB;border:1px solid #ECECF1;border-radius:16px;padding:22px 24px;text-align:left;margin-bottom:24px;${extraStyle}">
+// bodies, tables) — plain card, no accent stripe.
+const infoBox = (contentHtml: string) => `
+  <div style="background:#F9F9FB;border:1px solid #ECECF1;border-radius:16px;padding:22px 24px;text-align:left;margin-bottom:24px">
     ${contentHtml}
   </div>`
 
@@ -107,7 +109,7 @@ const ctaButton = (href: string, label: string) => `
     <tr>
       <td>
         <a href="${href}"
-          style="display:block;text-align:center;background:linear-gradient(135deg,#8B5CF6 0%,#5B21B6 100%);color:#FFFFFF;font-size:14px;font-weight:700;letter-spacing:0.01em;padding:15px 24px;border-radius:12px;text-decoration:none">
+          style="display:block;text-align:center;background:#131318;color:#FFFFFF;font-size:14px;font-weight:700;letter-spacing:0.01em;padding:15px 24px;border-radius:10px;text-decoration:none">
           ${label}
         </a>
       </td>
@@ -139,7 +141,7 @@ export function otpEmail(otp: string) {
 
   const boxes = otp.split('').map((d) => `
     <td style="padding:0 4px">
-      <div class="otp-box" style="width:46px;height:58px;line-height:58px;border-radius:12px;background:#F9F9FB;border:1.5px solid #DCC9FA;text-align:center;font-size:26px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#131318">
+      <div class="otp-box" style="width:46px;height:58px;line-height:58px;border-radius:12px;background:#F9F9FB;border:1.5px solid #D8D8E0;text-align:center;font-size:26px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#131318">
         ${d}
       </div>
     </td>`).join('')
@@ -147,7 +149,7 @@ export function otpEmail(otp: string) {
   return {
     subject: `[${otp}] Code de connexion — Portfolio NS`,
     html: base('Code de connexion', `Votre code OTP est ${otp} — valable 10 min`, `
-      ${badge('&#128274; Authentification')}
+      ${badge('Authentification')}
       ${heading('Votre code de connexion')}
       ${intro('Une tentative de connexion a &eacute;t&eacute; d&eacute;tect&eacute;e sur votre panneau d&rsquo;administration. Saisissez ce code pour confirmer votre identit&eacute;.')}
 
@@ -163,7 +165,7 @@ export function otpEmail(otp: string) {
             <td style="width:22px;vertical-align:top;padding-top:2px">${icon.alert}</td>
             <td>
               <p style="margin:0;font-size:12.5px;color:#6B6B76;line-height:1.6">
-                Si vous n&rsquo;&ecirc;tes pas &agrave; l&rsquo;origine de cette demande, <strong style="color:#B45309">ignorez cet e-mail</strong>. Personne d&rsquo;autre n&rsquo;a acc&egrave;s &agrave; votre compte.
+                Si vous n&rsquo;&ecirc;tes pas &agrave; l&rsquo;origine de cette demande, <strong style="color:#131318">ignorez cet e-mail</strong>. Personne d&rsquo;autre n&rsquo;a acc&egrave;s &agrave; votre compte.
               </p>
             </td>
           </tr>
@@ -182,13 +184,6 @@ const SUBJECT_LABELS: Record<string, string> = {
   autre: 'Autre',
 }
 
-const SUBJECT_COLORS: Record<string, string> = {
-  mission: '#8B5CF6',
-  collaboration: '#3B82F6',
-  conseil: '#10B981',
-  autre: '#F59E0B',
-}
-
 export function contactNotificationEmail(data: {
   name: string; email: string; phone?: string; subject: string; customSubject?: string; message: string
 }) {
@@ -196,7 +191,6 @@ export function contactNotificationEmail(data: {
     ? data.customSubject
     : (SUBJECT_LABELS[data.subject] ?? data.subject)
   const label = esc(rawLabel)
-  const accent = SUBJECT_COLORS[data.subject] ?? '#8B5CF6'
   const now = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
   const safeName    = esc(data.name)
   const safeEmail   = esc(data.email)
@@ -204,31 +198,31 @@ export function contactNotificationEmail(data: {
   const safeMessage = esc(data.message)
 
   return {
-    subject: `✉️ Nouveau message — ${rawLabel} — ${data.name}`,
+    subject: `Nouveau message — ${rawLabel} — ${data.name}`,
     html: base('Nouveau message de contact', `${data.name} vous a envoyé un message via votre portfolio`, `
-      ${badge('&#128233; Formulaire de contact', '#3B82F6', 'rgba(59,130,246,0.1)', 'rgba(59,130,246,0.25)')}
+      ${badge('Formulaire de contact')}
       ${heading('Nouveau message re&ccedil;u')}
       ${intro(`<strong style="color:#26262E">${safeName}</strong> a utilis&eacute; votre formulaire de contact le ${now}.`)}
 
       ${infoBox(`
         ${dataRow(icon.user, 'Nom', `<strong>${safeName}</strong>`)}
-        ${dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#3B82F6;text-decoration:none;font-weight:600">${safeEmail}</a>`)}
-        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#8B5CF6;text-decoration:none;font-weight:600">${safePhone}</a>`) : ''}
+        ${dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#131318;text-decoration:underline;font-weight:600">${safeEmail}</a>`)}
+        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#131318;text-decoration:underline;font-weight:600">${safePhone}</a>`) : ''}
         <table cellpadding="0" cellspacing="0" role="presentation" style="margin-top:2px">
           <tr>
             <td style="width:26px;vertical-align:top;padding-top:1px">${icon.tag}</td>
             <td>
               <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Sujet</p>
-              <span style="display:inline-block;background:${accent}14;border:1px solid ${accent}33;color:${accent};font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:0.04em">${label}</span>
+              <span style="display:inline-block;background:#F4F4F7;border:1px solid #E3E3EA;color:#131318;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:0.04em">${label}</span>
             </td>
           </tr>
         </table>
       `)}
 
       ${infoBox(`
-        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">${icon.message}&nbsp;&nbsp;Message</p>
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Message</p>
         <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${safeMessage}</p>
-      `, `border-left:3px solid ${accent}`)}
+      `)}
 
       ${ctaButton(`mailto:${safeEmail}?subject=Re%3A+${encodeURIComponent(rawLabel)}&body=Bonjour+${encodeURIComponent(data.name)}%2C%0A%0A`, `R&eacute;pondre &agrave; ${safeName}`)}
       ${secondaryLink(`mailto:${safeEmail}`, "Copier l'email")}
@@ -251,8 +245,8 @@ export function contactAutoReplyEmail(data: {
   return {
     subject: `Votre message a bien été reçu — Nawaf Nemrod SALAMI`,
     html: base('Message reçu', `Merci ${data.name}, votre message a bien été reçu. Je vous répondrai sous 48h.`, `
-      ${badge('&#9989; Message re&ccedil;u', '#10B981', 'rgba(16,185,129,0.1)', 'rgba(16,185,129,0.25)')}
-      ${heading(`Merci, ${safeName}&nbsp;! &#128075;`)}
+      ${badge('Message re&ccedil;u')}
+      ${heading(`Merci, ${safeName}&nbsp;!`)}
       ${intro(`Votre message a bien &eacute;t&eacute; re&ccedil;u et je m&rsquo;engage &agrave; vous r&eacute;pondre dans les <strong style="color:#26262E">48 heures ouvr&eacute;es</strong>. En attendant, n&rsquo;h&eacute;sitez pas &agrave; consulter mes projets sur le portfolio.`)}
 
       ${infoBox(`
@@ -265,7 +259,7 @@ export function contactAutoReplyEmail(data: {
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:8px">
         <tr>
           <td style="width:24px;vertical-align:top;padding-top:2px">
-            <div style="width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,0.12);border:1.5px solid #10B981;text-align:center;line-height:18px">${icon.check}</div>
+            <div style="width:20px;height:20px;border-radius:50%;background:#131318;text-align:center;line-height:20px">${icon.check}</div>
           </td>
           <td style="padding-bottom:14px">
             <p style="margin:0;font-size:13px;font-weight:600;color:#26262E">Message envoy&eacute;</p>
@@ -322,22 +316,22 @@ export function quoteNotificationEmail(data: {
     </tr>`).join('')
 
   return {
-    subject: `💰 Devis généré par le chatbot — ${data.numero} — ${data.clientNom}`,
+    subject: `Devis généré par le chatbot — ${data.numero} — ${data.clientNom}`,
     html: base('Nouveau devis généré', `Le chatbot a généré un devis pour ${data.clientNom}`, `
-      ${badge(`&#128176; Devis ${esc(data.numero)}`, '#10B981', 'rgba(16,185,129,0.1)', 'rgba(16,185,129,0.25)')}
+      ${badge(`Devis ${esc(data.numero)}`)}
       ${heading('Nouveau devis g&eacute;n&eacute;r&eacute; par le chatbot')}
       ${intro(`<strong style="color:#26262E">${safeNom}</strong>${safeSociete ? ` (${safeSociete})` : ''} a discut&eacute; avec l&rsquo;assistant le ${now} et un devis a &eacute;t&eacute; g&eacute;n&eacute;r&eacute; automatiquement.`)}
 
       ${infoBox(`
         ${dataRow(icon.user, 'Client', `<strong>${safeNom}</strong>${safeSociete ? ` &mdash; ${safeSociete}` : ''}`)}
-        ${safeEmail ? dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#3B82F6;text-decoration:none;font-weight:600">${safeEmail}</a>`) : ''}
-        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#8B5CF6;text-decoration:none;font-weight:600">${safePhone}</a>`) : ''}
+        ${safeEmail ? dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#131318;text-decoration:underline;font-weight:600">${safeEmail}</a>`) : ''}
+        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#131318;text-decoration:underline;font-weight:600">${safePhone}</a>`) : ''}
       `)}
 
       ${infoBox(`
         <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Description du projet</p>
         <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${safeDescription}</p>
-      `, 'border-left:3px solid #10B981')}
+      `)}
 
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:24px">
         <tr>
@@ -356,7 +350,7 @@ export function quoteNotificationEmail(data: {
         </tr>
         <tr>
           <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318;border-radius:10px 0 0 10px">Total TTC</td>
-          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#6EE7B7;text-align:right;background:#131318;border-radius:0 10px 10px 0">${fmt(data.totalTTC)}</td>
+          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318;border-radius:0 10px 10px 0">${fmt(data.totalTTC)}</td>
         </tr>
       </table>
 
