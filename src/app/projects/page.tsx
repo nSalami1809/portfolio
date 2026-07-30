@@ -90,7 +90,7 @@ export default function ProjectsPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.3) }}
             >
-              <Link href={`/projects/${project.slug}`} className="card block p-6 h-full group">
+              <Link href={`/projects/${project.slug}`} className="card block p-6 h-full group" data-cursor-label="Découvrir">
                 {/* Category & status */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="tag">{project.category}</span>

@@ -56,6 +56,7 @@ export default function BlogPage() {
                   href={`/blog/${post.slug}`}
                   className="group flex flex-col sm:flex-row gap-6 py-8 transition-colors duration-200"
                   style={{ borderTop: '1px solid var(--border)' }}
+                  data-cursor-label="Découvrir"
                 >
                   <div className="sm:w-32 shrink-0 flex sm:flex-col items-start sm:items-end gap-3">
                     {post.coverImage && (
