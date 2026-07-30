@@ -6,6 +6,7 @@ import { after } from 'next/server'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { quoteNotificationEmail, quoteClientCopyEmail } from '@/lib/email-templates'
+import { getAdminEmail } from '@/lib/admin-config'
 
 const TVA_RATE = 0.18
 const VALIDITE_JOURS = 30
@@ -114,16 +115,17 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   after(async () => {
     try {
       const transporter = getTransporter()
+      const adminEmail = await getAdminEmail()
       const notification = quoteNotificationEmail(quote)
       await transporter.sendMail({
         from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`,
-        to: process.env.ADMIN_EMAIL,
+        to: adminEmail,
         subject: notification.subject,
         html: notification.html,
       })
 
       if (payload.clientEmail) {
-        const clientCopy = quoteClientCopyEmail(quote)
+        const clientCopy = quoteClientCopyEmail(quote, adminEmail)
         await transporter.sendMail({
           from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
           to: payload.clientEmail,
@@ -163,7 +165,7 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
   after(async () => {
     try {
       const transporter = getTransporter()
-      const clientCopy = quoteClientCopyEmail(quote)
+      const clientCopy = quoteClientCopyEmail(quote, await getAdminEmail())
       await transporter.sendMail({
         from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
         to: email,
