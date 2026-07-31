@@ -1,13 +1,25 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useState, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 const COUNT  = 1400
 const RADIUS = 2.2
 
-function Particles() {
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches) // eslint-disable-line react-hooks/set-state-in-effect
+    const onChange = () => setReduced(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
+
+function Particles({ reduceMotion }: { reduceMotion: boolean }) {
   const pointsRef = useRef<THREE.Points>(null)
   const matRef    = useRef<THREE.PointsMaterial>(null)
 
@@ -27,6 +39,7 @@ function Particles() {
   }, [])
 
   useFrame(({ clock }) => {
+    if (reduceMotion) return
     const t = clock.elapsedTime
     if (pointsRef.current) {
       pointsRef.current.rotation.y = t * 0.09
@@ -57,7 +70,7 @@ function Particles() {
 }
 
 // Faint equatorial ring for depth
-function Ring() {
+function Ring({ reduceMotion }: { reduceMotion: boolean }) {
   const ref = useRef<THREE.Points>(null)
 
   const positions = useMemo(() => {
@@ -77,6 +90,7 @@ function Ring() {
   }, [])
 
   useFrame(({ clock }) => {
+    if (reduceMotion) return
     if (ref.current) ref.current.rotation.y = clock.elapsedTime * -0.05
   })
 
@@ -98,15 +112,17 @@ function Ring() {
 }
 
 export default function ParticleSphere() {
+  const reduceMotion = usePrefersReducedMotion()
+
   return (
     <Canvas
       camera={{ position: [0, 0, 6.5], fov: 45 }}
-      dpr={[1, 2]}
+      dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: true }}
       style={{ width: '100%', height: '100%' }}
     >
-      <Particles />
-      <Ring />
+      <Particles reduceMotion={reduceMotion} />
+      <Ring reduceMotion={reduceMotion} />
     </Canvas>
   )
 }

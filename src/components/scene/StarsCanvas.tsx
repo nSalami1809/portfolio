@@ -14,7 +14,7 @@ interface StarsCanvasProps {
 
 export function StarsCanvas({
   transparent = false,
-  maxStars = 1200,
+  maxStars = 600,
   hue = 217,
   brightness = 10,
   speedMultiplier = 1,
@@ -110,9 +110,9 @@ export function StarsCanvas({
     for (let i = 0; i < maxStars; i++) new Star();
 
     // --- Animation loop ---
-    const animate = () => {
-      if (paused) return; // Skip if paused
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+    const drawFrame = () => {
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 0.8;
       ctx.fillStyle = transparent ? 'hsla(217, 64%, 6%, 0)' : 'hsla(217, 64%, 6%, 1)';
@@ -122,11 +122,21 @@ export function StarsCanvas({
       for (let i = 1; i < stars.length; i++) {
         stars[i].draw();
       }
+    };
 
+    const animate = () => {
+      if (paused) return; // Skip if paused
+      drawFrame();
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+    // Users who've asked for less motion still see the starfield — it just
+    // doesn't twinkle/drift, which also skips the continuous CPU cost.
+    if (reduceMotion) {
+      drawFrame();
+    } else {
+      animationRef.current = requestAnimationFrame(animate);
+    }
 
     // --- Resize handling ---
     const handleResize = () => {
@@ -136,7 +146,7 @@ export function StarsCanvas({
 
     window.addEventListener('resize', handleResize);
     return () => {
-      cancelAnimationFrame(animationRef.current!);
+      if (animationRef.current !== undefined) cancelAnimationFrame(animationRef.current);
       window.removeEventListener('resize', handleResize);
     };
   }, [transparent, maxStars, hue, brightness, speedMultiplier, twinkleIntensity, paused]);
