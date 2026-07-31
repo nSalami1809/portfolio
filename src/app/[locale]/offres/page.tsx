@@ -60,7 +60,7 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
   const description = tr?.description || o.description
 
   return (
-    <div className="relative mb-16 rounded-3xl overflow-hidden card no-lift" style={{ minHeight: '340px' }}>
+    <div className="relative mb-16 rounded-3xl overflow-hidden liquid-glass" style={{ minHeight: '340px' }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={o.id}
@@ -68,17 +68,25 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45 }}
-          className="grid md:grid-cols-2 gap-8 items-center p-8 sm:p-12"
+          className="relative grid md:grid-cols-2 gap-8 items-center p-8 sm:p-12"
+          style={{ zIndex: 1 }}
         >
           <div>
-            {o.featured && <span className="tag text-xs mb-3 inline-block">{t.specialTitle}</span>}
-            <h2 className="font-display font-bold text-2xl sm:text-3xl mb-3" style={{ color: 'var(--text)' }}>{title}</h2>
-            <p className="text-sm sm:text-base leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>{description}</p>
-            <p className="font-display font-bold text-xl mb-6" style={{ color: 'var(--accent)' }}>{o.priceLabel}</p>
+            {o.featured && (
+              <span
+                className="text-xs mb-3 inline-flex items-center px-3 py-1 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)' }}
+              >
+                {t.specialTitle}
+              </span>
+            )}
+            <h2 className="font-display font-bold text-2xl sm:text-3xl mb-3" style={{ color: '#fff' }}>{title}</h2>
+            <p className="text-sm sm:text-base leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.72)' }}>{description}</p>
+            <p className="font-display font-bold text-xl mb-6" style={{ color: '#fff' }}>{o.priceLabel}</p>
             <button onClick={() => onRequest(title)} className="btn-primary text-sm">{ctaLabel}</button>
           </div>
           {o.image ? (
-            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '4 / 3' }}>
+            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '4 / 3', border: '1px solid rgba(255,255,255,0.25)' }}>
               <Image src={o.image} alt={title} fill sizes="(min-width: 768px) 45vw, 90vw" style={{ objectFit: 'cover' }} priority={index === 0} />
             </div>
           ) : (
@@ -88,7 +96,7 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
       </AnimatePresence>
 
       {offers.length > 1 && (
-        <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2">
+        <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2" style={{ zIndex: 1 }}>
           {offers.map((slide, i) => (
             <button
               key={slide.id}
@@ -96,14 +104,18 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
               aria-label={t.heroGoTo(translated[slide.id]?.title || slide.title)}
               aria-current={i === index}
               className="rounded-full transition-all duration-300"
-              style={{ width: i === index ? '20px' : '6px', height: '6px', background: i === index ? 'var(--accent)' : 'var(--border)' }}
+              style={{
+                width: i === index ? '20px' : '6px',
+                height: '6px',
+                background: i === index ? '#fff' : 'rgba(255,255,255,0.35)',
+              }}
             />
           ))}
           <button
             onClick={() => setUserPaused((p) => !p)}
             aria-label={userPaused ? t.heroPlay : t.heroPause}
             className="ml-2 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff' }}
           >
             {userPaused ? <PlayIcon /> : <PauseIcon />}
           </button>

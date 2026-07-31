@@ -196,6 +196,28 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-2px);
 }
 
+/* Fixed black/white liquid-glass panel — deliberately theme-independent
+   (unlike .card, which tints with --glass-bg/--accent) so it reads as a
+   distinct showcase element rather than another card in the grid below. */
+.liquid-glass {
+  position: relative;
+  background: linear-gradient(155deg, rgba(10,10,14,0.82), rgba(0,0,0,0.68));
+  border: 1.5px solid rgba(255,255,255,0.4);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0 40px rgba(255,255,255,0.03);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  isolation: isolate;
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0) 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .btn-primary {
   background: var(--accent);
   color: #fff;
