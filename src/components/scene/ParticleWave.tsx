@@ -1,16 +1,31 @@
 'use client'
 /* eslint-disable react-hooks/refs */
 
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useState, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Points, PointMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 
-const COLS = 60
-const ROWS = 40
+// Halved vs. the original 60x40 grid — a background particle field reads the
+// same at a glance, but recomputing every point's position via sin/cos every
+// frame (x2 meshes) was a real, continuous CPU cost worth cutting.
+const COLS = 38
+const ROWS = 24
 const SPACING = 0.32
 
-function Wave() {
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches) // eslint-disable-line react-hooks/set-state-in-effect
+    const onChange = () => setReduced(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
+
+function Wave({ reduceMotion }: { reduceMotion: boolean }) {
   const ref = useRef<THREE.Points>(null)
 
   const positions = useMemo(() => {
@@ -30,6 +45,7 @@ function Wave() {
   const posRef = useRef(positions.slice())
 
   useFrame(({ clock }) => {
+    if (reduceMotion) return
     const t = clock.getElapsedTime()
     const arr = posRef.current
     for (let i = 0; i < COLS; i++) {
@@ -64,7 +80,7 @@ function Wave() {
   )
 }
 
-function SecondaryWave() {
+function SecondaryWave({ reduceMotion }: { reduceMotion: boolean }) {
   const ref = useRef<THREE.Points>(null)
 
   const { positions } = useMemo(() => {
@@ -84,6 +100,7 @@ function SecondaryWave() {
   const posRef = useRef(positions.slice())
 
   useFrame(({ clock }) => {
+    if (reduceMotion) return
     const t = clock.getElapsedTime() + 1.5
     const arr = posRef.current
     for (let i = 0; i < COLS; i++) {
@@ -117,6 +134,8 @@ function SecondaryWave() {
 }
 
 export default function ParticleWave() {
+  const reduceMotion = usePrefersReducedMotion()
+
   return (
     <div
       style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}
@@ -124,16 +143,16 @@ export default function ParticleWave() {
     >
       <Canvas
         camera={{ position: [0, 5.5, 7], fov: 60 }}
-        gl={{ alpha: true, antialias: true }}
+        gl={{ alpha: true, antialias: false }}
         style={{ background: 'transparent' }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[0, 8, 0]} intensity={1.2} color="#3B82F6" />
         <pointLight position={[-6, 2, 4]} intensity={0.6} color="#1D4ED8" />
 
-        <Wave />
-        <SecondaryWave />
+        <Wave reduceMotion={reduceMotion} />
+        <SecondaryWave reduceMotion={reduceMotion} />
       </Canvas>
     </div>
   )
