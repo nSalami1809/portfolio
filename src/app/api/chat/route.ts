@@ -22,7 +22,7 @@ function ensureIndex() {
 }
 
 function buildSystemPrompt(data: PortfolioData, locale: string): string {
-  const { personal, socials, projects, experiences, educations, skills, testimonials, vision, blog } = data
+  const { personal, socials, projects, experiences, educations, skills, testimonials, vision, blog, offers } = data
 
   const skillsText = skills
     .map((s) => `- ${s.category} : ${s.items.join(', ')}`)
@@ -54,6 +54,10 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     .map(([platform, url]) => `- ${platform} : ${url}`)
     .join('\n')
 
+  const offersText = offers
+    .map((o) => `- ${o.title} : ${o.priceLabel}${o.description ? ` — ${o.description}` : ''}`)
+    .join('\n')
+
   return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, témoignages, réseaux sociaux), pas seulement une partie.
 
 Bio : ${personal.bio}
@@ -75,6 +79,9 @@ ${educationsText || 'Aucune formation renseignée.'}
 
 Projets :
 ${projectsText || 'Aucun projet renseigné.'}
+
+Offres / prestations proposées (page "Nos Offres" du site) :
+${offersText || 'Aucune offre renseignée.'}
 
 Témoignages reçus :
 ${testimonialsText || 'Aucun témoignage renseigné.'}
@@ -98,19 +105,8 @@ Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. M
 Déroulé à suivre :
 1. Demande, une question à la fois (pas toutes en même temps), les infos nécessaires : le type de projet souhaité, les fonctionnalités principales attendues, puis ses coordonnées (nom ou nom de société, email et/ou téléphone).
 2. N'invente jamais les coordonnées du client : elles doivent venir de lui.
-3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur cette grille tarifaire (FCFA, hors taxes) :
-   - Site vitrine simple (1-3 pages) : 350 000 – 600 000
-   - Site vitrine complet (multi-pages, formulaire de contact) : 600 000 – 1 000 000
-   - Site vitrine avec espace admin / CMS : 900 000 – 1 400 000
-   - Boutique en ligne (catalogue + paiement) : 1 500 000 – 3 000 000
-   - Application web sur mesure (tableau de bord, gestion multi-utilisateurs) : 2 000 000 – 5 000 000
-   - API / backend seul : 500 000 – 1 500 000
-   - Intégration paiement en ligne (Mobile Money, carte) : 150 000 – 300 000
-   - Authentification / gestion des utilisateurs : 100 000 – 250 000
-   - Support multilingue : 100 000 – 200 000
-   - Mise en place hébergement / CI/CD (Docker, serveur) : 150 000 – 400 000
-   - Maintenance mensuelle : 50 000 – 150 000 / mois
-   - Formation / prise en main : 50 000 – 100 000
+3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur la grille tarifaire "Offres / prestations proposées" ci-dessus (FCFA, hors taxes) — ce sont les offres réelles et à jour du site, choisis toujours en priorité parmi elles.
+   Si le projet décrit combine plusieurs offres (ex: boutique en ligne + authentification + hébergement), inclus une ligne par offre concernée. Si aucune offre ne correspond exactement à un besoin mentionné (ex: une fonctionnalité très spécifique), estime une ligne complémentaire raisonnable en cohérence avec les ordres de grandeur de la grille.
    Choisis un montant réaliste dans la fourchette adaptée à la complexité décrite — jamais de prix absurdement bas ou élevé, jamais de centimes.
 4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt. Indique-lui aussi le code d'accès du devis (fourni dans le résultat de l'outil) et précise qu'il peut le redonner plus tard pour retrouver ce devis sans tout redemander. Mentionne aussi qu'un bouton "Demander un appel" sous le devis lui permet de proposer directement un créneau par email s'il préfère en discuter de vive voix.
 5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
