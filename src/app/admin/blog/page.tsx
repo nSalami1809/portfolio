@@ -639,9 +639,9 @@ export default function AdminBlog() {
                         style={{
                           fontFamily: 'var(--font-poppins)',
                           background: 'var(--accent)',
-                          color: '#fff',
+                          color: 'var(--accent-contrast)',
                           border: 'none',
-                          boxShadow: '0 0 0 2px rgba(139,92,246,0.25)',
+                          boxShadow: '0 0 0 2px var(--accent-glow)',
                         }}
                         title="Publier sur le site"
                       >

@@ -22,7 +22,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <motion.div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'linear-gradient(135deg,#8B5CF6,#6D28D9)', boxShadow: '0 8px 28px rgba(139,92,246,0.4)' }}
+            style={{ background: 'var(--accent-gradient)', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }}
             whileHover={{ scale: 1.05 }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -42,7 +42,7 @@ export default function LoginPage() {
         <form action={action} className="card p-7 space-y-4">
 
           {/* Gradient top bar */}
-          <div className="-mx-7 -mt-7 mb-5 h-0.5 rounded-t-2xl" style={{ background: 'linear-gradient(90deg,#8B5CF6,#3B82F6)' }} />
+          <div className="-mx-7 -mt-7 mb-5 h-0.5 rounded-t-2xl" style={{ background: 'var(--accent-gradient)' }} />
 
           <div>
             <label htmlFor="email" className="block text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>

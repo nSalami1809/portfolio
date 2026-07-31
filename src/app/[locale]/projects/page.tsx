@@ -57,7 +57,7 @@ export default function ProjectsPage() {
   return (
     <div className="relative">
       {/* Full-page starfield background */}
-      <StarsCanvas hue={260} className="z-0 pointer-events-none" />
+      <StarsCanvas className="z-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20">
       {/* Hero */}

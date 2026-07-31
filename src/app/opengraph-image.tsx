@@ -15,7 +15,7 @@ export default function Image() {
           flexDirection: 'column',
           alignItems: 'flex-start',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #0a0a0f 0%, #12061e 50%, #0d1117 100%)',
+          background: 'linear-gradient(135deg, #0a0a0a 0%, #000000 50%, #0d0d0d 100%)',
           padding: '72px 80px',
           fontFamily: 'sans-serif',
           position: 'relative',
@@ -29,7 +29,7 @@ export default function Image() {
             right: '-100px',
             width: '500px',
             height: '500px',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.25) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
             borderRadius: '50%',
           }}
         />
@@ -40,15 +40,15 @@ export default function Image() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(139,92,246,0.12)',
-            border: '1px solid rgba(139,92,246,0.35)',
+            background: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.25)',
             borderRadius: '999px',
             padding: '6px 16px',
             marginBottom: '28px',
           }}
         >
           <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10B981' }} />
-          <span style={{ color: '#a78bfa', fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <span style={{ color: '#d4d4d4', fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Disponible pour missions
           </span>
         </div>
@@ -66,11 +66,11 @@ export default function Image() {
           }}
         >
           Nawaf Nemrod{' '}
-          <span style={{ color: '#8b5cf6' }}>Salami</span>
+          <span style={{ color: '#d4d4d4' }}>Salami</span>
         </div>
 
         {/* Role */}
-        <div style={{ fontSize: '26px', color: '#94a3b8', marginBottom: '48px', fontWeight: 400 }}>
+        <div style={{ fontSize: '26px', color: '#a3a3a3', marginBottom: '48px', fontWeight: 400 }}>
           Développeur Fullstack &amp; DevOps
         </div>
 
@@ -84,7 +84,7 @@ export default function Image() {
                 border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: '8px',
                 padding: '6px 14px',
-                color: '#cbd5e1',
+                color: '#d4d4d4',
                 fontSize: '15px',
               }}
             >
@@ -105,7 +105,7 @@ export default function Image() {
             color: '#ffffff',
           }}
         >
-          <span style={{ color: '#8b5cf6' }}>N</span>·S
+          <span style={{ color: '#d4d4d4' }}>N</span>·S
         </div>
       </div>
     ),
