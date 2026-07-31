@@ -64,7 +64,8 @@ export default function ResumePage() {
             {t.resume.subtitle}
           </p>
           {data.personal.cvUrl && (
-            <a href={data.personal.cvUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
+            // eslint-disable-next-line @next/next/no-html-link-for-pages -- forces a file download (Content-Disposition), not a page navigation
+            <a href="/api/cv" className="btn-primary">
               {t.resume.downloadCv}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
