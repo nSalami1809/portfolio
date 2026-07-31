@@ -11,6 +11,8 @@ import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import type { Quote } from '@/actions/quotes'
 import { usePortfolio } from '@/providers/PortfolioContext'
+import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 // Only needed once a visitor actually opens a generated devis (QR code lib
 // included) — keep it split out of the widget's own chunk until then.
@@ -20,9 +22,9 @@ type BotMood = 'idle' | 'thinking' | 'happy' | 'excited' | 'confused'
 
 function moodForText(text: string): BotMood {
   const t = text.toLowerCase()
-  if (/d[ée]sol[ée]|je n(?:'| )ai pas|aucune information|je ne sais pas|malheureusement|je ne peux pas/.test(t)) return 'confused'
-  if (/devis|f[ée]licitations|g[ée]n[ée]r[ée] avec succ[eè]s|c'est parti|excellente nouvelle/.test(t)) return 'excited'
-  if (/bonjour|bienvenue|ravi|super|avec plaisir|content de/.test(t)) return 'happy'
+  if (/d[ée]sol[ée]|je n(?:'| )ai pas|aucune information|je ne sais pas|malheureusement|je ne peux pas|sorry|i don't have|i don't know|unfortunately|i can't/.test(t)) return 'confused'
+  if (/devis|quote|f[ée]licitations|congratulations|g[ée]n[ée]r[ée] avec succ[eè]s|generated successfully|c'est parti|let's go|excellente nouvelle|great news/.test(t)) return 'excited'
+  if (/bonjour|hello|hi there|bienvenue|welcome|ravi|glad|super|great|avec plaisir|with pleasure|content de|happy to/.test(t)) return 'happy'
   return 'idle'
 }
 
@@ -201,9 +203,9 @@ function BotAvatar({ mood }: { mood: BotMood }) {
   )
 }
 
-function QuoteCard({ quote, onView, adminEmail }: { quote: Quote; onView: () => void; adminEmail?: string }) {
+function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () => void; adminEmail?: string; t: Dictionary['chat'] }) {
   const callHref = adminEmail
-    ? `mailto:${adminEmail}?subject=${encodeURIComponent(`Rendez-vous — devis ${quote.numero}`)}&body=${encodeURIComponent(`Bonjour,\n\nJe souhaite convenir d'un appel au sujet du devis ${quote.numero} (${quote.clientNom}).\n\nMes disponibilités :\n\nMerci !`)}`
+    ? `mailto:${adminEmail}?subject=${encodeURIComponent(`${t.callSubject} ${quote.numero}`)}&body=${encodeURIComponent(`${t.callBodyIntro} ${quote.numero} (${quote.clientNom}).\n\n${t.callBodyOutro}`)}`
     : undefined
 
   return (
@@ -212,22 +214,22 @@ function QuoteCard({ quote, onView, adminEmail }: { quote: Quote; onView: () => 
       style={{ maxWidth: '85%', background: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(91,33,182,0.1))', border: '1px solid var(--accent)' }}
     >
       <p className="text-xs font-bold mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
-        Devis {quote.numero}
+        {t.quotePrefix} {quote.numero}
       </p>
       <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{quote.clientNom}</p>
       <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>
-        Total TTC : {quote.totalTTC.toLocaleString('fr-FR')} FCFA
+        {t.totalTTC} : {quote.totalTTC.toLocaleString('fr-FR')} FCFA
       </p>
       <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>
-        Code de suivi : <strong style={{ color: 'var(--text)', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
+        {t.trackingCode} : <strong style={{ color: 'var(--text)', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
       </p>
       <div className="flex items-center gap-3 flex-wrap">
         <button onClick={onView} className="btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}>
-          Voir et imprimer le devis
+          {t.viewPrintQuote}
         </button>
         {callHref && (
           <a href={callHref} className="text-xs font-medium hover:underline" style={{ color: 'var(--accent)' }}>
-            Demander un appel
+            {t.requestCall}
           </a>
         )}
       </div>
@@ -235,16 +237,11 @@ function QuoteCard({ quote, onView, adminEmail }: { quote: Quote; onView: () => 
   )
 }
 
-const SUGGESTIONS: { label: string; text: string }[] = [
-  { label: 'Voir les projets', text: 'Quels sont tes projets les plus intéressants ?' },
-  { label: 'Compétences & stack', text: 'Quelles sont tes compétences techniques ?' },
-  { label: 'Combien coûte un site vitrine ?', text: 'Combien coûterait un site vitrine simple ?' },
-  { label: 'Demander un devis', text: "J'aimerais obtenir un devis pour mon projet." },
-]
-
 export default function ChatWidget() {
   const pathname = usePathname()
   const { data: { personal } } = usePortfolio()
+  const locale = useLocale()
+  const t = useDictionary()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
@@ -252,7 +249,7 @@ export default function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+    transport: new DefaultChatTransport({ api: '/api/chat', body: { locale } }),
   })
 
   const busy = status === 'submitted' || status === 'streaming'
@@ -302,7 +299,7 @@ export default function ChatWidget() {
       {/* Floating toggle button */}
       <motion.button
         onClick={toggleOpen}
-        aria-label={open ? 'Fermer le chat' : 'Ouvrir le chat'}
+        aria-label={open ? t.chat.toggleClose : t.chat.toggleOpen}
         aria-expanded={open}
         aria-controls="chat-widget-panel"
         className="fixed bottom-5 right-5 z-40 flex items-center justify-center rounded-full"
@@ -348,7 +345,7 @@ export default function ChatWidget() {
           <motion.div
             id="chat-widget-panel"
             role="dialog"
-            aria-label="Assistant du portfolio"
+            aria-label={t.chat.panelAria}
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -381,10 +378,10 @@ export default function ChatWidget() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
-                  Assistant du portfolio
+                  {t.chat.headerTitle}
                 </p>
                 <p className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                  Questions sur le parcours, les projets…
+                  {t.chat.headerSubtitle}
                 </p>
               </div>
             </div>
@@ -399,11 +396,11 @@ export default function ChatWidget() {
                       className="rounded-xl px-3.5 py-3 text-sm leading-relaxed"
                       style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-muted)', maxWidth: '85%' }}
                     >
-                      Bonjour ! Posez-moi une question sur le parcours, les projets ou les compétences de Nawaf. Je peux aussi <strong style={{ color: 'var(--text)' }}>générer un devis personnalisé</strong> pour votre projet, directement dans la conversation !
+                      {t.chat.greeting} <strong style={{ color: 'var(--text)' }}>{t.chat.greetingBold}</strong> {t.chat.greetingEnd}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {SUGGESTIONS.map(({ label, text }) => (
+                    {t.chat.suggestions.map(({ label, text }) => (
                       <button
                         key={label}
                         onClick={() => quickSend(text)}
@@ -462,7 +459,7 @@ export default function ChatWidget() {
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="excited" />
-                              <QuoteCard quote={quote} onView={() => setViewingQuote(quote)} adminEmail={personal.email} />
+                              <QuoteCard quote={quote} onView={() => setViewingQuote(quote)} adminEmail={personal.email} t={t.chat} />
                             </div>
                           )
                         }
@@ -474,7 +471,7 @@ export default function ChatWidget() {
                                 className="rounded-xl px-3.5 py-2.5 text-xs italic"
                                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
                               >
-                                Génération du devis…
+                                {t.chat.generatingQuote}
                               </div>
                             </div>
                           )
@@ -501,7 +498,7 @@ export default function ChatWidget() {
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="happy" />
-                              <QuoteCard quote={output} onView={() => setViewingQuote(output)} adminEmail={personal.email} />
+                              <QuoteCard quote={output} onView={() => setViewingQuote(output)} adminEmail={personal.email} t={t.chat} />
                             </div>
                           )
                         }
@@ -513,7 +510,7 @@ export default function ChatWidget() {
                                 className="rounded-xl px-3.5 py-2.5 text-xs italic"
                                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
                               >
-                                Recherche du devis…
+                                {t.chat.searchingQuote}
                               </div>
                             </div>
                           )
@@ -544,7 +541,7 @@ export default function ChatWidget() {
                                 className="rounded-xl px-3.5 py-2.5 text-xs italic"
                                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
                               >
-                                Envoi de l&rsquo;email…
+                                {t.chat.sendingEmail}
                               </div>
                             </div>
                           )
@@ -562,12 +559,12 @@ export default function ChatWidget() {
                   <motion.div
                     className="rounded-xl px-3 py-2.5 flex items-center gap-2"
                     style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
-                    aria-label="L'assistant réfléchit…"
+                    aria-label={t.chat.thinkingAria}
                     animate={{ y: [0, -2, 0] }}
                     transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   >
                     <BotAvatar mood="thinking" />
-                    <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>réfléchit</span>
+                    <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.chat.thinking}</span>
                     <div className="flex items-center gap-1">
                       {[0, 1, 2].map((i) => (
                         <motion.span
@@ -590,15 +587,15 @@ export default function ChatWidget() {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Écrivez votre question…"
-                aria-label="Votre message"
+                placeholder={t.chat.placeholder}
+                aria-label={t.chat.inputAria}
                 className="input text-sm flex-1"
                 autoComplete="off"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || busy}
-                aria-label="Envoyer"
+                aria-label={t.chat.sendAria}
                 className="btn-primary btn-sm shrink-0"
                 style={{ padding: '0.6rem' }}
               >

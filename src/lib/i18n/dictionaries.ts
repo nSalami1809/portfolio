@@ -1,5 +1,19 @@
 import type { Locale } from './locale'
 
+const chatSuggestionsFr = [
+  { label: 'Voir les projets', text: 'Quels sont tes projets les plus intéressants ?' },
+  { label: 'Compétences & stack', text: 'Quelles sont tes compétences techniques ?' },
+  { label: 'Combien coûte un site vitrine ?', text: 'Combien coûterait un site vitrine simple ?' },
+  { label: 'Demander un devis', text: "J'aimerais obtenir un devis pour mon projet." },
+]
+
+const chatSuggestionsEn = [
+  { label: 'View projects', text: 'What are your most interesting projects?' },
+  { label: 'Skills & stack', text: 'What are your technical skills?' },
+  { label: 'How much for a showcase website?', text: 'How much would a simple showcase website cost?' },
+  { label: 'Request a quote', text: "I'd like to get a quote for my project." },
+]
+
 const fr = {
   nav: {
     ariaMain: 'Navigation principale',
@@ -142,6 +156,33 @@ const fr = {
       successTitle: 'Message envoyé !',
       successText: 'Merci — je vous répondrai sous 48 heures ouvrables.',
     },
+  },
+  chat: {
+    toggleOpen: 'Ouvrir le chat',
+    toggleClose: 'Fermer le chat',
+    panelAria: 'Assistant du portfolio',
+    headerTitle: 'Assistant du portfolio',
+    headerSubtitle: 'Questions sur le parcours, les projets…',
+    greeting: 'Bonjour ! Posez-moi une question sur le parcours, les projets ou les compétences de Nawaf. Je peux aussi',
+    greetingBold: 'générer un devis personnalisé',
+    greetingEnd: 'pour votre projet, directement dans la conversation !',
+    suggestions: chatSuggestionsFr,
+    generatingQuote: 'Génération du devis…',
+    searchingQuote: 'Recherche du devis…',
+    sendingEmail: "Envoi de l'email…",
+    thinkingAria: "L'assistant réfléchit…",
+    thinking: 'réfléchit',
+    placeholder: 'Écrivez votre question…',
+    inputAria: 'Votre message',
+    sendAria: 'Envoyer',
+    quotePrefix: 'Devis',
+    totalTTC: 'Total TTC',
+    trackingCode: 'Code de suivi',
+    viewPrintQuote: 'Voir et imprimer le devis',
+    requestCall: 'Demander un appel',
+    callSubject: 'Rendez-vous — devis',
+    callBodyIntro: "Bonjour,\n\nJe souhaite convenir d'un appel au sujet du devis",
+    callBodyOutro: 'Mes disponibilités :\n\nMerci !',
   },
 }
 
@@ -287,6 +328,33 @@ const en: typeof fr = {
       successTitle: 'Message sent!',
       successText: "Thanks — I'll get back to you within 48 business hours.",
     },
+  },
+  chat: {
+    toggleOpen: 'Open chat',
+    toggleClose: 'Close chat',
+    panelAria: 'Portfolio assistant',
+    headerTitle: 'Portfolio assistant',
+    headerSubtitle: 'Questions about background, projects…',
+    greeting: 'Hi! Ask me anything about Nawaf’s background, projects or skills. I can also',
+    greetingBold: 'generate a custom quote',
+    greetingEnd: 'for your project, right here in the chat!',
+    suggestions: chatSuggestionsEn,
+    generatingQuote: 'Generating the quote…',
+    searchingQuote: 'Looking up the quote…',
+    sendingEmail: 'Sending the email…',
+    thinkingAria: 'The assistant is thinking…',
+    thinking: 'thinking',
+    placeholder: 'Type your question…',
+    inputAria: 'Your message',
+    sendAria: 'Send',
+    quotePrefix: 'Quote',
+    totalTTC: 'Total (incl. tax)',
+    trackingCode: 'Tracking code',
+    viewPrintQuote: 'View and print the quote',
+    requestCall: 'Request a call',
+    callSubject: 'Meeting — quote',
+    callBodyIntro: "Hello,\n\nI'd like to schedule a call about quote",
+    callBodyOutro: 'My availability:\n\nThanks!',
   },
 }
 

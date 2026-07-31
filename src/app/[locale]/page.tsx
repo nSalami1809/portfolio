@@ -3,6 +3,7 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import { fetchPortfolio } from '@/actions/portfolio'
+import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import {
@@ -27,10 +28,24 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const skills       = portfolio?.skills       ?? defaultSkills
   const testimonials = portfolio?.testimonials ?? defaultTestimonials
 
+  const bioFields = await translateFields('personal:bio', locale, { bio: personal.bio })
+  const translatedPersonal = { ...personal, bio: bioFields.bio }
+
+  const translatedTestimonials = await Promise.all(
+    testimonials.map(async (tm) => {
+      const fields = await translateFields(`testimonial:${tm.id}`, locale, {
+        text: tm.text,
+        role: tm.role ?? '',
+        company: tm.company ?? '',
+      })
+      return { ...tm, text: fields.text, role: fields.role || undefined, company: fields.company || undefined }
+    }),
+  )
+
   return (
     <>
       {/* ── HERO ── */}
-      <HeroSection personal={personal} socials={socials} locale={locale} t={t.home} />
+      <HeroSection personal={translatedPersonal} socials={socials} locale={locale} t={t.home} />
 
       {/* ── À PROPOS ── */}
       <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
@@ -143,7 +158,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </FadeIn>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {testimonials.map((tm, i) => (
+              {translatedTestimonials.map((tm, i) => (
                 <FadeIn key={tm.id} delay={Math.min(i * 0.08, 0.24)}>
                   <div className="card p-6 h-full flex flex-col">
                     <div className="mb-4">
