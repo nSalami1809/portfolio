@@ -138,7 +138,11 @@ export function StarsCanvas({
       ctx.fillStyle = transparent ? `rgba(${bg},0)` : `rgba(${bg},1)`;
       ctx.fillRect(0, 0, w, h);
 
-      ctx.globalCompositeOperation = 'lighter';
+      // 'lighter' (additive) only ever brightens — perfect for light stars
+      // glowing on a dark sky, but it can't darken a light background, so
+      // dark stars in light mode would stay invisible. Plain alpha
+      // blending works correctly for both directions.
+      ctx.globalCompositeOperation = isDark ? 'lighter' : 'source-over';
       for (let i = 1; i < stars.length; i++) {
         stars[i].draw();
       }
