@@ -124,10 +124,19 @@ export function StarsCanvas({
       }
     };
 
-    const animate = () => {
+    // Capped at ~30fps — the canvas sits behind glass cards with
+    // backdrop-filter, so every redraw forces every card above it to
+    // re-blur. Uncapped requestAnimationFrame runs at the display's full
+    // refresh rate (up to 120–144Hz on modern hardware) for no visible gain
+    // on a slow-drifting starfield, but doubles/triples the compositing tax.
+    const FRAME_INTERVAL = 1000 / 30;
+    let lastFrameTime = 0;
+    const animate = (now: number) => {
       if (paused) return; // Skip if paused
-      drawFrame();
       animationRef.current = requestAnimationFrame(animate);
+      if (now - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = now;
+      drawFrame();
     };
 
     // Users who've asked for less motion still see the starfield — it just

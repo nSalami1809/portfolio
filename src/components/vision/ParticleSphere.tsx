@@ -1,11 +1,12 @@
 'use client'
 
 import { useRef, useMemo, useState, useEffect } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
 const COUNT  = 1400
 const RADIUS = 2.2
+const TARGET_FPS = 30
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false)
@@ -17,6 +18,20 @@ function usePrefersReducedMotion() {
     return () => mq.removeEventListener('change', onChange)
   }, [])
   return reduced
+}
+
+// See ParticleWave.tsx for why: `frameloop="demand"` + a throttled manual
+// invalidate caps the actual render/compositing rate at ~30fps instead of
+// the display's full refresh rate, which matters because this canvas sits
+// behind glass cards whose backdrop-filter re-blurs it on every redraw.
+function FrameLimiter({ active }: { active: boolean }) {
+  const invalidate = useThree((s) => s.invalidate)
+  useEffect(() => {
+    if (!active) return
+    const id = setInterval(invalidate, 1000 / TARGET_FPS)
+    return () => clearInterval(id)
+  }, [invalidate, active])
+  return null
 }
 
 function Particles({ reduceMotion }: { reduceMotion: boolean }) {
@@ -120,7 +135,9 @@ export default function ParticleSphere() {
       dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: true }}
       style={{ width: '100%', height: '100%' }}
+      frameloop="demand"
     >
+      <FrameLimiter active={!reduceMotion} />
       <Particles reduceMotion={reduceMotion} />
       <Ring reduceMotion={reduceMotion} />
     </Canvas>

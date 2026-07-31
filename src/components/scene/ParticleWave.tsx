@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/refs */
 
 import { useRef, useMemo, useState, useEffect } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Points, PointMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -12,6 +12,7 @@ import * as THREE from 'three'
 const COLS = 38
 const ROWS = 24
 const SPACING = 0.32
+const TARGET_FPS = 30
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false)
@@ -23,6 +24,22 @@ function usePrefersReducedMotion() {
     return () => mq.removeEventListener('change', onChange)
   }, [])
   return reduced
+}
+
+// `frameloop="demand"` on the Canvas means nothing renders unless this
+// explicitly asks for a frame. Without it R3F redraws (and re-uploads GPU
+// buffers) at the display's full refresh rate — up to 120-144Hz — for a
+// slow-drifting background, and every redraw forces the glass cards on top
+// of it to re-run their backdrop-filter blur. Capping the actual render
+// cadence, not just our own math, is what cuts that cost.
+function FrameLimiter({ active }: { active: boolean }) {
+  const invalidate = useThree((s) => s.invalidate)
+  useEffect(() => {
+    if (!active) return
+    const id = setInterval(invalidate, 1000 / TARGET_FPS)
+    return () => clearInterval(id)
+  }, [invalidate, active])
+  return null
 }
 
 function Wave({ reduceMotion }: { reduceMotion: boolean }) {
@@ -146,11 +163,13 @@ export default function ParticleWave() {
         gl={{ alpha: true, antialias: false }}
         style={{ background: 'transparent' }}
         dpr={[1, 1.5]}
+        frameloop="demand"
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[0, 8, 0]} intensity={1.2} color="#3B82F6" />
         <pointLight position={[-6, 2, 4]} intensity={0.6} color="#1D4ED8" />
 
+        <FrameLimiter active={!reduceMotion} />
         <Wave reduceMotion={reduceMotion} />
         <SecondaryWave reduceMotion={reduceMotion} />
       </Canvas>
