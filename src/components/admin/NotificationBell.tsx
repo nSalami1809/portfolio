@@ -74,7 +74,7 @@ export default function NotificationBell() {
         {total > 0 && (
           <span
             className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-[10px] font-bold"
-            style={{ minWidth: 16, height: 16, padding: '0 3px', background: 'var(--accent)', color: '#fff' }}
+            style={{ minWidth: 16, height: 16, padding: '0 3px', background: 'var(--accent)', color: 'var(--accent-contrast)' }}
           >
             {total > 9 ? '9+' : total}
           </span>

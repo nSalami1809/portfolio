@@ -148,14 +148,14 @@ export default function BlogPostView({ post, locale, t }: { post: BlogPost; loca
             rel="noopener noreferrer"
             className="group flex items-center justify-between gap-4 rounded-xl px-5 py-4 mb-10 transition-all duration-200 hover:scale-[1.01]"
             style={{
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.07) 0%, rgba(91,33,182,0.03) 100%)',
-              border: '1px solid rgba(139,92,246,0.2)',
+              background: 'var(--accent-glow)',
+              border: '1px solid var(--glass-border)',
             }}
           >
             <div className="flex items-center gap-3 min-w-0">
               <div
                 className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(139,92,246,0.12)' }}
+                style={{ background: 'var(--accent-glow)' }}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--accent)' }} aria-hidden="true">
                   <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
@@ -176,7 +176,7 @@ export default function BlogPostView({ post, locale, t }: { post: BlogPost; loca
               style={{
                 fontFamily: 'var(--font-poppins)',
                 background: 'var(--accent)',
-                color: '#fff',
+                color: 'var(--accent-contrast)',
               }}
             >
               {t.discover}

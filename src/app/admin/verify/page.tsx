@@ -94,7 +94,7 @@ export default function VerifyPage() {
         <div className="text-center mb-8">
           <motion.div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'var(--accent)', boxShadow: '0 8px 28px rgba(139,92,246,0.4)' }}
+            style={{ background: 'var(--accent-gradient)', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }}
             animate={{ scale: pending ? 0.92 : 1 }}
             transition={{ duration: 0.2 }}
           >
@@ -161,7 +161,7 @@ export default function VerifyPage() {
                         : 'var(--surface)',
                       color: 'var(--text)',
                       boxShadow: focused === i
-                        ? '0 0 0 3px rgba(139,92,246,0.15)'
+                        ? '0 0 0 3px var(--accent-glow)'
                         : 'none',
                     }}
                   />

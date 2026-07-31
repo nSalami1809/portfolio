@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 interface StarsCanvasProps {
   transparent?: boolean;       // Background transparency
   maxStars?: number;           // Total number of stars
-  hue?: number;                // Color hue for the stars
   brightness?: number;         // Overall star brightness (0–1)
   speedMultiplier?: number;    // Global animation speed multiplier
   twinkleIntensity?: number;   // How often stars twinkle
@@ -15,7 +14,6 @@ interface StarsCanvasProps {
 export function StarsCanvas({
   transparent = false,
   maxStars = 600,
-  hue = 217,
   brightness = 10,
   speedMultiplier = 1,
   twinkleIntensity = 20,
@@ -44,8 +42,8 @@ export function StarsCanvas({
     const half = canvas2.width / 2;
     const gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half);
     gradient2.addColorStop(0.025, '#fff');
-    gradient2.addColorStop(0.1, `hsl(${hue}, 61%, 33%)`);
-    gradient2.addColorStop(0.25, `hsl(${hue}, 64%, 6%)`);
+    gradient2.addColorStop(0.1, 'rgba(255,255,255,0.45)');
+    gradient2.addColorStop(0.25, 'rgba(255,255,255,0.04)');
     gradient2.addColorStop(1, 'transparent');
     ctx2.fillStyle = gradient2;
     ctx2.beginPath();
@@ -115,7 +113,7 @@ export function StarsCanvas({
     const drawFrame = () => {
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 0.8;
-      ctx.fillStyle = transparent ? 'hsla(217, 64%, 6%, 0)' : 'hsla(217, 64%, 6%, 1)';
+      ctx.fillStyle = transparent ? 'rgba(11,11,15,0)' : 'rgba(11,11,15,1)';
       ctx.fillRect(0, 0, w, h);
 
       ctx.globalCompositeOperation = 'lighter';
@@ -158,7 +156,7 @@ export function StarsCanvas({
       if (animationRef.current !== undefined) cancelAnimationFrame(animationRef.current);
       window.removeEventListener('resize', handleResize);
     };
-  }, [transparent, maxStars, hue, brightness, speedMultiplier, twinkleIntensity, paused]);
+  }, [transparent, maxStars, brightness, speedMultiplier, twinkleIntensity, paused]);
 
   return (
     <canvas

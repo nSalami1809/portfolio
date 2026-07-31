@@ -87,11 +87,11 @@ function Wave({ reduceMotion }: { reduceMotion: boolean }) {
     <Points ref={ref} positions={posRef.current} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#60A5FA"
+        color="#FFFFFF"
         size={0.045}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.75}
+        opacity={0.6}
       />
     </Points>
   )
@@ -140,7 +140,7 @@ function SecondaryWave({ reduceMotion }: { reduceMotion: boolean }) {
     <Points ref={ref} positions={posRef.current} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#93C5FD"
+        color="#D4D4D4"
         size={0.025}
         sizeAttenuation
         depthWrite={false}
@@ -166,8 +166,8 @@ export default function ParticleWave() {
         frameloop="demand"
       >
         <ambientLight intensity={0.5} />
-        <pointLight position={[0, 8, 0]} intensity={1.2} color="#3B82F6" />
-        <pointLight position={[-6, 2, 4]} intensity={0.6} color="#1D4ED8" />
+        <pointLight position={[0, 8, 0]} intensity={1.2} color="#FFFFFF" />
+        <pointLight position={[-6, 2, 4]} intensity={0.6} color="#C7C7C7" />
 
         <FrameLimiter active={!reduceMotion} />
         <Wave reduceMotion={reduceMotion} />

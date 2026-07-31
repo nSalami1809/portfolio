@@ -253,7 +253,7 @@ export default function Navbar() {
                         aria-hidden="true"
                         className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
                         style={{
-                          background: isActive ? 'rgba(139,92,246,0.15)' : 'var(--surface)',
+                          background: isActive ? 'var(--accent-glow)' : 'var(--surface)',
                           color: isActive ? 'var(--accent)' : 'var(--text-muted)',
                         }}
                       >

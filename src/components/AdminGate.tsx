@@ -86,13 +86,13 @@ export default function AdminGate() {
             <form
               onSubmit={submit}
               className="card p-6"
-              style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(139,92,246,0.15)' }}
+              style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px var(--glass-border)' }}
             >
               {/* Header */}
               <div className="flex items-center gap-3 mb-5">
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#8B5CF6,#5B21B6)' }}
+                  style={{ background: 'var(--accent-gradient)' }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                     <rect x="3" y="11" width="18" height="11" rx="2"/>

@@ -196,7 +196,7 @@ function BotAvatar({ mood }: { mood: BotMood }) {
   return (
     <div
       className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-      style={{ background: 'linear-gradient(135deg,#8B5CF6,#5B21B6)' }}
+      style={{ background: 'var(--accent-gradient)' }}
       aria-hidden="true"
     >
       <BotIcon width={13} height={13} color="white" mood={mood} />
@@ -212,7 +212,7 @@ function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () 
   return (
     <div
       className="rounded-xl p-3.5"
-      style={{ maxWidth: '85%', background: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(91,33,182,0.1))', border: '1px solid var(--accent)' }}
+      style={{ maxWidth: '85%', background: 'var(--accent-glow)', border: '1px solid var(--accent)' }}
     >
       <p className="text-xs font-bold mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
         {t.quotePrefix} {quote.numero}
@@ -320,7 +320,7 @@ export default function ChatWidget() {
           height: 56,
           background: 'var(--accent)',
           boxShadow: '0 8px 30px var(--accent-glow)',
-          color: '#fff',
+          color: 'var(--accent-contrast)',
         }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
@@ -383,7 +383,7 @@ export default function ChatWidget() {
             >
               <div
                 className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg,#8B5CF6,#5B21B6)' }}
+                style={{ background: 'var(--accent-gradient)' }}
                 aria-hidden="true"
               >
                 <BotIcon width={17} height={17} color="white" mood={headerMood} />

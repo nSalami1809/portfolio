@@ -29,7 +29,7 @@ const ICONS = {
     </div>
   ),
   info: (
-    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)' }}>
+    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-glow)' }}>
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     </div>
   ),
@@ -38,7 +38,7 @@ const ICONS = {
 const BORDER = {
   success: 'rgba(16,185,129,0.35)',
   error:   'rgba(239,68,68,0.35)',
-  info:    'rgba(139,92,246,0.3)',
+  info:    'var(--glass-border)',
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
