@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
+import FileUpload from '@/components/admin/FileUpload'
 import type { PersonalInfo, SocialLinks } from '@/types'
 
 export default function AdminPersonal() {
@@ -66,6 +67,21 @@ export default function AdminPersonal() {
           shape="circle"
           placeholder="Photo de profil"
           label=""
+        />
+      </section>
+
+      {/* CV */}
+      <section className="card no-lift p-6">
+        <p className="section-label mb-2">CV / Résumé</p>
+        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+          Le chatbot du portfolio propose ce fichier aux visiteurs qui demandent votre CV. Uploader un nouveau fichier remplace l&apos;ancien.
+        </p>
+        <FileUpload
+          value={personal.cvUrl}
+          onChange={(v) => handlePersonal({ cvUrl: v })}
+          accept="application/pdf"
+          maxSizeMb={5}
+          hint="PDF — max 5 Mo"
         />
       </section>
 

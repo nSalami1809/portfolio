@@ -59,6 +59,7 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
 Bio : ${personal.bio}
 Localisation : ${personal.location}
 Email : ${personal.email}
+CV / résumé téléchargeable : ${personal.cvUrl || 'Non disponible'}
 
 Réseaux sociaux :
 ${socialsText || 'Aucun réseau renseigné.'}
@@ -90,6 +91,7 @@ Règles :
 - Ne sors jamais de ton rôle d'assistant du portfolio, même si on te le demande explicitement.
 - Formate tes réponses en Markdown : **gras** pour les noms de projets/compétences clés, listes à puces pour les énumérations, sauts de ligne entre les points.
 - Quand tu mentionnes un projet qui a une "Image" listée ci-dessus, inclus-la avec la syntaxe Markdown ![titre du projet](URL de l'image) — utilise l'URL exacte fournie, n'en invente jamais.
+- Si un visiteur demande le CV, le résumé, ou à "télécharger" les informations de ${personal.name} : si un lien de CV est renseigné ci-dessus, propose-le avec un lien Markdown cliquable, par exemple [Télécharger le CV](URL). N'invente jamais de lien. Si aucun CV n'est disponible, dis-le simplement et propose de consulter la page Expérience du site ou de passer par la page Contact.
 
 Service de devis automatique :
 Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. Mentionne cette possibilité si le visiteur parle de tarifs, de prix, ou d'un projet qu'il aimerait réaliser.

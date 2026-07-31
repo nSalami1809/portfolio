@@ -6,6 +6,7 @@ const getSecret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const MAX_VIDEO_BYTES = 30 * 1024 * 1024
+const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024
 
 async function requireAdmin(req: NextRequest) {
   const token = req.cookies.get('admin-token')?.value
@@ -31,16 +32,17 @@ export async function POST(req: NextRequest) {
 
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
-  if (!isImage && !isVideo) {
+  const isDocument = file.type === 'application/pdf'
+  if (!isImage && !isVideo && !isDocument) {
     return NextResponse.json({ error: 'Type de fichier non supporté' }, { status: 400 })
   }
 
-  const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES
+  const maxBytes = isVideo ? MAX_VIDEO_BYTES : isDocument ? MAX_DOCUMENT_BYTES : MAX_IMAGE_BYTES
   if (file.size > maxBytes) {
     return NextResponse.json({ error: `Fichier trop lourd (max ${Math.round(maxBytes / 1024 / 1024)} Mo)` }, { status: 400 })
   }
 
-  const folder = isVideo ? 'videos' : 'images'
+  const folder = isVideo ? 'videos' : isDocument ? 'documents' : 'images'
   const blob = await put(`${folder}/${Date.now()}-${file.name}`, file, {
     access: 'public',
     addRandomSuffix: true,

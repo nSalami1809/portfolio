@@ -60,9 +60,17 @@ export default function ResumePage() {
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
             {t.resume.title}
           </h1>
-          <p className="text-lg" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
+          <p className="text-lg mb-6" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
             {t.resume.subtitle}
           </p>
+          {data.personal.cvUrl && (
+            <a href={data.personal.cvUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
+              {t.resume.downloadCv}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+            </a>
+          )}
         </FadeIn>
       </div>
 

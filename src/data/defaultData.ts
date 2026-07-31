@@ -7,6 +7,7 @@ export const defaultPersonalInfo: PersonalInfo = {
   email: 'nemrodsalami1809@gmail.com',
   location: 'Libreville, Gabon — Disponible en remote',
   photo: '',
+  cvUrl: '',
 }
 
 export const defaultSocials: SocialLinks = {

@@ -78,6 +78,7 @@ const fr = {
     experiencesLabel: 'Expériences professionnelles',
     skillsLabel: 'Compétences techniques',
     educationLabel: 'Formations',
+    downloadCv: 'Télécharger mon CV',
   },
   vision: {
     label: 'Philosophie',
@@ -183,6 +184,7 @@ const fr = {
     callSubject: 'Rendez-vous — devis',
     callBodyIntro: "Bonjour,\n\nJe souhaite convenir d'un appel au sujet du devis",
     callBodyOutro: 'Mes disponibilités :\n\nMerci !',
+    cvSuggestion: { label: 'Télécharger le CV', text: 'Peux-tu me faire parvenir ton CV ?' },
   },
 }
 
@@ -250,6 +252,7 @@ const en: typeof fr = {
     experiencesLabel: 'Work experience',
     skillsLabel: 'Technical skills',
     educationLabel: 'Education',
+    downloadCv: 'Download my CV',
   },
   vision: {
     label: 'Philosophy',
@@ -355,6 +358,7 @@ const en: typeof fr = {
     callSubject: 'Meeting — quote',
     callBodyIntro: "Hello,\n\nI'd like to schedule a call about quote",
     callBodyOutro: 'My availability:\n\nThanks!',
+    cvSuggestion: { label: 'Download CV', text: 'Could you send me your CV?' },
   },
 }
 

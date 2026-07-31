@@ -242,6 +242,7 @@ export default function ChatWidget() {
   const { data: { personal } } = usePortfolio()
   const locale = useLocale()
   const t = useDictionary()
+  const suggestions = personal.cvUrl ? [...t.chat.suggestions, t.chat.cvSuggestion] : t.chat.suggestions
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
@@ -400,7 +401,7 @@ export default function ChatWidget() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {t.chat.suggestions.map(({ label, text }) => (
+                    {suggestions.map(({ label, text }) => (
                       <button
                         key={label}
                         onClick={() => quickSend(text)}
