@@ -3,15 +3,15 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { submitContact } from '@/actions/contact'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 
-function checkEmailFormat(v: string): string {
-  if (!v) return ''
-  return EMAIL_RE.test(v) ? '' : 'Format invalide — ex: prenom@domaine.com'
-}
-
-export default function ContactForm() {
+export default function ContactForm({ t }: { t: Dictionary['contact']['form'] }) {
+  const checkEmailFormat = (v: string): string => {
+    if (!v) return ''
+    return EMAIL_RE.test(v) ? '' : t.emailInvalid
+  }
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [form, setForm] = useState({
@@ -75,10 +75,10 @@ export default function ContactForm() {
           </svg>
         </div>
         <h3 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>
-          Message envoyé !
+          {t.successTitle}
         </h3>
         <p style={{ color: 'var(--text-muted)' }}>
-          Merci — je vous répondrai sous 48 heures ouvrables.
+          {t.successText}
         </p>
       </motion.div>
     )
@@ -94,18 +94,18 @@ export default function ContactForm() {
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="cf-name" className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-            Nom complet *
+            {t.nameLabel}
           </label>
           <input
             id="cf-name" type="text" name="name" value={form.name}
             onChange={handle} required maxLength={100}
-            placeholder="Prénom Nom"
+            placeholder={t.namePlaceholder}
             className={fieldClass}
           />
         </div>
         <div>
           <label htmlFor="cf-email" className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-            Email *
+            {t.emailLabel}
           </label>
           <div className="relative">
             <input
@@ -113,7 +113,7 @@ export default function ContactForm() {
               onChange={handleEmailChange}
               onBlur={handleEmailBlur}
               required maxLength={254}
-              placeholder="adresse@email.com"
+              placeholder={t.emailPlaceholder}
               aria-invalid={emailError ? 'true' : undefined}
               aria-describedby={emailError ? 'cf-email-error' : undefined}
               className={fieldClass}
@@ -158,8 +158,8 @@ export default function ContactForm() {
       {/* Téléphone */}
       <div>
         <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          Téléphone
-          <span className="ml-2 text-[10px] font-normal opacity-50">(optionnel)</span>
+          {t.phoneLabel}
+          <span className="ml-2 text-[10px] font-normal opacity-50">{t.phoneOptional}</span>
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }}>
@@ -170,7 +170,7 @@ export default function ContactForm() {
           <input
             id="cf-phone" type="tel" name="phone" value={form.phone}
             onChange={handle} maxLength={30}
-            placeholder="+241 ..."
+            placeholder={t.phonePlaceholder}
             className={fieldClass}
             style={{ paddingLeft: '2.25rem' }}
           />
@@ -180,7 +180,7 @@ export default function ContactForm() {
       {/* Sujet */}
       <div>
         <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          Sujet *
+          {t.subjectLabel}
         </label>
         <select
           id="cf-subject" name="subject" value={form.subject}
@@ -188,11 +188,11 @@ export default function ContactForm() {
           className={fieldClass}
           style={{ appearance: 'none' }}
         >
-          <option value="" disabled>Sélectionner un sujet</option>
-          <option value="mission">Mission / Projet freelance</option>
-          <option value="collaboration">Collaboration</option>
-          <option value="conseil">Conseil technique</option>
-          <option value="autre">Autre</option>
+          <option value="" disabled>{t.subjectPlaceholder}</option>
+          <option value="mission">{t.subjectMission}</option>
+          <option value="collaboration">{t.subjectCollaboration}</option>
+          <option value="conseil">{t.subjectConseil}</option>
+          <option value="autre">{t.subjectAutre}</option>
         </select>
       </div>
 
@@ -208,13 +208,13 @@ export default function ContactForm() {
             style={{ overflow: 'hidden' }}
           >
             <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-              Précisez l&apos;objet *
+              {t.customSubjectLabel}
             </label>
             <input
               id="cf-custom-subject" type="text" name="customSubject" value={form.customSubject}
               onChange={handle} maxLength={120}
               required={form.subject === 'autre'}
-              placeholder="Indiquez l'objet de votre message"
+              placeholder={t.customSubjectPlaceholder}
               className={fieldClass}
             />
           </motion.div>
@@ -224,12 +224,12 @@ export default function ContactForm() {
       {/* Message */}
       <div>
         <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          Message *
+          {t.messageLabel}
         </label>
         <textarea
           id="cf-message" name="message" value={form.message}
           onChange={handle} required rows={6} maxLength={3000}
-          placeholder="Décrivez votre besoin, vos contraintes, vos objectifs…"
+          placeholder={t.messagePlaceholder}
           className={fieldClass}
           style={{ resize: 'none' }}
         />
@@ -257,11 +257,11 @@ export default function ContactForm() {
               className="w-4 h-4 border-2 border-t-transparent rounded-full"
               style={{ borderColor: 'rgba(255,255,255,0.5)', borderTopColor: 'transparent' }}
             />
-            Envoi en cours…
+            {t.sending}
           </>
         ) : (
           <>
-            Envoyer le message
+            {t.send}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="22" y1="2" x2="11" y2="13"/>
               <polygon points="22 2 15 22 11 13 2 9 22 2"/>

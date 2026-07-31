@@ -1,14 +1,37 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import ParticleWaveClient from '@/components/scene/ParticleWaveClient'
+import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import { translateText } from '@/actions/translate'
+
+type Translated = Record<string, { title: string; excerpt: string }>
 
 export default function BlogPage() {
   const { data } = usePortfolio()
   const posts = data.blog.filter((p) => p.published)
+  const locale = useLocale()
+  const t = useDictionary()
+  const dateLocale = locale === 'en' ? 'en-US' : 'fr-FR'
+
+  const [translated, setTranslated] = useState<Translated>({})
+
+  useEffect(() => {
+    if (locale !== 'en' || posts.length === 0) { setTranslated({}); return } // eslint-disable-line react-hooks/set-state-in-effect
+    let cancelled = false
+    Promise.all(
+      posts.map(async (p) => {
+        const fields = await translateText(`blog:${p.slug}`, 'en', { title: p.title, excerpt: p.excerpt })
+        return [p.slug, { title: fields.title ?? p.title, excerpt: fields.excerpt ?? p.excerpt }] as const
+      }),
+    ).then((entries) => { if (!cancelled) setTranslated(Object.fromEntries(entries)) }).catch(() => {})
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, posts.length])
 
   return (
     <div className="relative">
@@ -16,12 +39,12 @@ export default function BlogPage() {
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-20">
         <FadeIn>
-          <p className="section-label mb-3">Articles</p>
+          <p className="section-label mb-3">{t.blog.label}</p>
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
-            Blog
+            {t.blog.title}
           </h1>
           <p className="text-lg mb-16" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
-            Retours d&apos;expérience, réflexions techniques et pensées sur le développement moderne.
+            {t.blog.subtitle}
           </p>
         </FadeIn>
 
@@ -41,19 +64,21 @@ export default function BlogPage() {
                 </svg>
               </div>
               <p className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>
-                Premiers articles en cours de rédaction
+                {t.blog.emptyTitle}
               </p>
               <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-                Revenez bientôt pour des articles sur le développement fullstack et DevOps.
+                {t.blog.emptyText}
               </p>
             </div>
           </FadeIn>
         ) : (
           <div>
-            {posts.map((post, i) => (
+            {posts.map((post, i) => {
+              const tp = translated[post.slug]
+              return (
               <FadeIn key={post.slug} delay={i * 0.07}>
                 <Link
-                  href={`/blog/${post.slug}`}
+                  href={`/${locale}/blog/${post.slug}`}
                   className="group flex flex-col sm:flex-row gap-6 py-8 transition-colors duration-200"
                   style={{ borderTop: '1px solid var(--border)' }}
                 >
@@ -81,19 +106,19 @@ export default function BlogPage() {
                       className="font-display font-semibold text-xl mb-2 transition-colors duration-200 group-hover:text-[var(--accent)]"
                       style={{ color: 'var(--text)' }}
                     >
-                      {post.title}
+                      {tp?.title ?? post.title}
                     </h2>
                     <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-                      {post.excerpt}
+                      {tp?.excerpt ?? post.excerpt}
                     </p>
                     <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                       <span>
-                        {new Date(post.date).toLocaleDateString('fr-FR', {
+                        {new Date(post.date).toLocaleDateString(dateLocale, {
                           year: 'numeric', month: 'long', day: 'numeric',
                         })}
                       </span>
                       <span>·</span>
-                      <span>{post.readTime} de lecture</span>
+                      <span>{post.readTime} {t.blog.readTime}</span>
                     </div>
                   </div>
                   <div className="self-center opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1">
@@ -103,7 +128,8 @@ export default function BlogPage() {
                   </div>
                 </Link>
               </FadeIn>
-            ))}
+              )
+            })}
             <div style={{ borderTop: '1px solid var(--border)' }} />
           </div>
         )}

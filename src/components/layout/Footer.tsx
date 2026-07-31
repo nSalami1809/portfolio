@@ -3,54 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { usePortfolio } from '@/providers/PortfolioContext'
-
-const navLinks = [
-  {
-    href: '/',
-    label: 'À propos',
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/resume',
-    label: 'Expérience',
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/projects',
-    label: 'Projets',
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/blog',
-    label: 'Blog',
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-      </svg>
-    ),
-  },
-  {
-    href: '/contact',
-    label: 'Contact',
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-      </svg>
-    ),
-  },
-]
+import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 
 function NavItem({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const [hovered, setHovered] = useState(false)
@@ -128,10 +81,60 @@ function SocialItem({
 
 export default function Footer() {
   const { data } = usePortfolio()
+  const locale = useLocale()
+  const t = useDictionary()
   const year = new Date().getFullYear()
 
+  const navLinks = [
+    {
+      href: `/${locale}`,
+      label: t.nav.about,
+      icon: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      ),
+    },
+    {
+      href: `/${locale}/resume`,
+      label: t.nav.resume,
+      icon: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+        </svg>
+      ),
+    },
+    {
+      href: `/${locale}/projects`,
+      label: t.nav.projects,
+      icon: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/>
+        </svg>
+      ),
+    },
+    {
+      href: `/${locale}/blog`,
+      label: t.nav.blog,
+      icon: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      ),
+    },
+    {
+      href: `/${locale}/contact`,
+      label: t.nav.contact,
+      icon: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      ),
+    },
+  ]
+
   return (
-    <footer aria-label="Pied de page" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+    <footer aria-label={t.footer.aria} style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
 
@@ -146,14 +149,14 @@ export default function Footer() {
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#10B981' }} />
               <span className="text-xs" style={{ color: '#10B981', fontFamily: 'var(--font-poppins)' }}>
-                Disponible pour missions
+                {t.footer.available}
               </span>
             </div>
           </div>
 
           {/* Navigation */}
           <div>
-            <p className="section-label mb-3">Navigation</p>
+            <p className="section-label mb-3">{t.footer.navigation}</p>
             <ul className="space-y-0.5">
               {navLinks.map((link) => (
                 <NavItem key={link.href} {...link} />
@@ -163,7 +166,7 @@ export default function Footer() {
 
           {/* Contact & socials */}
           <div>
-            <p className="section-label mb-3">Contact & Réseaux</p>
+            <p className="section-label mb-3">{t.footer.contactSocials}</p>
             <div className="space-y-1.5">
               {data.personal.email && (
                 <SocialItem
@@ -224,7 +227,7 @@ export default function Footer() {
           className="pt-8 flex justify-center text-xs"
           style={{ borderTop: '1px solid var(--border)', color: 'var(--text-subtle)' }}
         >
-          <p>&copy; {year} {data.personal.name}. Tous droits réservés.</p>
+          <p>&copy; {year} {data.personal.name}. {t.footer.rights}</p>
         </div>
       </div>
     </footer>

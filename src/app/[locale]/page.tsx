@@ -3,6 +3,8 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import { fetchPortfolio } from '@/actions/portfolio'
+import { getDictionary } from '@/lib/i18n/dictionaries'
+import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import {
   defaultPersonalInfo,
   defaultSocials,
@@ -13,7 +15,11 @@ import {
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
 
-export default async function HomePage() {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  const t = getDictionary(locale)
+
   const portfolio = await fetchPortfolio().catch(() => null)
 
   const personal     = portfolio?.personal     ?? defaultPersonalInfo
@@ -24,34 +30,25 @@ export default async function HomePage() {
   return (
     <>
       {/* ── HERO ── */}
-      <HeroSection personal={personal} socials={socials} />
+      <HeroSection personal={personal} socials={socials} locale={locale} t={t.home} />
 
       {/* ── À PROPOS ── */}
       <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <FadeIn>
-              <p className="section-label mb-4">À propos</p>
+              <p className="section-label mb-4">{t.home.aboutLabel}</p>
               <h2 className="section-title mb-6">
-                Construire ce qui{' '}
-                <span className="gradient-text">dure</span>
+                {t.home.aboutTitleStart}{' '}
+                <span className="gradient-text">{t.home.aboutTitleHighlight}</span>
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                <p>
-                  Avec plusieurs années d&apos;expérience en développement web fullstack,
-                  j&apos;ai acquis une expertise couvrant l&apos;ensemble de la chaîne de valeur
-                  technique : de la conception d&apos;interfaces jusqu&apos;au déploiement automatisé
-                  sur des infrastructures cloud.
-                </p>
-                <p>
-                  Ma singularité : je pense à la fois en développeur et en ingénieur
-                  infrastructure. Chaque ligne de code est pensée pour être déployée,
-                  monitorée et maintenue dans le temps.
-                </p>
+                <p>{t.home.aboutP1}</p>
+                <p>{t.home.aboutP2}</p>
               </div>
               <div className="mt-8">
-                <Link href="/vision" className="btn-secondary">
-                  Ma vision du métier
+                <Link href={`/${locale}/vision`} className="btn-secondary">
+                  {t.home.aboutCta}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
@@ -61,12 +58,7 @@ export default async function HomePage() {
 
             <FadeIn delay={0.1} direction="left">
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { value: '3+',   label: "Ans d'expérience" },
-                  { value: '10+',  label: 'Projets livrés' },
-                  { value: '15+',  label: 'Technologies' },
-                  { value: '100%', label: 'Implication' },
-                ].map(({ value, label }) => (
+                {t.home.stats.map(({ value, label }) => (
                   <div key={label} className="card p-6 text-center">
                     <p className="font-display font-bold text-4xl mb-2 gradient-text">{value}</p>
                     <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
@@ -84,8 +76,8 @@ export default async function HomePage() {
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <FadeIn className="text-center mb-16">
-            <p className="section-label mb-4">Stack technique</p>
-            <h2 className="section-title">Technologies maîtrisées</h2>
+            <p className="section-label mb-4">{t.home.stackLabel}</p>
+            <h2 className="section-title">{t.home.stackTitle}</h2>
           </FadeIn>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -146,13 +138,13 @@ export default async function HomePage() {
         <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <FadeIn className="text-center mb-16">
-              <p className="section-label mb-4">Ce qu&apos;ils disent</p>
-              <h2 className="section-title">Témoignages</h2>
+              <p className="section-label mb-4">{t.home.testimonialsLabel}</p>
+              <h2 className="section-title">{t.home.testimonialsTitle}</h2>
             </FadeIn>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {testimonials.map((t, i) => (
-                <FadeIn key={t.id} delay={Math.min(i * 0.08, 0.24)}>
+              {testimonials.map((tm, i) => (
+                <FadeIn key={tm.id} delay={Math.min(i * 0.08, 0.24)}>
                   <div className="card p-6 h-full flex flex-col">
                     <div className="mb-4">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--accent)' }}>
@@ -165,14 +157,14 @@ export default async function HomePage() {
                     </div>
 
                     <p className="text-sm leading-relaxed flex-1 mb-6" style={{ color: 'var(--text-muted)' }}>
-                      {t.text}
+                      {tm.text}
                     </p>
 
                     <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                      {t.avatar ? (
+                      {tm.avatar ? (
                         <Image
-                          src={t.avatar}
-                          alt={t.name}
+                          src={tm.avatar}
+                          alt={tm.name}
                           width={40}
                           height={40}
                           loading="lazy"
@@ -183,16 +175,16 @@ export default async function HomePage() {
                           className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-base"
                           style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}
                         >
-                          {t.name.charAt(0)}
+                          {tm.name.charAt(0)}
                         </div>
                       )}
                       <div>
                         <p className="text-sm font-semibold" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>
-                          {t.name}
+                          {tm.name}
                         </p>
-                        {(t.role || t.company) && (
+                        {(tm.role || tm.company) && (
                           <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                            {[t.role, t.company].filter(Boolean).join(' · ')}
+                            {[tm.role, tm.company].filter(Boolean).join(' · ')}
                           </p>
                         )}
                       </div>
@@ -213,15 +205,14 @@ export default async function HomePage() {
               className="rounded-2xl p-6 sm:p-12"
               style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-glow)' }}
             >
-              <p className="section-label mb-4">Disponible</p>
-              <h2 className="section-title mb-6">Envie de collaborer ?</h2>
+              <p className="section-label mb-4">{t.home.ctaLabel}</p>
+              <h2 className="section-title mb-6">{t.home.ctaTitle}</h2>
               <p className="mb-8 max-w-md mx-auto" style={{ color: 'var(--text-muted)' }}>
-                Je suis disponible pour des missions freelance, des collaborations
-                ou simplement discuter d&apos;un projet ambitieux.
+                {t.home.ctaText}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/contact" className="btn-primary">Me contacter</Link>
-                <Link href="/contact" className="btn-secondary">Envoyer un message</Link>
+                <Link href={`/${locale}/contact`} className="btn-primary">{t.home.ctaButton1}</Link>
+                <Link href={`/${locale}/contact`} className="btn-secondary">{t.home.ctaButton2}</Link>
               </div>
             </div>
           </FadeIn>

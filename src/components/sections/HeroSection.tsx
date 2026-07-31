@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { PersonalInfo, SocialLinks } from '@/types'
+import type { Locale } from '@/lib/i18n/locale'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 const container = {
   hidden: {},
@@ -18,6 +20,8 @@ const item = {
 interface Props {
   personal: PersonalInfo
   socials: SocialLinks
+  locale: Locale
+  t: Dictionary['home']
 }
 
 function TypingCursor() {
@@ -30,7 +34,7 @@ function TypingCursor() {
   )
 }
 
-export default function HeroSection({ personal, socials }: Props) {
+export default function HeroSection({ personal, socials, locale, t }: Props) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export default function HeroSection({ personal, socials }: Props) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const line1 = 'Bonjour, je suis'
+  const line1 = t.heroGreeting
   const lastName = personal.name.split(' ').slice(-1)[0]
   const firstNames = personal.name.split(' ').slice(0, -1).join(' ')
   const boundary1 = line1.length
@@ -131,12 +135,12 @@ export default function HeroSection({ personal, socials }: Props) {
               <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#10B981' }} />
             </span>
             <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-              Disponible pour de nouvelles missions
+              {t.heroAvailable}
             </span>
           </motion.div>
 
           <motion.p variants={item} className="section-label mb-5">
-            Développeur Fullstack & DevOps
+            {t.heroRoleLabel}
           </motion.p>
 
           <motion.h1
@@ -178,14 +182,14 @@ export default function HeroSection({ personal, socials }: Props) {
           </motion.p>
 
           <motion.div variants={item} className="flex flex-wrap gap-4 mb-10">
-            <Link href="/projects" className="btn-primary">
-              Voir mes projets
+            <Link href={`/${locale}/projects`} className="btn-primary">
+              {t.heroCtaProjects}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </Link>
-            <Link href="/contact" className="btn-secondary">
-              Me contacter
+            <Link href={`/${locale}/contact`} className="btn-secondary">
+              {t.heroCtaContact}
             </Link>
           </motion.div>
 
@@ -256,7 +260,7 @@ export default function HeroSection({ personal, socials }: Props) {
         {!scrolled && (
           <motion.a
             href="#apropos"
-            aria-label="Défiler vers la section À propos"
+            aria-label={t.heroScrollAria}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 cursor-pointer group z-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 8, 0] }}
@@ -270,7 +274,7 @@ export default function HeroSection({ personal, socials }: Props) {
               className="text-xs font-semibold tracking-widest transition-colors duration-200 group-hover:opacity-100"
               style={{ color: 'var(--accent-light)', fontFamily: 'var(--font-poppins)' }}
             >
-              SCROLL
+              {t.heroScroll}
             </span>
             <div
               className="relative w-7 h-11 rounded-full flex justify-center pt-2.5 transition-transform duration-200 group-hover:scale-110"

@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
 import type { BlogPost } from '@/types'
+import type { Locale } from '@/lib/i18n/locale'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 const IMAGE_RE = /^!\[(.*?)\]\((.+?)\)$/
 const VIDEO_RE = /^\[video\]\((.+?)\)$/
@@ -62,19 +64,20 @@ function renderContent(content: string) {
   })
 }
 
-export default function BlogPostView({ post }: { post: BlogPost }) {
+export default function BlogPostView({ post, locale, t }: { post: BlogPost; locale: Locale; t: Dictionary['blog'] }) {
+  const dateLocale = locale === 'en' ? 'en-US' : 'fr-FR'
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
       <FadeIn>
         <Link
-          href="/blog"
+          href={`/${locale}/blog`}
           className="inline-flex items-center gap-2 text-sm font-medium mb-16 transition-colors duration-200 hover:text-[var(--accent)]"
           style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          Blog
+          {t.backToBlog}
         </Link>
       </FadeIn>
 
@@ -82,7 +85,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
         <div className="flex flex-wrap items-center gap-3 mb-5">
           <span className="tag">{post.category}</span>
           <span className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-            {post.readTime} de lecture
+            {post.readTime} {t.readTime}
           </span>
         </div>
       </FadeIn>
@@ -116,7 +119,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
             <span style={{ color: 'var(--border)' }}>·</span>
           )}
           <p className="text-sm" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-            {new Date(post.date).toLocaleDateString('fr-FR', {
+            {new Date(post.date).toLocaleDateString(dateLocale, {
               year: 'numeric', month: 'long', day: 'numeric',
             })}
           </p>
@@ -161,7 +164,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                  Ressource mentionnée
+                  {t.resourceMentioned}
                 </p>
                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--accent)', fontFamily: 'var(--font-space-grotesk)' }}>
                   {(() => { try { return new URL(post.externalUrl).hostname.replace('www.', '') } catch { return post.externalUrl } })()}
@@ -176,7 +179,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
                 color: '#fff',
               }}
             >
-              Découvrir
+              {t.discover}
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                 <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
@@ -204,8 +207,8 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
       <div style={{ height: 1, background: 'var(--border)', marginTop: '4rem', marginBottom: '3rem' }} />
       <FadeIn delay={0.3}>
         <div className="flex items-center justify-between">
-          <Link href="/blog" className="btn-secondary text-sm px-4 py-2">← Tous les articles</Link>
-          <Link href="/contact" className="btn-primary text-sm px-4 py-2">Me contacter</Link>
+          <Link href={`/${locale}/blog`} className="btn-secondary text-sm px-4 py-2">{t.allArticles}</Link>
+          <Link href={`/${locale}/contact`} className="btn-primary text-sm px-4 py-2">{t.contact}</Link>
         </div>
       </FadeIn>
     </div>
