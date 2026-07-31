@@ -162,11 +162,14 @@ const fr = {
   offers: {
     label: 'Tarifs',
     title: 'Nos Offres',
-    subtitle: 'Des prestations claires, à des tarifs réalistes — chaque projet peut aussi être adapté sur mesure.',
+    subtitle: "Des solutions conçues pour répondre à vos besoins, avec des tarifs indicatifs adaptés à chaque type de projet. Chaque prestation est entièrement personnalisable et fait l'objet d'un devis sur mesure. Les prix affichés sont des fourchettes estimatives et peuvent être ajustés en fonction de vos exigences, de votre budget et de la complexité du projet.",
     specialTitle: 'Offres Spéciales',
     cta: 'Demander un devis',
     ctaMessage: (title: string) => `J'aimerais un devis pour : ${title}`,
     empty: 'Aucune offre pour le moment.',
+    heroGoTo: (title: string) => `Aller à l'offre : ${title}`,
+    heroPause: 'Mettre en pause le défilement',
+    heroPlay: 'Reprendre le défilement',
   },
   chat: {
     toggleOpen: 'Ouvrir le chat',
@@ -346,11 +349,14 @@ const en: typeof fr = {
   offers: {
     label: 'Pricing',
     title: 'Our Offers',
-    subtitle: 'Clear service packages at realistic rates — every project can also be tailored to your needs.',
+    subtitle: 'Solutions designed around your needs, with indicative rates tailored to each type of project. Every service is fully customizable and quoted individually. The prices shown are estimated ranges and can be adjusted based on your requirements, budget, and project complexity.',
     specialTitle: 'Special Offers',
     cta: 'Request a quote',
     ctaMessage: (title: string) => `I'd like a quote for: ${title}`,
     empty: 'No offers yet.',
+    heroGoTo: (title: string) => `Go to offer: ${title}`,
+    heroPause: 'Pause the slideshow',
+    heroPlay: 'Resume the slideshow',
   },
   chat: {
     toggleOpen: 'Open chat',
