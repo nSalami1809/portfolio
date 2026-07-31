@@ -1,23 +1,30 @@
-import type { Metadata } from 'next'
 import FadeIn from '@/components/animations/FadeIn'
 import ContactForm from '@/components/sections/ContactForm'
 import StarsCanvasClient from '@/components/scene/StarsCanvasClient'
+import { getDictionary } from '@/lib/i18n/dictionaries'
+import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 
-export const metadata: Metadata = { title: 'Contact' }
+export async function generateMetadata() {
+  return { title: 'Contact' }
+}
 
-export default function ContactPage() {
+export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  const t = getDictionary(locale)
+
   return (
     <div className="relative">
       <StarsCanvasClient className="z-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-20">
         <FadeIn>
-          <p className="section-label mb-3">Discutons</p>
+          <p className="section-label mb-3">{t.contact.label}</p>
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
-            Contact
+            {t.contact.title}
           </h1>
           <p className="text-lg mb-16" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
-            Une idée, un projet, une question ? Je réponds à tous les messages.
+            {t.contact.subtitle}
           </p>
         </FadeIn>
 
@@ -33,7 +40,7 @@ export default function ContactPage() {
                       <polyline points="22,6 12,13 2,6"/>
                     </svg>
                   ),
-                  label: 'Email',
+                  label: t.contact.email,
                   value: 'nemrodsalami1809@gmail.com',
                   href: 'mailto:nemrodsalami1809@gmail.com',
                 },
@@ -44,8 +51,8 @@ export default function ContactPage() {
                       <circle cx="12" cy="10" r="3"/>
                     </svg>
                   ),
-                  label: 'Localisation',
-                  value: 'Libreville, Gabon — Disponible en remote',
+                  label: t.contact.location,
+                  value: t.contact.locationValue,
                   href: undefined,
                 },
               ].map(({ icon, label, value, href }) => (
@@ -72,15 +79,15 @@ export default function ContactPage() {
               ))}
 
               <div className="card p-6">
-                <p className="section-label mb-4">Disponibilité</p>
+                <p className="section-label mb-4">{t.contact.availability}</p>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: '#10B981' }} />
                   <span className="text-sm font-medium" style={{ color: '#10B981', fontFamily: 'var(--font-poppins)' }}>
-                    Disponible pour de nouvelles missions
+                    {t.contact.availableMissions}
                   </span>
                 </div>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Réponse sous 48h ouvrables.
+                  {t.contact.responseTime}
                 </p>
               </div>
             </div>
@@ -88,7 +95,7 @@ export default function ContactPage() {
 
           {/* Formulaire */}
           <FadeIn delay={0.15}>
-            <ContactForm />
+            <ContactForm t={t.contact.form} />
           </FadeIn>
         </div>
       </div>

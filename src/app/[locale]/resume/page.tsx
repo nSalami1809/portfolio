@@ -4,11 +4,13 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
+import { useDictionary } from '@/lib/i18n/useLocale'
 
 const StarsCanvas = dynamic(() => import('@/components/scene/StarsCanvas').then((m) => m.StarsCanvas), { ssr: false })
 
 export default function ResumePage() {
   const { data } = usePortfolio()
+  const t = useDictionary()
 
   return (
     <div className="relative">
@@ -19,12 +21,12 @@ export default function ResumePage() {
       {/* Hero */}
       <div className="mb-20">
         <FadeIn>
-          <p className="section-label mb-3">Parcours</p>
+          <p className="section-label mb-3">{t.resume.label}</p>
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
-            Mon Expérience
+            {t.resume.title}
           </h1>
           <p className="text-lg" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
-            Parcours professionnel, compétences techniques et formations.
+            {t.resume.subtitle}
           </p>
         </FadeIn>
       </div>
@@ -32,7 +34,7 @@ export default function ResumePage() {
       {/* ── Expériences ── */}
       <section className="mb-20">
         <FadeIn>
-          <p className="section-label mb-10">Expériences professionnelles</p>
+          <p className="section-label mb-10">{t.resume.experiencesLabel}</p>
         </FadeIn>
 
         <div className="relative pl-6 sm:pl-8" style={{ borderLeft: '2px solid var(--border)' }}>
@@ -104,7 +106,7 @@ export default function ResumePage() {
       {/* ── Compétences ── */}
       <section className="mb-20">
         <FadeIn>
-          <p className="section-label mb-10">Compétences techniques</p>
+          <p className="section-label mb-10">{t.resume.skillsLabel}</p>
         </FadeIn>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -161,7 +163,7 @@ export default function ResumePage() {
       {/* ── Formations ── */}
       <section>
         <FadeIn>
-          <p className="section-label mb-10">Formations</p>
+          <p className="section-label mb-10">{t.resume.educationLabel}</p>
         </FadeIn>
 
         <div className="space-y-4">

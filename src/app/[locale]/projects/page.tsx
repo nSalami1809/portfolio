@@ -1,40 +1,58 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
+import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import { translateText } from '@/actions/translate'
 
 const StarsCanvas = dynamic(() => import('@/components/scene/StarsCanvas').then((m) => m.StarsCanvas), { ssr: false })
 
-const statusLabel: Record<string, string> = {
-  completed: 'Terminé',
-  'in-progress': 'En cours',
-  concept: 'Concept',
-}
-const statusColor: Record<string, string> = {
-  completed: '#10B981',
-  'in-progress': '#F59E0B',
-  concept: '#6B7280',
-}
+type Translated = Record<string, { title: string; description: string }>
 
 export default function ProjectsPage() {
   const { data } = usePortfolio()
   const { projects } = data
+  const locale = useLocale()
+  const t = useDictionary()
 
   const categories = useMemo(
-    () => ['Tous', ...Array.from(new Set(projects.map((p) => p.category)))],
-    [projects],
+    () => [t.projects.all, ...Array.from(new Set(projects.map((p) => p.category)))],
+    [projects, t.projects.all],
   )
-  const [active, setActive] = useState('Tous')
+  const [active, setActive] = useState(t.projects.all)
+
+  useEffect(() => { setActive(t.projects.all) }, [t.projects.all]) // eslint-disable-line react-hooks/set-state-in-effect
 
   const filtered = useMemo(
-    () => (active === 'Tous' ? projects : projects.filter((p) => p.category === active)),
-    [projects, active],
+    () => (active === t.projects.all ? projects : projects.filter((p) => p.category === active)),
+    [projects, active, t.projects.all],
   )
+
+  const [translated, setTranslated] = useState<Translated>({})
+
+  useEffect(() => {
+    if (locale !== 'en' || projects.length === 0) { setTranslated({}); return } // eslint-disable-line react-hooks/set-state-in-effect
+    let cancelled = false
+    Promise.all(
+      projects.map(async (p) => {
+        const fields = await translateText(`project:${p.slug}`, 'en', { title: p.title, description: p.description })
+        return [p.slug, { title: fields.title ?? p.title, description: fields.description ?? p.description }] as const
+      }),
+    ).then((entries) => { if (!cancelled) setTranslated(Object.fromEntries(entries)) }).catch(() => {})
+    return () => { cancelled = true }
+  }, [locale, projects])
+
+  const statusLabel: Record<string, string> = t.status
+  const statusColor: Record<string, string> = {
+    completed: '#10B981',
+    'in-progress': '#F59E0B',
+    concept: '#6B7280',
+  }
 
   return (
     <div className="relative">
@@ -45,19 +63,19 @@ export default function ProjectsPage() {
       {/* Hero */}
       <div className="mb-20">
         <FadeIn>
-          <p className="section-label mb-3">Portfolio</p>
+          <p className="section-label mb-3">{t.projects.label}</p>
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
-            Mes Projets
+            {t.projects.title}
           </h1>
           <p className="text-lg" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
-            Réalisations web, DevOps et interfaces — du prototype à la production.
+            {t.projects.subtitle}
           </p>
         </FadeIn>
       </div>
 
       {/* Filters */}
       <FadeIn>
-        <div className="flex flex-wrap gap-2 mb-12" role="group" aria-label="Filtrer par catégorie">
+        <div className="flex flex-wrap gap-2 mb-12" role="group" aria-label={t.projects.filterAria}>
           {categories.map((cat) => (
             <button
               key={cat}
@@ -81,7 +99,9 @@ export default function ProjectsPage() {
       {/* Grid */}
       <motion.div layout className="grid sm:grid-cols-2 gap-6">
         <AnimatePresence mode="popLayout">
-          {filtered.map((project, i) => (
+          {filtered.map((project, i) => {
+            const tp = translated[project.slug]
+            return (
             <motion.div
               key={project.slug}
               layout
@@ -90,7 +110,7 @@ export default function ProjectsPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.3) }}
             >
-              <Link href={`/projects/${project.slug}`} className="card block p-6 h-full group">
+              <Link href={`/${locale}/projects/${project.slug}`} className="card block p-6 h-full group">
                 {/* Category & status */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="tag">{project.category}</span>
@@ -111,7 +131,7 @@ export default function ProjectsPage() {
                   <div className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden">
                     <Image
                       src={project.image}
-                      alt={project.title}
+                      alt={tp?.title ?? project.title}
                       fill
                       loading="lazy"
                       sizes="(min-width: 640px) 50vw, 100vw"
@@ -136,10 +156,10 @@ export default function ProjectsPage() {
                   className="font-display font-semibold text-xl mb-3 transition-colors duration-200 group-hover:text-[var(--accent)]"
                   style={{ color: 'var(--text)' }}
                 >
-                  {project.title}
+                  {tp?.title ?? project.title}
                 </h3>
                 <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
-                  {project.description}
+                  {tp?.description ?? project.description}
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-5">
@@ -153,20 +173,21 @@ export default function ProjectsPage() {
                   style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}
                   aria-hidden="true"
                 >
-                  Voir le projet
+                  {t.projects.viewProject}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </div>
               </Link>
             </motion.div>
-          ))}
+            )
+          })}
         </AnimatePresence>
       </motion.div>
 
       {filtered.length === 0 && (
         <div className="py-20 text-center" style={{ color: 'var(--text-muted)' }}>
-          Aucun projet dans cette catégorie.
+          {t.projects.empty}
         </div>
       )}
       </div>
