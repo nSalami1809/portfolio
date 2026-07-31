@@ -5,6 +5,7 @@ export interface PersonalInfo {
   email: string
   location: string
   photo: string
+  cvUrl?: string
 }
 
 export interface SocialLinks {
