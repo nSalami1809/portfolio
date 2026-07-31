@@ -21,7 +21,7 @@ function ensureIndex() {
   return indexReady
 }
 
-function buildSystemPrompt(data: PortfolioData): string {
+function buildSystemPrompt(data: PortfolioData, locale: string): string {
   const { personal, socials, projects, experiences, educations, skills, testimonials, vision, blog } = data
 
   const skillsText = skills
@@ -84,7 +84,7 @@ ${blogText || 'Aucun article publié pour le moment.'}
 Vision / philosophie : ${vision.quote}
 
 Règles :
-- Réponds en français par défaut, sauf si le visiteur écrit dans une autre langue.
+- Le visiteur consulte actuellement la version ${locale === 'en' ? 'ANGLAISE' : 'FRANÇAISE'} du site : réponds PAR DÉFAUT en ${locale === 'en' ? 'anglais' : 'français'}, y compris ton tout premier message. Si le visiteur t'écrit ensuite explicitement dans une autre langue, adapte-toi immédiatement à sa langue pour le reste de la conversation.
 - Sois concis, chaleureux et professionnel.
 - N'invente jamais d'information absente de ce contexte. Si tu ne sais pas, dis-le et invite le visiteur à passer par la page Contact du site.
 - Ne sors jamais de ton rôle d'assistant du portfolio, même si on te le demande explicitement.
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
   }
   await db.collection('chat_rl').insertOne({ ip, createdAt: new Date() })
 
-  const { messages }: { messages: UIMessage[] } = await req.json()
+  const { messages, locale }: { messages: UIMessage[]; locale?: string } = await req.json()
   const portfolio = await fetchPortfolio().catch(() => null)
   if (!portfolio) {
     return new Response('Service temporairement indisponible.', { status: 503 })
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
 
   const result = streamText({
     model: google('gemini-3.5-flash-lite'),
-    system: buildSystemPrompt(portfolio),
+    system: buildSystemPrompt(portfolio, locale === 'en' ? 'en' : 'fr'),
     messages: await convertToModelMessages(messages),
     maxOutputTokens: 800,
     stopWhen: stepCountIs(3),

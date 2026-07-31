@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import { translateText } from '@/actions/translate'
 
 function NavItem({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const [hovered, setHovered] = useState(false)
@@ -85,6 +86,15 @@ export default function Footer() {
   const t = useDictionary()
   const year = new Date().getFullYear()
 
+  const [translatedRole, setTranslatedRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (locale !== 'en' || !data.personal.role) { setTranslatedRole(null); return } // eslint-disable-line react-hooks/set-state-in-effect
+    translateText('personal:role', 'en', { role: data.personal.role })
+      .then((fields) => setTranslatedRole(fields.role ?? null))
+      .catch(() => {})
+  }, [locale, data.personal.role])
+
   const navLinks = [
     {
       href: `/${locale}`,
@@ -144,7 +154,7 @@ export default function Footer() {
               <span style={{ color: 'var(--accent)' }}>N</span>·S
             </div>
             <p className="text-sm leading-relaxed max-w-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-              {data.personal.role}
+              {translatedRole ?? data.personal.role}
             </p>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#10B981' }} />

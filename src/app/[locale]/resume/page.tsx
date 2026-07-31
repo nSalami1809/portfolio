@@ -1,16 +1,51 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
-import { useDictionary } from '@/lib/i18n/useLocale'
+import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import { translateText } from '@/actions/translate'
 
 const StarsCanvas = dynamic(() => import('@/components/scene/StarsCanvas').then((m) => m.StarsCanvas), { ssr: false })
 
+type ExpTranslated = Record<string, { role: string; description: string }>
+type EduTranslated = Record<string, { degree: string; detail: string }>
+
 export default function ResumePage() {
   const { data } = usePortfolio()
+  const locale = useLocale()
   const t = useDictionary()
+
+  const [expT, setExpT] = useState<ExpTranslated>({})
+  const [eduT, setEduT] = useState<EduTranslated>({})
+
+  useEffect(() => {
+    if (locale !== 'en' || data.experiences.length === 0) { setExpT({}); return } // eslint-disable-line react-hooks/set-state-in-effect
+    let cancelled = false
+    Promise.all(
+      data.experiences.map(async (exp) => {
+        const fields = await translateText(`experience:${exp.id}`, 'en', { role: exp.role, description: exp.description })
+        return [exp.id, { role: fields.role ?? exp.role, description: fields.description ?? exp.description }] as const
+      }),
+    ).then((entries) => { if (!cancelled) setExpT(Object.fromEntries(entries)) }).catch(() => {})
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, data.experiences.length])
+
+  useEffect(() => {
+    if (locale !== 'en' || data.educations.length === 0) { setEduT({}); return } // eslint-disable-line react-hooks/set-state-in-effect
+    let cancelled = false
+    Promise.all(
+      data.educations.map(async (edu) => {
+        const fields = await translateText(`education:${edu.id}`, 'en', { degree: edu.degree, detail: edu.detail ?? '' })
+        return [edu.id, { degree: fields.degree ?? edu.degree, detail: fields.detail ?? edu.detail ?? '' }] as const
+      }),
+    ).then((entries) => { if (!cancelled) setEduT(Object.fromEntries(entries)) }).catch(() => {})
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, data.educations.length])
 
   return (
     <div className="relative">
@@ -38,7 +73,9 @@ export default function ResumePage() {
         </FadeIn>
 
         <div className="relative pl-6 sm:pl-8" style={{ borderLeft: '2px solid var(--border)' }}>
-          {data.experiences.map((exp, i) => (
+          {data.experiences.map((exp, i) => {
+            const trExp = expT[exp.id]
+            return (
             <FadeIn key={exp.id} delay={i * 0.08}>
               <div className="relative mb-10 last:mb-0">
                 {/* Dot */}
@@ -72,7 +109,7 @@ export default function ResumePage() {
                     <div className="flex-1 flex flex-wrap items-start justify-between gap-4">
                       <div>
                         <h3 className="font-display font-semibold text-xl" style={{ color: 'var(--text)' }}>
-                          {exp.role}
+                          {trExp?.role ?? exp.role}
                         </h3>
                         <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
                           {exp.company}
@@ -87,7 +124,7 @@ export default function ResumePage() {
                     </div>
                   </div>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-                    {exp.description}
+                    {trExp?.description ?? exp.description}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {exp.tags.map((tag) => (
@@ -97,7 +134,8 @@ export default function ResumePage() {
                 </div>
               </div>
             </FadeIn>
-          ))}
+            )
+          })}
         </div>
       </section>
 
@@ -167,7 +205,9 @@ export default function ResumePage() {
         </FadeIn>
 
         <div className="space-y-4">
-          {data.educations.map((edu, i) => (
+          {data.educations.map((edu, i) => {
+            const trEdu = eduT[edu.id]
+            return (
             <FadeIn key={edu.id} delay={i * 0.08}>
               <div className="card p-6">
                 <div className="flex items-start gap-4">
@@ -194,11 +234,11 @@ export default function ResumePage() {
                   <div className="flex-1 flex flex-wrap items-start justify-between gap-4">
                     <div className="flex-1">
                       <h3 className="font-display font-semibold text-lg mb-1" style={{ color: 'var(--text)' }}>
-                        {edu.degree}
+                        {trEdu?.degree ?? edu.degree}
                       </h3>
                       <p className="text-sm font-medium mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>{edu.school}</p>
                       {edu.detail && (
-                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{edu.detail}</p>
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{trEdu?.detail || edu.detail}</p>
                       )}
                     </div>
                     <span
@@ -211,7 +251,8 @@ export default function ResumePage() {
                 </div>
               </div>
             </FadeIn>
-          ))}
+            )
+          })}
         </div>
       </section>
       </div>
