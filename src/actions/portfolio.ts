@@ -4,8 +4,39 @@ import { cache } from 'react'
 import { revalidatePath } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import type { PortfolioData } from '@/types'
+import {
+  defaultPersonalInfo,
+  defaultSocials,
+  defaultProjects,
+  defaultExperiences,
+  defaultEducations,
+  defaultSkills,
+  defaultTestimonials,
+  defaultSettings,
+  defaultVision,
+  defaultBlogPosts,
+  defaultOffers,
+} from '@/data/defaultData'
 
 const DOC_ID = 'main'
+
+// Documents saved before a given field existed simply don't have that key in
+// MongoDB — merging over these defaults means adding a new top-level field
+// to PortfolioData can never again crash existing users on `undefined`
+// (e.g. `.length`/`.map` on a field that predates it).
+const DEFAULTS: PortfolioData = {
+  personal: defaultPersonalInfo,
+  socials: defaultSocials,
+  projects: defaultProjects,
+  experiences: defaultExperiences,
+  educations: defaultEducations,
+  skills: defaultSkills,
+  testimonials: defaultTestimonials,
+  settings: defaultSettings,
+  vision: defaultVision,
+  blog: defaultBlogPosts,
+  offers: defaultOffers,
+}
 
 export async function publishPortfolio(data: PortfolioData): Promise<void> {
   const db = await getDb()
@@ -26,5 +57,5 @@ export const fetchPortfolio = cache(async (): Promise<PortfolioData | null> => {
   const doc = await db.collection('portfolio').findOne({ _id: DOC_ID as unknown as never })
   if (!doc) return null
   const { _id: _docId, updatedAt: _updatedAt, ...data } = doc
-  return data as PortfolioData
+  return { ...DEFAULTS, ...data } as PortfolioData
 })
