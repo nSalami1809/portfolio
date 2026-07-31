@@ -53,7 +53,7 @@ const base = (title: string, preheader: string, body: string) => {
           <tr>
             <td class="card" style="background:#FFFFFF;border:1px solid #E8E8EF;border-radius:26px;padding:48px 42px;text-align:center">
 
-              <img src="${SITE_URL}/logo.png" width="52" height="52" alt="Nawaf Nemrod SALAMI" style="display:block;margin:0 auto 22px;width:52px;height:52px"/>
+              <img src="${SITE_URL}/logo-black.png" width="52" height="52" alt="Nawaf Nemrod SALAMI" style="display:block;margin:0 auto 22px;width:52px;height:52px"/>
 
               ${body}
 

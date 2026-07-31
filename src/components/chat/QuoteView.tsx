@@ -77,7 +77,7 @@ export default function QuoteView({ quote, onClose }: Props) {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- fixed local asset, print context */}
-            <img src="/logo.png" alt="" width={60} height={60} style={{ width: 60, height: 60 }} />
+            <img src="/logo-black.png" alt="" width={60} height={60} style={{ width: 60, height: 60 }} />
             <div>
               <p style={{ fontWeight: 700, fontSize: '1.15rem' }}>{personal.name}</p>
               <p style={{ fontSize: '0.8rem', color: '#555' }}>{personal.role}</p>

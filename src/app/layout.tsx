@@ -61,14 +61,23 @@ export const metadata: Metadata = {
   },
 }
 
+// Runs before first paint so the correct theme class is already on <html>
+// when React hydrates — without this, the page would flash the wrong
+// theme for a frame on every load. suppressHydrationWarning on <html> is
+// required because this script intentionally changes className before
+// React's hydration check runs.
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="fr"
-      className={`dark ${inter.variable} ${poppins.variable} ${spaceGrotesk.variable}`}
+      className={`${inter.variable} ${poppins.variable} ${spaceGrotesk.variable}`}
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <link rel="preconnect" href="https://prod.spline.design" />
         <link rel="dns-prefetch" href="https://prod.spline.design" />
         <link rel="preconnect" href="https://unpkg.com" crossOrigin="anonymous" />

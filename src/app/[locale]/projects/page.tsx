@@ -85,7 +85,7 @@ export default function ProjectsPage() {
               style={{
                 fontFamily: 'var(--font-poppins)',
                 background: active === cat ? 'var(--accent)' : 'var(--surface)',
-                color: active === cat ? '#fff' : 'var(--text-muted)',
+                color: active === cat ? 'var(--accent-contrast)' : 'var(--text-muted)',
                 border: active === cat ? '1px solid var(--accent)' : '1px solid var(--border)',
                 transform: active === cat ? 'scale(1.03)' : 'scale(1)',
               }}
