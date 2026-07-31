@@ -29,6 +29,7 @@ const fr = {
     closeMenu: 'Fermer le menu',
     menuAria: 'Menu de navigation',
     switchTo: 'English',
+    themeToggle: 'Basculer entre le mode sombre et le mode clair',
   },
   footer: {
     aria: 'Pied de page',
@@ -216,6 +217,7 @@ const en: typeof fr = {
     closeMenu: 'Close menu',
     menuAria: 'Navigation menu',
     switchTo: 'Français',
+    themeToggle: 'Toggle dark and light mode',
   },
   footer: {
     aria: 'Footer',

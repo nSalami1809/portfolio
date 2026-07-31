@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface StarsCanvasProps {
   transparent?: boolean;       // Background transparency
@@ -23,6 +23,21 @@ export function StarsCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
+  // This component only ever mounts client-side (always loaded via
+  // dynamic(..., { ssr: false })), so reading the DOM directly here is safe
+  // and gives the correct value on the very first frame — no flash of the
+  // wrong theme's colors. A MutationObserver keeps it in sync if the user
+  // toggles the theme while the page is open.
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+  );
+  useEffect(() => {
+    const el = document.documentElement;
+    const observer = new MutationObserver(() => setIsDark(el.classList.contains('dark')));
+    observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -41,9 +56,15 @@ export function StarsCanvas({
     canvas2.height = 100;
     const half = canvas2.width / 2;
     const gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half);
-    gradient2.addColorStop(0.025, '#fff');
-    gradient2.addColorStop(0.1, 'rgba(255,255,255,0.45)');
-    gradient2.addColorStop(0.25, 'rgba(255,255,255,0.04)');
+    if (isDark) {
+      gradient2.addColorStop(0.025, '#fff');
+      gradient2.addColorStop(0.1, 'rgba(255,255,255,0.45)');
+      gradient2.addColorStop(0.25, 'rgba(255,255,255,0.04)');
+    } else {
+      gradient2.addColorStop(0.025, '#0B0B0F');
+      gradient2.addColorStop(0.1, 'rgba(11,11,15,0.45)');
+      gradient2.addColorStop(0.25, 'rgba(11,11,15,0.06)');
+    }
     gradient2.addColorStop(1, 'transparent');
     ctx2.fillStyle = gradient2;
     ctx2.beginPath();
@@ -113,7 +134,8 @@ export function StarsCanvas({
     const drawFrame = () => {
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 0.8;
-      ctx.fillStyle = transparent ? 'rgba(11,11,15,0)' : 'rgba(11,11,15,1)';
+      const bg = isDark ? '11,11,15' : '255,255,255';
+      ctx.fillStyle = transparent ? `rgba(${bg},0)` : `rgba(${bg},1)`;
       ctx.fillRect(0, 0, w, h);
 
       ctx.globalCompositeOperation = 'lighter';
@@ -156,7 +178,7 @@ export function StarsCanvas({
       if (animationRef.current !== undefined) cancelAnimationFrame(animationRef.current);
       window.removeEventListener('resize', handleResize);
     };
-  }, [transparent, maxStars, brightness, speedMultiplier, twinkleIntensity, paused]);
+  }, [transparent, maxStars, brightness, speedMultiplier, twinkleIntensity, paused, isDark]);
 
   return (
     <canvas

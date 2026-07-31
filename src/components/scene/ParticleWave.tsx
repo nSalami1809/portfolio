@@ -26,6 +26,23 @@ function usePrefersReducedMotion() {
   return reduced
 }
 
+// The canvas is transparent over the page background, so its particle color
+// must invert with the theme (light dots on dark bg, dark dots on light bg)
+// or it disappears. Always mounted client-only (dynamic ssr:false), so
+// reading the DOM directly on first render is accurate — no flash.
+function useIsDarkTheme() {
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+  )
+  useEffect(() => {
+    const el = document.documentElement
+    const observer = new MutationObserver(() => setIsDark(el.classList.contains('dark')))
+    observer.observe(el, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+  return isDark
+}
+
 // `frameloop="demand"` on the Canvas means nothing renders unless this
 // explicitly asks for a frame. Without it R3F redraws (and re-uploads GPU
 // buffers) at the display's full refresh rate — up to 120-144Hz — for a
@@ -42,7 +59,7 @@ function FrameLimiter({ active }: { active: boolean }) {
   return null
 }
 
-function Wave({ reduceMotion }: { reduceMotion: boolean }) {
+function Wave({ reduceMotion, isDark }: { reduceMotion: boolean; isDark: boolean }) {
   const ref = useRef<THREE.Points>(null)
 
   const positions = useMemo(() => {
@@ -87,7 +104,7 @@ function Wave({ reduceMotion }: { reduceMotion: boolean }) {
     <Points ref={ref} positions={posRef.current} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#FFFFFF"
+        color={isDark ? '#FFFFFF' : '#111111'}
         size={0.045}
         sizeAttenuation
         depthWrite={false}
@@ -97,7 +114,7 @@ function Wave({ reduceMotion }: { reduceMotion: boolean }) {
   )
 }
 
-function SecondaryWave({ reduceMotion }: { reduceMotion: boolean }) {
+function SecondaryWave({ reduceMotion, isDark }: { reduceMotion: boolean; isDark: boolean }) {
   const ref = useRef<THREE.Points>(null)
 
   const { positions } = useMemo(() => {
@@ -140,7 +157,7 @@ function SecondaryWave({ reduceMotion }: { reduceMotion: boolean }) {
     <Points ref={ref} positions={posRef.current} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#D4D4D4"
+        color={isDark ? '#D4D4D4' : '#4B5563'}
         size={0.025}
         sizeAttenuation
         depthWrite={false}
@@ -152,6 +169,7 @@ function SecondaryWave({ reduceMotion }: { reduceMotion: boolean }) {
 
 export default function ParticleWave() {
   const reduceMotion = usePrefersReducedMotion()
+  const isDark = useIsDarkTheme()
 
   return (
     <div
@@ -170,8 +188,8 @@ export default function ParticleWave() {
         <pointLight position={[-6, 2, 4]} intensity={0.6} color="#C7C7C7" />
 
         <FrameLimiter active={!reduceMotion} />
-        <Wave reduceMotion={reduceMotion} />
-        <SecondaryWave reduceMotion={reduceMotion} />
+        <Wave reduceMotion={reduceMotion} isDark={isDark} />
+        <SecondaryWave reduceMotion={reduceMotion} isDark={isDark} />
       </Canvas>
     </div>
   )

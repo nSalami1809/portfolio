@@ -263,7 +263,7 @@ export default function AdminBlog() {
               style={{
                 fontFamily: 'var(--font-poppins)',
                 background: filterStatus === s ? 'var(--accent)' : 'transparent',
-                color: filterStatus === s ? '#fff' : 'var(--text-muted)',
+                color: filterStatus === s ? 'var(--accent-contrast)' : 'var(--text-muted)',
               }}
             >
               {s === 'all' ? 'Tous' : s === 'published' ? 'Publiés' : 'Masqués'}
@@ -515,8 +515,8 @@ export default function AdminBlog() {
                   onKeyDown={(e) => e.key === ' ' && setForm((p) => ({ ...p, published: !p.published }))}
                 >
                   <span
-                    className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
-                    style={{ transform: form.published ? 'translateX(20px)' : 'translateX(0)' }}
+                    className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full shadow transition-transform duration-200"
+                    style={{ background: '#fff', border: '1px solid var(--border)', transform: form.published ? 'translateX(20px)' : 'translateX(0)' }}
                   />
                 </div>
                 <div>

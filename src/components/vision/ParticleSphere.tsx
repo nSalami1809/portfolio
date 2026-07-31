@@ -34,7 +34,24 @@ function FrameLimiter({ active }: { active: boolean }) {
   return null
 }
 
-function Particles({ reduceMotion }: { reduceMotion: boolean }) {
+// The canvas is transparent over the page background, so its particle color
+// must invert with the theme or it disappears. Always mounted client-only
+// (dynamic ssr:false), so reading the DOM directly on first render is
+// accurate — no flash.
+function useIsDarkTheme() {
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+  )
+  useEffect(() => {
+    const el = document.documentElement
+    const observer = new MutationObserver(() => setIsDark(el.classList.contains('dark')))
+    observer.observe(el, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+  return isDark
+}
+
+function Particles({ reduceMotion, isDark }: { reduceMotion: boolean; isDark: boolean }) {
   const pointsRef = useRef<THREE.Points>(null)
   const matRef    = useRef<THREE.PointsMaterial>(null)
 
@@ -74,7 +91,7 @@ function Particles({ reduceMotion }: { reduceMotion: boolean }) {
       <pointsMaterial
         ref={matRef}
         size={0.028}
-        color="#ffffff"
+        color={isDark ? '#ffffff' : '#111111'}
         sizeAttenuation
         transparent
         opacity={0.75}
@@ -85,7 +102,7 @@ function Particles({ reduceMotion }: { reduceMotion: boolean }) {
 }
 
 // Faint equatorial ring for depth
-function Ring({ reduceMotion }: { reduceMotion: boolean }) {
+function Ring({ reduceMotion, isDark }: { reduceMotion: boolean; isDark: boolean }) {
   const ref = useRef<THREE.Points>(null)
 
   const positions = useMemo(() => {
@@ -116,7 +133,7 @@ function Ring({ reduceMotion }: { reduceMotion: boolean }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.018}
-        color="#ffffff"
+        color={isDark ? '#ffffff' : '#111111'}
         sizeAttenuation
         transparent
         opacity={0.35}
@@ -128,6 +145,7 @@ function Ring({ reduceMotion }: { reduceMotion: boolean }) {
 
 export default function ParticleSphere() {
   const reduceMotion = usePrefersReducedMotion()
+  const isDark = useIsDarkTheme()
 
   return (
     <Canvas
@@ -138,8 +156,8 @@ export default function ParticleSphere() {
       frameloop="demand"
     >
       <FrameLimiter active={!reduceMotion} />
-      <Particles reduceMotion={reduceMotion} />
-      <Ring reduceMotion={reduceMotion} />
+      <Particles reduceMotion={reduceMotion} isDark={isDark} />
+      <Ring reduceMotion={reduceMotion} isDark={isDark} />
     </Canvas>
   )
 }

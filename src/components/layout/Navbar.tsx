@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -116,9 +117,18 @@ export default function Navbar() {
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       >
         <nav aria-label={t.nav.ariaMain} className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo — single black asset, inverted to white in dark mode via
+              CSS so switching themes never triggers a second image fetch. */}
           <Link href={`/${locale}`} aria-label={t.nav.home} className="flex items-center">
-            <Image src="/logo.png" alt="Nawaf Nemrod SALAMI" width={50} height={50} priority style={{ width: 50, height: 50 }} />
+            <Image
+              src="/logo-black.png"
+              alt="Nawaf Nemrod SALAMI"
+              width={50}
+              height={50}
+              priority
+              style={{ width: 50, height: 50 }}
+              className="dark:invert"
+            />
           </Link>
 
           {/* Desktop nav */}
@@ -176,6 +186,8 @@ export default function Navbar() {
 
           {/* Right controls */}
           <div className="flex items-center gap-2">
+            <ThemeToggle ariaLabel={t.nav.themeToggle} />
+
             {/* Language switcher */}
             <Link
               href={switchHref}
@@ -293,6 +305,17 @@ export default function Navbar() {
                   </span>
                   {t.nav.switchTo}
                 </Link>
+              </motion.li>
+              <motion.li
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: (links.length + 1) * 0.04 + 0.05 }}
+                className="flex items-center justify-between gap-3 px-4 py-3.5"
+              >
+                <span className="text-base font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {t.nav.themeToggle}
+                </span>
+                <ThemeToggle ariaLabel={t.nav.themeToggle} />
               </motion.li>
             </ul>
           </motion.div>
