@@ -14,7 +14,7 @@ import type { Offer } from '@/types'
 type Translated = Record<string, { title: string; description: string; features: string }>
 type OffersDict = ReturnType<typeof useDictionary>['offers']
 
-const HERO_INTERVAL_MS = 10000
+const HERO_INTERVAL_MS = 3000
 
 function PauseIcon() {
   return <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
