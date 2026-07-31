@@ -53,6 +53,15 @@ export default function Navbar() {
       ),
     },
     {
+      href: `/${locale}/offres`,
+      label: t.nav.offers,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2.83 12.83A2 2 0 0 1 2 11.17V4a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.42.59l7.98 7.99a2 2 0 0 1 .02 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+      ),
+    },
+    {
       href: `/${locale}/blog`,
       label: t.nav.blog,
       icon: (

@@ -12,6 +12,7 @@ import type { Components } from 'react-markdown'
 import type { Quote } from '@/actions/quotes'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import { onOpenChatRequest } from '@/lib/chat-bridge'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 // Only needed once a visitor actually opens a generated devis (QR code lib
@@ -269,6 +270,16 @@ export default function ChatWidget() {
     const t = setTimeout(() => setJustOpened(false), 1500)
     return () => clearTimeout(t)
   }, [justOpened])
+
+  // Lets other pages (e.g. the Offers page's "Request a quote" buttons) open
+  // the widget and start the conversation without lifting chat state up.
+  useEffect(() => {
+    return onOpenChatRequest((text) => {
+      setOpen(true)
+      setJustOpened(true)
+      sendMessage({ text })
+    })
+  }, [sendMessage])
 
   const toggleOpen = () => {
     setOpen((v) => {

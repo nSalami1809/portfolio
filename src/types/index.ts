@@ -65,6 +65,15 @@ export interface Testimonial {
   avatar?: string
 }
 
+export interface Offer {
+  id: string
+  title: string
+  description: string
+  priceLabel: string
+  features?: string[]
+  featured?: boolean
+}
+
 export interface SiteSettings {
   accentColor: string
   favicon: string
@@ -105,4 +114,5 @@ export interface PortfolioData {
   settings: SiteSettings
   vision: VisionData
   blog: BlogPost[]
+  offers: Offer[]
 }

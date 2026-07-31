@@ -1,4 +1,4 @@
-import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost } from '@/types'
+import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost, Offer } from '@/types'
 
 export const defaultPersonalInfo: PersonalInfo = {
   name: 'Nawaf Nemrod Salami',
@@ -151,4 +151,88 @@ export const defaultVision: VisionData = {
 }
 
 export const defaultBlogPosts: BlogPost[] = []
+
+// Seeded from the pricing grid the chatbot used to have hardcoded — now the
+// single source of truth for both the public "Mes Offres" page and the
+// quote tool's system prompt (src/app/api/chat/route.ts).
+export const defaultOffers: Offer[] = [
+  {
+    id: 'offer-vitrine-simple',
+    title: 'Site vitrine simple',
+    description: '1 à 3 pages, idéal pour présenter une activité ou un profil professionnel.',
+    priceLabel: '350 000 – 600 000 FCFA',
+    features: ['1 à 3 pages', 'Design responsive', 'Formulaire de contact basique'],
+  },
+  {
+    id: 'offer-vitrine-complet',
+    title: 'Site vitrine complet',
+    description: 'Site multi-pages avec formulaire de contact et sections sur mesure.',
+    priceLabel: '600 000 – 1 000 000 FCFA',
+    features: ['Multi-pages', 'Formulaire de contact avancé', 'SEO de base'],
+    featured: true,
+  },
+  {
+    id: 'offer-vitrine-cms',
+    title: 'Site vitrine avec espace admin',
+    description: 'Comme le site complet, avec un espace d\'administration pour gérer le contenu vous-même.',
+    priceLabel: '900 000 – 1 400 000 FCFA',
+    features: ['Espace admin / CMS sur mesure', 'Gestion de contenu autonome', 'Authentification sécurisée'],
+  },
+  {
+    id: 'offer-ecommerce',
+    title: 'Boutique en ligne',
+    description: 'Catalogue produits, panier et paiement en ligne intégré.',
+    priceLabel: '1 500 000 – 3 000 000 FCFA',
+    features: ['Catalogue produits', 'Paiement en ligne', 'Gestion des commandes'],
+  },
+  {
+    id: 'offer-app-sur-mesure',
+    title: 'Application web sur mesure',
+    description: 'Tableau de bord, gestion multi-utilisateurs, logique métier spécifique.',
+    priceLabel: '2 000 000 – 5 000 000 FCFA',
+    features: ['Tableau de bord', 'Gestion multi-utilisateurs', 'Architecture sur mesure'],
+  },
+  {
+    id: 'offer-api-backend',
+    title: 'API / backend seul',
+    description: 'Backend et API robustes, sans interface — pour brancher sur votre propre frontend.',
+    priceLabel: '500 000 – 1 500 000 FCFA',
+  },
+  {
+    id: 'offer-paiement',
+    title: 'Intégration paiement en ligne',
+    description: 'Mobile Money, carte bancaire — ajouté à un projet existant ou nouveau.',
+    priceLabel: '150 000 – 300 000 FCFA',
+  },
+  {
+    id: 'offer-auth',
+    title: 'Authentification & gestion des utilisateurs',
+    description: 'Connexion sécurisée, rôles et permissions.',
+    priceLabel: '100 000 – 250 000 FCFA',
+  },
+  {
+    id: 'offer-multilingue',
+    title: 'Support multilingue',
+    description: 'Votre site ou application disponible en plusieurs langues.',
+    priceLabel: '100 000 – 200 000 FCFA',
+  },
+  {
+    id: 'offer-hebergement',
+    title: 'Mise en place hébergement / CI-CD',
+    description: 'Déploiement automatisé, Docker, serveur configuré et prêt pour la production.',
+    priceLabel: '150 000 – 400 000 FCFA',
+  },
+  {
+    id: 'offer-maintenance',
+    title: 'Maintenance mensuelle',
+    description: 'Suivi, corrections et petites évolutions de votre site ou application.',
+    priceLabel: '50 000 – 150 000 FCFA / mois',
+  },
+  {
+    id: 'offer-formation',
+    title: 'Formation / prise en main',
+    description: 'Prise en main de votre nouvel outil ou de votre espace d\'administration.',
+    priceLabel: '50 000 – 100 000 FCFA',
+  },
+]
 
