@@ -1,14 +1,117 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { translateText } from '@/actions/translate'
 import { openChatWithMessage } from '@/lib/chat-bridge'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import type { Offer } from '@/types'
 
 type Translated = Record<string, { title: string; description: string; features: string }>
+type OffersDict = ReturnType<typeof useDictionary>['offers']
+
+const HERO_INTERVAL_MS = 10000
+
+function PauseIcon() {
+  return <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+}
+function PlayIcon() {
+  return <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20"/></svg>
+}
+
+function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
+  offers: Offer[]
+  translated: Translated
+  t: OffersDict
+  ctaLabel: string
+  onRequest: (title: string) => void
+}) {
+  const [index, setIndex] = useState(0)
+  const [userPaused, setUserPaused] = useState(false)
+  const [tabHidden, setTabHidden] = useState(false)
+  const reduceMotion = usePrefersReducedMotion()
+
+  useEffect(() => {
+    const onVisibility = () => setTabHidden(document.hidden)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
+  useEffect(() => {
+    if (index >= offers.length) setIndex(0) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [offers.length, index])
+
+  const paused = userPaused || tabHidden || reduceMotion || offers.length <= 1
+
+  useEffect(() => {
+    if (paused) return
+    const id = setInterval(() => setIndex((i) => (i + 1) % offers.length), HERO_INTERVAL_MS)
+    return () => clearInterval(id)
+  }, [paused, offers.length])
+
+  if (offers.length === 0) return null
+  const o = offers[index]
+  const tr = translated[o.id]
+  const title = tr?.title || o.title
+  const description = tr?.description || o.description
+
+  return (
+    <div className="relative mb-16 rounded-3xl overflow-hidden card no-lift" style={{ minHeight: '340px' }}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={o.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.45 }}
+          className="grid md:grid-cols-2 gap-8 items-center p-8 sm:p-12"
+        >
+          <div>
+            {o.featured && <span className="tag text-xs mb-3 inline-block">{t.specialTitle}</span>}
+            <h2 className="font-display font-bold text-2xl sm:text-3xl mb-3" style={{ color: 'var(--text)' }}>{title}</h2>
+            <p className="text-sm sm:text-base leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>{description}</p>
+            <p className="font-display font-bold text-xl mb-6" style={{ color: 'var(--accent)' }}>{o.priceLabel}</p>
+            <button onClick={() => onRequest(title)} className="btn-primary text-sm">{ctaLabel}</button>
+          </div>
+          {o.image ? (
+            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '4 / 3' }}>
+              <Image src={o.image} alt={title} fill sizes="(min-width: 768px) 45vw, 90vw" style={{ objectFit: 'cover' }} priority={index === 0} />
+            </div>
+          ) : (
+            <div className="hidden md:block" aria-hidden="true" />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {offers.length > 1 && (
+        <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2">
+          {offers.map((slide, i) => (
+            <button
+              key={slide.id}
+              onClick={() => setIndex(i)}
+              aria-label={t.heroGoTo(translated[slide.id]?.title || slide.title)}
+              aria-current={i === index}
+              className="rounded-full transition-all duration-300"
+              style={{ width: i === index ? '20px' : '6px', height: '6px', background: i === index ? 'var(--accent)' : 'var(--border)' }}
+            />
+          ))}
+          <button
+            onClick={() => setUserPaused((p) => !p)}
+            aria-label={userPaused ? t.heroPlay : t.heroPause}
+            className="ml-2 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+          >
+            {userPaused ? <PlayIcon /> : <PauseIcon />}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
   offer: Offer
@@ -23,9 +126,14 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
 
   return (
     <div
-      className="card p-6 h-full flex flex-col"
+      className="card p-6 h-full flex flex-col overflow-hidden"
       style={highlighted ? { border: '1px solid var(--accent)', boxShadow: 'var(--shadow-glow)' } : undefined}
     >
+      {offer.image && (
+        <div className="relative -mx-6 -mt-6 mb-5" style={{ aspectRatio: '16 / 9' }}>
+          <Image src={offer.image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" style={{ objectFit: 'cover' }} />
+        </div>
+      )}
       <h3 className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>{title}</h3>
       <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: 'var(--text-muted)' }}>{description}</p>
 
@@ -96,6 +204,8 @@ export default function OffersPage() {
         <p className="py-10 text-center" style={{ color: 'var(--text-muted)' }}>{t.offers.empty}</p>
       ) : (
         <>
+          <OffersHero offers={data.offers} translated={translated} t={t.offers} ctaLabel={t.offers.cta} onRequest={requestQuote} />
+
           {special.length > 0 && (
             <div className="mb-16">
               <FadeIn>

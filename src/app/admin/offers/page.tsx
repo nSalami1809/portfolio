@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
+import ImageUpload from '@/components/admin/ImageUpload'
 import type { Offer } from '@/types'
 
-const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false }
-const GRID = '1rem 1fr 8rem 6rem'
+const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false, image: '' }
+const GRID = '1rem 2.5rem 1fr 8rem 6rem'
 
 function TrashIcon() {
   return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -113,6 +115,16 @@ export default function AdminOffers() {
               {editingId === '__new__' ? 'Nouvelle offre' : "Modifier l'offre"}
             </h2>
             <div className="grid sm:grid-cols-2 gap-x-5 gap-y-4 mb-5">
+              <div className="sm:col-span-2">
+                <ImageUpload
+                  label="Image de l'offre"
+                  value={form.image ?? ''}
+                  onChange={(v) => setForm((p) => ({ ...p, image: v }))}
+                  size="md"
+                  shape="square"
+                  placeholder="Illustrer cette offre"
+                />
+              </div>
               <div><F label="Titre" req /><input className="input text-sm" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Site vitrine complet" /></div>
               <div><F label="Prix" req /><input className="input text-sm" value={form.priceLabel} onChange={(e) => setForm((p) => ({ ...p, priceLabel: e.target.value }))} placeholder="600 000 – 1 000 000 FCFA" /></div>
               <div className="sm:col-span-2">
@@ -162,6 +174,7 @@ export default function AdminOffers() {
               style={{ gridTemplateColumns: GRID, color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', minWidth: '520px' }}
             >
               <input type="checkbox" checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(filtered.map((o) => o.id)))} aria-label="Sélectionner toutes" className="w-4 h-4 cursor-pointer" style={{ accentColor: 'var(--accent)' }} />
+              <span aria-hidden="true" />
               <span>Offre</span>
               <span>Prix</span>
               <span className="text-right">Actions</span>
@@ -171,6 +184,16 @@ export default function AdminOffers() {
               {filtered.map((o, i) => (
                 <div key={o.id} className="admin-row grid items-center gap-4 px-5 py-3.5" style={{ gridTemplateColumns: GRID, borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none' }}>
                   <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleSelect(o.id)} aria-label={`Sélectionner ${o.title}`} className="w-4 h-4 cursor-pointer self-center" style={{ accentColor: 'var(--accent)' }} />
+
+                  <div className="relative overflow-hidden shrink-0" style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    {o.image ? (
+                      <Image src={o.image} alt="" fill sizes="32px" style={{ objectFit: 'cover' }} />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ color: 'var(--text-subtle)' }} aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                    )}
+                  </div>
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

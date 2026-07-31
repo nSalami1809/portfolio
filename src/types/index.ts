@@ -72,6 +72,7 @@ export interface Offer {
   priceLabel: string
   features?: string[]
   featured?: boolean
+  image?: string
 }
 
 export interface SiteSettings {
