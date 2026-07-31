@@ -82,5 +82,8 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image).*)'],
+  // Exclude Next internals AND any path with a file extension (logo.png,
+  // images/*, favicon.ico, robots.txt, ...) — static assets must never be
+  // redirected through the locale-prefix logic.
+  matcher: ['/((?!_next/static|_next/image|.*\\..*).*)'],
 }
