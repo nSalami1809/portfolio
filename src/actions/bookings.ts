@@ -21,6 +21,7 @@ const TZ_OFFSET = '+01:00'
 export interface BookingPayload {
   clientNom: string
   clientEmail: string
+  clientTelephone?: string
   message?: string
   start: string // ISO datetime
 }
@@ -41,6 +42,7 @@ export interface AdminBooking extends Booking {
 interface BookingRecord {
   clientNom: string
   clientEmail: string
+  clientTelephone?: string
   message?: string
   start: Date
   end: Date
@@ -66,6 +68,7 @@ function toBooking(doc: WithId<BookingRecord>): Booking {
   return {
     clientNom: doc.clientNom,
     clientEmail: doc.clientEmail,
+    clientTelephone: doc.clientTelephone,
     message: doc.message,
     start: doc.start.toISOString(),
     end: doc.end.toISOString(),
@@ -200,6 +203,7 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
   const record: BookingRecord = {
     clientNom: payload.clientNom.trim(),
     clientEmail: payload.clientEmail.trim(),
+    clientTelephone: payload.clientTelephone?.trim() || undefined,
     message: payload.message?.trim() || undefined,
     start,
     end,
