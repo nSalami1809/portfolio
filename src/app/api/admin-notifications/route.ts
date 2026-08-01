@@ -21,10 +21,11 @@ export async function GET(req: NextRequest) {
   }
 
   const db = await getDb()
-  const [unreadContacts, unreadQuotes] = await Promise.all([
+  const [unreadContacts, unreadQuotes, unreadBookings] = await Promise.all([
     db.collection('contacts').countDocuments({ read: false }),
     db.collection('quotes').countDocuments({ read: false }),
+    db.collection('bookings').countDocuments({ read: false }),
   ])
 
-  return NextResponse.json({ unreadContacts, unreadQuotes })
+  return NextResponse.json({ unreadContacts, unreadQuotes, unreadBookings })
 }

@@ -1,4 +1,4 @@
-import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost, Offer } from '@/types'
+import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost, Offer, Availability } from '@/types'
 
 export const defaultPersonalInfo: PersonalInfo = {
   name: 'Nawaf Nemrod Salami',
@@ -235,4 +235,21 @@ export const defaultOffers: Offer[] = [
     priceLabel: '50 000 – 100 000 FCFA',
   },
 ]
+
+// Lun–Ven, 9h–18h par défaut — modifiable en back-office.
+export const defaultAvailability: Availability = {
+  weeklyHours: [
+    { day: 0, enabled: false, start: '09:00', end: '18:00' },
+    { day: 1, enabled: true,  start: '09:00', end: '18:00' },
+    { day: 2, enabled: true,  start: '09:00', end: '18:00' },
+    { day: 3, enabled: true,  start: '09:00', end: '18:00' },
+    { day: 4, enabled: true,  start: '09:00', end: '18:00' },
+    { day: 5, enabled: true,  start: '09:00', end: '18:00' },
+    { day: 6, enabled: false, start: '09:00', end: '18:00' },
+  ],
+  slotMinutes: 30,
+  bufferMinutes: 15,
+  bookingWindowDays: 30,
+  blackoutDates: [],
+}
 

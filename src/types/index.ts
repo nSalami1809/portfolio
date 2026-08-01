@@ -81,6 +81,21 @@ export interface SiteSettings {
   logo: string
 }
 
+export interface WeeklyHours {
+  day: number // 0 = dimanche … 6 = samedi
+  enabled: boolean
+  start: string // "09:00"
+  end: string   // "18:00"
+}
+
+export interface Availability {
+  weeklyHours: WeeklyHours[]  // 7 entrées, une par jour
+  slotMinutes: number         // durée d'un créneau réservable
+  bufferMinutes: number       // battement gardé libre entre deux rendez-vous
+  bookingWindowDays: number   // horizon de réservation (en jours)
+  blackoutDates: string[]     // dates ISO ("YYYY-MM-DD") entièrement bloquées
+}
+
 export interface BlogPost {
   slug: string
   title: string
@@ -116,4 +131,5 @@ export interface PortfolioData {
   vision: VisionData
   blog: BlogPost[]
   offers: Offer[]
+  availability: Availability
 }

@@ -33,7 +33,7 @@ function playChime() {
 }
 
 export default function NotificationBell() {
-  const [counts, setCounts] = useState({ unreadContacts: 0, unreadQuotes: 0 })
+  const [counts, setCounts] = useState({ unreadContacts: 0, unreadQuotes: 0, unreadBookings: 0 })
   const [open, setOpen] = useState(false)
   const prevTotal = useRef<number | null>(null)
 
@@ -42,10 +42,10 @@ export default function NotificationBell() {
       const res = await fetch('/api/admin-notifications')
       if (!res.ok) return
       const data = await res.json()
-      const total = (data.unreadContacts ?? 0) + (data.unreadQuotes ?? 0)
+      const total = (data.unreadContacts ?? 0) + (data.unreadQuotes ?? 0) + (data.unreadBookings ?? 0)
       if (prevTotal.current !== null && total > prevTotal.current) playChime()
       prevTotal.current = total
-      setCounts({ unreadContacts: data.unreadContacts ?? 0, unreadQuotes: data.unreadQuotes ?? 0 })
+      setCounts({ unreadContacts: data.unreadContacts ?? 0, unreadQuotes: data.unreadQuotes ?? 0, unreadBookings: data.unreadBookings ?? 0 })
     } catch {
       // Silent — a missed poll just gets retried on the next tick
     }
@@ -57,7 +57,7 @@ export default function NotificationBell() {
     return () => clearInterval(id)
   }, [poll])
 
-  const total = counts.unreadContacts + counts.unreadQuotes
+  const total = counts.unreadContacts + counts.unreadQuotes + counts.unreadBookings
 
   return (
     <div className="relative">
@@ -116,6 +116,17 @@ export default function NotificationBell() {
                 Devis non lus
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: counts.unreadQuotes > 0 ? 'var(--accent-glow)' : 'var(--bg-secondary)', color: counts.unreadQuotes > 0 ? 'var(--accent)' : 'var(--text-subtle)' }}>
                   {counts.unreadQuotes}
+                </span>
+              </Link>
+              <Link
+                href="/admin/calendar"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-[var(--surface-hover)]"
+                style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
+              >
+                Rendez-vous non lus
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: counts.unreadBookings > 0 ? 'var(--accent-glow)' : 'var(--bg-secondary)', color: counts.unreadBookings > 0 ? 'var(--accent)' : 'var(--text-subtle)' }}>
+                  {counts.unreadBookings}
                 </span>
               </Link>
               {total === 0 && (

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
 import { fetchPortfolio } from '@/actions/portfolio'
 import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
+import { getUpcomingAvailability, getDaySlots, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import type { PortfolioData } from '@/types'
 
 const MAX_ATTEMPTS = 20
@@ -112,7 +113,15 @@ Déroulé à suivre :
 5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
 
 Retrouver un devis déjà généré :
-Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis.`
+Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis.
+
+Prise de rendez-vous :
+Tu peux réserver directement un appel avec ${personal.name} dans la conversation, sans passer par un email. Propose-le si le visiteur veut discuter de vive voix, après avoir généré un devis, ou s'il demande explicitement un rendez-vous. Tous les horaires sont dans le fuseau de ${personal.name} (Afrique/Libreville, UTC+1) — précise-le si utile.
+1. Si le visiteur n'a pas de date précise en tête, appelle checkAvailability sans argument pour obtenir les prochains jours avec des créneaux libres, et propose-lui les 2-3 premiers.
+2. S'il demande une date précise, appelle checkAvailability avec cette date pour voir les créneaux de ce jour-là.
+3. Une fois qu'il a choisi un créneau, demande son nom et son email (jamais inventés), puis appelle bookMeeting avec la date, l'heure (HH:mm) et ces coordonnées.
+4. Après la réservation, confirme le créneau, indique que des emails de confirmation (avec fichier calendrier) ont été envoyés aux deux, et donne le code de suivi pour retrouver ou annuler ce rendez-vous plus tard.
+5. Pour retrouver ou annuler un rendez-vous existant à partir d'un code de suivi, utilise lookupBooking puis, si le visiteur confirme vouloir l'annuler, cancelBooking.`
 }
 
 export async function POST(req: NextRequest) {
@@ -185,6 +194,53 @@ export async function POST(req: NextRequest) {
           email: z.string().describe('Adresse email du client'),
         }),
         execute: async ({ reference, email }) => sendQuoteEmail(reference, email),
+      }),
+      checkAvailability: tool({
+        description:
+          "Vérifie les prochains créneaux de rendez-vous disponibles. Sans argument, renvoie les prochains jours avec des créneaux libres ; avec une date, renvoie les créneaux de ce jour précis.",
+        inputSchema: z.object({
+          date: z.string().optional().describe('Date ISO (YYYY-MM-DD), si le visiteur en a demandé une précise'),
+        }),
+        execute: async ({ date }) => {
+          if (date) return { date, slots: await getDaySlots(date) }
+          return { days: await getUpcomingAvailability() }
+        },
+      }),
+      bookMeeting: tool({
+        description:
+          "Réserve un rendez-vous à un créneau précis, une fois le créneau, le nom et l'email du visiteur obtenus (jamais inventés).",
+        inputSchema: z.object({
+          date: z.string().describe('Date ISO (YYYY-MM-DD)'),
+          time: z.string().describe('Heure au format HH:mm, dans le fuseau Afrique/Libreville (UTC+1)'),
+          clientNom: z.string(),
+          clientEmail: z.string(),
+          message: z.string().optional().describe('Contexte optionnel sur le sujet du rendez-vous'),
+        }),
+        execute: async ({ date, time, clientNom, clientEmail, message }) => {
+          try {
+            const start = new Date(`${date}T${time}:00+01:00`).toISOString()
+            return await bookMeeting({ clientNom, clientEmail, message, start })
+          } catch (e) {
+            return { error: e instanceof Error ? e.message : 'Impossible de réserver ce créneau.' }
+          }
+        },
+      }),
+      lookupBooking: tool({
+        description: "Retrouve un rendez-vous déjà réservé à partir de son code de suivi.",
+        inputSchema: z.object({
+          accessCode: z.string().describe('Code de suivi fourni par le visiteur'),
+        }),
+        execute: async ({ accessCode }) => {
+          const booking = await lookupBooking(accessCode)
+          return booking ?? { error: 'Aucun rendez-vous trouvé pour ce code.' }
+        },
+      }),
+      cancelBooking: tool({
+        description: "Annule un rendez-vous existant à partir de son code de suivi, après confirmation explicite du visiteur.",
+        inputSchema: z.object({
+          accessCode: z.string().describe('Code de suivi du rendez-vous à annuler'),
+        }),
+        execute: async ({ accessCode }) => cancelBooking(accessCode),
       }),
     },
   })

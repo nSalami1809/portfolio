@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import type { Quote } from '@/actions/quotes'
+import type { Booking } from '@/actions/bookings'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { onOpenChatRequest } from '@/lib/chat-bridge'
@@ -200,6 +201,25 @@ function BotAvatar({ mood }: { mood: BotMood }) {
       aria-hidden="true"
     >
       <BotIcon width={13} height={13} color="white" mood={mood} />
+    </div>
+  )
+}
+
+function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }) {
+  const when = new Date(booking.start).toLocaleString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville',
+  })
+  return (
+    <div className="rounded-xl p-3.5" style={{ maxWidth: '85%', background: 'var(--accent-glow)', border: '1px solid var(--accent)' }}>
+      <p className="text-xs font-bold mb-1 capitalize" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>{t.bookingPrefix}</p>
+      <p className="text-sm font-semibold mb-1 capitalize" style={{ color: 'var(--text)' }}>{when}</p>
+      {booking.status === 'cancelled' && (
+        <p className="text-xs font-semibold mb-1" style={{ color: '#EF4444' }}>{t.bookingCancelled}</p>
+      )}
+      <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{booking.clientNom}</p>
+      <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>
+        {t.trackingCode} : <strong style={{ color: 'var(--text)', letterSpacing: '0.05em' }}>{booking.accessCode}</strong>
+      </p>
     </div>
   )
 }
@@ -554,6 +574,115 @@ export default function ChatWidget() {
                                 style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
                               >
                                 {t.chat.sendingEmail}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
+                      if (part.type === 'tool-checkAvailability') {
+                        if (part.state === 'output-available') {
+                          const output = part.output as { date: string; slots: string[] } | { days: { date: string; slots: string[] }[] }
+                          const rows = 'days' in output ? output.days : [{ date: output.date, slots: output.slots }]
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="happy" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs space-y-1.5"
+                                style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                              >
+                                {rows.length === 0 || rows.every((r) => r.slots.length === 0) ? (
+                                  <span style={{ color: 'var(--text-subtle)' }}>{t.chat.noAvailability}</span>
+                                ) : rows.map((r) => (
+                                  <p key={r.date}>
+                                    <strong>{new Date(`${r.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</strong>
+                                    {' — '}{r.slots.slice(0, 6).join(', ')}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="thinking" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                {t.chat.checkingAvailability}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
+                      if (part.type === 'tool-bookMeeting' || part.type === 'tool-lookupBooking') {
+                        if (part.state === 'output-available') {
+                          const output = part.output as Booking | { error: string }
+                          if ('error' in output) {
+                            return (
+                              <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                                <BotAvatar mood="confused" />
+                                <div
+                                  className="rounded-xl px-3.5 py-2.5 text-sm"
+                                  style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                                >
+                                  {output.error}
+                                </div>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="excited" />
+                              <BookingCard booking={output} t={t.chat} />
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="thinking" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                {part.type === 'tool-bookMeeting' ? t.chat.bookingMeeting : t.chat.searchingBooking}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
+                      if (part.type === 'tool-cancelBooking') {
+                        if (part.state === 'output-available') {
+                          const output = part.output as { ok: boolean; message: string }
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood={output.ok ? 'happy' : 'confused'} />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-sm"
+                                style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                              >
+                                {output.message}
+                              </div>
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="thinking" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                {t.chat.cancelingBooking}
                               </div>
                             </div>
                           )
