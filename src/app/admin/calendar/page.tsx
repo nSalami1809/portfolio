@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
-import { listBookings, markBookingRead, adminCancelBooking, deleteBooking } from '@/actions/bookings'
+import { listBookings, markBookingRead, adminCancelBooking, deleteBooking, createEvent } from '@/actions/bookings'
 import type { AdminBooking } from '@/actions/bookings'
 import type { WeeklyHours } from '@/types'
 import MonthGrid, { type DayStatus } from '@/components/calendar/MonthGrid'
@@ -63,6 +63,33 @@ export default function AdminCalendar() {
     if (set.has(dateISO)) set.delete(dateISO); else set.add(dateISO)
     updateAvailability({ ...data.availability, blackoutDates: Array.from(set).sort() })
     toast(set.has(dateISO) ? 'Journée bloquée' : 'Journée débloquée')
+  }
+
+  const [showEventForm, setShowEventForm] = useState(false)
+  const [eventTitle, setEventTitle] = useState('')
+  const [eventTime, setEventTime] = useState('09:00')
+  const [eventDuration, setEventDuration] = useState(60)
+  const [creatingEvent, setCreatingEvent] = useState(false)
+
+  const openEventForm = () => { setShowEventForm(true); setEventTitle('') }
+
+  const handleCreateEvent = async () => {
+    if (!selectedDay || !eventTitle.trim()) return
+    setCreatingEvent(true)
+    try {
+      await createEvent({
+        title: eventTitle.trim(),
+        start: `${selectedDay}T${eventTime}:00+01:00`,
+        durationMinutes: eventDuration,
+      })
+      await load()
+      setShowEventForm(false)
+      toast('Événement ajouté')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Impossible de créer cet événement', 'error')
+    } finally {
+      setCreatingEvent(false)
+    }
   }
 
   const handleOpen = async (b: AdminBooking) => {
@@ -136,14 +163,17 @@ export default function AdminCalendar() {
             year={year} month={month}
             onNavigate={(y, m) => { setYear(y); setMonth(m) }}
             selected={selectedDay}
-            onSelectDate={setSelectedDay}
+            onSelectDate={(d) => { setSelectedDay(d); setShowEventForm(false) }}
             dayStatus={dayStatus}
             todayISO={todayISO()}
             headerAction={
               selectedDay ? (
-                <button onClick={() => toggleBlackout(selectedDay)} className={isBlocked ? 'btn-secondary btn-sm' : 'btn-primary btn-sm'}>
-                  {isBlocked ? 'Débloquer ce jour' : 'Bloquer ce jour'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={openEventForm} className="btn-primary btn-sm">+ Nouvel événement</button>
+                  <button onClick={() => toggleBlackout(selectedDay)} className="btn-secondary btn-sm">
+                    {isBlocked ? 'Débloquer ce jour' : 'Bloquer ce jour'}
+                  </button>
+                </div>
               ) : undefined
             }
           />
@@ -157,14 +187,43 @@ export default function AdminCalendar() {
                 {isBlocked && (
                   <p className="text-xs mb-3 px-2 py-1 rounded-lg inline-block" style={{ background: 'var(--surface-hover)', color: 'var(--text-subtle)' }}>Journée bloquée</p>
                 )}
+
+                {showEventForm && (
+                  <div className="p-2.5 rounded-lg mb-3 space-y-2" style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}>
+                    <input
+                      autoFocus value={eventTitle} onChange={(e) => setEventTitle(e.target.value)}
+                      placeholder="Titre de l'événement" className="input text-sm"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="input text-sm" style={{ width: '8.5rem' }} />
+                      <select value={eventDuration} onChange={(e) => setEventDuration(Number(e.target.value))} className="input text-sm">
+                        <option value={15}>15 min</option>
+                        <option value={30}>30 min</option>
+                        <option value={60}>1 h</option>
+                        <option value={120}>2 h</option>
+                        <option value={240}>4 h</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={handleCreateEvent} disabled={creatingEvent || !eventTitle.trim()} className="btn-primary btn-xs">Créer</button>
+                      <button onClick={() => setShowEventForm(false)} className="btn-secondary btn-xs">Annuler</button>
+                    </div>
+                  </div>
+                )}
+
                 {dayBookings.length === 0 ? (
                   <p className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>Aucun rendez-vous ce jour.</p>
                 ) : (
                   <div className="space-y-2">
                     {dayBookings.map((b) => (
                       <div key={b.id} className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--surface-hover)' }}>
-                        <p className="font-semibold" style={{ color: 'var(--text)' }}>{new Date(b.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville' })} — {b.clientNom}</p>
-                        <p style={{ color: 'var(--text-subtle)' }}>{b.clientEmail}{b.clientTelephone ? ` · ${b.clientTelephone}` : ''}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-semibold" style={{ color: 'var(--text)' }}>{new Date(b.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville' })} — {b.clientNom}</p>
+                          {b.source === 'admin' && <span className="tag text-xs">Événement</span>}
+                        </div>
+                        {b.source === 'client' && (
+                          <p style={{ color: 'var(--text-subtle)' }}>{b.clientEmail}{b.clientTelephone ? ` · ${b.clientTelephone}` : ''}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -200,9 +259,10 @@ export default function AdminCalendar() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
                     <p className="text-sm font-semibold truncate" style={{ color: b.read ? 'var(--text-muted)' : 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{b.clientNom}</p>
+                    {b.source === 'admin' && <span className="tag text-xs">Événement</span>}
                     {b.status === 'cancelled' && <span className="tag text-xs">Annulé</span>}
                   </div>
-                  <p className="text-xs truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{formatDateTime(b.start)} · {b.clientEmail}</p>
+                  <p className="text-xs truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{formatDateTime(b.start)}{b.source === 'client' ? ` · ${b.clientEmail}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   {b.status === 'confirmed' && (

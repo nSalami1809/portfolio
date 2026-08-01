@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
-import { getMonthSlots, getDaySlots, bookMeeting, type Booking } from '@/actions/bookings'
+import { getMonthSlots, getDaySchedule, bookMeeting, type Booking, type DaySlot } from '@/actions/bookings'
 import MonthGrid, { type DayStatus } from '@/components/calendar/MonthGrid'
 
 function todayISO() {
@@ -24,7 +24,7 @@ export default function CalendarPage() {
   const [loadingMonth, setLoadingMonth] = useState(true)
 
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
-  const [daySlots, setDaySlots] = useState<string[] | null>(null)
+  const [daySchedule, setDaySchedule] = useState<DaySlot[] | null>(null)
   const [loadingDay, setLoadingDay] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
 
@@ -56,8 +56,8 @@ export default function CalendarPage() {
     setBooking(null)
     setError(null)
     setLoadingDay(true)
-    getDaySlots(dateISO)
-      .then(setDaySlots)
+    getDaySchedule(dateISO)
+      .then(setDaySchedule)
       .finally(() => setLoadingDay(false))
   }, [])
 
@@ -132,13 +132,27 @@ export default function CalendarPage() {
                     <div className="flex flex-wrap gap-2">
                       {[...Array(6)].map((_, i) => <div key={i} className="animate-pulse rounded-lg" style={{ width: 64, height: 32, background: 'var(--surface)' }} />)}
                     </div>
-                  ) : !daySlots?.length ? (
+                  ) : !daySchedule?.length ? (
                     <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>{tc.noSlots}</p>
                   ) : !selectedSlot ? (
                     <div className="flex flex-wrap gap-2">
-                      {daySlots.map((s) => (
-                        <button key={s} onClick={() => setSelectedSlot(s)} className="btn-secondary btn-sm" style={{ padding: '0.4rem 0.9rem' }}>
-                          {s}
+                      {daySchedule.map((s) => (
+                        <button
+                          key={s.time}
+                          type="button"
+                          disabled={!s.available}
+                          onClick={() => setSelectedSlot(s.time)}
+                          className="btn-secondary btn-sm"
+                          style={{
+                            padding: '0.4rem 0.9rem',
+                            opacity: s.available ? 1 : 0.4,
+                            textDecoration: s.available ? 'none' : 'line-through',
+                            cursor: s.available ? 'pointer' : 'not-allowed',
+                          }}
+                          aria-label={s.available ? s.time : `${s.time} — ${tc.slotTaken}`}
+                          title={s.available ? undefined : tc.slotTaken}
+                        >
+                          {s.time}
                         </button>
                       ))}
                     </div>
