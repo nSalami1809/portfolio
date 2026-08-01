@@ -32,6 +32,10 @@ export interface Booking extends BookingPayload {
   durationMinutes: number
   status: 'confirmed' | 'cancelled'
   createdAt: string
+  // 'admin' = an event Nawaf blocked directly from the back office (no
+  // client attached) — still occupies the slot everywhere (public page,
+  // chatbot), just never triggers client emails or rate limiting.
+  source: 'admin' | 'client'
 }
 
 export interface AdminBooking extends Booking {
@@ -51,6 +55,7 @@ interface BookingRecord {
   status: 'confirmed' | 'cancelled'
   read: boolean
   createdAt: Date
+  source?: 'admin' | 'client'
 }
 
 function bookings() {
@@ -76,6 +81,7 @@ function toBooking(doc: WithId<BookingRecord>): Booking {
     accessCode: doc.accessCode,
     status: doc.status,
     createdAt: doc.createdAt.toISOString(),
+    source: doc.source ?? 'client',
   }
 }
 
@@ -156,6 +162,47 @@ export async function getMonthSlots(year: number, month: number): Promise<Record
   const lastDay = new Date(year, month, 0).getDate()
   const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
   return computeSlots(from, to)
+}
+
+export interface DaySlot { time: string; available: boolean }
+
+// Full day schedule — both open AND taken slots — so the public page can
+// show a visitor that a slot is already booked instead of just silently
+// omitting it. Never exposes who booked it, only that it's unavailable.
+export async function getDaySchedule(dateISO: string): Promise<DaySlot[]> {
+  const portfolio = await fetchPortfolio()
+  const availability = portfolio?.availability
+  if (!availability) return []
+
+  const dow = toInstant(dateISO, '12:00').getDay()
+  const hours = availability.weeklyHours.find((h) => h.day === dow)
+  if (!hours?.enabled || availability.blackoutDates.includes(dateISO)) return []
+
+  const now = new Date()
+  const windowEnd = new Date(now.getTime() + availability.bookingWindowDays * 86_400_000)
+  const dayStart = toInstant(dateISO, hours.start)
+  const dayEnd = toInstant(dateISO, hours.end)
+  if (dayStart > windowEnd) return []
+
+  const col = await bookings()
+  const existing = await col
+    .find({ status: 'confirmed', start: { $lt: dayEnd }, end: { $gt: dayStart } })
+    .project<Pick<BookingRecord, 'start' | 'end'>>({ start: 1, end: 1 })
+    .toArray()
+
+  const slotMs = availability.slotMinutes * 60_000
+  const bufferMs = availability.bufferMinutes * 60_000
+  const out: DaySlot[] = []
+  for (let t = dayStart.getTime(); t + slotMs <= dayEnd.getTime(); t += slotMs) {
+    const slotStart = new Date(t)
+    const slotEnd = new Date(t + slotMs)
+    if (slotStart < now || slotStart > windowEnd) continue
+    const conflict = existing.some(
+      (b) => slotStart.getTime() < b.end.getTime() + bufferMs && slotEnd.getTime() + bufferMs > b.start.getTime(),
+    )
+    out.push({ time: hhmm(slotStart), available: !conflict })
+  }
+  return out
 }
 
 // Next few open days — used by the chatbot when the visitor hasn't named a
@@ -254,6 +301,42 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
   })
 
   return booking
+}
+
+// ── Admin: block a slot directly (no client) ─────────────────────────────
+// Same underlying record as a real booking, so it automatically occupies
+// the slot everywhere that reads confirmed bookings — the public page, the
+// admin grid, and the chatbot's checkAvailability/bookMeeting — with no
+// separate blocking mechanism to keep in sync.
+
+export async function createEvent(payload: { title: string; start: string; durationMinutes: number }): Promise<Booking> {
+  if (!payload.title?.trim()) throw new Error('Titre requis.')
+  if (!payload.start) throw new Error('Créneau requis.')
+
+  const start = new Date(payload.start)
+  const durationMinutes = payload.durationMinutes > 0 ? payload.durationMinutes : 30
+  const end = new Date(start.getTime() + durationMinutes * 60_000)
+
+  const col = await bookings()
+  const conflict = await col.findOne({ status: 'confirmed', start: { $lt: end }, end: { $gt: start } })
+  if (conflict) throw new Error('Ce créneau chevauche déjà un événement ou un rendez-vous existant.')
+
+  const accessCode = generateAccessCode()
+  const record: BookingRecord = {
+    clientNom: payload.title.trim(),
+    clientEmail: '',
+    start,
+    end,
+    durationMinutes,
+    accessCode,
+    status: 'confirmed',
+    read: true, // created by the admin — no unread notification needed
+    createdAt: new Date(),
+    source: 'admin',
+  }
+
+  const { insertedId } = await col.insertOne(record)
+  return toBooking({ ...record, _id: insertedId })
 }
 
 // Retrieve a booking by its access code, so a visitor can find or cancel it
