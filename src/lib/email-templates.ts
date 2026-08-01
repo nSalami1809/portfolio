@@ -441,12 +441,14 @@ function formatSlot(startISO: string): string {
 export function bookingNotificationEmail(data: {
   clientNom: string
   clientEmail: string
+  clientTelephone?: string
   message?: string
   start: string
   accessCode: string
 }) {
   const safeNom = esc(data.clientNom)
   const safeEmail = esc(data.clientEmail)
+  const safePhone = data.clientTelephone ? esc(data.clientTelephone) : undefined
   const when = formatSlot(data.start)
 
   return {
@@ -460,6 +462,7 @@ export function bookingNotificationEmail(data: {
         ${dataRow(icon.clock, 'Cr&eacute;neau', `<strong>${esc(when)}</strong>`)}
         ${dataRow(icon.user, 'Client', `<strong>${safeNom}</strong>`)}
         ${dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#131318;text-decoration:underline;font-weight:600">${safeEmail}</a>`)}
+        ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#131318;text-decoration:underline;font-weight:600">${safePhone}</a>`) : ''}
       `)}
 
       ${data.message ? infoBox(`

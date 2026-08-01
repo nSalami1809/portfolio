@@ -119,7 +119,7 @@ Prise de rendez-vous :
 Tu peux réserver directement un appel avec ${personal.name} dans la conversation, sans passer par un email. Propose-le si le visiteur veut discuter de vive voix, après avoir généré un devis, ou s'il demande explicitement un rendez-vous. Tous les horaires sont dans le fuseau de ${personal.name} (Afrique/Libreville, UTC+1) — précise-le si utile.
 1. Si le visiteur n'a pas de date précise en tête, appelle checkAvailability sans argument pour obtenir les prochains jours avec des créneaux libres, et propose-lui les 2-3 premiers.
 2. S'il demande une date précise, appelle checkAvailability avec cette date pour voir les créneaux de ce jour-là.
-3. Une fois qu'il a choisi un créneau, demande son nom et son email (jamais inventés), puis appelle bookMeeting avec la date, l'heure (HH:mm) et ces coordonnées.
+3. Une fois qu'il a choisi un créneau, demande ses coordonnées (nom, email et/ou téléphone — jamais inventées), puis appelle bookMeeting avec la date, l'heure (HH:mm) et ces coordonnées.
 4. Après la réservation, confirme le créneau, indique que des emails de confirmation (avec fichier calendrier) ont été envoyés aux deux, et donne le code de suivi pour retrouver ou annuler ce rendez-vous plus tard.
 5. Pour retrouver ou annuler un rendez-vous existant à partir d'un code de suivi, utilise lookupBooking puis, si le visiteur confirme vouloir l'annuler, cancelBooking.`
 }
@@ -214,12 +214,13 @@ export async function POST(req: NextRequest) {
           time: z.string().describe('Heure au format HH:mm, dans le fuseau Afrique/Libreville (UTC+1)'),
           clientNom: z.string(),
           clientEmail: z.string(),
+          clientTelephone: z.string().optional(),
           message: z.string().optional().describe('Contexte optionnel sur le sujet du rendez-vous'),
         }),
-        execute: async ({ date, time, clientNom, clientEmail, message }) => {
+        execute: async ({ date, time, clientNom, clientEmail, clientTelephone, message }) => {
           try {
             const start = new Date(`${date}T${time}:00+01:00`).toISOString()
-            return await bookMeeting({ clientNom, clientEmail, message, start })
+            return await bookMeeting({ clientNom, clientEmail, clientTelephone, message, start })
           } catch (e) {
             return { error: e instanceof Error ? e.message : 'Impossible de réserver ce créneau.' }
           }

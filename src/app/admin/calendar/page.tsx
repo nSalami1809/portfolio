@@ -164,7 +164,7 @@ export default function AdminCalendar() {
                     {dayBookings.map((b) => (
                       <div key={b.id} className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--surface-hover)' }}>
                         <p className="font-semibold" style={{ color: 'var(--text)' }}>{new Date(b.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville' })} — {b.clientNom}</p>
-                        <p style={{ color: 'var(--text-subtle)' }}>{b.clientEmail}</p>
+                        <p style={{ color: 'var(--text-subtle)' }}>{b.clientEmail}{b.clientTelephone ? ` · ${b.clientTelephone}` : ''}</p>
                       </div>
                     ))}
                   </div>
