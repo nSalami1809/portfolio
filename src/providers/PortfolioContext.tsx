@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer } from '@/types'
+import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer, Availability } from '@/types'
 import {
   defaultPersonalInfo,
   defaultSocials,
@@ -14,6 +14,7 @@ import {
   defaultVision,
   defaultBlogPosts,
   defaultOffers,
+  defaultAvailability,
 } from '@/data/defaultData'
 import { publishPortfolio, fetchPortfolio } from '@/actions/portfolio'
 
@@ -31,6 +32,7 @@ const defaultData: PortfolioData = {
   vision: defaultVision,
   blog: defaultBlogPosts,
   offers: defaultOffers,
+  availability: defaultAvailability,
 }
 
 interface PortfolioContextValue {
@@ -46,6 +48,7 @@ interface PortfolioContextValue {
   updateVision: (vision: VisionData) => void
   updateBlogPosts: (blog: BlogPost[]) => void
   updateOffers: (offers: Offer[]) => void
+  updateAvailability: (availability: Availability) => void
   resetAll: () => void
 }
 
@@ -66,6 +69,7 @@ const PortfolioContext = createContext<PortfolioContextValue>({
   updateVision: noop,
   updateBlogPosts: noop,
   updateOffers: noop,
+  updateAvailability: noop,
   resetAll: noop,
 })
 
@@ -227,6 +231,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const updateVision       = useCallback((vision: VisionData)           => persist('vision', vision), [persist])
   const updateBlogPosts    = useCallback((blog: BlogPost[])             => persist('blog', blog), [persist])
   const updateOffers       = useCallback((offers: Offer[])              => persist('offers', offers), [persist])
+  const updateAvailability = useCallback((availability: Availability)   => persist('availability', availability), [persist])
 
   const resetAll = useCallback(() => {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
@@ -240,10 +245,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     data,
     updatePersonal, updateSocials, updateProjects, updateExperiences,
     updateEducations, updateSkills, updateTestimonials, updateSettings,
-    updateVision, updateBlogPosts, updateOffers, resetAll,
+    updateVision, updateBlogPosts, updateOffers, updateAvailability, resetAll,
   }), [data, updatePersonal, updateSocials, updateProjects, updateExperiences,
       updateEducations, updateSkills, updateTestimonials, updateSettings,
-      updateVision, updateBlogPosts, updateOffers, resetAll])
+      updateVision, updateBlogPosts, updateOffers, updateAvailability, resetAll])
 
   return (
     <PortfolioContext.Provider value={value}>

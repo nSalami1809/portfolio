@@ -428,3 +428,79 @@ export function quoteClientCopyEmail(data: {
     `),
   }
 }
+
+// ── Booking notification (admin) ───────────────────────────────────────────
+
+function formatSlot(startISO: string): string {
+  return new Date(startISO).toLocaleString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Africa/Libreville',
+  })
+}
+
+export function bookingNotificationEmail(data: {
+  clientNom: string
+  clientEmail: string
+  message?: string
+  start: string
+  accessCode: string
+}) {
+  const safeNom = esc(data.clientNom)
+  const safeEmail = esc(data.clientEmail)
+  const when = formatSlot(data.start)
+
+  return {
+    subject: `Nouveau rendez-vous — ${data.clientNom} — ${when}`,
+    html: base('Nouveau rendez-vous', `${data.clientNom} a réservé un créneau le ${when}`, `
+      ${badge('Calendrier')}
+      ${heading('Nouveau rendez-vous r&eacute;serv&eacute;')}
+      ${intro(`<strong style="color:#26262E">${safeNom}</strong> vient de r&eacute;server un cr&eacute;neau sur votre calendrier.`)}
+
+      ${infoBox(`
+        ${dataRow(icon.clock, 'Cr&eacute;neau', `<strong>${esc(when)}</strong>`)}
+        ${dataRow(icon.user, 'Client', `<strong>${safeNom}</strong>`)}
+        ${dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#131318;text-decoration:underline;font-weight:600">${safeEmail}</a>`)}
+      `)}
+
+      ${data.message ? infoBox(`
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Message</p>
+        <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${esc(data.message)}</p>
+      ` ) : ''}
+
+      ${ctaButton(`mailto:${safeEmail}?subject=${encodeURIComponent('Votre rendez-vous')}`, `Contacter ${safeNom}`)}
+      ${secondaryLink(`mailto:${safeEmail}`, "Copier l'email")}
+    `),
+  }
+}
+
+// ── Booking copy (client) ───────────────────────────────────────────────────
+
+export function bookingClientCopyEmail(data: {
+  clientNom: string
+  message?: string
+  start: string
+  accessCode: string
+}, adminEmail: string) {
+  const safeNom = esc(data.clientNom)
+  const when = formatSlot(data.start)
+
+  return {
+    subject: `Votre rendez-vous est confirmé — ${when}`,
+    html: base('Rendez-vous confirmé', `Votre rendez-vous est confirmé pour le ${when}`, `
+      ${badge('Rendez-vous confirm&eacute;')}
+      ${heading(`C&rsquo;est confirm&eacute;, ${safeNom.split(' ')[0]}&nbsp;!`)}
+      ${intro(`Votre rendez-vous avec Nawaf Nemrod SALAMI est bien enregistr&eacute;. Un fichier calendrier est joint &agrave; cet e-mail pour l&rsquo;ajouter directement &agrave; votre agenda.`)}
+
+      ${infoBox(`
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Cr&eacute;neau</p>
+        <p style="margin:0 0 16px;font-size:16px;font-weight:800;color:#131318">${esc(when)}</p>
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
+        <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+        <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">Conservez ce code : donnez-le au chatbot du portfolio pour retrouver ou annuler ce rendez-vous.</p>
+      `)}
+
+      ${ctaButton(SITE_URL, 'Voir le portfolio')}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent('À propos de mon rendez-vous')}`, 'Une question ?')}
+    `),
+  }
+}
