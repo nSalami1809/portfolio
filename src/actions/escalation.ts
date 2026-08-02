@@ -10,14 +10,25 @@ import { getAdminEmail } from '@/lib/admin-config'
 // directly, or the bot genuinely can't help after a few tries. Unlike a
 // quote/booking/message, this needs to reach the admin *immediately* —
 // the record is kept for a paper trail, but the email is the real channel.
-export async function requestHumanHelp(payload: { reason: string; visitorEmail?: string }): Promise<{ ok: boolean; message: string }> {
+export async function requestHumanHelp(payload: {
+  reason: string
+  clientNom: string
+  clientEmail: string
+  clientTelephone?: string
+}): Promise<{ ok: boolean; message: string }> {
   const reason = payload.reason?.trim()
-  if (!reason) return { ok: false, message: 'Un motif est requis.' }
+  const clientNom = payload.clientNom?.trim()
+  const clientEmail = payload.clientEmail?.trim()
+  if (!reason || !clientNom || !clientEmail) return { ok: false, message: 'Nom, email et motif sont requis.' }
+
+  const clientTelephone = payload.clientTelephone?.trim() || undefined
 
   const db = await getDb()
   await db.collection('escalations').insertOne({
     reason: reason.slice(0, 1000),
-    visitorEmail: payload.visitorEmail?.trim() || undefined,
+    clientNom,
+    clientEmail,
+    clientTelephone,
     createdAt: new Date(),
   })
 
@@ -25,7 +36,7 @@ export async function requestHumanHelp(payload: { reason: string; visitorEmail?:
     try {
       const transporter = getTransporter()
       const adminEmail = await getAdminEmail()
-      const email = escalationEmail({ reason, visitorEmail: payload.visitorEmail })
+      const email = escalationEmail({ reason, clientNom, clientEmail, clientTelephone })
       await transporter.sendMail({
         from: `"Portfolio NS · Chatbot" <${process.env.GMAIL_USER}>`,
         to: adminEmail,
