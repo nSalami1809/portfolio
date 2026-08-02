@@ -270,6 +270,25 @@ export default function AdminSettings() {
           )}
         </AnimatePresence>
       </section>
+
+      {/* ── Data export ────────────────────────────────────────────────────── */}
+      <div className="pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+        <h2 className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>
+          Sauvegarde des données
+        </h2>
+        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+          Téléchargez une copie complète de vos données (portfolio, devis, messages, rendez-vous, liste d&apos;attente) au format JSON.
+        </p>
+      </div>
+
+      <section className="card no-lift p-6">
+        <a href="/api/admin-export" download className="btn-secondary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Télécharger la sauvegarde (JSON)
+        </a>
+      </section>
     </div>
   )
 }

@@ -248,10 +248,14 @@ export default function Footer() {
         </div>
 
         <div
-          className="pt-8 flex justify-center text-xs"
+          className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-center"
           style={{ borderTop: '1px solid var(--border)', color: 'var(--text-subtle)' }}
         >
           <p>&copy; {year} {data.personal.name}. {t.footer.rights}</p>
+          <span className="hidden sm:inline" aria-hidden="true">·</span>
+          <Link href={`/${locale}/mentions-legales`} className="hover:underline">{t.footer.legalNotice}</Link>
+          <span className="hidden sm:inline" aria-hidden="true">·</span>
+          <Link href={`/${locale}/confidentialite`} className="hover:underline">{t.footer.privacyPolicy}</Link>
         </div>
       </div>
     </footer>

@@ -22,6 +22,7 @@ interface Props {
   socials: SocialLinks
   locale: Locale
   t: Dictionary['home']
+  nextSlot: { date: string; time: string } | null
 }
 
 function TypingCursor() {
@@ -34,8 +35,12 @@ function TypingCursor() {
   )
 }
 
-export default function HeroSection({ personal, socials, locale, t }: Props) {
+export default function HeroSection({ personal, socials, locale, t, nextSlot }: Props) {
   const [scrolled, setScrolled] = useState(false)
+
+  const nextSlotLabel = nextSlot
+    ? new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(`${nextSlot.date}T12:00:00`))
+    : null
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -125,18 +130,32 @@ export default function HeroSection({ personal, socials, locale, t }: Props) {
             </motion.div>
           )}
 
-          <motion.div
-            variants={item}
-            className="inline-flex items-center gap-2 mb-5 px-3.5 py-1.5 rounded-full"
-            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#10B981' }} />
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#10B981' }} />
-            </span>
-            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-              {t.heroAvailable}
-            </span>
+          <motion.div variants={item} className="flex flex-wrap items-center gap-2 mb-5">
+            <div
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full"
+              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#10B981' }} />
+                <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#10B981' }} />
+              </span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+                {t.heroAvailable}
+              </span>
+            </div>
+
+            {nextSlot && nextSlotLabel && (
+              <Link
+                href={`/${locale}/calendrier`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-transform hover:scale-105"
+                style={{ background: 'var(--accent-glow)', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {t.nextSlotPrefix} {nextSlotLabel} {nextSlot.time}
+              </Link>
+            )}
           </motion.div>
 
           <motion.p variants={item} className="section-label mb-5">

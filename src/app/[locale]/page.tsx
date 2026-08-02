@@ -3,6 +3,7 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import { fetchPortfolio } from '@/actions/portfolio'
+import { getUpcomingAvailability } from '@/actions/bookings'
 import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
@@ -31,6 +32,45 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const bioFields = await translateFields('personal:bio', locale, { bio: personal.bio })
   const translatedPersonal = { ...personal, bio: bioFields.bio }
 
+  // Next open slot for the homepage hero badge — same data as the calendar,
+  // just surfaced earlier so a visitor doesn't have to navigate to discover
+  // it. Computed server-side at the page's own 30s ISR cadence, so it's
+  // never an extra client-side fetch.
+  const upcoming = await getUpcomingAvailability(1).catch(() => [])
+  const nextSlot = upcoming[0] && upcoming[0].slots[0]
+    ? { date: upcoming[0].date, time: upcoming[0].slots[0] }
+    : null
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+  const sameAs = [socials.linkedin, socials.github, socials.facebook, socials.instagram].filter(Boolean)
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Person',
+        '@id': `${siteUrl}/#person`,
+        name: personal.name,
+        jobTitle: personal.role,
+        description: personal.bio,
+        email: personal.email || undefined,
+        url: siteUrl,
+        image: personal.photo || undefined,
+        sameAs: sameAs.length ? sameAs : undefined,
+        address: personal.location ? { '@type': 'PostalAddress', addressLocality: personal.location } : undefined,
+      },
+      {
+        '@type': 'ProfessionalService',
+        '@id': `${siteUrl}/#service`,
+        name: personal.name,
+        description: personal.bio,
+        url: siteUrl,
+        image: personal.photo || undefined,
+        areaServed: 'Worldwide',
+        address: personal.location ? { '@type': 'PostalAddress', addressLocality: personal.location } : undefined,
+      },
+    ],
+  }
+
   const translatedTestimonials = await Promise.all(
     testimonials.map(async (tm) => {
       const fields = await translateFields(`testimonial:${tm.id}`, locale, {
@@ -44,8 +84,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       {/* ── HERO ── */}
-      <HeroSection personal={translatedPersonal} socials={socials} locale={locale} t={t.home} />
+      <HeroSection personal={translatedPersonal} socials={socials} locale={locale} t={t.home} nextSlot={nextSlot} />
 
       {/* ── À PROPOS ── */}
       <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>

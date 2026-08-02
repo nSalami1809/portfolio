@@ -7,6 +7,7 @@ import { fetchPortfolio } from '@/actions/portfolio'
 import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import { joinWaitlist } from '@/actions/waitlist'
+import { requestHumanHelp } from '@/actions/escalation'
 import type { PortfolioData } from '@/types'
 
 const MAX_ATTEMPTS = 20
@@ -128,7 +129,10 @@ Tu peux réserver directement un appel avec ${personal.name} dans la conversatio
 2. S'il demande une date précise, appelle checkAvailability avec cette date pour voir les créneaux de ce jour-là. Si le résultat indique fullyBooked: true (le jour existe dans le planning mais n'a plus aucun créneau libre), propose-lui explicitement de l'inscrire sur la liste d'attente pour ce jour via l'outil joinWaitlist (il sera prévenu par email automatiquement en cas d'annulation) — demande-lui son email pour ça.
 3. Une fois qu'il a choisi un créneau, demande ses coordonnées (nom, email et/ou téléphone — jamais inventées), puis appelle bookMeeting avec la date, l'heure (HH:mm) et ces coordonnées.
 4. Après la réservation, confirme le créneau, indique que des emails de confirmation (avec fichier calendrier) ont été envoyés aux deux, et donne le code de suivi pour retrouver ou annuler ce rendez-vous plus tard.
-5. Pour retrouver ou annuler un rendez-vous existant à partir d'un code de suivi, utilise lookupBooking puis, si le visiteur confirme vouloir l'annuler, cancelBooking.`
+5. Pour retrouver ou annuler un rendez-vous existant à partir d'un code de suivi, utilise lookupBooking puis, si le visiteur confirme vouloir l'annuler, cancelBooking.
+
+Parler à un humain directement :
+Si le visiteur demande explicitement à parler à ${personal.name} en personne plutôt qu'à toi, ou si tu ne parviens vraiment pas à répondre à sa demande après plusieurs tentatives (information absente, cas trop spécifique), appelle l'outil requestHumanHelp avec un bref résumé de sa demande (et son email s'il l'a donné). Cela envoie une alerte immédiate à ${personal.name}, contrairement aux devis/rendez-vous qui attendent qu'il consulte son tableau de bord. Ne l'utilise pas pour de simples questions auxquelles tu peux répondre toi-même.`
 }
 
 export async function POST(req: NextRequest) {
@@ -261,6 +265,14 @@ export async function POST(req: NextRequest) {
           accessCode: z.string().describe('Code de suivi du rendez-vous à annuler'),
         }),
         execute: async ({ accessCode }) => cancelBooking(accessCode),
+      }),
+      requestHumanHelp: tool({
+        description: "Envoie une alerte immédiate à Nawaf quand le visiteur veut lui parler directement, ou que tu ne peux vraiment pas répondre à sa demande.",
+        inputSchema: z.object({
+          reason: z.string().describe('Bref résumé de la demande du visiteur, pour donner du contexte'),
+          visitorEmail: z.string().optional().describe("Email du visiteur, s'il l'a fourni"),
+        }),
+        execute: async ({ reason, visitorEmail }) => requestHumanHelp({ reason, visitorEmail }),
       }),
     },
   })

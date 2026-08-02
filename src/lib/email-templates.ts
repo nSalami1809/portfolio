@@ -557,3 +557,30 @@ export function waitlistSlotOpenEmail(data: { date: string; name?: string }) {
     `),
   }
 }
+
+// ── Chatbot escalation — visitor wants a human ──────────────────────────────
+
+export function escalationEmail(data: { reason: string; visitorEmail?: string }) {
+  const safeReason = esc(data.reason)
+  const safeEmail = data.visitorEmail ? esc(data.visitorEmail) : undefined
+
+  return {
+    subject: `⚡ Un visiteur veut vous parler directement`,
+    html: base('Demande directe', 'Un visiteur du chatbot souhaite vous parler directement', `
+      ${badge('Chatbot · Urgent')}
+      ${heading('Un visiteur veut vous parler directement')}
+      ${intro('Le chatbot n\'a pas pu r&eacute;pondre lui-m&ecirc;me, ou le visiteur a explicitement demand&eacute; &agrave; vous joindre.')}
+
+      ${infoBox(`
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Contexte</p>
+        <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${safeReason}</p>
+      `)}
+
+      ${safeEmail
+        ? `${infoBox(`${dataRow(icon.mail, 'Email du visiteur', `<a href="mailto:${safeEmail}" style="color:#131318;text-decoration:underline;font-weight:600">${safeEmail}</a>`)}`)}
+           ${ctaButton(`mailto:${safeEmail}`, 'Répondre au visiteur')}`
+        : `<p style="margin:0;font-size:12.5px;color:#9A9AA6">Aucun email fourni — le visiteur est probablement encore dans la conversation sur le site.</p>`
+      }
+    `),
+  }
+}
