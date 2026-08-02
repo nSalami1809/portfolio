@@ -2,10 +2,29 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState, useEffect } from 'react'
 import { usePortfolio } from '@/providers/PortfolioContext'
+
+interface ActivityStats {
+  contacts30d: number
+  quotes30d: number
+  bookings30d: number
+  acceptedQuotes: number
+  upcomingBookings: number
+  views30d: number
+  views24h: number
+}
 
 export default function AdminDashboard() {
   const { data, resetAll } = usePortfolio()
+  const [activity, setActivity] = useState<ActivityStats | null>(null)
+
+  useEffect(() => {
+    fetch('/api/admin-stats')
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => { if (json) setActivity(json) })
+      .catch(() => {})
+  }, [])
 
   const stats = [
     { label: 'Projets',      value: data.projects.length,                                      href: '/admin/projects',      color: '#8B5CF6' },
@@ -33,6 +52,31 @@ export default function AdminDashboard() {
           Gérez votre portfolio depuis cet espace d&apos;administration.
         </p>
       </div>
+
+      {/* Activity — business signals from the last 30 days */}
+      {activity && (
+        <div>
+          <p className="section-label mb-4">Activité (30 derniers jours)</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4" role="list">
+            {[
+              { label: 'Vues (30j)',      value: activity.views30d,        href: '/',                 color: '#3B82F6' },
+              { label: 'Vues (24h)',      value: activity.views24h,        href: '/',                 color: '#60A5FA' },
+              { label: 'Messages',        value: activity.contacts30d,     href: '/admin/contacts',  color: '#06B6D4' },
+              { label: 'Devis',           value: activity.quotes30d,       href: '/admin/quotes',    color: '#8B5CF6' },
+              { label: 'Rendez-vous',     value: activity.bookings30d,     href: '/admin/calendar',  color: '#F59E0B' },
+              { label: 'Devis acceptés',  value: activity.acceptedQuotes,  href: '/admin/quotes',    color: '#10B981' },
+              { label: 'RDV à venir',     value: activity.upcomingBookings, href: '/admin/calendar', color: '#EC4899' },
+            ].map(({ label, value, href, color }) => (
+              <Link key={label} href={href} role="listitem" aria-label={`${value} ${label}`}>
+                <div className="card p-5 h-full cursor-pointer" style={{ borderLeft: `3px solid ${color}` }}>
+                  <p className="text-3xl font-bold font-display mb-1 leading-none" style={{ color }}>{value}</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>{label}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats — keep hover lift since they're Links */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4" role="list">

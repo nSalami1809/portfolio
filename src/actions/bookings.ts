@@ -6,10 +6,11 @@ import { ObjectId, type WithId } from 'mongodb'
 import { after } from 'next/server'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
-import { bookingNotificationEmail, bookingClientCopyEmail } from '@/lib/email-templates'
+import { bookingNotificationEmail, bookingClientCopyEmail, bookingReminderEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { buildICS } from '@/lib/ics'
 import { fetchPortfolio } from '@/actions/portfolio'
+import { notifyWaitlist } from '@/actions/waitlist'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids visual ambiguity
 const MAX_PER_HOUR = 5
@@ -56,6 +57,7 @@ interface BookingRecord {
   read: boolean
   createdAt: Date
   source?: 'admin' | 'client'
+  reminderSent?: boolean
 }
 
 function bookings() {
@@ -164,7 +166,10 @@ export async function getMonthSlots(year: number, month: number): Promise<Record
   return computeSlots(from, to)
 }
 
-export interface DaySlot { time: string; available: boolean }
+// `time` is the Africa/Libreville wall-clock label; `iso` is the same slot's
+// absolute instant, letting a visitor's browser render it in their own
+// timezone without re-deriving it from the Libreville-local string.
+export interface DaySlot { time: string; iso: string; available: boolean }
 
 // Full day schedule — both open AND taken slots — so the public page can
 // show a visitor that a slot is already booked instead of just silently
@@ -200,7 +205,7 @@ export async function getDaySchedule(dateISO: string): Promise<DaySlot[]> {
     const conflict = existing.some(
       (b) => slotStart.getTime() < b.end.getTime() + bufferMs && slotEnd.getTime() + bufferMs > b.start.getTime(),
     )
-    out.push({ time: hhmm(slotStart), available: !conflict })
+    out.push({ time: hhmm(slotStart), iso: slotStart.toISOString(), available: !conflict })
   }
   return out
 }
@@ -357,6 +362,7 @@ export async function cancelBooking(accessCode: string): Promise<{ ok: boolean; 
   if (doc.status === 'cancelled') return { ok: true, message: 'Ce rendez-vous était déjà annulé.' }
 
   await col.updateOne({ _id: doc._id }, { $set: { status: 'cancelled' } })
+  after(() => notifyWaitlist(isoDate(doc.start)))
   return { ok: true, message: 'Le rendez-vous a été annulé.' }
 }
 
@@ -379,10 +385,58 @@ export async function markBookingRead(id: string): Promise<void> {
 
 export async function adminCancelBooking(id: string): Promise<void> {
   const col = await bookings()
+  const doc = await col.findOne({ _id: new ObjectId(id) })
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { status: 'cancelled' } })
+  if (doc) after(() => notifyWaitlist(isoDate(doc.start)))
 }
 
 export async function deleteBooking(id: string): Promise<void> {
   const col = await bookings()
   await col.deleteOne({ _id: new ObjectId(id) })
+}
+
+// ── Reminders ─────────────────────────────────────────────────────────────
+// Called by a daily cron (see /api/cron/booking-reminders). A 24-48h window
+// checked once a day — rather than a precise "N hours before" checked
+// hourly — guarantees exactly one reminder per booking even on Vercel's
+// Hobby plan, which only allows daily cron invocations.
+export async function sendDueReminders(): Promise<{ sent: number }> {
+  const col = await bookings()
+  const now = new Date()
+  const windowStart = new Date(now.getTime() + 24 * 3_600_000)
+  const windowEnd = new Date(now.getTime() + 48 * 3_600_000)
+
+  const due = await col
+    .find({
+      status: 'confirmed',
+      source: { $ne: 'admin' },
+      reminderSent: { $ne: true },
+      start: { $gte: windowStart, $lte: windowEnd },
+    })
+    .toArray()
+
+  if (due.length === 0) return { sent: 0 }
+
+  const transporter = getTransporter()
+  const adminEmail = await getAdminEmail()
+  let sent = 0
+
+  for (const doc of due) {
+    const booking = toBooking(doc)
+    try {
+      const reminder = bookingReminderEmail(booking, adminEmail)
+      await transporter.sendMail({
+        from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+        to: booking.clientEmail,
+        subject: reminder.subject,
+        html: reminder.html,
+      })
+      await col.updateOne({ _id: doc._id }, { $set: { reminderSent: true } })
+      sent++
+    } catch (e) {
+      console.error('[sendDueReminders] email error for booking', doc._id.toString(), e)
+    }
+  }
+
+  return { sent }
 }

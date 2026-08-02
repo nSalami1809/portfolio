@@ -28,6 +28,8 @@ export interface QuotePayload {
   items: QuoteItem[]
 }
 
+export type QuoteStatus = 'pending' | 'accepted' | 'declined'
+
 export interface Quote extends QuotePayload {
   numero: string
   accessCode: string
@@ -36,6 +38,7 @@ export interface Quote extends QuotePayload {
   totalHT: number
   tva: number
   totalTTC: number
+  status: QuoteStatus
 }
 
 export interface AdminQuote extends Quote {
@@ -54,6 +57,7 @@ interface QuoteRecord extends QuotePayload {
   totalTTC: number
   read: boolean
   createdAt: Date
+  status?: QuoteStatus
 }
 
 function quotes() {
@@ -81,6 +85,7 @@ function toQuote(doc: WithId<QuoteRecord>): Quote {
     clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items,
     numero, accessCode, validiteJours, totalHT, tva, totalTTC,
     dateEmission: dateEmission instanceof Date ? dateEmission.toISOString() : dateEmission,
+    status: doc.status ?? 'pending',
   }
 }
 
@@ -105,9 +110,10 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
     totalHT,
     tva,
     totalTTC,
+    status: 'pending',
   }
 
-  await col.insertOne({ ...payload, numero, accessCode, dateEmission, validiteJours: VALIDITE_JOURS, totalHT, tva, totalTTC, read: false, createdAt: new Date() })
+  await col.insertOne({ ...payload, numero, accessCode, dateEmission, validiteJours: VALIDITE_JOURS, totalHT, tva, totalTTC, read: false, createdAt: new Date(), status: 'pending' })
 
   // Notify the admin (+ send the client their own copy if we already have an
   // email) in the background — a slow/unreachable SMTP server must never
@@ -196,6 +202,11 @@ export async function listQuotes(): Promise<AdminQuote[]> {
 export async function markQuoteRead(id: string): Promise<void> {
   const col = await quotes()
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { read: true } })
+}
+
+export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {
+  const col = await quotes()
+  await col.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
 }
 
 export async function deleteQuote(id: string): Promise<void> {

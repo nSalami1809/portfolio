@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
-import { listQuotes, markQuoteRead, deleteQuote } from '@/actions/quotes'
-import type { AdminQuote } from '@/actions/quotes'
+import { listQuotes, markQuoteRead, deleteQuote, updateQuoteStatus } from '@/actions/quotes'
+import type { AdminQuote, QuoteStatus } from '@/actions/quotes'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
@@ -17,6 +17,9 @@ function formatDate(iso: string) {
 }
 
 const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
+
+const STATUS_LABEL: Record<QuoteStatus, string> = { pending: 'En attente', accepted: 'Accepté', declined: 'Refusé' }
+const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#10B981', declined: '#EF4444' }
 
 export default function AdminQuotes() {
   const [quotes, setQuotes]     = useState<AdminQuote[]>([])
@@ -48,6 +51,11 @@ export default function AdminQuotes() {
       await markQuoteRead(q.id)
       setQuotes((prev) => prev.map((x) => x.id === q.id ? { ...x, read: true } : x))
     }
+  }
+
+  const handleStatusChange = async (id: string, status: QuoteStatus) => {
+    setQuotes((prev) => prev.map((x) => x.id === id ? { ...x, status } : x))
+    await updateQuoteStatus(id, status)
   }
 
   const handleDelete = async (id: string) => {
@@ -194,11 +202,23 @@ export default function AdminQuotes() {
                 </p>
               </div>
 
-              {/* Date + delete */}
+              {/* Date + status + delete */}
               <div className="flex items-center gap-3 flex-shrink-0">
                 <p className="text-xs hidden sm:block" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                   {formatDate(q.createdAt)}
                 </p>
+                <select
+                  value={q.status}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => handleStatusChange(q.id, e.target.value as QuoteStatus)}
+                  className="input text-xs"
+                  style={{ width: 'auto', padding: '0.35rem 1.75rem 0.35rem 0.6rem', color: STATUS_COLOR[q.status], fontWeight: 600 }}
+                  aria-label={`Statut du devis ${q.numero}`}
+                >
+                  {(Object.keys(STATUS_LABEL) as QuoteStatus[]).map((s) => (
+                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                  ))}
+                </select>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(q.id) }}
                   disabled={deleting === q.id}
