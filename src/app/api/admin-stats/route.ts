@@ -15,25 +15,65 @@ async function requireAdmin(req: NextRequest) {
   }
 }
 
+function dayKey(d: Date) {
+  // Africa/Libreville is a fixed UTC+1 offset — shift then read UTC fields
+  const shifted = new Date(d.getTime() + 60 * 60 * 1000)
+  return shifted.toISOString().slice(0, 10)
+}
+
 export async function GET(req: NextRequest) {
   if (!(await requireAdmin(req))) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
   const db = await getDb()
-  const since30d = new Date(Date.now() - 30 * 86_400_000)
-  const since24h = new Date(Date.now() - 86_400_000)
   const now = new Date()
+  const since24h = new Date(now.getTime() - 86_400_000)
+  const since14d = new Date(now.getTime() - 14 * 86_400_000)
+  const since30d = new Date(now.getTime() - 30 * 86_400_000)
+  const since60d = new Date(now.getTime() - 60 * 86_400_000)
 
-  const [contacts30d, quotes30d, bookings30d, acceptedQuotes, upcomingBookings, views30d, views24h] = await Promise.all([
+  const [
+    contacts30d, quotes30d, bookings30d, views30d, views24h,
+    contactsPrev30d, quotesPrev30d, bookingsPrev30d, viewsPrev30d,
+    upcomingBookings, acceptedQuotes, declinedQuotes,
+    viewsRaw,
+  ] = await Promise.all([
     db.collection('contacts').countDocuments({ createdAt: { $gte: since30d } }),
     db.collection('quotes').countDocuments({ createdAt: { $gte: since30d } }),
     db.collection('bookings').countDocuments({ createdAt: { $gte: since30d }, source: { $ne: 'admin' } }),
-    db.collection('quotes').countDocuments({ status: 'accepted' }),
-    db.collection('bookings').countDocuments({ status: 'confirmed', start: { $gte: now } }),
     db.collection('page_views').countDocuments({ createdAt: { $gte: since30d } }),
     db.collection('page_views').countDocuments({ createdAt: { $gte: since24h } }),
+    db.collection('contacts').countDocuments({ createdAt: { $gte: since60d, $lt: since30d } }),
+    db.collection('quotes').countDocuments({ createdAt: { $gte: since60d, $lt: since30d } }),
+    db.collection('bookings').countDocuments({ createdAt: { $gte: since60d, $lt: since30d }, source: { $ne: 'admin' } }),
+    db.collection('page_views').countDocuments({ createdAt: { $gte: since60d, $lt: since30d } }),
+    db.collection('bookings').countDocuments({ status: 'confirmed', start: { $gte: now } }),
+    db.collection('quotes').countDocuments({ status: 'accepted' }),
+    db.collection('quotes').countDocuments({ status: 'declined' }),
+    db.collection('page_views')
+      .find({ createdAt: { $gte: since14d } })
+      .project<{ createdAt: Date }>({ createdAt: 1 })
+      .toArray(),
   ])
 
-  return NextResponse.json({ contacts30d, quotes30d, bookings30d, acceptedQuotes, upcomingBookings, views30d, views24h })
+  // Fill in every day of the 14-day window (including zero-view days) so
+  // the chart has a continuous axis instead of gaps where nothing happened.
+  const byDay = new Map<string, number>()
+  for (const v of viewsRaw) byDay.set(dayKey(v.createdAt), (byDay.get(dayKey(v.createdAt)) ?? 0) + 1)
+  const viewsByDay: { date: string; count: number }[] = []
+  for (let i = 13; i >= 0; i--) {
+    const d = dayKey(new Date(now.getTime() - i * 86_400_000))
+    viewsByDay.push({ date: d, count: byDay.get(d) ?? 0 })
+  }
+
+  const decidedQuotes = acceptedQuotes + declinedQuotes
+  const quoteAcceptanceRate = decidedQuotes > 0 ? Math.round((acceptedQuotes / decidedQuotes) * 100) : null
+
+  return NextResponse.json({
+    contacts30d, quotes30d, bookings30d, views30d, views24h,
+    contactsPrev30d, quotesPrev30d, bookingsPrev30d, viewsPrev30d,
+    upcomingBookings, acceptedQuotes, quoteAcceptanceRate,
+    viewsByDay,
+  })
 }

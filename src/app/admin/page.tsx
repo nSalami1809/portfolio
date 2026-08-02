@@ -1,18 +1,64 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { usePortfolio } from '@/providers/PortfolioContext'
+import BarChart from '@/components/admin/BarChart'
 
 interface ActivityStats {
   contacts30d: number
   quotes30d: number
   bookings30d: number
-  acceptedQuotes: number
-  upcomingBookings: number
   views30d: number
   views24h: number
+  contactsPrev30d: number
+  quotesPrev30d: number
+  bookingsPrev30d: number
+  viewsPrev30d: number
+  upcomingBookings: number
+  acceptedQuotes: number
+  quoteAcceptanceRate: number | null
+  viewsByDay: { date: string; count: number }[]
+}
+
+type Trend = { dir: 'up' | 'down' | 'new' | 'flat'; pct: number | null }
+
+function trend(current: number, previous: number): Trend {
+  if (previous === 0) return { dir: current > 0 ? 'new' : 'flat', pct: null }
+  const pct = Math.round(((current - previous) / previous) * 100)
+  if (pct === 0) return { dir: 'flat', pct: 0 }
+  return { dir: pct > 0 ? 'up' : 'down', pct: Math.abs(pct) }
+}
+
+function TrendBadge({ t }: { t: Trend }) {
+  if (t.dir === 'flat') return null
+  const color = t.dir === 'down' ? '#EF4444' : '#10B981'
+  const label = t.dir === 'new' ? 'Nouveau' : `${t.dir === 'up' ? '+' : '-'}${t.pct}%`
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+      style={{ color, background: `${color}1A` }}
+    >
+      {t.dir === 'up' && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round"><polyline points="18 15 12 9 6 15" /></svg>}
+      {t.dir === 'down' && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round"><polyline points="6 9 12 15 18 9" /></svg>}
+      {label}
+    </span>
+  )
+}
+
+function KpiCard({ label, value, href, color, t }: { label: string; value: number; href: string; color: string; t?: Trend }) {
+  return (
+    <Link href={href} role="listitem" aria-label={`${value} ${label}`}>
+      <div className="card p-5 h-full cursor-pointer" style={{ borderLeft: `3px solid ${color}` }}>
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-3xl font-bold font-display leading-none" style={{ color }}>{value}</p>
+          {t && <TrendBadge t={t} />}
+        </div>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>{label}</p>
+      </div>
+    </Link>
+  )
 }
 
 export default function AdminDashboard() {
@@ -53,27 +99,43 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Activity — business signals from the last 30 days */}
+      {/* Activity — business signals from the last 30 days, with trend vs the previous 30 */}
       {activity && (
-        <div>
-          <p className="section-label mb-4">Activité (30 derniers jours)</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4" role="list">
-            {[
-              { label: 'Vues (30j)',      value: activity.views30d,        href: '/',                 color: '#3B82F6' },
-              { label: 'Vues (24h)',      value: activity.views24h,        href: '/',                 color: '#60A5FA' },
-              { label: 'Messages',        value: activity.contacts30d,     href: '/admin/contacts',  color: '#06B6D4' },
-              { label: 'Devis',           value: activity.quotes30d,       href: '/admin/quotes',    color: '#8B5CF6' },
-              { label: 'Rendez-vous',     value: activity.bookings30d,     href: '/admin/calendar',  color: '#F59E0B' },
-              { label: 'Devis acceptés',  value: activity.acceptedQuotes,  href: '/admin/quotes',    color: '#10B981' },
-              { label: 'RDV à venir',     value: activity.upcomingBookings, href: '/admin/calendar', color: '#EC4899' },
-            ].map(({ label, value, href, color }) => (
-              <Link key={label} href={href} role="listitem" aria-label={`${value} ${label}`}>
-                <div className="card p-5 h-full cursor-pointer" style={{ borderLeft: `3px solid ${color}` }}>
-                  <p className="text-3xl font-bold font-display mb-1 leading-none" style={{ color }}>{value}</p>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>{label}</p>
-                </div>
-              </Link>
-            ))}
+        <div className="space-y-4">
+          <p className="section-label">Activité (30 derniers jours vs période précédente)</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4" role="list">
+            <KpiCard label="Vues (30j)"   value={activity.views30d}    href="/"                 color="#3B82F6" t={trend(activity.views30d, activity.viewsPrev30d)} />
+            <KpiCard label="Messages"     value={activity.contacts30d} href="/admin/contacts"   color="#06B6D4" t={trend(activity.contacts30d, activity.contactsPrev30d)} />
+            <KpiCard label="Devis"        value={activity.quotes30d}   href="/admin/quotes"     color="#8B5CF6" t={trend(activity.quotes30d, activity.quotesPrev30d)} />
+            <KpiCard label="Rendez-vous"  value={activity.bookings30d} href="/admin/calendar"   color="#F59E0B" t={trend(activity.bookings30d, activity.bookingsPrev30d)} />
+            <KpiCard label="RDV à venir"  value={activity.upcomingBookings} href="/admin/calendar" color="#EC4899" />
+          </div>
+
+          <div className="grid lg:grid-cols-[1fr,280px] gap-4">
+            {/* Views chart */}
+            <div className="card no-lift p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-semibold" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>Vues sur 14 jours</p>
+                <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{activity.views24h} aujourd&apos;hui</p>
+              </div>
+              <BarChart data={activity.viewsByDay} />
+            </div>
+
+            {/* Quote acceptance rate */}
+            <div className="card no-lift p-5 flex flex-col">
+              <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>Taux d&apos;acceptation des devis</p>
+              {activity.quoteAcceptanceRate === null ? (
+                <p className="text-xs flex-1" style={{ color: 'var(--text-subtle)' }}>Pas encore de devis accepté ou refusé.</p>
+              ) : (
+                <>
+                  <p className="text-4xl font-display font-bold mb-3" style={{ color: '#10B981' }}>{activity.quoteAcceptanceRate}%</p>
+                  <div className="w-full rounded-full overflow-hidden mb-3" style={{ height: 6, background: 'var(--surface)' }}>
+                    <div style={{ width: `${activity.quoteAcceptanceRate}%`, height: '100%', background: '#10B981' }} />
+                  </div>
+                  <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{activity.acceptedQuotes} devis accepté{activity.acceptedQuotes !== 1 ? 's' : ''} au total</p>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
