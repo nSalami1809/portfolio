@@ -50,5 +50,22 @@ export default async function BlogPostPage({ params }: { params: Promise<{ local
     content: post.content,
   })
 
-  return <BlogPostView post={{ ...post, ...translated }} locale={locale} t={t.blog} />
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: translated.title,
+    description: translated.excerpt,
+    image: post.coverImage || undefined,
+    datePublished: post.date,
+    author: { '@type': 'Person', name: post.author || 'Nawaf Nemrod Salami' },
+    mainEntityOfPage: `${siteUrl}/${locale}/blog/${slug}`,
+  }
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BlogPostView post={{ ...post, ...translated }} locale={locale} t={t.blog} />
+    </>
+  )
 }
