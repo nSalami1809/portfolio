@@ -7,7 +7,6 @@ import { fetchPortfolio } from '@/actions/portfolio'
 import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import { joinWaitlist } from '@/actions/waitlist'
-import { requestHumanHelp } from '@/actions/escalation'
 import type { PortfolioData } from '@/types'
 
 const MAX_ATTEMPTS = 20
@@ -132,7 +131,7 @@ Tu peux réserver directement un appel avec ${personal.name} dans la conversatio
 5. Pour retrouver ou annuler un rendez-vous existant à partir d'un code de suivi, utilise lookupBooking puis, si le visiteur confirme vouloir l'annuler, cancelBooking.
 
 Parler à un humain directement :
-Si le visiteur demande explicitement à parler à ${personal.name} en personne plutôt qu'à toi, ou si tu ne parviens vraiment pas à répondre à sa demande après plusieurs tentatives (information absente, cas trop spécifique), appelle l'outil requestHumanHelp avec un bref résumé de sa demande (et son email s'il l'a donné). Cela envoie une alerte immédiate à ${personal.name}, contrairement aux devis/rendez-vous qui attendent qu'il consulte son tableau de bord. Ne l'utilise pas pour de simples questions auxquelles tu peux répondre toi-même.`
+Si le visiteur demande explicitement à parler à ${personal.name} en personne plutôt qu'à toi, ou si tu ne parviens vraiment pas à répondre à sa demande après plusieurs tentatives (information absente, cas trop spécifique), appelle l'outil requestHumanHelp avec un bref résumé de sa demande. Un formulaire s'affiche alors automatiquement dans le chat pour que le visiteur laisse lui-même son nom, son email et son téléphone — ne les lui demande donc pas toi-même avant d'appeler l'outil. Cela envoie une alerte immédiate à ${personal.name} dès que le visiteur valide le formulaire, contrairement aux devis/rendez-vous qui attendent qu'il consulte son tableau de bord. Ne l'utilise pas pour de simples questions auxquelles tu peux répondre toi-même.`
 }
 
 export async function POST(req: NextRequest) {
@@ -266,13 +265,14 @@ export async function POST(req: NextRequest) {
         }),
         execute: async ({ accessCode }) => cancelBooking(accessCode),
       }),
+      // No execute: pauses client-side so the chat UI can render a contact
+      // form (name/email/phone) before requestHumanHelp is actually called —
+      // this is what guarantees the alert email always has a way to reply.
       requestHumanHelp: tool({
-        description: "Envoie une alerte immédiate à Nawaf quand le visiteur veut lui parler directement, ou que tu ne peux vraiment pas répondre à sa demande.",
+        description: "Signale que le visiteur veut parler directement à Nawaf, ou que tu ne parviens vraiment pas à répondre à sa demande. Déclenche un formulaire de coordonnées dans le chat — ne demande pas toi-même le nom/email/téléphone avant d'appeler cet outil.",
         inputSchema: z.object({
           reason: z.string().describe('Bref résumé de la demande du visiteur, pour donner du contexte'),
-          visitorEmail: z.string().optional().describe("Email du visiteur, s'il l'a fourni"),
         }),
-        execute: async ({ reason, visitorEmail }) => requestHumanHelp({ reason, visitorEmail }),
       }),
     },
   })

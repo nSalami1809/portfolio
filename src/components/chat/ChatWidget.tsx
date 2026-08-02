@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import type { Quote } from '@/actions/quotes'
 import type { Booking } from '@/actions/bookings'
+import { requestHumanHelp } from '@/actions/escalation'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { onOpenChatRequest } from '@/lib/chat-bridge'
@@ -258,6 +259,62 @@ function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () 
   )
 }
 
+function HumanHelpForm({ onSubmit, t }: { onSubmit: (fields: { clientNom: string; clientEmail: string; clientTelephone: string }) => void; t: Dictionary['chat'] }) {
+  const [nom, setNom] = useState('')
+  const [email, setEmail] = useState('')
+  const [tel, setTel] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!nom.trim() || !email.trim() || submitting) return
+    setSubmitting(true)
+    onSubmit({ clientNom: nom.trim(), clientEmail: email.trim(), clientTelephone: tel.trim() })
+  }
+
+  return (
+    <div
+      className="rounded-xl p-3.5"
+      style={{ maxWidth: '85%', background: 'var(--accent-glow)', border: '1px solid var(--accent)' }}
+    >
+      <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text)' }}>{t.humanHelpTitle}</p>
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <input
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
+          placeholder={t.humanHelpNamePlaceholder}
+          required
+          disabled={submitting}
+          className="input text-sm w-full"
+          autoComplete="name"
+        />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t.humanHelpEmailPlaceholder}
+          required
+          disabled={submitting}
+          className="input text-sm w-full"
+          autoComplete="email"
+        />
+        <input
+          type="tel"
+          value={tel}
+          onChange={(e) => setTel(e.target.value)}
+          placeholder={t.humanHelpPhonePlaceholder}
+          disabled={submitting}
+          className="input text-sm w-full"
+          autoComplete="tel"
+        />
+        <button type="submit" disabled={submitting || !nom.trim() || !email.trim()} className="btn-primary btn-sm w-full" style={{ fontSize: '0.75rem' }}>
+          {submitting ? t.requestingHuman : t.humanHelpSubmit}
+        </button>
+      </form>
+    </div>
+  )
+}
+
 export default function ChatWidget() {
   const pathname = usePathname()
   const { data: { personal } } = usePortfolio()
@@ -270,8 +327,9 @@ export default function ChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, addToolOutput } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat', body: { locale } }),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   })
 
   const busy = status === 'submitted' || status === 'streaming'
@@ -736,7 +794,22 @@ export default function ChatWidget() {
                             </div>
                           )
                         }
-                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                        if (part.state === 'input-available') {
+                          const reason = (part.input as { reason: string }).reason
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="idle" />
+                              <HumanHelpForm
+                                t={t.chat}
+                                onSubmit={async (fields) => {
+                                  const output = await requestHumanHelp({ reason, ...fields })
+                                  addToolOutput({ tool: 'requestHumanHelp', toolCallId: part.toolCallId, output })
+                                }}
+                              />
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming') {
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="thinking" />
