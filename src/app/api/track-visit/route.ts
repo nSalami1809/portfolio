@@ -12,11 +12,20 @@ function ensureIndex() {
   return indexReady
 }
 
+// Most crawlers don't execute client-side JS at all, so this beacon
+// already excludes the bulk of bot traffic by construction — this catches
+// the ones that do (headless/JS-rendering crawlers, uptime monitors, link
+// previewers) so the count stays a genuine visitor-activity signal.
+const BOT_RE = /bot|spider|crawl|slurp|facebookexternalhit|whatsapp|telegram|preview|monitor|headless|pingdom|lighthouse/i
+
 // Fire-and-forget page-view counter for the admin dashboard's "Vues"
 // stat — deliberately minimal (no cookies, no IP, no unique-visitor
 // dedup) so it stays cheap and never becomes something to defend as PII.
 export async function POST(req: NextRequest) {
   try {
+    const ua = req.headers.get('user-agent') ?? ''
+    if (BOT_RE.test(ua)) return NextResponse.json({ ok: true })
+
     const { path } = await req.json()
     if (typeof path !== 'string' || !path || path.startsWith('/admin')) {
       return NextResponse.json({ ok: true })
