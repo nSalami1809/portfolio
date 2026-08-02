@@ -108,6 +108,18 @@ export default function AdminPersonal() {
             </div>
           </div>
           <div>
+            <label className="field-label" htmlFor="pi-whatsapp">Numéro WhatsApp</label>
+            <input
+              id="pi-whatsapp" className="input" type="tel"
+              value={personal.whatsapp ?? ''}
+              onChange={(e) => handlePersonal({ whatsapp: e.target.value })}
+              placeholder="+241 77 00 00 00"
+            />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+              Format international avec indicatif. Affiche un bouton WhatsApp sur le site si renseigné.
+            </p>
+          </div>
+          <div>
             <label className="field-label" htmlFor="pi-bio">Biographie</label>
             <textarea
               id="pi-bio"

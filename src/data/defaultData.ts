@@ -8,6 +8,7 @@ export const defaultPersonalInfo: PersonalInfo = {
   location: 'Libreville, Gabon — Disponible en remote',
   photo: '',
   cvUrl: '',
+  whatsapp: '',
 }
 
 export const defaultSocials: SocialLinks = {

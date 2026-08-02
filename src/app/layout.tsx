@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { PortfolioProvider } from '@/providers/PortfolioContext'
 import Navbar from '@/components/layout/Navbar'
@@ -7,6 +8,7 @@ import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
 import AdminGate from '@/components/AdminGate'
 import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
+import VisitTracker from '@/components/analytics/VisitTracker'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -92,7 +94,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <AdminGate />
           <ChatWidgetLoader />
+          <VisitTracker />
         </PortfolioProvider>
+        <Analytics />
       </body>
     </html>
   )

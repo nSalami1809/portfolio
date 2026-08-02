@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import { listBookings, markBookingRead, adminCancelBooking, deleteBooking, createEvent } from '@/actions/bookings'
+import { getWaitlistCounts } from '@/actions/waitlist'
 import type { AdminBooking } from '@/actions/bookings'
 import type { WeeklyHours } from '@/types'
 import MonthGrid, { type DayStatus } from '@/components/calendar/MonthGrid'
@@ -28,10 +29,15 @@ export default function AdminCalendar() {
   const [tab, setTab] = useState<Tab>('calendrier')
 
   const [bookings, setBookings] = useState<AdminBooking[]>([])
+  const [waitlistCounts, setWaitlistCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const load = useCallback(async () => {
     setLoading(true)
-    try { setBookings(await listBookings()) } finally { setLoading(false) }
+    try {
+      const [b, w] = await Promise.all([listBookings(), getWaitlistCounts()])
+      setBookings(b)
+      setWaitlistCounts(w)
+    } finally { setLoading(false) }
   }, [])
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
@@ -186,6 +192,11 @@ export default function AdminCalendar() {
                 <p className="font-display font-semibold mb-3" style={{ color: 'var(--text)' }}>{formatDateTime(`${selectedDay}T12:00:00`).split(' ').slice(0, 3).join(' ')}</p>
                 {isBlocked && (
                   <p className="text-xs mb-3 px-2 py-1 rounded-lg inline-block" style={{ background: 'var(--surface-hover)', color: 'var(--text-subtle)' }}>Journée bloquée</p>
+                )}
+                {!!waitlistCounts[selectedDay] && (
+                  <p className="text-xs mb-3 px-2 py-1 rounded-lg inline-block" style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}>
+                    {waitlistCounts[selectedDay]} en liste d&apos;attente
+                  </p>
                 )}
 
                 {showEventForm && (

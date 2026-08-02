@@ -5,7 +5,8 @@ import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
 import { fetchPortfolio } from '@/actions/portfolio'
 import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
-import { getUpcomingAvailability, getDaySlots, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
+import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
+import { joinWaitlist } from '@/actions/waitlist'
 import type { PortfolioData } from '@/types'
 
 const MAX_ATTEMPTS = 20
@@ -59,11 +60,16 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     .map((o) => `- ${o.title} : ${o.priceLabel}${o.description ? ` — ${o.description}` : ''}`)
     .join('\n')
 
+  const whatsappText = personal.whatsapp
+    ? `WhatsApp : ${personal.whatsapp} (lien direct : https://wa.me/${personal.whatsapp.replace(/\D/g, '')})`
+    : 'Non disponible.'
+
   return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, témoignages, réseaux sociaux), pas seulement une partie.
 
 Bio : ${personal.bio}
 Localisation : ${personal.location}
 Email : ${personal.email}
+${whatsappText}
 CV / résumé téléchargeable : ${personal.cvUrl ? '/api/cv' : 'Non disponible'}
 
 Réseaux sociaux :
@@ -100,6 +106,7 @@ Règles :
 - Formate tes réponses en Markdown : **gras** pour les noms de projets/compétences clés, listes à puces pour les énumérations, sauts de ligne entre les points.
 - Quand tu mentionnes un projet qui a une "Image" listée ci-dessus, inclus-la avec la syntaxe Markdown ![titre du projet](URL de l'image) — utilise l'URL exacte fournie, n'en invente jamais.
 - Si un visiteur demande le CV, le résumé, ou à "télécharger" les informations de ${personal.name} : si un lien est renseigné ci-dessus, propose-le EXACTEMENT tel quel (jamais un autre lien inventé) avec un lien Markdown cliquable, par exemple [Télécharger le CV](/api/cv) — ce lien déclenche automatiquement un téléchargement du PDF. Si aucun CV n'est disponible, dis-le simplement et propose de consulter la page Expérience du site ou de passer par la page Contact.
+- Si le visiteur préfère discuter par WhatsApp plutôt que par ce chat (ou le demande explicitement) et qu'un numéro WhatsApp est renseigné ci-dessus, propose le lien direct sous forme de lien Markdown cliquable, par exemple [Discuter sur WhatsApp](https://wa.me/...). N'invente jamais ce numéro : utilise exactement celui fourni ci-dessus, et ne le propose pas s'il est marqué "Non disponible".
 
 Service de devis automatique :
 Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. Mentionne cette possibilité si le visiteur parle de tarifs, de prix, ou d'un projet qu'il aimerait réaliser.
@@ -113,12 +120,12 @@ Déroulé à suivre :
 5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
 
 Retrouver un devis déjà généré :
-Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis.
+Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis. Le résultat inclut un statut ("pending" = en attente de réponse de ${personal.name}, "accepted" = accepté, "declined" = refusé) — communique-le naturellement au visiteur s'il demande où en est son devis.
 
 Prise de rendez-vous :
 Tu peux réserver directement un appel avec ${personal.name} dans la conversation, sans passer par un email. Propose-le si le visiteur veut discuter de vive voix, après avoir généré un devis, ou s'il demande explicitement un rendez-vous. Tous les horaires sont dans le fuseau de ${personal.name} (Afrique/Libreville, UTC+1) — précise-le si utile.
 1. Si le visiteur n'a pas de date précise en tête, appelle checkAvailability sans argument pour obtenir les prochains jours avec des créneaux libres, et propose-lui les 2-3 premiers.
-2. S'il demande une date précise, appelle checkAvailability avec cette date pour voir les créneaux de ce jour-là.
+2. S'il demande une date précise, appelle checkAvailability avec cette date pour voir les créneaux de ce jour-là. Si le résultat indique fullyBooked: true (le jour existe dans le planning mais n'a plus aucun créneau libre), propose-lui explicitement de l'inscrire sur la liste d'attente pour ce jour via l'outil joinWaitlist (il sera prévenu par email automatiquement en cas d'annulation) — demande-lui son email pour ça.
 3. Une fois qu'il a choisi un créneau, demande ses coordonnées (nom, email et/ou téléphone — jamais inventées), puis appelle bookMeeting avec la date, l'heure (HH:mm) et ces coordonnées.
 4. Après la réservation, confirme le créneau, indique que des emails de confirmation (avec fichier calendrier) ont été envoyés aux deux, et donne le code de suivi pour retrouver ou annuler ce rendez-vous plus tard.
 5. Pour retrouver ou annuler un rendez-vous existant à partir d'un code de suivi, utilise lookupBooking puis, si le visiteur confirme vouloir l'annuler, cancelBooking.`
@@ -197,14 +204,26 @@ export async function POST(req: NextRequest) {
       }),
       checkAvailability: tool({
         description:
-          "Vérifie les prochains créneaux de rendez-vous disponibles. Sans argument, renvoie les prochains jours avec des créneaux libres ; avec une date, renvoie les créneaux de ce jour précis.",
+          "Vérifie les prochains créneaux de rendez-vous disponibles. Sans argument, renvoie les prochains jours avec des créneaux libres ; avec une date, renvoie les créneaux de ce jour précis (et signale fullyBooked si ce jour existe dans le planning mais n'a plus de créneau libre — dans ce cas, propose la liste d'attente via joinWaitlist).",
         inputSchema: z.object({
           date: z.string().optional().describe('Date ISO (YYYY-MM-DD), si le visiteur en a demandé une précise'),
         }),
         execute: async ({ date }) => {
-          if (date) return { date, slots: await getDaySlots(date) }
+          if (date) {
+            const schedule = await getDaySchedule(date)
+            const slots = schedule.filter((s) => s.available).map((s) => s.time)
+            return { date, slots, fullyBooked: schedule.length > 0 && slots.length === 0 }
+          }
           return { days: await getUpcomingAvailability() }
         },
+      }),
+      joinWaitlist: tool({
+        description: "Inscrit le visiteur sur la liste d'attente d'un jour complet — il sera prévenu automatiquement par email si un créneau se libère (annulation).",
+        inputSchema: z.object({
+          date: z.string().describe('Date ISO (YYYY-MM-DD) du jour complet'),
+          email: z.string().describe('Adresse email du visiteur'),
+        }),
+        execute: async ({ date, email }) => joinWaitlist({ date, email }),
       }),
       bookMeeting: tool({
         description:

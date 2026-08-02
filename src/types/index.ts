@@ -6,6 +6,7 @@ export interface PersonalInfo {
   location: string
   photo: string
   cvUrl?: string
+  whatsapp?: string // international format, e.g. "+24177000000"
 }
 
 export interface SocialLinks {

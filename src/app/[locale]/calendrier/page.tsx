@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { getMonthSlots, getDaySchedule, bookMeeting, type Booking, type DaySlot } from '@/actions/bookings'
+import { joinWaitlist } from '@/actions/waitlist'
 import MonthGrid, { type DayStatus } from '@/components/calendar/MonthGrid'
 
 function todayISO() {
@@ -26,12 +27,26 @@ export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [daySchedule, setDaySchedule] = useState<DaySlot[] | null>(null)
   const [loadingDay, setLoadingDay] = useState(false)
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<DaySlot | null>(null)
+
+  // Slots come back from the server as Africa/Libreville wall-clock times +
+  // an absolute instant — displaying that instant in the visitor's own
+  // browser timezone (no explicit `timeZone` option = runtime default)
+  // avoids the "is 14:00 his time or mine?" confusion for remote clients.
+  const visitorTz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, [])
+  const formatLocalTime = useCallback(
+    (iso: string) => new Date(iso).toLocaleTimeString(locale === 'en' ? 'en-US' : 'fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    [locale],
+  )
 
   const [form, setForm] = useState({ clientNom: '', clientEmail: '', clientTelephone: '', message: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [booking, setBooking] = useState<Booking | null>(null)
+
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false)
+  const [waitlistMessage, setWaitlistMessage] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -55,20 +70,35 @@ export default function CalendarPage() {
     setSelectedSlot(null)
     setBooking(null)
     setError(null)
+    setWaitlistEmail('')
+    setWaitlistMessage(null)
     setLoadingDay(true)
     getDaySchedule(dateISO)
       .then(setDaySchedule)
       .finally(() => setLoadingDay(false))
   }, [])
 
+  const handleJoinWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedDay || !waitlistEmail.trim()) return
+    setWaitlistSubmitting(true)
+    try {
+      const result = await joinWaitlist({ date: selectedDay, email: waitlistEmail.trim() })
+      setWaitlistMessage(result.message)
+    } catch {
+      setWaitlistMessage(tc.genericError)
+    } finally {
+      setWaitlistSubmitting(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedDay || !selectedSlot) return
+    if (!selectedSlot) return
     setSubmitting(true)
     setError(null)
     try {
-      const start = new Date(`${selectedDay}T${selectedSlot}:00+01:00`).toISOString()
-      const result = await bookMeeting({ ...form, start })
+      const result = await bookMeeting({ ...form, start: selectedSlot.iso })
       setBooking(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : tc.genericError)
@@ -126,7 +156,12 @@ export default function CalendarPage() {
                 </motion.p>
               ) : (
                 <motion.div key={selectedDay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <p className="font-display font-semibold capitalize mb-3" style={{ color: 'var(--text)' }}>{dayLabel}</p>
+                  <p className="font-display font-semibold capitalize mb-1" style={{ color: 'var(--text)' }}>{dayLabel}</p>
+                  {!loadingDay && !!daySchedule?.length && (
+                    <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>
+                      {tc.timezoneNote(visitorTz)}
+                    </p>
+                  )}
 
                   {loadingDay ? (
                     <div className="flex flex-wrap gap-2">
@@ -134,14 +169,32 @@ export default function CalendarPage() {
                     </div>
                   ) : !daySchedule?.length ? (
                     <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>{tc.noSlots}</p>
+                  ) : daySchedule.every((s) => !s.available) ? (
+                    <div>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-subtle)' }}>{tc.fullyBooked}</p>
+                      {waitlistMessage ? (
+                        <p className="text-sm" style={{ color: 'var(--accent)' }}>{waitlistMessage}</p>
+                      ) : (
+                        <form onSubmit={handleJoinWaitlist} className="space-y-2">
+                          <input
+                            required type="email" value={waitlistEmail}
+                            onChange={(e) => setWaitlistEmail(e.target.value)}
+                            placeholder={tc.emailPlaceholder} className="input text-sm"
+                          />
+                          <button type="submit" disabled={waitlistSubmitting} className="btn-secondary w-full justify-center text-sm">
+                            {tc.joinWaitlist}
+                          </button>
+                        </form>
+                      )}
+                    </div>
                   ) : !selectedSlot ? (
                     <div className="flex flex-wrap gap-2">
                       {daySchedule.map((s) => (
                         <button
-                          key={s.time}
+                          key={s.iso}
                           type="button"
                           disabled={!s.available}
-                          onClick={() => setSelectedSlot(s.time)}
+                          onClick={() => setSelectedSlot(s)}
                           className="btn-secondary btn-sm"
                           style={{
                             padding: '0.4rem 0.9rem',
@@ -149,17 +202,17 @@ export default function CalendarPage() {
                             textDecoration: s.available ? 'none' : 'line-through',
                             cursor: s.available ? 'pointer' : 'not-allowed',
                           }}
-                          aria-label={s.available ? s.time : `${s.time} — ${tc.slotTaken}`}
+                          aria-label={s.available ? formatLocalTime(s.iso) : `${formatLocalTime(s.iso)} — ${tc.slotTaken}`}
                           title={s.available ? undefined : tc.slotTaken}
                         >
-                          {s.time}
+                          {formatLocalTime(s.iso)}
                         </button>
                       ))}
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-3">
                       <button type="button" onClick={() => setSelectedSlot(null)} className="text-xs mb-1 hover:underline" style={{ color: 'var(--accent)' }}>
-                        ← {selectedSlot}
+                        ← {formatLocalTime(selectedSlot.iso)}
                       </button>
                       <input required value={form.clientNom} onChange={(e) => setForm((p) => ({ ...p, clientNom: e.target.value }))} placeholder={tc.namePlaceholder} className="input text-sm" />
                       <input required type="email" value={form.clientEmail} onChange={(e) => setForm((p) => ({ ...p, clientEmail: e.target.value }))} placeholder={tc.emailPlaceholder} className="input text-sm" />

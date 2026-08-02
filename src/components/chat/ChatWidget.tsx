@@ -690,6 +690,37 @@ export default function ChatWidget() {
                         return null
                       }
 
+                      if (part.type === 'tool-joinWaitlist') {
+                        if (part.state === 'output-available') {
+                          const output = part.output as { ok: boolean; message: string }
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood={output.ok ? 'happy' : 'confused'} />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-sm"
+                                style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                              >
+                                {output.message}
+                              </div>
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="thinking" />
+                              <div
+                                className="rounded-xl px-3.5 py-2.5 text-xs italic"
+                                style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text-subtle)' }}
+                              >
+                                {t.chat.joiningWaitlist}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }
+
                       return null
                     })}
                   </div>

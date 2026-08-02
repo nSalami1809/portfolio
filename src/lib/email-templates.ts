@@ -507,3 +507,53 @@ export function bookingClientCopyEmail(data: {
     `),
   }
 }
+
+// ── Booking reminder (client) ───────────────────────────────────────────────
+
+export function bookingReminderEmail(data: {
+  clientNom: string
+  start: string
+  accessCode: string
+}, adminEmail: string) {
+  const safeNom = esc(data.clientNom)
+  const when = formatSlot(data.start)
+
+  return {
+    subject: `Rappel — votre rendez-vous ${when}`,
+    html: base('Rappel de rendez-vous', `Votre rendez-vous approche — ${when}`, `
+      ${badge('Rappel')}
+      ${heading(`&Agrave; bient&ocirc;t, ${safeNom.split(' ')[0]}&nbsp;!`)}
+      ${intro(`Petit rappel : votre rendez-vous avec Nawaf Nemrod SALAMI approche.`)}
+
+      ${infoBox(`
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Cr&eacute;neau</p>
+        <p style="margin:0 0 16px;font-size:16px;font-weight:800;color:#131318">${esc(when)}</p>
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
+        <p style="margin:0;font-size:14px;font-weight:700;color:#131318;letter-spacing:0.1em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+      `)}
+
+      ${ctaButton(SITE_URL, 'Voir le portfolio')}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent('À propos de mon rendez-vous')}`, 'Besoin de le déplacer ?')}
+    `),
+  }
+}
+
+// ── Waitlist — a slot opened up ─────────────────────────────────────────────
+
+export function waitlistSlotOpenEmail(data: { date: string; name?: string }) {
+  const dayLabel = new Date(`${data.date}T12:00:00`).toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Libreville',
+  })
+  const greeting = data.name ? esc(data.name.split(' ')[0]) : 'Bonjour'
+
+  return {
+    subject: `Une place s'est libérée — ${dayLabel}`,
+    html: base('Une place vient de se libérer', `Un créneau vient de se libérer le ${dayLabel}`, `
+      ${badge('Liste d’attente')}
+      ${heading(`${greeting}, une place vient de se lib&eacute;rer&nbsp;!`)}
+      ${intro(`Vous vous &eacute;tiez inscrit sur la liste d&rsquo;attente pour le <strong style="color:#26262E">${dayLabel}</strong> — un cr&eacute;neau vient tout juste de se lib&eacute;rer ce jour-l&agrave;. Les places partent vite, r&eacute;servez d&egrave;s maintenant si &ccedil;a vous int&eacute;resse toujours.`)}
+
+      ${ctaButton(`${SITE_URL}/fr/calendrier`, 'Réserver ce créneau')}
+    `),
+  }
+}
