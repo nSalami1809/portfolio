@@ -20,6 +20,15 @@ const icon = {
 
 const phone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
 
+const star = `<svg width="14" height="14" viewBox="0 0 24 24" fill="${INK}" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+
+function starRow(rating: number): string {
+  const clamped = Math.min(5, Math.max(0, Math.round(rating)))
+  return Array.from({ length: 5 }, (_, i) =>
+    `<span style="opacity:${i < clamped ? '1' : '0.25'}">${star}</span>`,
+  ).join('')
+}
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
 // ── Base layout — light, centered, monochrome boutique-agency style ─────────
@@ -232,14 +241,14 @@ export function contactNotificationEmail(data: {
 
 // ── Testimonial submission (admin) — awaiting moderation ────────────────────
 
-export function testimonialNotificationEmail(data: { name: string; role?: string; company?: string; text: string }) {
+export function testimonialNotificationEmail(data: { name: string; role?: string; company?: string; text: string; rating: number }) {
   const safeName = esc(data.name)
   const roleCompany = [data.role, data.company].filter((v): v is string => !!v).map(esc).join(' — ')
   const safeText = esc(data.text)
   const now = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
 
   return {
-    subject: `Nouveau témoignage à valider — ${data.name}`,
+    subject: `Nouveau témoignage à valider — ${data.name} (${data.rating}/5)`,
     html: base('Nouveau témoignage', `${data.name} a laissé un témoignage sur votre portfolio`, `
       ${badge('Témoignage · À valider')}
       ${heading('Un nouveau t&eacute;moignage attend votre validation')}
@@ -247,6 +256,7 @@ export function testimonialNotificationEmail(data: { name: string; role?: string
 
       ${infoBox(`
         ${dataRow(icon.user, 'Nom', `<strong>${safeName}</strong>${roleCompany ? ` &mdash; ${roleCompany}` : ''}`)}
+        <div style="margin-top:10px">${starRow(data.rating)}<span style="margin-left:6px;font-size:12px;font-weight:700;color:#26262E;vertical-align:middle">${data.rating}/5</span></div>
         <p style="margin:12px 0 0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">&ldquo;${safeText}&rdquo;</p>
       `)}
 

@@ -6,11 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
+import StarRating from '@/components/ui/StarRating'
+import StarRatingInput from '@/components/ui/StarRatingInput'
 import { listPendingTestimonials, resolveTestimonialSubmission } from '@/actions/testimonials'
 import type { TestimonialSubmission } from '@/actions/testimonials'
 import type { Testimonial } from '@/types'
 
-const EMPTY: Omit<Testimonial, 'id'> = { name: '', role: '', company: '', text: '', avatar: '' }
+const EMPTY: Omit<Testimonial, 'id'> = { name: '', role: '', company: '', text: '', avatar: '', rating: 5 }
 const GRID = '1rem 2.5rem 1fr 6rem'
 const uid = () => Date.now().toString()
 
@@ -50,7 +52,7 @@ export default function AdminTestimonials() {
 
   const approvePending = async (s: TestimonialSubmission) => {
     setResolving((r) => new Set(r).add(s.id))
-    persist([...testimonials, { id: uid(), name: s.name, role: s.role, company: s.company, text: s.text }])
+    persist([...testimonials, { id: uid(), name: s.name, role: s.role, company: s.company, text: s.text, rating: s.rating }])
     await resolveTestimonialSubmission(s.id).catch(() => {})
     setPending((p) => p.filter((x) => x.id !== s.id))
     setResolving((r) => { const n = new Set(r); n.delete(s.id); return n })
@@ -67,7 +69,7 @@ export default function AdminTestimonials() {
   }
 
   const startNew = () => { setEditingId('__new__'); setForm({ ...EMPTY }) }
-  const startEdit = (t: Testimonial) => { setEditingId(t.id); const { id: _, ...rest } = t; setForm(rest) }
+  const startEdit = (t: Testimonial) => { setEditingId(t.id); const { id: _, ...rest } = t; setForm({ ...rest, rating: rest.rating ?? 5 }) }
 
   const confirmEdit = () => {
     if (!form.name.trim() || !form.text.trim()) return
@@ -134,6 +136,7 @@ export default function AdminTestimonials() {
                   {s.company && <span className="text-xs" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>· {s.company}</span>}
                 </div>
                 {s.role && <p className="text-xs mb-2" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{s.role}</p>}
+                <div className="mb-2"><StarRating rating={s.rating} size={12} /></div>
                 <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>&ldquo;{s.text}&rdquo;</p>
                 <div className="flex items-center gap-2">
                   <button onClick={() => approvePending(s)} disabled={resolving.has(s.id)} className="btn-primary btn-xs">Approuver</button>
@@ -170,6 +173,10 @@ export default function AdminTestimonials() {
               <div><F label="Nom" req /><input className="input text-sm" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Prénom Nom" /></div>
               <div><F label="Poste" /><input className="input text-sm" value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))} placeholder="Directeur Technique" /></div>
               <div><F label="Entreprise" /><input className="input text-sm" value={form.company} onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))} placeholder="Nom de l'entreprise" /></div>
+              <div>
+                <F label="Note" req />
+                <StarRatingInput value={form.rating ?? 5} onChange={(rating) => setForm((p) => ({ ...p, rating }))} size={20} />
+              </div>
               <div className="sm:col-span-2">
                 <F label="Témoignage" req />
                 <textarea className="input text-sm" value={form.text} onChange={(e) => setForm((p) => ({ ...p, text: e.target.value }))} rows={4} style={{ resize: 'vertical', minHeight: '90px' }} placeholder="Ce que dit la personne à votre sujet…" />
@@ -232,6 +239,7 @@ export default function AdminTestimonials() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{t.name}</p>
                       {t.company && <span className="text-xs" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>· {t.company}</span>}
+                      <StarRating rating={t.rating ?? 5} size={10} showValue={false} />
                     </div>
                     {t.role && <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.role}</p>}
                     <p className="text-xs mt-1 line-clamp-1" style={{ color: 'var(--text-muted)' }}>&ldquo;{t.text}&rdquo;</p>

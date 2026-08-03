@@ -353,6 +353,32 @@ h1, h2, h3, h4, h5, h6 {
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 
+/* â”€â”€â”€ Testimonials marquee â”€â”€â”€ */
+/* Pure CSS transform loop (GPU-composited, no JS per-frame work) â€” the
+   track is rendered twice back-to-back and slides exactly -50%, so the
+   seam between the two copies is invisible and the loop never jumps. */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+.marquee-viewport {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+.marquee-track {
+  width: max-content;
+  will-change: transform;
+}
+
+.marquee-track:hover { animation-play-state: paused; }
+
 /* â”€â”€â”€ Admin UI system â”€â”€â”€ */
 
 /* Button size modifiers â€” override base btn padding */

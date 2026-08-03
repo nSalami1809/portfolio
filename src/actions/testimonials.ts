@@ -30,6 +30,7 @@ export type TestimonialSubmissionPayload = {
   role?: string
   company?: string
   text: string
+  rating: number
 }
 
 export type SubmitTestimonialResult =
@@ -45,6 +46,7 @@ export type TestimonialSubmission = {
   role: string
   company: string
   text: string
+  rating: number
   createdAt: string
 }
 
@@ -59,6 +61,7 @@ export async function submitTestimonial(payload: TestimonialSubmissionPayload): 
   if (payload.role && payload.role.length > 100) return { ok: false, error: 'Poste invalide.' }
   if (payload.company && payload.company.length > 100) return { ok: false, error: 'Entreprise invalide.' }
   if (!payload.text?.trim() || payload.text.length > 1000) return { ok: false, error: 'Témoignage invalide (1000 caractères maximum).' }
+  if (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5) return { ok: false, error: 'Note invalide.' }
 
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim()
@@ -79,11 +82,11 @@ export async function submitTestimonial(payload: TestimonialSubmissionPayload): 
   const text = payload.text.trim()
 
   await db.collection('testimonial_ratelimits').insertOne({ ip, createdAt: new Date() })
-  await db.collection('testimonial_submissions').insertOne({ name, role, company, text, ip, createdAt: new Date() })
+  await db.collection('testimonial_submissions').insertOne({ name, role, company, text, rating: payload.rating, ip, createdAt: new Date() })
 
   try {
     const transporter = getTransporter()
-    const email = testimonialNotificationEmail({ name, role, company, text })
+    const email = testimonialNotificationEmail({ name, role, company, text, rating: payload.rating })
     await transporter.sendMail({
       from: `"Portfolio NS · Témoignages" <${process.env.GMAIL_USER}>`,
       to: await getAdminEmail(),
@@ -108,6 +111,7 @@ export async function listPendingTestimonials(): Promise<TestimonialSubmission[]
     role: rest.role ?? '',
     company: rest.company ?? '',
     text: rest.text ?? '',
+    rating: typeof rest.rating === 'number' ? rest.rating : 5,
     createdAt: createdAt instanceof Date ? createdAt.toISOString() : String(createdAt),
   }))
 }

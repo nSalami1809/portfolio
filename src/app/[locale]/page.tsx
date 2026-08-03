@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
+import TestimonialsMarquee from '@/components/sections/TestimonialsMarquee'
 import { fetchPortfolio } from '@/actions/portfolio'
 import { getUpcomingAvailability } from '@/actions/bookings'
 import { translateFields } from '@/lib/translate'
@@ -78,7 +79,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         role: tm.role ?? '',
         company: tm.company ?? '',
       })
-      return { ...tm, text: fields.text, role: fields.role || undefined, company: fields.company || undefined }
+      return { ...tm, text: fields.text, role: fields.role, company: fields.company }
     }),
   )
 
@@ -191,7 +192,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* ── TÉMOIGNAGES ── */}
-      <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+      <section className="py-24 overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <FadeIn className="text-center mb-16">
             <p className="section-label mb-4">{t.home.testimonialsLabel}</p>
@@ -206,61 +207,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </svg>
             </Link>
           </FadeIn>
-
-          {testimonials.length > 0 && (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {translatedTestimonials.map((tm, i) => (
-                <FadeIn key={tm.id} delay={Math.min(i * 0.08, 0.24)}>
-                  <div className="card p-6 h-full flex flex-col">
-                    <div className="mb-4">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--accent)' }}>
-                        <path
-                          d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"
-                          fill="currentColor"
-                          opacity="0.4"
-                        />
-                      </svg>
-                    </div>
-
-                    <p className="text-sm leading-relaxed flex-1 mb-6" style={{ color: 'var(--text-muted)' }}>
-                      {tm.text}
-                    </p>
-
-                    <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                      {tm.avatar ? (
-                        <Image
-                          src={tm.avatar}
-                          alt={tm.name}
-                          width={40}
-                          height={40}
-                          loading="lazy"
-                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-base"
-                          style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}
-                        >
-                          {tm.name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>
-                          {tm.name}
-                        </p>
-                        {(tm.role || tm.company) && (
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                            {[tm.role, tm.company].filter(Boolean).join(' · ')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </FadeIn>
-              ))}
-            </div>
-          )}
         </div>
+
+        {testimonials.length > 0 && (
+          <FadeIn delay={0.1}>
+            <TestimonialsMarquee testimonials={translatedTestimonials} />
+          </FadeIn>
+        )}
       </section>
 
       {/* ── CTA ── */}

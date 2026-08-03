@@ -64,6 +64,7 @@ export interface Testimonial {
   company: string
   text: string
   avatar?: string
+  rating?: number
 }
 
 export interface Offer {
