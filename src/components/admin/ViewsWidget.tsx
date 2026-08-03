@@ -1,14 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import AreaSparkline from './AreaSparkline'
+import ViewsLineChart from './ViewsLineChart'
 import TrendBadge, { trend } from './TrendBadge'
 import { STATS_RANGES, RANGE_LABELS } from '@/lib/admin-stats'
 import type { StatsRange, ViewsStats } from '@/lib/admin-stats'
-
-const SPAN_LABEL: Record<ViewsStats['bucketSpan'], string> = {
-  hour: 'heure', day: 'jour', week: 'semaine', month: 'mois',
-}
 
 function formatPeriod(stats: ViewsStats): string {
   if (stats.offset === 0) return `${stats.rangeLabel} — jusqu'à aujourd'hui`
@@ -83,16 +79,18 @@ export default function ViewsWidget({ initial }: { initial: ViewsStats }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
         <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{formatPeriod(stats)}</p>
         <TrendBadge t={t} />
       </div>
 
-      <div className="flex items-end gap-4" style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s ease' }}>
-        <p className="text-4xl font-display font-bold flex-shrink-0 leading-none" style={{ color: 'var(--text)' }}>{stats.views}</p>
-        <div className="flex-1 min-w-0">
-          <AreaSparkline data={stats.buckets} height={56} ariaLabel={`Vues par ${SPAN_LABEL[stats.bucketSpan]}`} />
-        </div>
+      <div className="flex items-baseline gap-2 mb-2">
+        <p className="text-3xl font-display font-bold leading-none" style={{ color: 'var(--text)' }}>{stats.views}</p>
+        <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>vue{stats.views !== 1 ? 's' : ''} sur la période</p>
+      </div>
+
+      <div style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s ease' }}>
+        <ViewsLineChart data={stats.buckets} bucketSpan={stats.bucketSpan} height={200} />
       </div>
     </div>
   )
