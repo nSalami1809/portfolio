@@ -6,10 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
+import { listPendingTestimonials, resolveTestimonialSubmission } from '@/actions/testimonials'
+import type { TestimonialSubmission } from '@/actions/testimonials'
 import type { Testimonial } from '@/types'
 
 const EMPTY: Omit<Testimonial, 'id'> = { name: '', role: '', company: '', text: '', avatar: '' }
 const GRID = '1rem 2.5rem 1fr 6rem'
+const uid = () => Date.now().toString()
 
 function TrashIcon() {
   return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -30,6 +33,8 @@ export default function AdminTestimonials() {
   const [form, setForm] = useState<Omit<Testimonial, 'id'>>({ ...EMPTY })
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
+  const [pending, setPending] = useState<TestimonialSubmission[]>([])
+  const [resolving, setResolving] = useState<Set<string>>(new Set())
 
   // Adopt the shared context's testimonials until this page makes its own edit
   const localOwned = useRef(false)
@@ -37,8 +42,29 @@ export default function AdminTestimonials() {
     if (!localOwned.current) setTestimonials(data.testimonials)
   }, [data.testimonials])
 
-  const uid = () => Date.now().toString()
+  useEffect(() => {
+    listPendingTestimonials().then(setPending).catch(() => {})
+  }, [])
+
   const persist = (updated: Testimonial[]) => { localOwned.current = true; setTestimonials(updated); updateTestimonials(updated) }
+
+  const approvePending = async (s: TestimonialSubmission) => {
+    setResolving((r) => new Set(r).add(s.id))
+    persist([...testimonials, { id: uid(), name: s.name, role: s.role, company: s.company, text: s.text }])
+    await resolveTestimonialSubmission(s.id).catch(() => {})
+    setPending((p) => p.filter((x) => x.id !== s.id))
+    setResolving((r) => { const n = new Set(r); n.delete(s.id); return n })
+    toast('Témoignage approuvé et publié')
+  }
+
+  const rejectPending = async (s: TestimonialSubmission) => {
+    if (!confirm(`Supprimer le témoignage en attente de « ${s.name} » ?`)) return
+    setResolving((r) => new Set(r).add(s.id))
+    await resolveTestimonialSubmission(s.id).catch(() => {})
+    setPending((p) => p.filter((x) => x.id !== s.id))
+    setResolving((r) => { const n = new Set(r); n.delete(s.id); return n })
+    toast('Témoignage refusé', 'error')
+  }
 
   const startNew = () => { setEditingId('__new__'); setForm({ ...EMPTY }) }
   const startEdit = (t: Testimonial) => { setEditingId(t.id); const { id: _, ...rest } = t; setForm(rest) }
@@ -90,6 +116,36 @@ export default function AdminTestimonials() {
           <button onClick={startNew} className="btn-primary btn-sm">+ Nouveau témoignage</button>
         </div>
       </div>
+
+      {/* Pending moderation queue — visitor-submitted, not yet published */}
+      {pending.length > 0 && (
+        <div className="card no-lift p-5" style={{ borderColor: 'var(--accent)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--accent)' }} aria-hidden="true" />
+            <p className="font-display font-semibold text-sm" style={{ color: 'var(--text)' }}>
+              {pending.length} témoignage{pending.length !== 1 ? 's' : ''} en attente de validation
+            </p>
+          </div>
+          <div className="space-y-3">
+            {pending.map((s) => (
+              <div key={s.id} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                  <p className="font-medium text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{s.name}</p>
+                  {s.company && <span className="text-xs" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>· {s.company}</span>}
+                </div>
+                {s.role && <p className="text-xs mb-2" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{s.role}</p>}
+                <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>&ldquo;{s.text}&rdquo;</p>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => approvePending(s)} disabled={resolving.has(s.id)} className="btn-primary btn-xs">Approuver</button>
+                  <button onClick={() => rejectPending(s)} disabled={resolving.has(s.id)} className="btn-danger btn-xs">
+                    <TrashIcon /> Supprimer
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative" style={{ maxWidth: '380px' }}>

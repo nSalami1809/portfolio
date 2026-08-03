@@ -191,14 +191,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* ── TÉMOIGNAGES ── */}
-      {testimonials.length > 0 && (
-        <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <FadeIn className="text-center mb-16">
-              <p className="section-label mb-4">{t.home.testimonialsLabel}</p>
-              <h2 className="section-title">{t.home.testimonialsTitle}</h2>
-            </FadeIn>
+      <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <FadeIn className="text-center mb-16">
+            <p className="section-label mb-4">{t.home.testimonialsLabel}</p>
+            <h2 className="section-title mb-6">{t.home.testimonialsTitle}</h2>
+            {testimonials.length === 0 && (
+              <p className="mb-6" style={{ color: 'var(--text-muted)' }}>{t.home.testimonialsEmpty}</p>
+            )}
+            <Link href={`/${locale}/temoignage`} className="btn-secondary">
+              {t.home.testimonialsCta}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </FadeIn>
 
+          {testimonials.length > 0 && (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {translatedTestimonials.map((tm, i) => (
                 <FadeIn key={tm.id} delay={Math.min(i * 0.08, 0.24)}>
@@ -250,9 +259,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </FadeIn>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </section>
 
       {/* ── CTA ── */}
       <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
