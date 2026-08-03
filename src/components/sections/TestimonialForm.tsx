@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { submitTestimonial } from '@/actions/testimonials'
+import StarRatingInput from '@/components/ui/StarRatingInput'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage']['form'] }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
-  const [form, setForm] = useState({ name: '', role: '', company: '', text: '' })
+  const [form, setForm] = useState({ name: '', role: '', company: '', text: '', rating: 5 })
 
   const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
@@ -84,6 +85,13 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
             className={fieldClass}
           />
         </div>
+      </div>
+
+      <div>
+        <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+          {t.ratingLabel}
+        </label>
+        <StarRatingInput value={form.rating} onChange={(rating) => setForm((p) => ({ ...p, rating }))} />
       </div>
 
       <div>
