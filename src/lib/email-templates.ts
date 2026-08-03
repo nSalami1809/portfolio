@@ -230,6 +230,31 @@ export function contactNotificationEmail(data: {
   }
 }
 
+// ── Testimonial submission (admin) — awaiting moderation ────────────────────
+
+export function testimonialNotificationEmail(data: { name: string; role?: string; company?: string; text: string }) {
+  const safeName = esc(data.name)
+  const roleCompany = [data.role, data.company].filter((v): v is string => !!v).map(esc).join(' — ')
+  const safeText = esc(data.text)
+  const now = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
+
+  return {
+    subject: `Nouveau témoignage à valider — ${data.name}`,
+    html: base('Nouveau témoignage', `${data.name} a laissé un témoignage sur votre portfolio`, `
+      ${badge('Témoignage · À valider')}
+      ${heading('Un nouveau t&eacute;moignage attend votre validation')}
+      ${intro(`<strong style="color:#26262E">${safeName}</strong> a laiss&eacute; un t&eacute;moignage le ${now}. Il n&rsquo;appara&icirc;tra sur le site qu&rsquo;apr&egrave;s votre approbation dans le tableau de bord.`)}
+
+      ${infoBox(`
+        ${dataRow(icon.user, 'Nom', `<strong>${safeName}</strong>${roleCompany ? ` &mdash; ${roleCompany}` : ''}`)}
+        <p style="margin:12px 0 0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">&ldquo;${safeText}&rdquo;</p>
+      `)}
+
+      ${ctaButton(`${SITE_URL}/admin/testimonials`, 'Valider ce témoignage')}
+    `),
+  }
+}
+
 // ── Contact auto-reply (visitor) ───────────────────────────────────────────
 
 export function contactAutoReplyEmail(data: {
