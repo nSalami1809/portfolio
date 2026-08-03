@@ -28,7 +28,7 @@ function PillIcon({ path }: { path: keyof typeof iconPaths }) {
   )
 }
 
-function StatPill({ icon, value, label, color, href, t }: { icon: keyof typeof iconPaths; value: number; label: string; color: string; href: string; t?: Trend }) {
+function StatPill({ icon, value, label, href, t }: { icon: keyof typeof iconPaths; value: number; label: string; href: string; t?: Trend }) {
   return (
     <Link
       href={href}
@@ -36,7 +36,7 @@ function StatPill({ icon, value, label, color, href, t }: { icon: keyof typeof i
       className="rounded-2xl p-3 flex items-center gap-3 transition-colors hover:bg-[var(--surface-hover)]"
       style={{ background: 'var(--surface)' }}
     >
-      <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}1A`, color }}>
+      <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-hover)', color: 'var(--text)' }}>
         <PillIcon path={icon} />
       </span>
       <div className="min-w-0">
@@ -54,11 +54,11 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
   const { data, resetAll } = usePortfolio()
 
   const contentStats = [
-    { label: 'Projets',      value: data.projects.length,                                 href: '/admin/projects',    color: '#8B5CF6', icon: 'projects' as const },
-    { label: 'Expériences',  value: data.experiences.length,                              href: '/admin/experience',  color: '#06B6D4', icon: 'experience' as const },
-    { label: 'Compétences',  value: data.skills.reduce((a, s) => a + s.items.length, 0), href: '/admin/skills',      color: '#10B981', icon: 'skills' as const },
-    { label: 'Formations',   value: data.educations.length,                               href: '/admin/experience',  color: '#F59E0B', icon: 'experience' as const },
-    { label: 'Témoignages',  value: data.testimonials.length,                             href: '/admin/testimonials', color: '#EC4899', icon: 'testimonials' as const },
+    { label: 'Projets',      value: data.projects.length,                                 href: '/admin/projects',     icon: 'projects' as const },
+    { label: 'Expériences',  value: data.experiences.length,                              href: '/admin/experience',   icon: 'experience' as const },
+    { label: 'Compétences',  value: data.skills.reduce((a, s) => a + s.items.length, 0), href: '/admin/skills',       icon: 'skills' as const },
+    { label: 'Formations',   value: data.educations.length,                               href: '/admin/experience',   icon: 'experience' as const },
+    { label: 'Témoignages',  value: data.testimonials.length,                             href: '/admin/testimonials', icon: 'testimonials' as const },
   ]
 
   const quickLinks = [
@@ -84,13 +84,13 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
       <div className="card no-lift p-6">
         <p className="section-label mb-5">Aperçu</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" role="list">
-          <StatPill icon="eye"      value={overview.views30d}        label="Vues (30j)"    href="/"                 color="#3B82F6" t={trend(overview.views30d, overview.viewsPrev30d)} />
-          <StatPill icon="messages" value={overview.contacts30d}     label="Messages"      href="/admin/contacts"   color="#06B6D4" t={trend(overview.contacts30d, overview.contactsPrev30d)} />
-          <StatPill icon="quotes"   value={overview.quotes30d}       label="Devis"         href="/admin/quotes"     color="#8B5CF6" t={trend(overview.quotes30d, overview.quotesPrev30d)} />
-          <StatPill icon="calendar" value={overview.bookings30d}     label="Rendez-vous"   href="/admin/calendar"   color="#F59E0B" t={trend(overview.bookings30d, overview.bookingsPrev30d)} />
-          <StatPill icon="clock"    value={overview.upcomingBookings} label="RDV à venir"  href="/admin/calendar"   color="#EC4899" />
+          <StatPill icon="eye"      value={overview.views30d}         label="Vues (30j)"   href="/"                t={trend(overview.views30d, overview.viewsPrev30d)} />
+          <StatPill icon="messages" value={overview.contacts30d}      label="Messages"     href="/admin/contacts"  t={trend(overview.contacts30d, overview.contactsPrev30d)} />
+          <StatPill icon="quotes"   value={overview.quotes30d}        label="Devis"        href="/admin/quotes"    t={trend(overview.quotes30d, overview.quotesPrev30d)} />
+          <StatPill icon="calendar" value={overview.bookings30d}      label="Rendez-vous"  href="/admin/calendar"  t={trend(overview.bookings30d, overview.bookingsPrev30d)} />
+          <StatPill icon="clock"    value={overview.upcomingBookings} label="RDV à venir"  href="/admin/calendar" />
           {contentStats.map((s) => (
-            <StatPill key={s.label} icon={s.icon} value={s.value} label={s.label} href={s.href} color={s.color} />
+            <StatPill key={s.label} icon={s.icon} value={s.value} label={s.label} href={s.href} />
           ))}
         </div>
       </div>
