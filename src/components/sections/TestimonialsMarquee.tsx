@@ -34,18 +34,28 @@ function TestimonialCard({ tm, fixedWidth }: { tm: Testimonial; fixedWidth?: boo
       <div className="mb-2.5">
         <StarRating rating={tm.rating ?? 5} />
       </div>
-      <p className="text-sm leading-relaxed line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
         &ldquo;{tm.text}&rdquo;
       </p>
     </div>
   )
 }
 
+const CARD_UNIT = 320 + 16 // fixed card width + the row's flex gap
+const MIN_TRACK_WIDTH = 3200 // wide enough that even a single testimonial fills an ultra-wide monitor with no visible gap
+const SPEED_PX_PER_S = 70
+
 function MarqueeRow({ items, direction }: { items: Testimonial[]; direction: 'left' | 'right' }) {
-  // Duplicated so the -50% loop is seamless; duration scales with row length
-  // so every card keeps roughly the same on-screen speed regardless of count.
-  const durationS = Math.max(18, items.length * 6)
-  const doubled = [...items, ...items]
+  // With very few testimonials, a single pass is narrower than the viewport
+  // on wide screens — the loop would then show a big empty gap once the
+  // (too-short) track scrolls past. Repeat the set until it's comfortably
+  // wider than any realistic desktop viewport, then double that for the
+  // seamless -50% loop.
+  const unitWidth = items.length * CARD_UNIT
+  const repeats = Math.max(1, Math.ceil(MIN_TRACK_WIDTH / unitWidth))
+  const base = Array.from({ length: repeats }, () => items).flat()
+  const track = [...base, ...base]
+  const durationS = Math.max(10, Math.round((base.length * CARD_UNIT) / SPEED_PX_PER_S))
 
   return (
     <div className="marquee-viewport">
@@ -53,7 +63,7 @@ function MarqueeRow({ items, direction }: { items: Testimonial[]; direction: 'le
         className="marquee-track flex gap-4"
         style={{ animation: `marquee-${direction} ${durationS}s linear infinite` }}
       >
-        {doubled.map((tm, i) => (
+        {track.map((tm, i) => (
           <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth />
         ))}
       </div>
