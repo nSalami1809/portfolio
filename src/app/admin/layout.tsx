@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { ToastProvider } from '@/components/admin/Toast'
@@ -51,8 +52,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="font-display font-bold text-base leading-tight" style={{ color: 'var(--text)' }}>
                 <span style={{ color: 'var(--accent)' }}>Admin</span> Panel
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                Portfolio NS
+              <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                Portfolio
+                <Image src="/logo-black.png" alt="" width={11} height={11} className="dark:invert" style={{ width: 11, height: 11 }} />
               </p>
             </div>
             <button

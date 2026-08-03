@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { loginWithCredentials } from '@/actions/auth'
 import type { LoginResult } from '@/actions/auth'
@@ -33,8 +34,10 @@ export default function LoginPage() {
           <h1 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text)' }}>
             Admin Panel
           </h1>
-          <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-            Portfolio NS · Accès sécurisé
+          <p className="text-xs font-medium tracking-widest uppercase flex items-center justify-center gap-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+            Portfolio
+            <Image src="/logo-black.png" alt="" width={13} height={13} className="dark:invert" style={{ width: 13, height: 13 }} />
+            · Accès sécurisé
           </p>
         </div>
 
