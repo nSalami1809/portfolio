@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '@/actions/auth'
 
@@ -22,6 +22,9 @@ interface SidebarProps {
 const STORAGE_KEY = 'admin-sidebar-collapsed'
 const WIDTH_OPEN = 256
 const WIDTH_COLLAPSED = 64
+// Grace period before collapsing back on mouse-leave, so briefly crossing
+// the edge (e.g. moving toward the topbar) doesn't cause a flicker.
+const HOVER_COLLAPSE_DELAY_MS = 200
 
 // Collapse is a desktop-only affordance — on mobile the sidebar stays the
 // existing full-width off-canvas overlay (opened via the topbar's hamburger),
@@ -67,37 +70,26 @@ function FadeLabel({ show, children, className }: { show: boolean; children: Rea
   )
 }
 
-function Tooltip({ show, label }: { show: boolean; label: string }) {
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          role="tooltip"
-          initial={{ opacity: 0, x: -4 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.12 }}
-          className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap z-50 pointer-events-none"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}
-        >
-          {label}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
 export default function Sidebar({ items, mobileOpen, onCloseMobile }: SidebarProps) {
   const pathname = usePathname()
   const isDesktop = useIsDesktop()
   const [rawCollapsed, setRawCollapsed] = useState(false)
-  const [hoveredHref, setHoveredHref] = useState<string | null>(null)
+  const [isHovering, setIsHovering] = useState(false)
+  const collapseTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const collapsed = isDesktop && rawCollapsed
+  // What's actually shown right now: truly expanded, or collapsed-but-
+  // temporarily widened because the cursor (or keyboard focus) is on it.
+  const expanded = !collapsed || isHovering
 
   useEffect(() => {
     try {
       if (localStorage.getItem(STORAGE_KEY) === '1') setRawCollapsed(true) // eslint-disable-line react-hooks/set-state-in-effect
     } catch { /* unavailable */ }
+  }, [])
+
+  useEffect(() => () => {
+    if (collapseTimeout.current) clearTimeout(collapseTimeout.current)
   }, [])
 
   const toggleCollapsed = () => {
@@ -108,6 +100,14 @@ export default function Sidebar({ items, mobileOpen, onCloseMobile }: SidebarPro
     })
   }
 
+  const handleHoverStart = () => {
+    if (collapseTimeout.current) { clearTimeout(collapseTimeout.current); collapseTimeout.current = null }
+    setIsHovering(true)
+  }
+  const handleHoverEnd = () => {
+    collapseTimeout.current = setTimeout(() => setIsHovering(false), HOVER_COLLAPSE_DELAY_MS)
+  }
+
   return (
     <motion.aside
       // Framer Motion only applies `animate` once it mounts client-side —
@@ -115,18 +115,22 @@ export default function Sidebar({ items, mobileOpen, onCloseMobile }: SidebarPro
       // actually renders with, so it must match the default (open) state
       // to avoid a flash of unstyled/content-sized width on first paint.
       initial={false}
-      animate={{ width: collapsed ? WIDTH_COLLAPSED : WIDTH_OPEN }}
+      animate={{ width: expanded ? WIDTH_OPEN : WIDTH_COLLAPSED }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className={`fixed lg:sticky top-0 h-screen flex-shrink-0 flex flex-col z-40 overflow-hidden transition-transform duration-300 lg:translate-x-0 ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ width: WIDTH_OPEN, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}
       aria-label="Navigation admin"
+      onMouseEnter={handleHoverStart}
+      onMouseLeave={handleHoverEnd}
+      onFocus={handleHoverStart}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) handleHoverEnd() }}
     >
       {/* Logo */}
-      <div className={`h-16 flex items-center flex-shrink-0 ${collapsed ? 'justify-center px-2' : 'justify-between px-5'}`} style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className={`h-16 flex items-center flex-shrink-0 ${expanded ? 'justify-between px-5' : 'justify-center px-2'}`} style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="min-w-0">
-          <FadeLabel show={!collapsed}>
+          <FadeLabel show={expanded}>
             <p className="font-display font-bold text-base leading-tight" style={{ color: 'var(--text)' }}>
               <span style={{ color: 'var(--accent)' }}>Admin</span> Panel
             </p>
@@ -135,7 +139,7 @@ export default function Sidebar({ items, mobileOpen, onCloseMobile }: SidebarPro
               <Image src="/logo-black.png" alt="" width={11} height={11} className="dark:invert" style={{ width: 11, height: 11 }} />
             </p>
           </FadeLabel>
-          {collapsed && (
+          {!expanded && (
             <Image src="/logo-black.png" alt="" width={20} height={20} className="dark:invert" style={{ width: 20, height: 20 }} />
           )}
         </div>
@@ -156,34 +160,27 @@ export default function Sidebar({ items, mobileOpen, onCloseMobile }: SidebarPro
         {items.map(({ href, label, icon }) => {
           const isActive = pathname === href
           return (
-            <div
+            <Link
               key={href}
-              className="relative"
-              onMouseEnter={() => setHoveredHref(href)}
-              onMouseLeave={() => setHoveredHref(null)}
+              href={href}
+              onClick={onCloseMobile}
+              aria-label={!expanded ? label : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 ${!expanded ? 'justify-center' : ''}`}
+              style={{
+                background: isActive ? 'var(--accent-glow)' : 'transparent',
+                color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+                fontFamily: 'var(--font-poppins)',
+                outlineColor: 'var(--accent)',
+              }}
+              onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--surface-hover)' }}
+              onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <Link
-                href={href}
-                onClick={onCloseMobile}
-                aria-label={collapsed ? label : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 ${collapsed ? 'justify-center' : ''}`}
-                style={{
-                  background: isActive ? 'var(--accent-glow)' : 'transparent',
-                  color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                  fontFamily: 'var(--font-poppins)',
-                  outlineColor: 'var(--accent)',
-                }}
-                onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--surface-hover)' }}
-                onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true">
-                  <path d={icon}/>
-                </svg>
-                <FadeLabel show={!collapsed}>{label}</FadeLabel>
-              </Link>
-              <Tooltip show={collapsed && hoveredHref === href} label={label} />
-            </div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true">
+                <path d={icon}/>
+              </svg>
+              <FadeLabel show={expanded}>{label}</FadeLabel>
+            </Link>
           )
         })}
       </nav>
@@ -193,52 +190,38 @@ export default function Sidebar({ items, mobileOpen, onCloseMobile }: SidebarPro
         <button
           onClick={toggleCollapsed}
           aria-label={rawCollapsed ? 'Développer la barre latérale' : 'Réduire la barre latérale'}
-          className={`hidden lg:flex w-full items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 ${collapsed ? 'justify-center' : ''}`}
+          className={`hidden lg:flex w-full items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 ${!expanded ? 'justify-center' : ''}`}
           style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)', outlineColor: 'var(--accent)' }}
         >
           <ChevronIcon direction={collapsed ? 'right' : 'left'} />
-          <FadeLabel show={!collapsed}>Réduire</FadeLabel>
+          <FadeLabel show={expanded}>{rawCollapsed ? 'Développer' : 'Réduire'}</FadeLabel>
         </button>
 
-        <div
-          className="relative"
-          onMouseEnter={() => setHoveredHref('__back')}
-          onMouseLeave={() => setHoveredHref(null)}
+        <Link
+          href="/"
+          aria-label={!expanded ? 'Retour au portfolio' : undefined}
+          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 ${!expanded ? 'justify-center' : ''}`}
+          style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)', outlineColor: 'var(--accent)' }}
         >
-          <Link
-            href="/"
-            aria-label={collapsed ? 'Retour au portfolio' : undefined}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 ${collapsed ? 'justify-center' : ''}`}
-            style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)', outlineColor: 'var(--accent)' }}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          <FadeLabel show={expanded}>Retour au portfolio</FadeLabel>
+        </Link>
+
+        <form action={logout}>
+          <button
+            type="submit"
+            aria-label={!expanded ? 'Se déconnecter' : undefined}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 ${!expanded ? 'justify-center' : ''}`}
+            style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)', outlineColor: '#EF4444' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
             </svg>
-            <FadeLabel show={!collapsed}>Retour au portfolio</FadeLabel>
-          </Link>
-          <Tooltip show={collapsed && hoveredHref === '__back'} label="Retour au portfolio" />
-        </div>
-
-        <div
-          className="relative"
-          onMouseEnter={() => setHoveredHref('__logout')}
-          onMouseLeave={() => setHoveredHref(null)}
-        >
-          <form action={logout}>
-            <button
-              type="submit"
-              aria-label={collapsed ? 'Se déconnecter' : undefined}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 ${collapsed ? 'justify-center' : ''}`}
-              style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)', outlineColor: '#EF4444' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-              </svg>
-              <FadeLabel show={!collapsed}>Se déconnecter</FadeLabel>
-            </button>
-          </form>
-          <Tooltip show={collapsed && hoveredHref === '__logout'} label="Se déconnecter" />
-        </div>
+            <FadeLabel show={expanded}>Se déconnecter</FadeLabel>
+          </button>
+        </form>
       </div>
     </motion.aside>
   )
