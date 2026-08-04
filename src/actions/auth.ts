@@ -9,6 +9,7 @@ import { generateOTP, storeOTP, consumeOTP } from '@/lib/otp'
 import { getTransporter } from '@/lib/mailer'
 import { otpEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 const getSecret   = () => new TextEncoder().encode(process.env.JWT_SECRET!)
 const COOKIE      = 'admin-token'
@@ -117,6 +118,7 @@ export async function loginWithCredentials(
   const jar = await cookies()
   jar.set('admin-pre', '1', {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 600, // 10 min — corresponds to OTP TTL
     path: '/',
@@ -167,6 +169,8 @@ export async function changePassword(
   _: ChangePasswordResult | null,
   formData: FormData,
 ): Promise<ChangePasswordResult> {
+  await requireAdmin()
+
   const current  = formData.get('current')?.toString() ?? ''
   const next     = formData.get('next')?.toString() ?? ''
   const confirm  = formData.get('confirm')?.toString() ?? ''
@@ -204,6 +208,8 @@ export async function changeEmail(
   _: ChangeEmailResult | null,
   formData: FormData,
 ): Promise<ChangeEmailResult> {
+  await requireAdmin()
+
   const password      = formData.get('password')?.toString() ?? ''
   const nextEmail      = formData.get('email')?.toString().trim() ?? ''
   const confirmEmail   = formData.get('confirmEmail')?.toString().trim() ?? ''

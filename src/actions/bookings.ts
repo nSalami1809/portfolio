@@ -11,6 +11,7 @@ import { getAdminEmail } from '@/lib/admin-config'
 import { buildICS } from '@/lib/ics'
 import { fetchPortfolio } from '@/actions/portfolio'
 import { notifyWaitlist } from '@/actions/waitlist'
+import { requireAdmin } from '@/lib/require-admin'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids visual ambiguity
 const MAX_PER_HOUR = 5
@@ -315,6 +316,7 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
 // separate blocking mechanism to keep in sync.
 
 export async function createEvent(payload: { title: string; start: string; durationMinutes: number }): Promise<Booking> {
+  await requireAdmin()
   if (!payload.title?.trim()) throw new Error('Titre requis.')
   if (!payload.start) throw new Error('Créneau requis.')
 
@@ -369,6 +371,7 @@ export async function cancelBooking(accessCode: string): Promise<{ ok: boolean; 
 // ── Admin actions ─────────────────────────────────────────────────────────
 
 export async function listBookings(): Promise<AdminBooking[]> {
+  await requireAdmin()
   const col = await bookings()
   const docs = await col.find({}).sort({ start: -1 }).limit(200).toArray()
   return docs.map((doc) => ({
@@ -379,11 +382,13 @@ export async function listBookings(): Promise<AdminBooking[]> {
 }
 
 export async function markBookingRead(id: string): Promise<void> {
+  await requireAdmin()
   const col = await bookings()
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { read: true } })
 }
 
 export async function adminCancelBooking(id: string): Promise<void> {
+  await requireAdmin()
   const col = await bookings()
   const doc = await col.findOne({ _id: new ObjectId(id) })
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { status: 'cancelled' } })
@@ -391,6 +396,7 @@ export async function adminCancelBooking(id: string): Promise<void> {
 }
 
 export async function deleteBooking(id: string): Promise<void> {
+  await requireAdmin()
   const col = await bookings()
   await col.deleteOne({ _id: new ObjectId(id) })
 }

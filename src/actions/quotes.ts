@@ -7,6 +7,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { quoteNotificationEmail, quoteClientCopyEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 const TVA_RATE = 0.18
 const VALIDITE_JOURS = 30
@@ -189,6 +190,7 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
 // ── Admin actions ────────────────────────────────────────────────────────────
 
 export async function listQuotes(): Promise<AdminQuote[]> {
+  await requireAdmin()
   const col = await quotes()
   const docs = await col.find({}).sort({ createdAt: -1 }).limit(200).toArray()
   return docs.map((doc) => ({
@@ -200,16 +202,19 @@ export async function listQuotes(): Promise<AdminQuote[]> {
 }
 
 export async function markQuoteRead(id: string): Promise<void> {
+  await requireAdmin()
   const col = await quotes()
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { read: true } })
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {
+  await requireAdmin()
   const col = await quotes()
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
 }
 
 export async function deleteQuote(id: string): Promise<void> {
+  await requireAdmin()
   const col = await quotes()
   await col.deleteOne({ _id: new ObjectId(id) })
 }

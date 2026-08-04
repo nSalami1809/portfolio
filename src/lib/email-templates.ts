@@ -208,7 +208,7 @@ export function contactNotificationEmail(data: {
 
   return {
     subject: `Nouveau message — ${rawLabel} — ${data.name}`,
-    html: base('Nouveau message de contact', `${data.name} vous a envoyé un message via votre portfolio`, `
+    html: base('Nouveau message de contact', `${safeName} vous a envoyé un message via votre portfolio`, `
       ${badge('Formulaire de contact')}
       ${heading('Nouveau message re&ccedil;u')}
       ${intro(`<strong style="color:#26262E">${safeName}</strong> a utilis&eacute; votre formulaire de contact le ${now}.`)}
@@ -249,7 +249,7 @@ export function testimonialNotificationEmail(data: { name: string; role?: string
 
   return {
     subject: `Nouveau témoignage à valider — ${data.name} (${data.rating}/5)`,
-    html: base('Nouveau témoignage', `${data.name} a laissé un témoignage sur votre portfolio`, `
+    html: base('Nouveau témoignage', `${safeName} a laissé un témoignage sur votre portfolio`, `
       ${badge('Témoignage · À valider')}
       ${heading('Un nouveau t&eacute;moignage attend votre validation')}
       ${intro(`<strong style="color:#26262E">${safeName}</strong> a laiss&eacute; un t&eacute;moignage le ${now}. Il n&rsquo;appara&icirc;tra sur le site qu&rsquo;apr&egrave;s votre approbation dans le tableau de bord.`)}
@@ -279,7 +279,7 @@ export function contactAutoReplyEmail(data: {
 
   return {
     subject: `Votre message a bien été reçu — Nawaf Nemrod SALAMI`,
-    html: base('Message reçu', `Merci ${data.name}, votre message a bien été reçu. Je vous répondrai sous 48h.`, `
+    html: base('Message reçu', `Merci ${safeName}, votre message a bien été reçu. Je vous répondrai sous 48h.`, `
       ${badge('Message re&ccedil;u')}
       ${heading(`Merci, ${safeName}&nbsp;!`)}
       ${intro(`Votre message a bien &eacute;t&eacute; re&ccedil;u et je m&rsquo;engage &agrave; vous r&eacute;pondre dans les <strong style="color:#26262E">48 heures ouvr&eacute;es</strong>. En attendant, n&rsquo;h&eacute;sitez pas &agrave; consulter mes projets sur le portfolio.`)}
@@ -352,7 +352,7 @@ export function quoteNotificationEmail(data: {
 
   return {
     subject: `Devis généré par le chatbot — ${data.numero} — ${data.clientNom}`,
-    html: base('Nouveau devis généré', `Le chatbot a généré un devis pour ${data.clientNom}`, `
+    html: base('Nouveau devis généré', `Le chatbot a généré un devis pour ${safeNom}`, `
       ${badge(`Devis ${esc(data.numero)}`)}
       ${heading('Nouveau devis g&eacute;n&eacute;r&eacute; par le chatbot')}
       ${intro(`<strong style="color:#26262E">${safeNom}</strong>${safeSociete ? ` (${safeSociete})` : ''} a discut&eacute; avec l&rsquo;assistant le ${now} et un devis a &eacute;t&eacute; g&eacute;n&eacute;r&eacute; automatiquement.`)}
@@ -488,7 +488,7 @@ export function bookingNotificationEmail(data: {
 
   return {
     subject: `Nouveau rendez-vous — ${data.clientNom} — ${when}`,
-    html: base('Nouveau rendez-vous', `${data.clientNom} a réservé un créneau le ${when}`, `
+    html: base('Nouveau rendez-vous', `${safeNom} a réservé un créneau le ${when}`, `
       ${badge('Calendrier')}
       ${heading('Nouveau rendez-vous r&eacute;serv&eacute;')}
       ${intro(`<strong style="color:#26262E">${safeNom}</strong> vient de r&eacute;server un cr&eacute;neau sur votre calendrier.`)}
@@ -603,7 +603,7 @@ export function escalationEmail(data: { reason: string; clientNom: string; clien
 
   return {
     subject: `⚡ ${data.clientNom} veut vous parler directement`,
-    html: base('Demande directe', `${data.clientNom} souhaite vous parler directement`, `
+    html: base('Demande directe', `${safeNom} souhaite vous parler directement`, `
       ${badge('Chatbot · Urgent')}
       ${heading('Un visiteur veut vous parler directement')}
       ${intro('Le chatbot n\'a pas pu r&eacute;pondre lui-m&ecirc;me, ou le visiteur a explicitement demand&eacute; &agrave; vous joindre. Voici ses coordonn&eacute;es pour le recontacter.')}
