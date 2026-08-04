@@ -1,9 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+
+// A tablet in landscape (e.g. iPad) can be wide enough to hit the `lg:`
+// desktop breakpoint while still being touch-only — `mouseenter`/`mouseleave`
+// never fire there, so a hover-only rail would be permanently stuck
+// collapsed with no way to see labels. Detect a real pointer + hover
+// capability and fall back to tap-to-toggle otherwise.
+function useHasHover() {
+  const [hasHover, setHasHover] = useState(true)
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: hover) and (pointer: fine)')
+    setHasHover(mq.matches) // eslint-disable-line react-hooks/set-state-in-effect
+    const onChange = () => setHasHover(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return hasHover
+}
 
 export interface SidebarLinkData {
   label: string
@@ -60,6 +77,7 @@ export function DesktopSidebar({
   collapsedWidth?: number
 }) {
   const { open, setOpen, animate } = useSidebar()
+  const hasHover = useHasHover()
   return (
     <motion.aside
       // Framer Motion's `animate` prop only takes effect once it mounts
@@ -69,10 +87,11 @@ export function DesktopSidebar({
       initial={false}
       animate={{ width: animate ? (open ? width : collapsedWidth) : width }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={hasHover ? () => setOpen(true) : undefined}
+      onMouseLeave={hasHover ? () => setOpen(false) : undefined}
       onFocus={() => setOpen(true)}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false) }}
+      onClick={!hasHover ? () => setOpen((v) => !v) : undefined}
       className={cn('h-full hidden lg:flex lg:flex-col flex-shrink-0 overflow-hidden', className)}
       style={{ width: collapsedWidth, ...style }}
       aria-label="Navigation admin"
