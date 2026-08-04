@@ -1,12 +1,11 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { ToastProvider } from '@/components/admin/Toast'
 import NotificationBell from '@/components/admin/NotificationBell'
-import { logout } from '@/actions/auth'
+import Sidebar from '@/components/admin/Sidebar'
 
 const navItems = [
   { href: '/admin', label: 'Tableau de bord', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -39,90 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex" style={{ background: 'var(--bg-secondary)' }}>
 
         {/* ── Sidebar ── */}
-        <aside
-          className={`fixed lg:sticky top-0 h-screen w-64 flex-shrink-0 flex flex-col z-40 transition-transform duration-300 lg:translate-x-0 ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-          style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}
-          aria-label="Navigation admin"
-        >
-          {/* Logo */}
-          <div className="px-5 h-16 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
-            <div>
-              <p className="font-display font-bold text-base leading-tight" style={{ color: 'var(--text)' }}>
-                <span style={{ color: 'var(--accent)' }}>Admin</span> Panel
-              </p>
-              <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                Portfolio
-                <Image src="/logo-black.png" alt="" width={11} height={11} className="dark:invert" style={{ width: 11, height: 11 }} />
-              </p>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Fermer le menu"
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--surface-hover)]"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Nav */}
-          <nav className="flex-1 p-3 overflow-y-auto space-y-0.5" role="navigation">
-            {navItems.map(({ href, label, icon }) => {
-              const isActive = pathname === href
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setSidebarOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
-                  style={{
-                    background: isActive ? 'var(--accent-glow)' : 'transparent',
-                    color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                    fontFamily: 'var(--font-poppins)',
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--surface-hover)' }}
-                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true">
-                    <path d={icon}/>
-                  </svg>
-                  <span>{label}</span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* Footer: back + logout */}
-          <div className="p-3 flex-shrink-0 space-y-0.5" style={{ borderTop: '1px solid var(--border)' }}>
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)]"
-              style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-              </svg>
-              Retour au portfolio
-            </Link>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-red-500/10"
-                style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-                </svg>
-                Se déconnecter
-              </button>
-            </form>
-          </div>
-        </aside>
+        <Sidebar items={navItems} mobileOpen={sidebarOpen} onCloseMobile={() => setSidebarOpen(false)} />
 
         {/* Overlay mobile */}
         {sidebarOpen && (
