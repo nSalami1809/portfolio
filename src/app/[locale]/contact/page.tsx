@@ -78,17 +78,30 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                 </div>
               ))}
 
-              <div className="card p-6">
-                <p className="section-label mb-4">{t.contact.availability}</p>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: '#10B981' }} />
-                  <span className="text-sm font-medium" style={{ color: '#10B981', fontFamily: 'var(--font-poppins)' }}>
-                    {t.contact.availableMissions}
+              <div className="card p-5 flex items-start gap-4">
+                <div
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(16,185,129,0.12)', color: '#10B981' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5" aria-hidden="true">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#10B981' }} />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: '#10B981', border: '2px solid var(--surface)' }} />
                   </span>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {t.contact.responseTime}
-                </p>
+                <div>
+                  <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                    {t.contact.availability}
+                  </p>
+                  <p className="text-sm font-semibold mb-1" style={{ color: '#10B981', fontFamily: 'var(--font-poppins)' }}>
+                    {t.contact.availableMissions}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    {t.contact.responseTime}
+                  </p>
+                </div>
               </div>
             </div>
           </FadeIn>
