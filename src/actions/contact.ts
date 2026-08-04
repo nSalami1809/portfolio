@@ -7,6 +7,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { contactNotificationEmail, contactAutoReplyEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 const MAX_PER_HOUR = 3
 
@@ -138,6 +139,7 @@ export async function submitContact(payload: ContactPayload): Promise<ContactRes
 // ── Admin actions ──────────────────────────────────────────────────────────
 
 export async function listContacts(): Promise<ContactMessage[]> {
+  await requireAdmin()
   const db = await getDb()
   const docs = await db.collection('contacts')
     .find({})
@@ -160,6 +162,7 @@ export async function listContacts(): Promise<ContactMessage[]> {
 }
 
 export async function markContactRead(id: string): Promise<void> {
+  await requireAdmin()
   const db = await getDb()
   await db.collection('contacts').updateOne(
     { _id: new ObjectId(id) },
@@ -168,6 +171,7 @@ export async function markContactRead(id: string): Promise<void> {
 }
 
 export async function deleteContact(id: string): Promise<void> {
+  await requireAdmin()
   const db = await getDb()
   await db.collection('contacts').deleteOne({ _id: new ObjectId(id) })
 }

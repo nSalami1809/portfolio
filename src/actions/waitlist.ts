@@ -1,11 +1,14 @@
 'use server'
 
+import { headers } from 'next/headers'
 import type { WithId } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { waitlistSlotOpenEmail } from '@/lib/email-templates'
+import { requireAdmin } from '@/lib/require-admin'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
+const MAX_PER_HOUR = 5
 
 interface WaitlistRecord {
   date: string // 'YYYY-MM-DD', same Africa/Libreville-day convention as bookings
@@ -19,14 +22,36 @@ function waitlist() {
   return getDb().then((db) => db.collection<WaitlistRecord>('waitlist'))
 }
 
+let indexesReady: Promise<void> | null = null
+function getIndexes() {
+  if (!indexesReady) {
+    indexesReady = getDb()
+      .then((db) => db.collection('waitlist_ratelimits').createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 }))
+      .then(() => {})
+      .catch(() => {})
+  }
+  return indexesReady
+}
+
 export async function joinWaitlist(payload: { date: string; email: string; name?: string }): Promise<{ ok: boolean; message: string }> {
   if (!payload.date) return { ok: false, message: 'Date requise.' }
   if (!EMAIL_RE.test(payload.email)) return { ok: false, message: 'Adresse email invalide.' }
+
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? hdrs.get('x-real-ip') ?? 'unknown'
+
+  const [db] = await Promise.all([getDb(), getIndexes()])
+  const since = new Date(Date.now() - 3600 * 1000)
+  const count = await db.collection('waitlist_ratelimits').countDocuments({ ip, createdAt: { $gte: since } })
+  if (count >= MAX_PER_HOUR) {
+    return { ok: false, message: 'Limite atteinte. Réessayez plus tard.' }
+  }
 
   const col = await waitlist()
   const existing = await col.findOne({ date: payload.date, email: payload.email.trim().toLowerCase() })
   if (existing) return { ok: true, message: 'Vous êtes déjà sur la liste pour ce jour.' }
 
+  await db.collection('waitlist_ratelimits').insertOne({ ip, createdAt: new Date() })
   await col.insertOne({
     date: payload.date,
     name: payload.name?.trim() || undefined,
@@ -69,6 +94,7 @@ export async function notifyWaitlist(date: string): Promise<void> {
 // ── Admin ─────────────────────────────────────────────────────────────────
 
 export async function getWaitlistCounts(): Promise<Record<string, number>> {
+  await requireAdmin()
   const col = await waitlist()
   const docs = await col.find({ notified: false }).project<{ date: string }>({ date: 1 }).toArray()
   const counts: Record<string, number> = {}

@@ -6,6 +6,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { testimonialNotificationEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 const MAX_PER_HOUR = 3
 
@@ -103,6 +104,7 @@ export async function submitTestimonial(payload: TestimonialSubmissionPayload): 
 // ── Admin: moderation queue ──────────────────────────────────────────────────
 
 export async function listPendingTestimonials(): Promise<TestimonialSubmission[]> {
+  await requireAdmin()
   const db = await getDb()
   const docs = await db.collection('testimonial_submissions').find({}).sort({ createdAt: -1 }).limit(100).toArray()
   return docs.map(({ _id, createdAt, ...rest }) => ({
@@ -120,6 +122,7 @@ export async function listPendingTestimonials(): Promise<TestimonialSubmission[]
 // client via the existing updateTestimonials flow — this just removes the
 // now-published submission from the moderation queue.
 export async function resolveTestimonialSubmission(id: string): Promise<void> {
+  await requireAdmin()
   const db = await getDb()
   await db.collection('testimonial_submissions').deleteOne({ _id: new ObjectId(id) })
 }

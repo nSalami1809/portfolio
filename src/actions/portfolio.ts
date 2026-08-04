@@ -3,6 +3,7 @@
 import { cache } from 'react'
 import { revalidatePath } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
+import { requireAdmin } from '@/lib/require-admin'
 import type { PortfolioData } from '@/types'
 import {
   defaultPersonalInfo,
@@ -41,6 +42,8 @@ const DEFAULTS: PortfolioData = {
 }
 
 export async function publishPortfolio(data: PortfolioData): Promise<void> {
+  await requireAdmin()
+
   const db = await getDb()
   await db.collection('portfolio').updateOne(
     { _id: DOC_ID as unknown as never },
