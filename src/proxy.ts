@@ -26,6 +26,16 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // ── Stray locale prefix on an admin path (e.g. /en/admin) ────────────────
+  // /admin/* never lives under /[locale] — a locale-prefixed admin URL has
+  // no matching route and would otherwise 404. Strip the prefix instead.
+  const localeAdminMatch = pathname.match(/^\/(fr|en)(\/admin(?:\/.*)?)$/)
+  if (localeAdminMatch) {
+    const url = req.nextUrl.clone()
+    url.pathname = localeAdminMatch[2]
+    return NextResponse.redirect(url)
+  }
+
   // ── /admin/login ─────────────────────────────────────────────────────────
   if (pathname.startsWith('/admin/login')) {
     const jwtToken = req.cookies.get('admin-token')?.value
