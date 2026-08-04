@@ -6,9 +6,6 @@ import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai'
 import { motion, AnimatePresence } from 'framer-motion'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import type { Components } from 'react-markdown'
 import type { Quote } from '@/actions/quotes'
 import type { Booking } from '@/actions/bookings'
 import { requestHumanHelp } from '@/actions/escalation'
@@ -20,6 +17,10 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 // Only needed once a visitor actually opens a generated devis (QR code lib
 // included) — keep it split out of the widget's own chunk until then.
 const QuoteView = dynamic(() => import('./QuoteView'), { ssr: false })
+
+// react-markdown + remark-gfm — only needed once an actual bot message
+// needs rendering, not the instant the (closed) chat bubble mounts.
+const ChatMarkdown = dynamic(() => import('./ChatMarkdown'), { ssr: false })
 
 type BotMood = 'idle' | 'thinking' | 'happy' | 'excited' | 'confused'
 
@@ -113,85 +114,6 @@ function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { 
       </motion.g>
     </svg>
   )
-}
-
-const wrapStyle: React.CSSProperties = { overflowWrap: 'anywhere', wordBreak: 'break-word' }
-
-const markdownComponents: Components = {
-  p: ({ children }) => <p className="mb-2 last:mb-0" style={wrapStyle}>{children}</p>,
-  strong: ({ children }) => <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{children}</strong>,
-  em: ({ children }) => <em>{children}</em>,
-  ul: ({ children }) => <ul className="mb-2 last:mb-0 pl-4 space-y-1" style={{ listStyle: 'disc', ...wrapStyle }}>{children}</ul>,
-  ol: ({ children }) => <ol className="mb-2 last:mb-0 pl-4 space-y-1" style={{ listStyle: 'decimal', ...wrapStyle }}>{children}</ol>,
-  li: ({ children }) => <li>{children}</li>,
-  a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', ...wrapStyle }}>
-      {children}
-    </a>
-  ),
-  // Fenced code blocks (```python ...) render as <pre><code>; this wrapper is
-  // what actually keeps long/unbroken lines from blowing out the bubble width
-  // on narrow screens — it scrolls horizontally instead of stretching the page.
-  pre: ({ children }) => (
-    <pre
-      className="rounded-lg mt-1 mb-2"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        padding: '0.65rem 0.75rem',
-        overflowX: 'auto',
-        maxWidth: '100%',
-        WebkitOverflowScrolling: 'touch',
-      }}
-    >
-      {children}
-    </pre>
-  ),
-  code: ({ children, className }) => {
-    const isBlock = /language-/.test(className ?? '') || String(children).includes('\n')
-    if (isBlock) {
-      return (
-        <code className={className} style={{ fontFamily: 'monospace', fontSize: '0.75rem', whiteSpace: 'pre' }}>
-          {children}
-        </code>
-      )
-    }
-    return (
-      <code
-        className="text-xs rounded"
-        style={{ background: 'var(--surface)', padding: '0.1rem 0.35rem', fontFamily: 'monospace', ...wrapStyle }}
-      >
-        {children}
-      </code>
-    )
-  },
-  img: ({ src, alt }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded images, unknown aspect ratio
-    <img
-      src={typeof src === 'string' ? src : undefined}
-      alt={alt ?? ''}
-      loading="lazy"
-      className="rounded-lg mt-1 mb-2"
-      style={{ maxWidth: '100%', height: 'auto', border: '1px solid var(--border)' }}
-    />
-  ),
-  // GFM tables (remark-gfm) don't wrap by nature — scope the horizontal
-  // scroll to the table itself instead of letting it stretch the bubble.
-  table: ({ children }) => (
-    <div className="mb-2 last:mb-0" style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
-      <table style={{ borderCollapse: 'collapse', fontSize: '0.75rem' }}>{children}</table>
-    </div>
-  ),
-  th: ({ children }) => (
-    <th style={{ border: '1px solid var(--border)', padding: '0.35rem 0.5rem', textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text)' }}>
-      {children}
-    </th>
-  ),
-  td: ({ children }) => (
-    <td style={{ border: '1px solid var(--border)', padding: '0.35rem 0.5rem', ...wrapStyle }}>
-      {children}
-    </td>
-  ),
 }
 
 function BotAvatar({ mood }: { mood: BotMood }) {
@@ -533,11 +455,7 @@ export default function ChatWidget() {
                               className="rounded-xl px-3.5 py-2.5 text-sm leading-relaxed"
                               style={{ maxWidth: '78%', minWidth: 0, overflowX: 'hidden', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
                             >
-                              <div className="chat-markdown">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                                  {part.text}
-                                </ReactMarkdown>
-                              </div>
+                              <ChatMarkdown text={part.text} />
                             </div>
                           </div>
                         )

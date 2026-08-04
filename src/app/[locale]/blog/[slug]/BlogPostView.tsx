@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
@@ -17,6 +18,7 @@ function renderContent(content: string) {
     if (imageMatch) {
       const [, alt, src] = imageMatch
       return (
+        // eslint-disable-next-line @next/next/no-img-element -- free-form inline images from admin-authored post body text, unknown aspect ratio
         <img
           key={i}
           src={src}
@@ -128,12 +130,16 @@ export default function BlogPostView({ post, locale, t }: { post: BlogPost; loca
 
       {post.coverImage && (
         <FadeIn delay={0.18}>
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full rounded-2xl mb-12 object-cover"
-            style={{ border: '1px solid var(--border)', maxHeight: 480 }}
-          />
+          <div className="relative w-full rounded-2xl mb-12 overflow-hidden" style={{ border: '1px solid var(--border)', height: 480 }}>
+            <Image
+              src={post.coverImage}
+              alt={post.title}
+              fill
+              sizes="(min-width: 768px) 768px, 100vw"
+              className="object-cover"
+              priority
+            />
+          </div>
         </FadeIn>
       )}
 

@@ -13,8 +13,6 @@
     "@ai-sdk/react": "^4.0.45",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
-    "@splinetool/react-spline": "^4.1.0",
-    "@splinetool/runtime": "^1.12.98",
     "@types/nodemailer": "^8.0.1",
     "@types/three": "^0.184.1",
     "@upstash/redis": "^1.38.0",
