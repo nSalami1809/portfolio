@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -9,8 +8,6 @@ import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { translateText } from '@/actions/translate'
-
-const StarsCanvas = dynamic(() => import('@/components/scene/StarsCanvas').then((m) => m.StarsCanvas), { ssr: false })
 
 type Translated = Record<string, { title: string; description: string }>
 
@@ -56,9 +53,6 @@ export default function ProjectsPage() {
 
   return (
     <div className="relative">
-      {/* Full-page starfield background */}
-      <StarsCanvas className="z-0 pointer-events-none" />
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20">
       {/* Hero */}
       <div className="mb-20">

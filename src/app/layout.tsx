@@ -65,7 +65,10 @@ export const metadata: Metadata = {
 // theme for a frame on every load. suppressHydrationWarning on <html> is
 // required because this script intentionally changes className before
 // React's hydration check runs.
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`
+// Defaults to the visitor's OS/browser color-scheme preference (light or
+// dark) when they haven't explicitly picked a theme via the toggle yet —
+// an explicit choice stored in localStorage always wins.
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');var dark=t?t!=='light':window.matchMedia('(prefers-color-scheme: dark)').matches;if(dark)document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

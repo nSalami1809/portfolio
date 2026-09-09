@@ -19,7 +19,23 @@ export function useTheme() {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
-    setThemeState(stored === 'light' ? 'light' : 'dark') // eslint-disable-line react-hooks/set-state-in-effect
+    if (stored === 'light' || stored === 'dark') {
+      setThemeState(stored) // eslint-disable-line react-hooks/set-state-in-effect
+      return
+    }
+
+    // No explicit choice saved yet — follow the OS/browser preference, and
+    // keep following it live if the visitor switches their system theme
+    // while the page is open.
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    const syncWithSystem = () => {
+      const next: Theme = mql.matches ? 'dark' : 'light'
+      setThemeState(next)
+      applyTheme(next)
+    }
+    syncWithSystem()
+    mql.addEventListener('change', syncWithSystem)
+    return () => mql.removeEventListener('change', syncWithSystem)
   }, [])
 
   const setTheme = useCallback((next: Theme) => {

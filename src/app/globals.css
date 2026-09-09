@@ -27,9 +27,23 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
   --shadow-lg: 0 10px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
   --shadow-glow: 0 0 30px rgba(0,0,0,0.12);
-  --radius: 12px;
-  --radius-sm: 8px;
-  --radius-lg: 20px;
+  /* Square design language: every corner-radius token — both this
+     project's own (--radius, --radius-sm, --radius-lg) and Tailwind's
+     default scale (--radius-xs through --radius-4xl, which these names
+     shadow since this block loads after the tailwindcss import) — is
+     flattened to 0, so every rounded utility class and every card, button,
+     input and tag renders with sharp corners site-wide. rounded-full (true
+     circles: avatars, status dots, spinners) is untouched by design — it
+     isn't driven by a radius variable in Tailwind v4. */
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 
   /* Liquid glass tokens (neutral black/white) */
   --glass-bg: rgba(255, 255, 255, 0.65);
@@ -297,7 +311,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.25rem 0.75rem;
   background: var(--accent-glow);
   color: var(--accent-light);
-  border-radius: 99px;
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 500;
   font-family: var(--font-poppins), sans-serif;
