@@ -83,10 +83,11 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5" aria-hidden="true">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#10B981' }} />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: '#10B981', border: '2px solid var(--surface)' }} />
-                  </span>
+                  <span
+                    className="absolute -top-0.5 -right-0.5 inline-block w-2.5 h-2.5"
+                    style={{ background: '#10B981', border: '2px solid var(--surface)' }}
+                    aria-hidden="true"
+                  />
                 </div>
                 <div>
                   <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>

@@ -163,7 +163,7 @@ export default function Footer() {
               {translatedRole ?? data.personal.role}
             </p>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#10B981' }} />
+              <div className="w-1.5 h-1.5 flex-shrink-0" style={{ background: '#10B981' }} />
               <span className="text-xs" style={{ color: '#10B981', fontFamily: 'var(--font-poppins)' }}>
                 {t.footer.available}
               </span>

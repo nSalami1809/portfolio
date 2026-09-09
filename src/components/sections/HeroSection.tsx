@@ -135,10 +135,7 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
               className="inline-flex items-center gap-2 px-3 h-8 rounded-xl"
               style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
             >
-              <span className="relative flex h-2 w-2 flex-shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#10B981' }} />
-                <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#10B981' }} />
-              </span>
+              <span className="inline-block w-1.5 h-1.5 flex-shrink-0" style={{ background: '#10B981' }} aria-hidden="true" />
               <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                 {t.heroAvailable}
               </span>
