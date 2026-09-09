@@ -19,7 +19,7 @@ export async function storeOTP(email: string, otp: string): Promise<void> {
   const [db] = await Promise.all([getDb(), getOtpIndex()])
   await db.collection('otps').updateOne(
     { email },
-    { $set: { email, otp, expiresAt: new Date(Date.now() + 10 * 60 * 1000), attempts: 0 } },
+    { $set: { email, otp, expiresAt: new Date(Date.now() + 60 * 1000), attempts: 0 } },
     { upsert: true },
   )
 }

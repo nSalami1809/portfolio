@@ -157,7 +157,7 @@ export function otpEmail(otp: string) {
 
   return {
     subject: `[${otp}] Code de connexion — Portfolio NS`,
-    html: base('Code de connexion', `Votre code OTP est ${otp} — valable 10 min`, `
+    html: base('Code de connexion', `Votre code OTP est ${otp} — valable 60 secondes`, `
       ${badge('Authentification')}
       ${heading('Votre code de connexion')}
       ${intro('Une tentative de connexion a &eacute;t&eacute; d&eacute;tect&eacute;e sur votre panneau d&rsquo;administration. Saisissez ce code pour confirmer votre identit&eacute;.')}
@@ -167,7 +167,7 @@ export function otpEmail(otp: string) {
       </table>
 
       ${infoBox(`
-        ${dataRow(icon.clock, 'Expiration', '<strong>10 minutes</strong>')}
+        ${dataRow(icon.clock, 'Expiration', '<strong>60 secondes</strong>')}
         ${dataRow(icon.clock, 'Horodatage', now)}
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:6px;padding-top:14px;border-top:1px solid #ECECF1">
           <tr>

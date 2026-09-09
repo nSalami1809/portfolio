@@ -17,6 +17,7 @@ export default function VerifyPage() {
   const formRef   = useRef<HTMLFormElement>(null)
 
   const [state, action, pending] = useActionState<VerifyOTPResult, FormData>(verifyOTPAction, null)
+  const [secondsLeft, setSecondsLeft] = useState(60)
 
   // Shake on error
   useEffect(() => {
@@ -28,6 +29,15 @@ export default function VerifyPage() {
       setTimeout(() => setShake(false), 500)
     }
   }, [state])
+
+  // The OTP is only valid for 60s — count it down so the visitor knows
+  // when to expect it to expire instead of guessing after a failed attempt.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSecondsLeft((s) => (s > 0 ? s - 1 : 0))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [])
 
   const submit = useCallback((allDigits: string[]) => {
     if (allDigits.some((d) => d === '')) return
@@ -108,6 +118,13 @@ export default function VerifyPage() {
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
             Entrez le code à 6 chiffres reçu par email
           </p>
+          <p
+            className="text-xs mt-2 font-medium"
+            style={{ color: secondsLeft > 0 ? 'var(--text-subtle)' : '#EF4444', fontFamily: 'var(--font-poppins)' }}
+            role="timer"
+          >
+            {secondsLeft > 0 ? `Expire dans ${secondsLeft}s` : 'Code expiré — demandez-en un nouveau'}
+          </p>
         </div>
 
         {/* Card */}
@@ -146,7 +163,7 @@ export default function VerifyPage() {
                     style={{
                       width: '46px',
                       height: '56px',
-                      borderRadius: '10px',
+                      borderRadius: 0,
                       border: `2px solid ${
                         digit
                           ? 'var(--accent)'
@@ -183,7 +200,7 @@ export default function VerifyPage() {
               {Array.from({ length: LENGTH }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-full transition-all duration-200"
+                  className="transition-all duration-200"
                   style={{
                     width: i < filled ? '18px' : '6px',
                     height: '6px',

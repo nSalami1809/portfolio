@@ -1,6 +1,5 @@
 import FadeIn from '@/components/animations/FadeIn'
 import ContactForm from '@/components/sections/ContactForm'
-import StarsCanvasClient from '@/components/scene/StarsCanvasClient'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 
@@ -15,8 +14,6 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
 
   return (
     <div className="relative">
-      <StarsCanvasClient className="z-0 pointer-events-none" />
-
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-20">
         <FadeIn>
           <p className="section-label mb-3">{t.contact.label}</p>

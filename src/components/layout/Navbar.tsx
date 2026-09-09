@@ -140,58 +140,50 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav */}
-          <ul
-            className="hidden lg:flex items-center gap-0.5"
-            onMouseLeave={() => setHovered(null)}
+          {/* Desktop nav — square floating dock: one bordered block holding
+              every link, active item shown as a solid filled square. Plain
+              conditional backgrounds (no layout-animated pill) keep this to
+              a single style recalculation per hover, no extra JS work. */}
+          <div
+            className="hidden lg:flex items-center"
+            style={{
+              border: '1px solid var(--border)',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            }}
           >
-            {links.map(({ href, label, icon }) => {
-              const isActive = pathname === href
-              const isHovered = hovered === href
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    onMouseEnter={() => setHovered(href)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className="relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150"
-                    style={{
-                      color: isActive ? 'var(--accent)' : isHovered ? 'var(--text)' : 'var(--text-muted)',
-                      fontFamily: 'var(--font-poppins)',
-                      position: 'relative',
-                    }}
-                  >
-                    {/* Hover background pill */}
-                    {isHovered && !isActive && (
-                      <motion.span
-                        layoutId="nav-hover-pill"
-                        className="absolute inset-0 rounded-lg -z-10"
-                        style={{ background: 'var(--surface-hover)' }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                      />
-                    )}
-                    {/* Active background pill */}
-                    {isActive && (
-                      <motion.span
-                        layoutId="nav-active-pill"
-                        className="absolute inset-0 rounded-lg -z-10"
-                        style={{ background: 'var(--accent-glow)' }}
-                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                      />
-                    )}
-                    <span
-                      aria-hidden="true"
-                      className="transition-colors duration-150"
-                      style={{ color: isActive ? 'var(--accent)' : isHovered ? 'var(--accent)' : 'var(--text-subtle)' }}
+            <ul className="flex items-center" onMouseLeave={() => setHovered(null)}>
+              {links.map(({ href, label, icon }, i) => {
+                const isActive = pathname === href
+                const isHovered = hovered === href
+                return (
+                  <li key={href} style={{ borderRight: i < links.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                    <Link
+                      href={href}
+                      onMouseEnter={() => setHovered(href)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors duration-150"
+                      style={{
+                        background: isActive ? 'var(--accent)' : isHovered ? 'var(--surface-hover)' : 'transparent',
+                        color: isActive ? 'var(--accent-contrast)' : isHovered ? 'var(--text)' : 'var(--text-muted)',
+                        fontFamily: 'var(--font-poppins)',
+                      }}
                     >
-                      {icon}
-                    </span>
-                    {label}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+                      <span
+                        aria-hidden="true"
+                        className="transition-colors duration-150"
+                        style={{ color: isActive ? 'var(--accent-contrast)' : isHovered ? 'var(--accent)' : 'var(--text-subtle)' }}
+                      >
+                        {icon}
+                      </span>
+                      {label}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
 
           {/* Right controls */}
           <div className="flex items-center gap-2">
