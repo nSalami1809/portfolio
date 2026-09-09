@@ -140,12 +140,12 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav — square floating dock: one bordered block holding
-              every link, active item shown as a solid filled square. Plain
-              conditional backgrounds (no layout-animated pill) keep this to
-              a single style recalculation per hover, no extra JS work. */}
+          {/* Desktop nav — floating pill dock: one rounded-full capsule
+              holding every link, active item shown as a solid filled pill.
+              Plain conditional backgrounds (no layout-animated pill) keep
+              this to a single style recalculation per hover, no extra JS. */}
           <div
-            className="hidden lg:flex items-center"
+            className="hidden lg:flex items-center rounded-full p-1"
             style={{
               border: '1px solid var(--border)',
               background: 'var(--glass-bg)',
@@ -154,16 +154,16 @@ export default function Navbar() {
             }}
           >
             <ul className="flex items-center" onMouseLeave={() => setHovered(null)}>
-              {links.map(({ href, label, icon }, i) => {
+              {links.map(({ href, label, icon }) => {
                 const isActive = pathname === href
                 const isHovered = hovered === href
                 return (
-                  <li key={href} style={{ borderRight: i < links.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <li key={href}>
                     <Link
                       href={href}
                       onMouseEnter={() => setHovered(href)}
                       aria-current={isActive ? 'page' : undefined}
-                      className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors duration-150"
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full transition-colors duration-150"
                       style={{
                         background: isActive ? 'var(--accent)' : isHovered ? 'var(--surface-hover)' : 'transparent',
                         color: isActive ? 'var(--accent-contrast)' : isHovered ? 'var(--text)' : 'var(--text-muted)',
