@@ -15,6 +15,12 @@ const chatSuggestionsEn = [
 ]
 
 const fr = {
+  error: {
+    title: 'Une erreur est survenue',
+    description: "Ce n'est pas grave — cliquez pour réessayer. Si le problème persiste, revenez à l'accueil.",
+    retry: 'Réessayer',
+    backHome: "Retour à l'accueil",
+  },
   nav: {
     ariaMain: 'Navigation principale',
     home: 'Accueil',
@@ -269,6 +275,12 @@ const fr = {
 }
 
 const en: typeof fr = {
+  error: {
+    title: 'Something went wrong',
+    description: "It's not serious — click to try again. If the problem persists, head back home.",
+    retry: 'Try again',
+    backHome: 'Back to home',
+  },
   nav: {
     ariaMain: 'Main navigation',
     home: 'Home',
