@@ -1,14 +1,14 @@
-import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultBlogPosts } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import BlogPostView from './BlogPostView'
+import NotFoundMessage from '@/components/NotFoundMessage'
 
 async function getPost(slug: string) {
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('blog/[slug]/page')
   const posts = portfolio?.blog ?? defaultBlogPosts
   return posts.find((p) => p.slug === slug && p.published) ?? null
 }
@@ -16,7 +16,7 @@ async function getPost(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const post = await getPost(slug)
-  if (!post) return {}
+  if (!post) return { robots: { index: false, follow: false } }
 
   return {
     title: post.title,
@@ -42,7 +42,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ local
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
   const post = await getPost(slug)
-  if (!post) notFound()
+  if (!post) {
+    return <NotFoundMessage locale={locale} t={t.notFound} />
+  }
 
   const translated = await translateFields(`blog:${slug}`, locale, {
     title: post.title,

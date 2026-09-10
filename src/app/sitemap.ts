@@ -1,11 +1,11 @@
 import type { MetadataRoute } from 'next'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { LOCALES } from '@/lib/i18n/locale'
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('sitemap')
 
   const entries: MetadataRoute.Sitemap = []
 

@@ -3,7 +3,7 @@ import { streamText, convertToModelMessages, tool, stepCountIs, type UIMessage }
 import { google } from '@ai-sdk/google'
 import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import { joinWaitlist } from '@/actions/waitlist'
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
   await db.collection('chat_rl').insertOne({ ip, createdAt: new Date() })
 
   const { messages, locale }: { messages: UIMessage[]; locale?: string } = await req.json()
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('api/chat')
   if (!portfolio) {
     return new Response('Service temporairement indisponible.', { status: 503 })
   }

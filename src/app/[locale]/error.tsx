@@ -10,7 +10,13 @@ import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 // React unmounts the broken subtree and renders nothing, with no way to
 // recover short of knowing to hit refresh. This turns that into a page with
 // a retry button instead.
-export default function LocaleError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+//
+// Uses `unstable_retry`, not `reset` — `reset` only clears this boundary's
+// local error state and re-renders the exact same (still-broken) children
+// reference, so it does nothing for the common case here (a Server
+// Component's data fetch failing). `unstable_retry` calls router.refresh()
+// first, which actually re-fetches the RSC payload before resetting.
+export default function LocaleError({ error, unstable_retry }: { error: Error & { digest?: string }; unstable_retry: () => void }) {
   const locale = useLocale()
   const t = useDictionary()
 
@@ -26,7 +32,7 @@ export default function LocaleError({ error, reset }: { error: Error & { digest?
           {t.error.description}
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <button onClick={reset} className="btn-primary">
+          <button onClick={unstable_retry} className="btn-primary">
             {t.error.retry}
           </button>
           <Link href={`/${locale}`} className="btn-secondary">

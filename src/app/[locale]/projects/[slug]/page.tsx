@@ -1,14 +1,14 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultProjects } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import ProjectDetailView from './ProjectDetailView'
+import NotFoundMessage from '@/components/NotFoundMessage'
 
 async function getProject(slug: string) {
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('projects/[slug]/page')
   const projects = portfolio?.projects ?? defaultProjects
   return projects.find((p) => p.slug === slug) ?? null
 }
@@ -16,7 +16,7 @@ async function getProject(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const project = await getProject(slug)
-  if (!project) return {}
+  if (!project) return { robots: { index: false, follow: false } }
 
   return {
     title: project.title,
@@ -42,15 +42,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const project = await getProject(slug)
 
   if (!project) {
-    return (
-      <div className="max-w-5xl mx-auto px-6 py-20 text-center">
-        <p className="section-label mb-4">{t.projects.notFoundLabel}</p>
-        <h1 className="section-title mb-8">{t.projects.notFoundTitle}</h1>
-        <Link href={`/${locale}/projects`} className="btn-primary">
-          {t.projects.backToProjects}
-        </Link>
-      </div>
-    )
+    return <NotFoundMessage locale={locale} t={t.notFound} />
   }
 
   const translated = await translateFields(`project:${slug}`, locale, {
