@@ -146,12 +146,12 @@ export default function ProjectsPage() {
                   </div>
                 )}
 
-                <h3
+                <h2
                   className="font-display font-semibold text-xl mb-3 transition-colors duration-200 group-hover:text-[var(--accent)]"
                   style={{ color: 'var(--text)' }}
                 >
                   {tp?.title ?? project.title}
-                </h3>
+                </h2>
                 <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
                   {tp?.description ?? project.description}
                 </p>

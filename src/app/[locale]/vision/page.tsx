@@ -107,12 +107,12 @@ export default function VisionPage() {
         {vision.valeurs.map((v, i) => (
           <FadeIn key={v.title} delay={i * 0.1}>
             <div className="card p-6 h-full group">
-              <h3
+              <h2
                 className="font-display font-bold text-2xl mb-3 transition-colors duration-200 group-hover:text-[var(--accent)]"
                 style={{ color: 'var(--text)' }}
               >
                 {tr(`valeur_title_${i}`, v.title)}
-              </h3>
+              </h2>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {tr(`valeur_text_${i}`, v.text)}
               </p>
