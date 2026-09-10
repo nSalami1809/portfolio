@@ -100,7 +100,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <p className="section-label mb-4">{t.home.aboutLabel}</p>
               <h2 className="section-title mb-6">
                 {t.home.aboutTitleStart}{' '}
-                <span className="gradient-text">{t.home.aboutTitleHighlight}</span>
+                <span style={{ color: 'var(--accent)' }}>{t.home.aboutTitleHighlight}</span>
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 <p>{t.home.aboutP1}</p>
@@ -120,7 +120,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <div className="grid grid-cols-2 gap-4">
                 {t.home.stats.map(({ value, label }) => (
                   <div key={label} className="card p-6 text-center">
-                    <p className="font-display font-bold text-4xl mb-2 gradient-text">{value}</p>
+                    <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}>{value}</p>
                     <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                       {label}
                     </p>
@@ -223,8 +223,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="max-w-3xl mx-auto px-6 text-center">
           <FadeIn>
             <div
-              className="rounded-2xl p-6 sm:p-12"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-glow)' }}
+              className="p-6 sm:p-12"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
             >
               <p className="section-label mb-4">{t.home.ctaLabel}</p>
               <h2 className="section-title mb-6">{t.home.ctaTitle}</h2>

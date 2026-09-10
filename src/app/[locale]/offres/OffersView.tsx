@@ -139,7 +139,7 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
   return (
     <div
       className="card p-6 h-full flex flex-col overflow-hidden"
-      style={highlighted ? { border: '1px solid var(--accent)', boxShadow: 'var(--shadow-glow)' } : undefined}
+      style={highlighted ? { border: '1px solid var(--accent)' } : undefined}
     >
       {offer.image && (
         <div className="relative -mx-6 -mt-6 mb-5" style={{ aspectRatio: '16 / 9' }}>
