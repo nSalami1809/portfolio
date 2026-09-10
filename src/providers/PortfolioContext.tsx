@@ -16,7 +16,7 @@ import {
   defaultOffers,
   defaultAvailability,
 } from '@/data/defaultData'
-import { publishPortfolio, fetchPortfolio } from '@/actions/portfolio'
+import { publishPortfolio, fetchPortfolio, fetchPortfolioFresh } from '@/actions/portfolio'
 
 const STORAGE_KEY = 'portfolio-data'
 
@@ -104,9 +104,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
     let base = local
     try {
-      // Calls the server action directly (never the ISR-cached /api/portfolio
-      // route) so the merge base is always truly current, not up to 15s stale.
-      const fresh = await fetchPortfolio()
+      // Uncached, direct-from-MongoDB read (never the tagged/cached
+      // fetchPortfolio) so the merge base is always truly current — this is
+      // what stops a stale open tab from clobbering fields it never touched.
+      const fresh = await fetchPortfolioFresh()
       if (fresh) base = fresh
     } catch { /* offline — fall back to publishing local state as-is */ }
 
@@ -208,8 +209,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     // loads. A local draft can silently desync from what was actually
     // published (e.g. localStorage quota exceeded while saving large
     // uploaded images), so it must never permanently hide real changes.
-    // Uses the server action directly (never the ISR-cached /api/portfolio
-    // route) so this is always the true current state, not stale by design.
+    // Uses the tagged/cached fetchPortfolio (not the /api/portfolio route,
+    // which has its own separate 15s cache) — near-instantly fresh after a
+    // publish via revalidateTag, 30s max staleness otherwise. Fine here:
+    // this is a one-time hydration, not the pre-publish merge guard.
     fetchPortfolio()
       .then((fresh) => {
         if (!fresh || hydratedFromMongo.current) return
