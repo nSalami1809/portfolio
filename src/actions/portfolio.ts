@@ -1,7 +1,7 @@
 'use server'
 
 import { cache } from 'react'
-import { revalidatePath } from 'next/cache'
+import { updateTag, unstable_cache } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import { requireAdmin } from '@/lib/require-admin'
 import type { PortfolioData } from '@/types'
@@ -50,17 +50,42 @@ export async function publishPortfolio(data: PortfolioData): Promise<void> {
     { $set: { ...data, _id: DOC_ID as unknown as never, updatedAt: new Date() } },
     { upsert: true },
   )
-  // Bust the ISR cache so the home page reflects changes immediately
-  revalidatePath('/')
+  // Immediate expiration for every reader tagged 'portfolio' (pages, API
+  // routes, the chatbot, sitemap, bookings' availability rules) — the next
+  // request after a publish always recomputes, no stale-while-revalidate
+  // window. (revalidateTag('portfolio', 'max') would only mark it stale
+  // and still serve one more cached response in the meantime.) updateTag
+  // requires a genuine Server Action context, which publishPortfolio is —
+  // guarded anyway so the write above can never be undone by a cache-layer
+  // failure; the 30s `revalidate` on the cache itself is the fallback here.
+  try {
+    updateTag('portfolio')
+  } catch (err) {
+    console.error('publishPortfolio: updateTag failed, relying on the 30s cache fallback', err)
+  }
 }
 
-// React.cache dedupes this within a single request — the root layout and a
-// page (e.g. `/`) both call this to seed their initial render, and without
-// memoization that would mean two MongoDB round trips per request.
-export const fetchPortfolio = cache(async (): Promise<PortfolioData | null> => {
+async function fetchPortfolioFromDb(): Promise<PortfolioData | null> {
   const db = await getDb()
   const doc = await db.collection('portfolio').findOne({ _id: DOC_ID as unknown as never })
   if (!doc) return null
   const { _id: _docId, updatedAt: _updatedAt, ...data } = doc
   return { ...DEFAULTS, ...data } as PortfolioData
-})
+}
+
+// Cached + tagged — the version every public-facing reader should use
+// (pages, API routes, the chatbot, sitemap, bookings' availability rules).
+// react's `cache()` dedupes calls within a single request on top of
+// `unstable_cache`'s cross-request cache, which `publishPortfolio` above
+// invalidates on-demand via `updateTag('portfolio')`; `revalidate: 30`
+// is only a fallback if that tag invalidation is ever missed.
+export const fetchPortfolio = cache(
+  unstable_cache(fetchPortfolioFromDb, ['portfolio'], { tags: ['portfolio'], revalidate: 30 }),
+)
+
+// Uncached — reads MongoDB directly, every time. Reserved for
+// PortfolioContext's syncAndPublish(), which must merge against the true
+// current state right before publishing so a stale open tab can never
+// clobber fields it never touched. Do not use this for rendering; it
+// defeats the point of the cached version above.
+export const fetchPortfolioFresh = fetchPortfolioFromDb
