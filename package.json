@@ -2,6 +2,10 @@
   "name": "portefolionem",
   "version": "0.1.0",
   "private": true,
+  "allowScripts": {
+    "sharp": "0.34.5",
+    "unrs-resolver": "1.12.2"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
