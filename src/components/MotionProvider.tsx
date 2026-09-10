@@ -19,7 +19,11 @@ import { LazyMotion, domMax } from 'framer-motion'
 //
 // `strict` throws if any `motion.*` component slips through instead of
 // `m.*`, which would otherwise silently re-pull the full bundle for that
-// component and quietly defeat the point of this provider.
+// component and quietly defeat the point of this provider. PageTransition.tsx
+// no longer uses framer-motion at all (see the comment there — its
+// AnimatePresence-based fade was the actual cause of a production bug,
+// unrelated to `m` vs `motion`), so there's nothing exempting it from
+// `strict` anymore.
 export default function MotionProvider({ children }: { children: React.ReactNode }) {
   return (
     <LazyMotion features={domMax} strict>
