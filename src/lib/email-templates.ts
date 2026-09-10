@@ -45,7 +45,7 @@ const base = (title: string, preheader: string, body: string) => {
   <style>
     @media only screen and (max-width:600px){
       .wrapper{padding:32px 12px!important}
-      .card{padding:36px 22px!important;border-radius:20px!important}
+      .card{padding:36px 22px!important}
       .otp-box{width:36px!important;height:46px!important;font-size:20px!important}
     }
   </style>
@@ -60,7 +60,7 @@ const base = (title: string, preheader: string, body: string) => {
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:480px;margin:0 auto">
 
           <tr>
-            <td class="card" style="background:#FFFFFF;border:1px solid #E8E8EF;border-radius:26px;padding:48px 42px;text-align:center">
+            <td class="card" style="background:#FFFFFF;border:1px solid #E8E8EF;padding:48px 42px;text-align:center">
 
               <img src="${SITE_URL}/logo-black.png" width="52" height="52" alt="Nawaf Nemrod SALAMI" style="display:block;margin:0 auto 22px;width:52px;height:52px"/>
 
@@ -94,7 +94,7 @@ const base = (title: string, preheader: string, body: string) => {
 const badge = (label: string) => `
   <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 18px">
     <tr>
-      <td style="background:#131318;color:#FFFFFF;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 15px;border-radius:99px">
+      <td style="background:#131318;color:#FFFFFF;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 15px">
         ${label}
       </td>
     </tr>
@@ -109,7 +109,7 @@ const intro = (html: string) => `
 // Rounded light-gray box for structured, left-aligned content (data, message
 // bodies, tables) — plain card, no accent stripe.
 const infoBox = (contentHtml: string) => `
-  <div style="background:#F9F9FB;border:1px solid #ECECF1;border-radius:16px;padding:22px 24px;text-align:left;margin-bottom:24px">
+  <div style="background:#F9F9FB;border:1px solid #ECECF1;padding:22px 24px;text-align:left;margin-bottom:24px">
     ${contentHtml}
   </div>`
 
@@ -118,7 +118,7 @@ const ctaButton = (href: string, label: string) => `
     <tr>
       <td>
         <a href="${href}"
-          style="display:block;text-align:center;background:#131318;color:#FFFFFF;font-size:14px;font-weight:700;letter-spacing:0.01em;padding:15px 24px;border-radius:10px;text-decoration:none">
+          style="display:block;text-align:center;background:#131318;color:#FFFFFF;font-size:14px;font-weight:700;letter-spacing:0.01em;padding:15px 24px;text-decoration:none">
           ${label}
         </a>
       </td>
@@ -150,7 +150,7 @@ export function otpEmail(otp: string) {
 
   const boxes = otp.split('').map((d) => `
     <td style="padding:0 4px">
-      <div class="otp-box" style="width:46px;height:58px;line-height:58px;border-radius:12px;background:#F9F9FB;border:1.5px solid #D8D8E0;text-align:center;font-size:26px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#131318">
+      <div class="otp-box" style="width:46px;height:58px;line-height:58px;background:#F9F9FB;border:1.5px solid #D8D8E0;text-align:center;font-size:26px;font-weight:700;font-family:'Courier New',Courier,monospace;color:#131318">
         ${d}
       </div>
     </td>`).join('')
@@ -222,7 +222,7 @@ export function contactNotificationEmail(data: {
             <td style="width:26px;vertical-align:top;padding-top:1px">${icon.tag}</td>
             <td>
               <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Sujet</p>
-              <span style="display:inline-block;background:#F4F4F7;border:1px solid #E3E3EA;color:#131318;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:0.04em">${label}</span>
+              <span style="display:inline-block;background:#F4F4F7;border:1px solid #E3E3EA;color:#131318;font-size:11px;font-weight:700;padding:3px 10px;letter-spacing:0.04em">${label}</span>
             </td>
           </tr>
         </table>
@@ -294,7 +294,7 @@ export function contactAutoReplyEmail(data: {
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:8px">
         <tr>
           <td style="width:24px;vertical-align:top;padding-top:2px">
-            <div style="width:20px;height:20px;border-radius:50%;background:#131318;text-align:center;line-height:20px">${icon.check}</div>
+            <div style="width:20px;height:20px;background:#131318;text-align:center;line-height:20px">${icon.check}</div>
           </td>
           <td style="padding-bottom:14px">
             <p style="margin:0;font-size:13px;font-weight:600;color:#26262E">Message envoy&eacute;</p>
@@ -303,7 +303,7 @@ export function contactAutoReplyEmail(data: {
         </tr>
         <tr>
           <td style="width:24px;vertical-align:top;padding-top:2px">
-            <div style="width:20px;height:20px;border-radius:50%;background:#F4F4F7;border:1.5px solid #DADAE2;text-align:center;line-height:18px">
+            <div style="width:20px;height:20px;background:#F4F4F7;border:1.5px solid #DADAE2;text-align:center;line-height:18px">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#B0B0BB" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
             </div>
           </td>
@@ -384,8 +384,8 @@ export function quoteNotificationEmail(data: {
           <td style="padding:6px 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.tva)}</td>
         </tr>
         <tr>
-          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318;border-radius:10px 0 0 10px">Total TTC</td>
-          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318;border-radius:0 10px 10px 0">${fmt(data.totalTTC)}</td>
+          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318">Total TTC</td>
+          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318">${fmt(data.totalTTC)}</td>
         </tr>
       </table>
 
@@ -453,8 +453,8 @@ export function quoteClientCopyEmail(data: {
           <td style="padding:6px 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.tva)}</td>
         </tr>
         <tr>
-          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318;border-radius:10px 0 0 10px">Total TTC</td>
-          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318;border-radius:0 10px 10px 0">${fmt(data.totalTTC)}</td>
+          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318">Total TTC</td>
+          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318">${fmt(data.totalTTC)}</td>
         </tr>
       </table>
 

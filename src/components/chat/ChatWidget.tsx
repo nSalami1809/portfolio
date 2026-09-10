@@ -119,7 +119,7 @@ function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { 
 function BotAvatar({ mood }: { mood: BotMood }) {
   return (
     <div
-      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+      className="w-6 h-6 flex items-center justify-center flex-shrink-0"
       style={{ background: 'var(--accent-gradient)' }}
       aria-hidden="true"
     >
@@ -314,7 +314,7 @@ export default function ChatWidget() {
         aria-label={open ? t.chat.toggleClose : t.chat.toggleOpen}
         aria-expanded={open}
         aria-controls="chat-widget-panel"
-        className="fixed bottom-5 right-5 z-40 flex items-center justify-center rounded-full"
+        className="fixed bottom-5 right-5 z-40 flex items-center justify-center"
         style={{
           width: 56,
           height: 56,
@@ -372,7 +372,6 @@ export default function ChatWidget() {
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
               border: '1px solid var(--glass-border)',
-              borderRadius: '1.25rem',
               boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
             }}
           >
@@ -382,7 +381,7 @@ export default function ChatWidget() {
               style={{ borderBottom: '1px solid var(--border)' }}
             >
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                className="w-9 h-9 flex items-center justify-center flex-shrink-0"
                 style={{ background: 'var(--accent-gradient)' }}
                 aria-hidden="true"
               >
@@ -416,7 +415,7 @@ export default function ChatWidget() {
                       <button
                         key={label}
                         onClick={() => quickSend(text)}
-                        className="text-xs font-medium rounded-full transition-colors"
+                        className="text-xs font-medium transition-colors"
                         style={{
                           background: 'var(--accent-glow)',
                           color: 'var(--accent)',
