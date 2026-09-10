@@ -29,6 +29,7 @@ const EMPTY: Omit<Project, 'slug'> = {
   title: '', description: '', longDescription: '', category: 'Web',
   tags: [], year: new Date().getFullYear().toString(),
   status: 'in-progress', liveUrl: '', githubUrl: '', image: '',
+  caseStudyContext: '', caseStudySolution: '', caseStudyResults: '',
 }
 
 // CSS grid template shared by header and rows (desktop)
@@ -240,6 +241,29 @@ export default function AdminProjects() {
               </div>
               <div>
                 <F label="Demo URL" /><input className="input text-sm" value={form.liveUrl ?? ''} onChange={(e) => setForm((p) => ({ ...p, liveUrl: e.target.value }))} placeholder="https://…" />
+              </div>
+            </div>
+
+            <div className="mb-5 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+              <h3 className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--text)' }}>
+                Étude de cas (optionnel)
+              </h3>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-subtle)' }}>
+                Rempli, ce bloc s&apos;affiche sur la fiche du projet. Laisse vide pour garder la fiche telle quelle.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-x-5 gap-y-4">
+                <div className="sm:col-span-2">
+                  <F label="Contexte / problématique" />
+                  <textarea className="input text-sm" value={form.caseStudyContext ?? ''} onChange={(e) => setForm((p) => ({ ...p, caseStudyContext: e.target.value }))} rows={3} style={{ resize: 'vertical', minHeight: '80px' }} placeholder="Quel était le besoin ou le problème du client ?" />
+                </div>
+                <div className="sm:col-span-2">
+                  <F label="Solution apportée" />
+                  <textarea className="input text-sm" value={form.caseStudySolution ?? ''} onChange={(e) => setForm((p) => ({ ...p, caseStudySolution: e.target.value }))} rows={3} style={{ resize: 'vertical', minHeight: '80px' }} placeholder="Comment as-tu résolu le problème ?" />
+                </div>
+                <div className="sm:col-span-2">
+                  <F label="Résultats" />
+                  <textarea className="input text-sm" value={form.caseStudyResults ?? ''} onChange={(e) => setForm((p) => ({ ...p, caseStudyResults: e.target.value }))} rows={3} style={{ resize: 'vertical', minHeight: '80px' }} placeholder="Impact concret, chiffres, retours du client…" />
+                </div>
               </div>
             </div>
 

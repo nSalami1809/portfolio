@@ -114,6 +114,31 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
               </div>
             </div>
           </FadeIn>
+
+          {/* Case study */}
+          {(project.caseStudyContext || project.caseStudySolution || project.caseStudyResults) && (
+            <FadeIn delay={0.3}>
+              <div className="mt-14">
+                <p className="section-label mb-6">{t.caseStudyLabel}</p>
+                <div className="space-y-8">
+                  {[
+                    { label: t.caseStudyContext, text: project.caseStudyContext },
+                    { label: t.caseStudySolution, text: project.caseStudySolution },
+                    { label: t.caseStudyResults, text: project.caseStudyResults },
+                  ].filter((s) => s.text).map((s) => (
+                    <div key={s.label} className="card p-6">
+                      <h3 className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>
+                        {s.label}
+                      </h3>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-muted)' }}>
+                        {s.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </FadeIn>
+          )}
         </div>
 
         {/* Sidebar */}

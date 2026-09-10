@@ -118,6 +118,10 @@ const fr = {
     year: 'Année',
     statusLabel: 'Statut',
     viewAllProjects: 'Voir tous les projets',
+    caseStudyLabel: 'Étude de cas',
+    caseStudyContext: 'Contexte',
+    caseStudySolution: 'Solution',
+    caseStudyResults: 'Résultats',
   },
   blog: {
     label: 'Articles',
@@ -368,6 +372,10 @@ const en: typeof fr = {
     year: 'Year',
     statusLabel: 'Status',
     viewAllProjects: 'View all projects',
+    caseStudyLabel: 'Case study',
+    caseStudyContext: 'Context',
+    caseStudySolution: 'Solution',
+    caseStudyResults: 'Results',
   },
   blog: {
     label: 'Articles',
