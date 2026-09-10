@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { submitContact } from '@/actions/contact'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
@@ -61,7 +61,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
 
   if (status === 'sent') {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="card p-10 text-center h-full flex flex-col items-center justify-center gap-4"
@@ -80,7 +80,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
         <p style={{ color: 'var(--text-muted)' }}>
           {t.successText}
         </p>
-      </motion.div>
+      </m.div>
     )
   }
 
@@ -199,7 +199,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       {/* Objet personnalisé si "Autre" */}
       <AnimatePresence>
         {form.subject === 'autre' && (
-          <motion.div
+          <m.div
             key="customSubject"
             initial={{ opacity: 0, height: 0, marginTop: 0 }}
             animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
@@ -217,7 +217,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
               placeholder={t.customSubjectPlaceholder}
               className={fieldClass}
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -251,7 +251,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       >
         {status === 'sending' ? (
           <>
-            <motion.span
+            <m.span
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               className="w-4 h-4 border-2 border-t-transparent rounded-full"

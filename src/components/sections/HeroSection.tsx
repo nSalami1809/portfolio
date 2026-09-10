@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import type { PersonalInfo, SocialLinks } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -91,9 +91,9 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
 
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 w-full py-16">
         {/* Text */}
-        <motion.div variants={container} initial="hidden" animate="show">
+        <m.div variants={container} initial="hidden" animate="show">
           {personal.photo && (
-            <motion.div variants={item} className="mb-6">
+            <m.div variants={item} className="mb-6">
               <Image
                 src={personal.photo}
                 alt={personal.name}
@@ -103,10 +103,10 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
                 className="w-20 h-20 rounded-full object-cover"
                 style={{ border: '2px solid var(--accent)', boxShadow: '0 0 0 4px var(--accent-glow)' }}
               />
-            </motion.div>
+            </m.div>
           )}
 
-          <motion.div variants={item} className="flex flex-wrap items-center gap-2.5 mb-5">
+          <m.div variants={item} className="flex flex-wrap items-center gap-2.5 mb-5">
             <div
               className="inline-flex items-center gap-2 px-3 h-8 rounded-xl"
               style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
@@ -139,13 +139,13 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
                 </span>
               </Link>
             )}
-          </motion.div>
+          </m.div>
 
-          <motion.p variants={item} className="section-label mb-5">
+          <m.p variants={item} className="section-label mb-5">
             {t.heroRoleLabel}
-          </motion.p>
+          </m.p>
 
-          <motion.h1
+          <m.h1
             variants={item}
             className="font-display font-bold leading-[1.05] mb-6"
             style={{ fontSize: 'clamp(2.8rem, 7vw, 5.5rem)', letterSpacing: '-0.03em' }}
@@ -164,17 +164,17 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
               {t3}
               {typed >= boundary2 && <TypingCursor />}
             </span>
-          </motion.h1>
+          </m.h1>
 
-          <motion.p
+          <m.p
             variants={item}
             className="text-lg leading-relaxed mb-10 max-w-lg"
             style={{ color: 'var(--text-muted)' }}
           >
             {personal.bio}
-          </motion.p>
+          </m.p>
 
-          <motion.div variants={item} className="flex flex-wrap gap-4 mb-10">
+          <m.div variants={item} className="flex flex-wrap gap-4 mb-10">
             <Link href={`/${locale}/projects`} className="btn-primary">
               {t.heroCtaProjects}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -184,10 +184,10 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
             <Link href={`/${locale}/contact`} className="btn-secondary">
               {t.heroCtaContact}
             </Link>
-          </motion.div>
+          </m.div>
 
           {/* Socials */}
-          <motion.div variants={item} className="flex items-center gap-4">
+          <m.div variants={item} className="flex items-center gap-4">
             {socials.github && (
               <a href={socials.github} target="_blank" rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
@@ -244,14 +244,14 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
                 </svg>
               </a>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
 
       {/* Scroll indicator */}
       <AnimatePresence>
         {!scrolled && (
-          <motion.a
+          <m.a
             href="#apropos"
             aria-label={t.heroScrollAria}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 cursor-pointer group z-10"
@@ -277,14 +277,14 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
                 boxShadow: '0 0 20px var(--accent-glow), inset 0 1px 0 var(--glass-highlight)',
               }}
             >
-              <motion.div
+              <m.div
                 animate={{ y: [0, 14, 0], opacity: [1, 0, 1] }}
                 transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                 className="w-1.5 h-1.5 rounded-full"
                 style={{ background: 'var(--accent)' }}
               />
             </div>
-          </motion.a>
+          </m.a>
         )}
       </AnimatePresence>
     </section>

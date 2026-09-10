@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import ThemeToggle from './ThemeToggle'
 
@@ -208,17 +208,17 @@ export default function Navbar() {
               className="lg:hidden flex flex-col justify-center gap-1.5 w-9 h-9 rounded-lg transition-colors duration-200"
               style={{ background: open ? 'var(--surface-hover)' : 'transparent' }}
             >
-              <motion.span
+              <m.span
                 animate={open ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
                 className="block w-5 h-0.5 mx-auto origin-center"
                 style={{ background: 'var(--text)' }}
               />
-              <motion.span
+              <m.span
                 animate={open ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
                 className="block w-5 h-0.5 mx-auto"
                 style={{ background: 'var(--text)' }}
               />
-              <motion.span
+              <m.span
                 animate={open ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
                 className="block w-5 h-0.5 mx-auto origin-center"
                 style={{ background: 'var(--text)' }}
@@ -231,7 +231,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             id="mobile-menu"
             role="dialog"
             aria-label={t.nav.menuAria}
@@ -246,7 +246,7 @@ export default function Navbar() {
               {links.map(({ href, label, icon }, i) => {
                 const isActive = pathname === href
                 return (
-                  <motion.li
+                  <m.li
                     key={href}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -274,19 +274,19 @@ export default function Navbar() {
                       </span>
                       <span className="flex-1">{label}</span>
                       {isActive && (
-                        <motion.span
+                        <m.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           style={{ color: 'var(--accent)', fontSize: '18px', lineHeight: 1 }}
                         >
                           →
-                        </motion.span>
+                        </m.span>
                       )}
                     </Link>
-                  </motion.li>
+                  </m.li>
                 )
               })}
-              <motion.li
+              <m.li
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: links.length * 0.04 + 0.05 }}
@@ -306,8 +306,8 @@ export default function Navbar() {
                   </span>
                   {t.nav.switchTo}
                 </Link>
-              </motion.li>
-              <motion.li
+              </m.li>
+              <m.li
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: (links.length + 1) * 0.04 + 0.05 }}
@@ -317,9 +317,9 @@ export default function Navbar() {
                   {t.nav.themeToggle}
                 </span>
                 <ThemeToggle ariaLabel={t.nav.themeToggle} />
-              </motion.li>
+              </m.li>
             </ul>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

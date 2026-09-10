@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
@@ -275,7 +275,7 @@ export default function AdminBlog() {
       {/* Form (new / edit) */}
       <AnimatePresence>
         {editingSlug !== null && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -322,7 +322,7 @@ export default function AdminBlog() {
                 </select>
                 <AnimatePresence>
                   {form.category === 'Autre' && (
-                    <motion.div
+                    <m.div
                       key="customCategory"
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
@@ -338,7 +338,7 @@ export default function AdminBlog() {
                         placeholder="Précisez la catégorie (ex: IA / ML, Sécurité…)"
                         autoFocus
                       />
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -537,7 +537,7 @@ export default function AdminBlog() {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
@@ -62,7 +62,7 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
   return (
     <div className="relative mb-16 rounded-3xl overflow-hidden liquid-glass" style={{ minHeight: '340px' }}>
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={o.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -92,7 +92,7 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
           ) : (
             <div className="hidden md:block" aria-hidden="true" />
           )}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {offers.length > 1 && (

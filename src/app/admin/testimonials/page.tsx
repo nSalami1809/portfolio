@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
@@ -162,7 +162,7 @@ export default function AdminTestimonials() {
       {/* Form */}
       <AnimatePresence>
         {editingId && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="card no-lift p-6">
+          <m.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="card no-lift p-6">
             <h2 className="font-display font-semibold text-lg mb-5" style={{ color: 'var(--text)' }}>
               {editingId === '__new__' ? 'Nouveau témoignage' : 'Modifier le témoignage'}
             </h2>
@@ -188,7 +188,7 @@ export default function AdminTestimonials() {
               </button>
               <button onClick={() => setEditingId(null)} className="btn-secondary btn-sm mt-4">Annuler</button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
@@ -234,7 +234,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
           {skill.items.map((item) => {
             const icon = skill.icons?.[item]
             return (
-              <motion.div
+              <m.div
                 key={item}
                 layout
                 initial={{ opacity: 0, scale: 0.88 }}
@@ -274,7 +274,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                 >
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
-              </motion.div>
+              </m.div>
             )
           })}
         </AnimatePresence>
@@ -283,7 +283,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
       {/* Change icon panel (existing items) */}
       <AnimatePresence>
         {iconTarget && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -313,7 +313,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                 maxSizeMb={1}
               />
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

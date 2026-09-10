@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useInView } from 'framer-motion'
+import { m, useInView } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
 interface FadeInProps {
@@ -50,7 +50,7 @@ export default function FadeIn({
   }
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       className={className}
       suppressHydrationWarning
@@ -60,6 +60,6 @@ export default function FadeIn({
       transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

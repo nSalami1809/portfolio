@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { listQuotes } from '@/actions/quotes'
 import type { AdminQuote } from '@/actions/quotes'
 import { listContacts } from '@/actions/contact'
@@ -139,7 +139,7 @@ export default function AdminProspects() {
 
                 <AnimatePresence>
                   {isOpen && (
-                    <motion.div
+                    <m.div
                       initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}
                     >
@@ -158,7 +158,7 @@ export default function AdminProspects() {
                           </div>
                         ))}
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>

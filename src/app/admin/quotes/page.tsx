@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { listQuotes, markQuoteRead, deleteQuote, updateQuoteStatus } from '@/actions/quotes'
 import type { AdminQuote, QuoteStatus } from '@/actions/quotes'
 
@@ -119,7 +119,7 @@ export default function AdminQuotes() {
           >
             {label}
             {filter === id && (
-              <motion.div
+              <m.div
                 layoutId="quotes-tab"
                 className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
                 style={{ background: 'var(--accent)' }}
@@ -162,7 +162,7 @@ export default function AdminQuotes() {
       ) : (
         <div className="space-y-2">
           {filtered.map((q, i) => (
-            <motion.div
+            <m.div
               key={q.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,7 +232,7 @@ export default function AdminQuotes() {
                   </svg>
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       )}

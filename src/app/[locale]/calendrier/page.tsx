@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { getMonthSlots, getDaySchedule, bookMeeting, type Booking, type DaySlot } from '@/actions/bookings'
@@ -139,7 +139,7 @@ export default function CalendarPage() {
           <div className="card p-5" style={{ minHeight: 320 }}>
             <AnimatePresence mode="wait">
               {booking ? (
-                <motion.div key="confirmed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <m.div key="confirmed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--accent-glow)' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
                   </div>
@@ -149,13 +149,13 @@ export default function CalendarPage() {
                     <p className="text-xs mb-1" style={{ color: 'var(--text-subtle)' }}>{tc.accessCodeLabel}</p>
                     <p className="font-display font-bold text-lg tracking-widest" style={{ color: 'var(--text)' }}>{booking.accessCode}</p>
                   </div>
-                </motion.div>
+                </m.div>
               ) : !selectedDay ? (
-                <motion.p key="pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm" style={{ color: 'var(--text-subtle)' }}>
+                <m.p key="pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm" style={{ color: 'var(--text-subtle)' }}>
                   {tc.pickDay}
-                </motion.p>
+                </m.p>
               ) : (
-                <motion.div key={selectedDay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <m.div key={selectedDay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <p className="font-display font-semibold capitalize mb-1" style={{ color: 'var(--text)' }}>{dayLabel}</p>
                   {!loadingDay && !!daySchedule?.length && (
                     <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>
@@ -224,7 +224,7 @@ export default function CalendarPage() {
                       </button>
                     </form>
                   )}
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>

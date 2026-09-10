@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
@@ -190,7 +190,7 @@ export default function AdminProjects() {
       {/* Form panel */}
       <AnimatePresence>
         {editingId && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -273,7 +273,7 @@ export default function AdminProjects() {
               </button>
               <button onClick={cancelEdit} className="btn-secondary btn-sm mt-4">Annuler</button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
