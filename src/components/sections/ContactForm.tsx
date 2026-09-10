@@ -157,7 +157,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
 
       {/* Téléphone */}
       <div>
-        <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+        <label htmlFor="cf-phone" className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
           {t.phoneLabel}
           <span className="ml-2 text-[10px] font-normal opacity-50">{t.phoneOptional}</span>
         </label>
@@ -179,7 +179,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
 
       {/* Sujet */}
       <div>
-        <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+        <label htmlFor="cf-subject" className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
           {t.subjectLabel}
         </label>
         <select
@@ -207,7 +207,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             transition={{ duration: 0.2 }}
             style={{ overflow: 'hidden' }}
           >
-            <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+            <label htmlFor="cf-custom-subject" className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
               {t.customSubjectLabel}
             </label>
             <input
@@ -223,7 +223,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
 
       {/* Message */}
       <div>
-        <label className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+        <label htmlFor="cf-message" className={labelClass} style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
           {t.messageLabel}
         </label>
         <textarea

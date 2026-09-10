@@ -36,11 +36,16 @@ export default function FadeIn({
 
   const visible = isInView || forceVisible
 
+  // Kept small on purpose: the Layout Instability API tracks an element's
+  // rendered position regardless of *why* it moved, so a transform-based
+  // reveal still counts toward Cumulative Layout Shift even though nothing
+  // actually reflows. A smaller offset keeps the reveal visible while
+  // cutting its CLS contribution proportionally.
   const offsets = {
-    up: { y: 20, x: 0 },
-    down: { y: -20, x: 0 },
-    left: { x: 20, y: 0 },
-    right: { x: -20, y: 0 },
+    up: { y: 12, x: 0 },
+    down: { y: -12, x: 0 },
+    left: { x: 12, y: 0 },
+    right: { x: -12, y: 0 },
     none: { x: 0, y: 0 },
   }
 

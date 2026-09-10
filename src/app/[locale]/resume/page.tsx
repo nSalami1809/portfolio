@@ -72,7 +72,7 @@ export default function ResumePage() {
       {/* ── Expériences ── */}
       <section className="mb-20">
         <FadeIn>
-          <p className="section-label mb-10">{t.resume.experiencesLabel}</p>
+          <h2 className="section-label mb-10">{t.resume.experiencesLabel}</h2>
         </FadeIn>
 
         <div className="relative pl-6 sm:pl-8" style={{ borderLeft: '2px solid var(--border)' }}>
@@ -147,7 +147,7 @@ export default function ResumePage() {
       {/* ── Compétences ── */}
       <section className="mb-20">
         <FadeIn>
-          <p className="section-label mb-10">{t.resume.skillsLabel}</p>
+          <h2 className="section-label mb-10">{t.resume.skillsLabel}</h2>
         </FadeIn>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -204,7 +204,7 @@ export default function ResumePage() {
       {/* ── Formations ── */}
       <section>
         <FadeIn>
-          <p className="section-label mb-10">{t.resume.educationLabel}</p>
+          <h2 className="section-label mb-10">{t.resume.educationLabel}</h2>
         </FadeIn>
 
         <div className="space-y-4">

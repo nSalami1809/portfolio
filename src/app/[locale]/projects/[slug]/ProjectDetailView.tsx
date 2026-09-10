@@ -119,7 +119,7 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
           {(project.caseStudyContext || project.caseStudySolution || project.caseStudyResults) && (
             <FadeIn delay={0.3}>
               <div className="mt-14">
-                <p className="section-label mb-6">{t.caseStudyLabel}</p>
+                <h2 className="section-label mb-6">{t.caseStudyLabel}</h2>
                 <div className="space-y-8">
                   {[
                     { label: t.caseStudyContext, text: project.caseStudyContext },
