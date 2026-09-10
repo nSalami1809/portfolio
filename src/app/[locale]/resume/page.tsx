@@ -245,7 +245,7 @@ export default function ResumePage() {
                       )}
                     </div>
                     <span
-                      className="text-xs px-3 py-1.5 rounded-full whitespace-nowrap"
+                      className="text-xs px-3 py-1.5 whitespace-nowrap"
                       style={{ background: 'var(--surface-hover)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
                     >
                       {edu.year}

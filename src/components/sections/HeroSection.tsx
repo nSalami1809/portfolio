@@ -89,30 +89,6 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
         style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 40%, var(--accent-glow), transparent)' }}
       />
 
-      {/* Drifting gradient blobs */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute rounded-full"
-        style={{
-          width: 480, height: 480, top: '-10%', left: '-8%',
-          background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)',
-          filter: 'blur(60px)',
-        }}
-        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute rounded-full"
-        style={{
-          width: 420, height: 420, bottom: '-15%', right: '-10%',
-          background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)',
-          filter: 'blur(70px)',
-        }}
-        animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 w-full py-16">
         {/* Text */}
         <motion.div variants={container} initial="hidden" animate="show">
@@ -179,18 +155,9 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
               {typed < boundary1 && <TypingCursor />}
             </span>
             <br />
-            <span className="relative inline-block">
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 -z-10 select-none"
-                style={{ color: 'var(--accent)', opacity: 0.4, filter: 'blur(28px)' }}
-              >
-                {lastName}
-              </span>
-              <span className="gradient-text">
-                {t2}
-                {typed >= boundary1 && typed < boundary2 && <TypingCursor />}
-              </span>
+            <span style={{ color: 'var(--accent)' }}>
+              {t2}
+              {typed >= boundary1 && typed < boundary2 && <TypingCursor />}
             </span>
             <br />
             <span style={{ color: 'var(--text)' }}>
