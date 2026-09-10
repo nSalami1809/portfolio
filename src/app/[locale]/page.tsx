@@ -58,6 +58,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         image: personal.photo || undefined,
         sameAs: sameAs.length ? sameAs : undefined,
         address: personal.location ? { '@type': 'PostalAddress', addressLocality: personal.location } : undefined,
+        knowsAbout: skills.flatMap((s) => s.items),
+        knowsLanguage: ['fr', 'en'],
       },
       {
         '@type': 'ProfessionalService',

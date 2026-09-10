@@ -59,12 +59,29 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     longDescription: project.longDescription,
   })
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: translated.title,
+    description: translated.description,
+    image: project.image || undefined,
+    datePublished: project.year,
+    author: { '@type': 'Person', name: 'Nawaf Nemrod Salami' },
+    keywords: project.tags.length ? project.tags.join(', ') : undefined,
+    url: project.liveUrl || `${siteUrl}/${locale}/projects/${slug}`,
+    mainEntityOfPage: `${siteUrl}/${locale}/projects/${slug}`,
+  }
+
   return (
-    <ProjectDetailView
-      project={{ ...project, ...translated }}
-      locale={locale}
-      t={t.projects}
-      statusLabel={t.status}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ProjectDetailView
+        project={{ ...project, ...translated }}
+        locale={locale}
+        t={t.projects}
+        statusLabel={t.status}
+      />
+    </>
   )
 }
