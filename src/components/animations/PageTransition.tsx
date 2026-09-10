@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 
 // Opacity-only transition — avoids CLS from y-offset shift on initial paint.
@@ -15,7 +15,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div
+      <m.div
         key={pathname}
         variants={variants}
         initial="initial"
@@ -24,7 +24,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
         transition={{ duration: 0.12, ease: 'easeInOut' }}
       >
         {children}
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   )
 }

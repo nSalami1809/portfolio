@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { createContext, useCallback, useContext, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 type ToastType = 'success' | 'error' | 'info'
 
@@ -69,7 +69,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {toasts.map((t) => (
-            <motion.div
+            <m.div
               key={t.id}
               layout
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -99,7 +99,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

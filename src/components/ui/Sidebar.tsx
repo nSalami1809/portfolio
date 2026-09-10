@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 // A tablet in landscape (e.g. iPad) can be wide enough to hit the `lg:`
@@ -79,7 +79,7 @@ export function DesktopSidebar({
   const { open, setOpen, animate } = useSidebar()
   const hasHover = useHasHover()
   return (
-    <motion.aside
+    <m.aside
       // Framer Motion's `animate` prop only takes effect once it mounts
       // client-side — `style.width` below is what SSR actually renders,
       // so it must match the resting (collapsed) state to avoid a flash
@@ -97,7 +97,7 @@ export function DesktopSidebar({
       aria-label="Navigation admin"
     >
       {children}
-    </motion.aside>
+    </m.aside>
   )
 }
 
@@ -110,7 +110,7 @@ export function MobileSidebarPanel({ className, style, children }: { className?:
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -120,7 +120,7 @@ export function MobileSidebarPanel({ className, style, children }: { className?:
             role="presentation"
             aria-hidden="true"
           />
-          <motion.div
+          <m.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -129,7 +129,7 @@ export function MobileSidebarPanel({ className, style, children }: { className?:
             style={style}
           >
             {children}
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>
@@ -171,7 +171,7 @@ export function SidebarLink({
       <span className="flex-shrink-0">{link.icon}</span>
       <AnimatePresence initial={false}>
         {open && (
-          <motion.span
+          <m.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -179,7 +179,7 @@ export function SidebarLink({
             className="whitespace-nowrap overflow-hidden group-hover/sidebar:translate-x-1 transition-transform duration-150"
           >
             {link.label}
-          </motion.span>
+          </m.span>
         )}
       </AnimatePresence>
     </Link>

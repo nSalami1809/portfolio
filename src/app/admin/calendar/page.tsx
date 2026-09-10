@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import { listBookings, markBookingRead, adminCancelBooking, deleteBooking, createEvent } from '@/actions/bookings'
@@ -157,7 +157,7 @@ export default function AdminCalendar() {
           >
             {label}
             {tab === id && (
-              <motion.div layoutId="cal-tab" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ background: 'var(--accent)' }} transition={{ type: 'spring', stiffness: 400, damping: 32 }} />
+              <m.div layoutId="cal-tab" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ background: 'var(--accent)' }} transition={{ type: 'spring', stiffness: 400, damping: 32 }} />
             )}
           </button>
         ))}
@@ -256,7 +256,7 @@ export default function AdminCalendar() {
         ) : (
           <div className="space-y-2">
             {bookings.map((b, i) => (
-              <motion.div
+              <m.div
                 key={b.id}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: i * 0.03 }}
                 className="card no-lift admin-row cursor-pointer flex items-center gap-4 p-4"
@@ -283,7 +283,7 @@ export default function AdminCalendar() {
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         )

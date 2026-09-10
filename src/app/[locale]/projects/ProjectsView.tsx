@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import type { Project } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
@@ -74,10 +74,10 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
       </FadeIn>
 
       {/* Grid */}
-      <motion.div layout className="grid sm:grid-cols-2 gap-6">
+      <m.div layout className="grid sm:grid-cols-2 gap-6">
         <AnimatePresence mode="popLayout">
           {filtered.map((project, i) => (
-            <motion.div
+            <m.div
               key={project.slug}
               layout
               initial={{ opacity: 0, scale: 0.95 }}
@@ -154,10 +154,10 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
                   </svg>
                 </div>
               </Link>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
 
       {filtered.length === 0 && (
         <div className="py-20 text-center" style={{ color: 'var(--text-muted)' }}>

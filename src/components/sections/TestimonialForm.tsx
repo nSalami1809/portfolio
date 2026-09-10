@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { submitTestimonial } from '@/actions/testimonials'
 import StarRatingInput from '@/components/ui/StarRatingInput'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -29,7 +29,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
 
   if (status === 'sent') {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="card p-10 text-center flex flex-col items-center justify-center gap-4"
@@ -41,7 +41,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
         </div>
         <h3 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>{t.successTitle}</h3>
         <p style={{ color: 'var(--text-muted)' }}>{t.successText}</p>
-      </motion.div>
+      </m.div>
     )
   }
 
@@ -119,7 +119,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
       <button type="submit" disabled={status === 'sending'} className="btn-primary w-full justify-center">
         {status === 'sending' ? (
           <>
-            <motion.span
+            <m.span
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               className="w-4 h-4 border-2 border-t-transparent rounded-full"

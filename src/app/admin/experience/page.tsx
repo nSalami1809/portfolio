@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
@@ -177,7 +177,7 @@ export default function AdminExperience() {
         <>
           <AnimatePresence>
             {editExpId && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="card no-lift p-6">
+              <m.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="card no-lift p-6">
                 <h2 className="font-display font-semibold text-lg mb-5" style={{ color: 'var(--text)' }}>
                   {editExpId === '__new__' ? 'Nouvelle expérience' : 'Modifier l\'expérience'}
                 </h2>
@@ -197,7 +197,7 @@ export default function AdminExperience() {
                   </button>
                   <button onClick={() => setEditExpId(null)} className="btn-secondary btn-sm mt-4">Annuler</button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -235,7 +235,7 @@ export default function AdminExperience() {
         <>
           <AnimatePresence>
             {editEduId && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="card no-lift p-6">
+              <m.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="card no-lift p-6">
                 <h2 className="font-display font-semibold text-lg mb-5" style={{ color: 'var(--text)' }}>
                   {editEduId === '__new__' ? 'Nouvelle formation' : 'Modifier la formation'}
                 </h2>
@@ -254,7 +254,7 @@ export default function AdminExperience() {
                   </button>
                   <button onClick={() => setEditEduId(null)} className="btn-secondary btn-sm mt-4">Annuler</button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 

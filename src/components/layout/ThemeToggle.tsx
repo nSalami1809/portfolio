@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useTheme } from '@/hooks/useTheme'
 
 function MoonIcon() {
@@ -41,7 +41,7 @@ export default function ThemeToggle({ label, ariaLabel }: { label?: string; aria
           <SunIcon />
         </span>
       </span>
-      <motion.span
+      <m.span
         aria-hidden="true"
         className="absolute top-0.5 flex items-center justify-center"
         style={{ width: 22, height: 22, background: 'var(--accent)', color: 'var(--accent-contrast)' }}
@@ -49,7 +49,7 @@ export default function ThemeToggle({ label, ariaLabel }: { label?: string; aria
         transition={{ type: 'spring', stiffness: 500, damping: 32 }}
       >
         {isDark ? <MoonIcon /> : <SunIcon />}
-      </motion.span>
+      </m.span>
       {label && <span className="sr-only">{label}</span>}
     </button>
   )

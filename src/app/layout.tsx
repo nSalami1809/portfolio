@@ -6,6 +6,7 @@ import { PortfolioProvider } from '@/providers/PortfolioContext'
 import AdminGate from '@/components/AdminGate'
 import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
 import VisitTracker from '@/components/analytics/VisitTracker'
+import MotionProvider from '@/components/MotionProvider'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -86,12 +87,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://unpkg.com" />
       </head>
       <body>
-        <PortfolioProvider>
-          {children}
-          <AdminGate />
-          <ChatWidgetLoader />
-          <VisitTracker />
-        </PortfolioProvider>
+        <MotionProvider>
+          <PortfolioProvider>
+            {children}
+            <AdminGate />
+            <ChatWidgetLoader />
+            <VisitTracker />
+          </PortfolioProvider>
+        </MotionProvider>
         <Analytics />
       </body>
     </html>

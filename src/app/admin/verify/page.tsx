@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect, useActionState, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { verifyOTPAction } from '@/actions/auth'
 import type { VerifyOTPResult } from '@/actions/auth'
 
@@ -94,7 +94,7 @@ export default function VerifyPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -102,7 +102,7 @@ export default function VerifyPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <motion.div
+          <m.div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{ background: 'var(--accent-gradient)', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }}
             animate={{ scale: pending ? 0.92 : 1 }}
@@ -111,7 +111,7 @@ export default function VerifyPage() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-          </motion.div>
+          </m.div>
           <h1 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text)' }}>
             Vérification OTP
           </h1>
@@ -134,13 +134,13 @@ export default function VerifyPage() {
           <form ref={formRef} action={action}>
             <input type="hidden" name="otp" value={digits.join('')} readOnly />
 
-            <motion.div
+            <m.div
               className="flex justify-center gap-2.5"
               animate={shake ? { x: [0, -8, 8, -8, 8, -4, 4, 0] } : { x: 0 }}
               transition={{ duration: 0.45 }}
             >
               {digits.map((digit, i) => (
-                <motion.div
+                <m.div
                   key={i}
                   className="relative"
                   animate={{ scale: focused === i ? 1.06 : 1 }}
@@ -184,16 +184,16 @@ export default function VerifyPage() {
                   />
                   {/* Caret indicator on focused empty box */}
                   {focused === i && !digit && (
-                    <motion.div
+                    <m.div
                       className="absolute left-1/2 bottom-3 -translate-x-1/2 w-0.5 rounded-full"
                       style={{ height: '18px', background: 'var(--accent)' }}
                       animate={{ opacity: [1, 0, 1] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     />
                   )}
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
 
             {/* Progress dots */}
             <div className="flex justify-center gap-1.5 mt-4">
@@ -214,7 +214,7 @@ export default function VerifyPage() {
           {/* Error */}
           <AnimatePresence>
             {error && (
-              <motion.p
+              <m.p
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -223,7 +223,7 @@ export default function VerifyPage() {
                 role="alert"
               >
                 {error}
-              </motion.p>
+              </m.p>
             )}
           </AnimatePresence>
 
@@ -236,7 +236,7 @@ export default function VerifyPage() {
           >
             {pending ? (
               <>
-                <motion.span
+                <m.span
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   className="w-4 h-4 border-2 rounded-full"
@@ -266,7 +266,7 @@ export default function VerifyPage() {
             </button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

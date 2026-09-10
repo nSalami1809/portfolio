@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { loginWithCredentials } from '@/actions/auth'
 import type { LoginResult } from '@/actions/auth'
 import PasswordInput from '@/components/ui/PasswordInput'
@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -21,7 +21,7 @@ export default function LoginPage() {
       >
         {/* Branding */}
         <div className="text-center mb-8">
-          <motion.div
+          <m.div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{ background: 'var(--accent-gradient)', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }}
             whileHover={{ scale: 1.05 }}
@@ -30,7 +30,7 @@ export default function LoginPage() {
               <rect x="3" y="11" width="18" height="11" rx="2"/>
               <path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
-          </motion.div>
+          </m.div>
           <h1 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text)' }}>
             Admin Panel
           </h1>
@@ -72,7 +72,7 @@ export default function LoginPage() {
 
           <AnimatePresence>
             {error && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -6, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -88,14 +88,14 @@ export default function LoginPage() {
                   </svg>
                   {error}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
           <button type="submit" disabled={pending} className="btn-primary w-full justify-center !mt-5">
             {pending ? (
               <>
-                <motion.span
+                <m.span
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   className="w-4 h-4 border-2 rounded-full"
@@ -117,7 +117,7 @@ export default function LoginPage() {
             Un code OTP vous sera envoyé par email
           </p>
         </form>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

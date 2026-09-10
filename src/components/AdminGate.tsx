@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import PasswordInput from '@/components/ui/PasswordInput'
 
 export default function AdminGate() {
@@ -64,7 +64,7 @@ export default function AdminGate() {
       {open && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -75,7 +75,7 @@ export default function AdminGate() {
           />
 
           {/* Panel */}
-          <motion.div
+          <m.div
             key="panel"
             initial={{ opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -122,7 +122,7 @@ export default function AdminGate() {
 
               <AnimatePresence>
                 {error && (
-                  <motion.p
+                  <m.p
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -130,7 +130,7 @@ export default function AdminGate() {
                     style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }}
                   >
                     {error}
-                  </motion.p>
+                  </m.p>
                 )}
               </AnimatePresence>
 
@@ -138,7 +138,7 @@ export default function AdminGate() {
                 {loading ? 'Vérification…' : 'Accéder'}
               </button>
             </form>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

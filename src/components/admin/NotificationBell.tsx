@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 const POLL_MS = 20_000
 
@@ -90,7 +90,7 @@ export default function NotificationBell() {
         {open && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden="true" />
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -6, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.97 }}
@@ -150,7 +150,7 @@ export default function NotificationBell() {
                   Rien de nouveau pour le moment.
                 </p>
               )}
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

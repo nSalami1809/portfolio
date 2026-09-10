@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useActionState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import PasswordInput from '@/components/ui/PasswordInput'
@@ -68,7 +68,7 @@ export default function AdminSettings() {
 
         <AnimatePresence mode="wait">
           {pwOk ? (
-            <motion.div
+            <m.div
               key="success"
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -85,9 +85,9 @@ export default function AdminSettings() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               Mot de passe modifié avec succès.
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.form key="form" action={pwAction} className="space-y-4">
+            <m.form key="form" action={pwAction} className="space-y-4">
               <div>
                 <label htmlFor="current" className="block text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                   Mot de passe actuel
@@ -123,7 +123,7 @@ export default function AdminSettings() {
 
               <AnimatePresence>
                 {pwError && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -144,14 +144,14 @@ export default function AdminSettings() {
                       </svg>
                       {pwError}
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
 
               <button type="submit" disabled={pwPending} className="btn-primary btn-sm">
                 {pwPending ? (
                   <>
-                    <motion.span
+                    <m.span
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       className="w-3.5 h-3.5 border-2 rounded-full"
@@ -161,7 +161,7 @@ export default function AdminSettings() {
                   </>
                 ) : 'Modifier le mot de passe'}
               </button>
-            </motion.form>
+            </m.form>
           )}
         </AnimatePresence>
       </section>
@@ -171,7 +171,7 @@ export default function AdminSettings() {
 
         <AnimatePresence mode="wait">
           {emailOk ? (
-            <motion.div
+            <m.div
               key="success"
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -188,9 +188,9 @@ export default function AdminSettings() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               Adresse email mise à jour : {emailOk.email}. Utilisez-la dès la prochaine connexion.
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.form key="form" action={emailAction} className="space-y-4">
+            <m.form key="form" action={emailAction} className="space-y-4">
               <div>
                 <label htmlFor="newEmail" className="block text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                   Nouvelle adresse email
@@ -228,7 +228,7 @@ export default function AdminSettings() {
 
               <AnimatePresence>
                 {emailError && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -249,14 +249,14 @@ export default function AdminSettings() {
                       </svg>
                       {emailError}
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
 
               <button type="submit" disabled={emailPending} className="btn-primary btn-sm">
                 {emailPending ? (
                   <>
-                    <motion.span
+                    <m.span
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       className="w-3.5 h-3.5 border-2 rounded-full"
@@ -266,7 +266,7 @@ export default function AdminSettings() {
                   </>
                 ) : "Modifier l'adresse email"}
               </button>
-            </motion.form>
+            </m.form>
           )}
         </AnimatePresence>
       </section>

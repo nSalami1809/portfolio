@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import type { Quote } from '@/actions/quotes'
 import type { Booking } from '@/actions/bookings'
 import { requestHumanHelp } from '@/actions/escalation'
@@ -39,13 +39,13 @@ function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { 
 
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <motion.g
+      <m.g
         style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
         animate={tilt ? { rotate: [-7, 7, -7] } : { rotate: 0 }}
         transition={tilt ? { duration: 2.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
       >
         {/* antenna */}
-        <motion.circle
+        <m.circle
           cx="12" cy="2.6" r="1.15" fill="currentColor"
           animate={
             mood === 'thinking' ? { opacity: [1, 0.35, 1] }
@@ -67,12 +67,12 @@ function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { 
         {/* eyes */}
         {mood === 'thinking' ? (
           <>
-            <motion.circle
+            <m.circle
               cy="13.1" r="1.55" fill="currentColor"
               animate={{ cx: [9.7, 10.3, 9.7] }}
               transition={{ duration: 1.7, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <motion.circle
+            <m.circle
               cy="13.1" r="1.55" fill="currentColor"
               animate={{ cx: [14.3, 14.9, 14.3] }}
               transition={{ duration: 1.7, repeat: Infinity, ease: 'easeInOut' }}
@@ -85,13 +85,13 @@ function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { 
           </>
         ) : (
           <>
-            <motion.circle
+            <m.circle
               cx="9.7" cy="13.1" r={bigEyes ? 1.75 : 1.55} fill="currentColor"
               style={eyeOrigin}
               animate={{ scaleY: [1, 1, 0.12, 1] }}
               transition={{ duration: 3.6, repeat: Infinity, times: [0, 0.92, 0.96, 1], ease: 'easeInOut' }}
             />
-            <motion.circle
+            <m.circle
               cx="14.3" cy="13.1" r={bigEyes ? 1.75 : 1.55} fill="currentColor"
               style={eyeOrigin}
               animate={{ scaleY: [1, 1, 0.12, 1] }}
@@ -111,7 +111,7 @@ function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { 
         ) : (
           <path d="M9.3 16.6c1 .95 4.4.95 5.4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         )}
-      </motion.g>
+      </m.g>
     </svg>
   )
 }
@@ -309,7 +309,7 @@ export default function ChatWidget() {
   return (
     <>
       {/* Floating toggle button */}
-      <motion.button
+      <m.button
         onClick={toggleOpen}
         aria-label={open ? t.chat.toggleClose : t.chat.toggleOpen}
         aria-expanded={open}
@@ -327,7 +327,7 @@ export default function ChatWidget() {
       >
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
-            <motion.svg
+            <m.svg
               key="close"
               initial={{ opacity: 0, rotate: -45 }}
               animate={{ opacity: 1, rotate: 0 }}
@@ -336,9 +336,9 @@ export default function ChatWidget() {
               width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
             >
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </motion.svg>
+            </m.svg>
           ) : (
-            <motion.div
+            <m.div
               key="bot"
               initial={{ opacity: 0, rotate: 45 }}
               animate={{ opacity: 1, rotate: 0 }}
@@ -346,15 +346,15 @@ export default function ChatWidget() {
               transition={{ duration: 0.15 }}
             >
               <BotIcon width={26} height={26} aria-hidden="true" />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
-      </motion.button>
+      </m.button>
 
       {/* Chat panel */}
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             id="chat-widget-panel"
             role="dialog"
             aria-label={t.chat.panelAria}
@@ -749,7 +749,7 @@ export default function ChatWidget() {
               })}
               {busy && (
                 <div className="flex" style={{ justifyContent: 'flex-start' }}>
-                  <motion.div
+                  <m.div
                     className="rounded-xl px-3 py-2.5 flex items-center gap-2"
                     style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
                     aria-label={t.chat.thinkingAria}
@@ -760,7 +760,7 @@ export default function ChatWidget() {
                     <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.chat.thinking}</span>
                     <div className="flex items-center gap-1">
                       {[0, 1, 2].map((i) => (
-                        <motion.span
+                        <m.span
                           key={i}
                           className="rounded-full"
                           style={{ width: 4, height: 4, background: 'var(--text-subtle)' }}
@@ -769,7 +769,7 @@ export default function ChatWidget() {
                         />
                       ))}
                     </div>
-                  </motion.div>
+                  </m.div>
                 </div>
               )}
             </div>
@@ -797,7 +797,7 @@ export default function ChatWidget() {
                 </svg>
               </button>
             </form>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
