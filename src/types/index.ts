@@ -29,6 +29,9 @@ export interface Project {
   liveUrl?: string
   githubUrl?: string
   image?: string
+  caseStudyContext?: string
+  caseStudySolution?: string
+  caseStudyResults?: string
 }
 
 export interface Experience {

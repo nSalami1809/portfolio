@@ -57,6 +57,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     title: project.title,
     description: project.description,
     longDescription: project.longDescription,
+    caseStudyContext: project.caseStudyContext ?? '',
+    caseStudySolution: project.caseStudySolution ?? '',
+    caseStudyResults: project.caseStudyResults ?? '',
   })
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
