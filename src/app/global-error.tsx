@@ -3,7 +3,10 @@
 // Root-level fallback — catches an error that escapes even [locale]/error.tsx
 // (e.g. one thrown by the root layout itself). Must render its own
 // <html>/<body> since it replaces the whole root layout when active.
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+//
+// Uses `unstable_retry`, not `reset` — see the comment in [locale]/error.tsx
+// for why `reset` alone does not actually retry a failed Server Component.
+export default function GlobalError({ unstable_retry }: { error: Error & { digest?: string }; unstable_retry: () => void }) {
   return (
     <html lang="fr">
       <body style={{ margin: 0, background: '#FFFFFF', color: '#0B0B0F', fontFamily: 'system-ui, sans-serif' }}>
@@ -16,7 +19,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
               Ce n&apos;est pas grave — cliquez pour réessayer.
             </p>
             <button
-              onClick={reset}
+              onClick={unstable_retry}
               style={{ background: '#111111', color: '#FFFFFF', border: 'none', padding: '0.75rem 1.75rem', cursor: 'pointer', fontWeight: 500 }}
             >
               Réessayer

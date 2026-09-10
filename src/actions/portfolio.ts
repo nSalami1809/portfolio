@@ -89,3 +89,21 @@ export const fetchPortfolio = cache(
 // clobber fields it never touched. Do not use this for rendering; it
 // defeats the point of the cached version above.
 export const fetchPortfolioFresh = fetchPortfolioFromDb
+
+// Every public page/route falls back to hardcoded placeholder data
+// (defaultProjects, etc.) when fetchPortfolio() fails, rather than showing
+// an error screen to a visitor over a transient Mongo hiccup. That's the
+// right call for visitors, but a bare `.catch(() => null)` at each of the
+// dozen call sites made those failures completely invisible — nothing in
+// the server logs ever showed that real data had silently been swapped for
+// placeholders. This centralizes the fallback so every call site logs the
+// same way; the behavior (fall back to null → caller's own defaults) is
+// unchanged.
+export async function fetchPortfolioSafe(context: string): Promise<PortfolioData | null> {
+  try {
+    return await fetchPortfolio()
+  } catch (err) {
+    console.error(`[fetchPortfolioSafe] ${context}: fetchPortfolio() failed, falling back to defaults`, err)
+    return null
+  }
+}

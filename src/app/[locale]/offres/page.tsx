@@ -1,4 +1,4 @@
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultOffers } from '@/data/defaultData'
 import OffersView from './OffersView'
 
@@ -6,7 +6,7 @@ import OffersView from './OffersView'
 export const revalidate = 30
 
 export default async function OffersPage() {
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('offres/page')
   const offers = portfolio?.offers ?? defaultOffers
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
@@ -21,7 +21,7 @@ export default async function VisionPage({ params }: { params: Promise<{ locale:
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
 
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('vision/page')
   const vision = portfolio?.vision ?? defaultVision
 
   const fields: Record<string, string> = { quote: vision.quote }

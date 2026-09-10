@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 
@@ -79,7 +79,7 @@ function content(locale: 'fr' | 'en', email: string) {
 export default async function PrivacyPolicyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('confidentialite/page')
   const personal = portfolio?.personal ?? defaultPersonalInfo
 
   const { title, sections } = content(locale === 'en' ? 'en' : 'fr', personal.email)

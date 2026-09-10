@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 
 // Builds a clean "FirstLast.pdf" filename from the admin's full name —
 // derived from data instead of hardcoded, so it stays correct if the name
@@ -17,7 +17,7 @@ function cvFileName(fullName: string): string {
 }
 
 export async function GET() {
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('api/cv')
   const cvUrl = portfolio?.personal.cvUrl
   if (!cvUrl) {
     return new NextResponse('CV non disponible', { status: 404 })

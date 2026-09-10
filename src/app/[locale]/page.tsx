@@ -3,7 +3,7 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import TestimonialsMarquee from '@/components/sections/TestimonialsMarquee'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { getUpcomingAvailability } from '@/actions/bookings'
 import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
@@ -23,7 +23,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
 
-  const portfolio = await fetchPortfolio().catch(() => null)
+  const portfolio = await fetchPortfolioSafe('[locale]/page')
 
   const personal     = portfolio?.personal     ?? defaultPersonalInfo
   const socials      = portfolio?.socials      ?? defaultSocials
