@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     model: google('gemini-3.5-flash-lite'),
     system: buildSystemPrompt(portfolio, locale === 'en' ? 'en' : 'fr'),
     messages: await convertToModelMessages(messages),
-    maxOutputTokens: 800,
+    maxOutputTokens: 2000,
     stopWhen: stepCountIs(3),
     tools: {
       generateQuote: tool({

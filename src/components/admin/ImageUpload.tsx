@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Image from 'next/image'
-import { compressImage, uploadFile, deleteUploadedFile } from '@/lib/upload'
+import { compressImage, uploadFile } from '@/lib/upload'
 
 interface Props {
   value?: string
@@ -54,8 +54,9 @@ export default function ImageUpload({
     try {
       const compressed = await compressImage(file, maxSide)
       const url = await uploadFile(compressed, file.name.replace(/\.[^.]+$/, '.jpg'))
-      // Best-effort cleanup of the previous uploaded file
-      if (value) deleteUploadedFile(value)
+      // Don't delete the previous file here: this change is only local
+      // form state until the parent form is actually saved, and deleting
+      // eagerly can wipe out a still-published blob if the edit is cancelled.
       onChange(url)
     } catch {
       setError('Erreur lors de l\'upload de l\'image.')
@@ -65,7 +66,6 @@ export default function ImageUpload({
   }
 
   const handleRemove = () => {
-    if (value) deleteUploadedFile(value)
     onChange('')
     setError(null)
   }
