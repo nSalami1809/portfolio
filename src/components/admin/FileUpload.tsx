@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { uploadFile, deleteUploadedFile } from '@/lib/upload'
+import { uploadFile } from '@/lib/upload'
 
 interface Props {
   value?: string
@@ -40,7 +40,9 @@ export default function FileUpload({ value, onChange, accept, maxSizeMb = 5, hin
     setLoading(true)
     try {
       const url = await uploadFile(file, file.name)
-      if (value) deleteUploadedFile(value)
+      // Don't delete the previous file here: this change is only local
+      // form state until the parent form is actually saved, and deleting
+      // eagerly can wipe out a still-published blob if the edit is cancelled.
       onChange(url)
     } catch {
       setError("Erreur lors de l'upload du fichier.")
@@ -50,7 +52,6 @@ export default function FileUpload({ value, onChange, accept, maxSizeMb = 5, hin
   }
 
   const handleRemove = () => {
-    if (value) deleteUploadedFile(value)
     onChange('')
     setError(null)
   }
