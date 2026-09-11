@@ -103,14 +103,17 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
 
                 {/* Image */}
                 {project.image ? (
-                  <div className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden">
+                  <div
+                    className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden"
+                    style={{ background: 'var(--surface-hover)' }}
+                  >
                     <Image
                       src={project.image}
                       alt={project.title}
                       fill
                       loading="lazy"
                       sizes="(min-width: 640px) 50vw, 100vw"
-                      className="object-cover"
+                      className="object-contain"
                     />
                   </div>
                 ) : (
