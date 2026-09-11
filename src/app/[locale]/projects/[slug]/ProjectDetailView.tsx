@@ -99,7 +99,7 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
                   fill
                   priority
                   sizes="(min-width: 1024px) 800px, 100vw"
-                  className="object-cover"
+                  className="object-contain"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3">
