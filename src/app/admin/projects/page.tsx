@@ -9,6 +9,7 @@ import ImageUpload from '@/components/admin/ImageUpload'
 import type { Project } from '@/types'
 
 const CATEGORIES = ['Web', 'DevOps', 'Backend', 'Frontend', 'Mobile', 'IA / ML', 'Autre']
+const FIXED_CATEGORIES = CATEGORIES.slice(0, -1)
 
 function F({ label, req }: { label: string; req?: boolean }) {
   return <label className="field-label">{label}{req && <span style={{ color: '#EF4444' }}> *</span>}</label>
@@ -84,6 +85,7 @@ export default function AdminProjects() {
 
   const confirmEdit = () => {
     if (!form.title.trim()) return
+    const category = form.category.trim() || 'Autre'
     const base = form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     const makeSlug = (b: string) => {
       let s = b
@@ -92,10 +94,10 @@ export default function AdminProjects() {
       return s
     }
     if (editingId === '__new__') {
-      persist([{ slug: makeSlug(base), ...form }, ...projects])
+      persist([{ slug: makeSlug(base), ...form, category }, ...projects])
       toast('Projet ajouté')
     } else {
-      persist(projects.map((x) => x.slug === editingId ? { ...x, ...form } : x))
+      persist(projects.map((x) => x.slug === editingId ? { ...x, ...form, category } : x))
       toast('Projet mis à jour')
     }
     setEditingId(null)
@@ -136,6 +138,7 @@ export default function AdminProjects() {
 
   const allSelected = filtered.length > 0 && selected.size === filtered.length
   const someSelected = selected.size > 0
+  const categorySelectValue = FIXED_CATEGORIES.includes(form.category) ? form.category : 'Autre'
 
   return (
     <div className="space-y-5">
@@ -211,9 +214,23 @@ export default function AdminProjects() {
               </div>
               <div>
                 <F label="Catégorie" />
-                <select className="input text-sm" value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}>
+                <select
+                  className="input text-sm"
+                  value={categorySelectValue}
+                  onChange={(e) => { const v = e.target.value; setForm((p) => ({ ...p, category: v === 'Autre' ? '' : v })) }}
+                >
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
+                {categorySelectValue === 'Autre' && (
+                  <input
+                    className="input text-sm mt-2"
+                    value={form.category}
+                    onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
+                    placeholder="Précisez la catégorie (ex: Design, IoT…)"
+                    aria-label="Précisez la catégorie"
+                    autoFocus
+                  />
+                )}
               </div>
               <div>
                 <F label="Statut" />

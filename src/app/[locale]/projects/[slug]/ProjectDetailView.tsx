@@ -61,10 +61,26 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
           </FadeIn>
 
           <FadeIn delay={0.15}>
-            <p className="text-lg leading-relaxed mb-10" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-lg leading-relaxed mb-8" style={{ color: 'var(--text-muted)' }}>
               {project.longDescription}
             </p>
           </FadeIn>
+
+          {project.liveUrl && (
+            <FadeIn delay={0.18}>
+              <a
+                href={project.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary text-base px-8 py-4 mb-10"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+                </svg>
+                {t.viewLive}
+              </a>
+            </FadeIn>
+          )}
 
           {/* Image / placeholder */}
           <FadeIn delay={0.2}>
