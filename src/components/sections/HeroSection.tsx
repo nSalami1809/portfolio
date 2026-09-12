@@ -111,7 +111,7 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
               className="inline-flex items-center gap-2 px-3 h-8 rounded-xl"
               style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
             >
-              <span className="inline-block w-1.5 h-1.5 flex-shrink-0" style={{ background: '#10B981' }} aria-hidden="true" />
+              <span className="inline-block w-1.5 h-1.5 flex-shrink-0" style={{ background: '#008000' }} aria-hidden="true" />
               <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                 {t.heroAvailable}
               </span>

@@ -68,9 +68,9 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       >
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center mb-2"
-          style={{ background: 'rgba(16,185,129,0.1)' }}
+          style={{ background: 'rgba(0,128,0,0.1)' }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
@@ -122,7 +122,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
                 borderColor: emailError
                   ? 'rgba(239,68,68,0.7)'
                   : emailValid
-                  ? 'rgba(16,185,129,0.6)'
+                  ? 'rgba(0,128,0,0.6)'
                   : undefined,
               }}
             />
@@ -136,7 +136,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
                     <line x1="9" y1="9" x2="15" y2="15"/>
                   </svg>
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5" strokeLinecap="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                     <polyline points="22 4 12 14.01 9 11.01"/>
                   </svg>

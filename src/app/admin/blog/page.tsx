@@ -623,9 +623,9 @@ export default function AdminBlog() {
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 hover:opacity-70"
                         style={{
                           fontFamily: 'var(--font-poppins)',
-                          background: 'rgba(16,185,129,0.12)',
-                          color: '#10B981',
-                          border: '1px solid rgba(16,185,129,0.3)',
+                          background: 'rgba(0,128,0,0.12)',
+                          color: '#008000',
+                          border: '1px solid rgba(0,128,0,0.3)',
                         }}
                         title="Cliquer pour masquer"
                       >

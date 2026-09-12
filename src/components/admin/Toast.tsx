@@ -19,8 +19,8 @@ const ToastContext = createContext<ToastCtx | null>(null)
 
 const ICONS = {
   success: (
-    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(16,185,129,0.15)' }}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(0,128,0,0.15)' }}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
   ),
   error: (
@@ -36,7 +36,7 @@ const ICONS = {
 }
 
 const BORDER = {
-  success: 'rgba(16,185,129,0.35)',
+  success: 'rgba(0,128,0,0.35)',
   error:   'rgba(239,68,68,0.35)',
   info:    'var(--glass-border)',
 }

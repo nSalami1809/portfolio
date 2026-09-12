@@ -19,7 +19,7 @@ function formatDate(iso: string) {
 const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 
 const STATUS_LABEL: Record<QuoteStatus, string> = { pending: 'En attente', accepted: 'Accepté', declined: 'Refusé' }
-const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#10B981', declined: '#EF4444' }
+const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#008000', declined: '#EF4444' }
 
 export default function AdminQuotes() {
   const [quotes, setQuotes]     = useState<AdminQuote[]>([])
@@ -93,7 +93,7 @@ export default function AdminQuotes() {
         {[
           { label: 'Total', value: quotes.length, color: 'var(--text)' },
           { label: 'Non lus', value: unreadCount, color: '#8B5CF6' },
-          { label: 'Lus', value: quotes.length - unreadCount, color: '#10B981' },
+          { label: 'Lus', value: quotes.length - unreadCount, color: '#008000' },
           { label: 'Montant total', value: fmt(totalTTC), color: 'var(--text)' },
         ].map(({ label, value, color }) => (
           <div key={label} className="card no-lift p-4 text-center">

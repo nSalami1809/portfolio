@@ -8,7 +8,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 import FadeIn from '@/components/animations/FadeIn'
 
 const statusColor: Record<string, string> = {
-  completed: '#10B981',
+  completed: '#008000',
   'in-progress': '#F59E0B',
   concept: '#6B7280',
 }

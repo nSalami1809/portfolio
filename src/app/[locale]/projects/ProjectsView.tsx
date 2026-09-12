@@ -10,7 +10,7 @@ import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 const statusColor: Record<string, string> = {
-  completed: '#10B981',
+  completed: '#008000',
   'in-progress': '#F59E0B',
   concept: '#6B7280',
 }

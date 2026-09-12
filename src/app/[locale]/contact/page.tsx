@@ -78,14 +78,14 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
               <div className="card p-5 flex items-start gap-4">
                 <div
                   className="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(16,185,129,0.12)', color: '#10B981' }}
+                  style={{ background: 'rgba(0,128,0,0.12)', color: '#008000' }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                   <span
                     className="absolute -top-0.5 -right-0.5 inline-block w-2.5 h-2.5"
-                    style={{ background: '#10B981', border: '2px solid var(--surface)' }}
+                    style={{ background: '#008000', border: '2px solid var(--surface)' }}
                     aria-hidden="true"
                   />
                 </div>
@@ -93,7 +93,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                   <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                     {t.contact.availability}
                   </p>
-                  <p className="text-sm font-semibold mb-1" style={{ color: '#10B981', fontFamily: 'var(--font-poppins)' }}>
+                  <p className="text-sm font-semibold mb-1" style={{ color: '#008000', fontFamily: 'var(--font-poppins)' }}>
                     {t.contact.availableMissions}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
