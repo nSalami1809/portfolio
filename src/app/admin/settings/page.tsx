@@ -75,9 +75,9 @@ export default function AdminSettings() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
               style={{
-                background: 'rgba(16,185,129,0.08)',
-                border: '1px solid rgba(16,185,129,0.2)',
-                color: '#10B981',
+                background: 'rgba(0,128,0,0.08)',
+                border: '1px solid rgba(0,128,0,0.2)',
+                color: '#008000',
                 fontFamily: 'var(--font-poppins)',
               }}
             >
@@ -178,9 +178,9 @@ export default function AdminSettings() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
               style={{
-                background: 'rgba(16,185,129,0.08)',
-                border: '1px solid rgba(16,185,129,0.2)',
-                color: '#10B981',
+                background: 'rgba(0,128,0,0.08)',
+                border: '1px solid rgba(0,128,0,0.2)',
+                color: '#008000',
                 fontFamily: 'var(--font-poppins)',
               }}
             >

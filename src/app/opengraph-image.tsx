@@ -47,7 +47,7 @@ export default function Image() {
             marginBottom: '28px',
           }}
         >
-          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10B981' }} />
+          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#008000' }} />
           <span style={{ color: '#d4d4d4', fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Disponible pour missions
           </span>

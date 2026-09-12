@@ -34,8 +34,8 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
         animate={{ opacity: 1, scale: 1 }}
         className="card p-10 text-center flex flex-col items-center justify-center gap-4"
       >
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2" style={{ background: 'rgba(16,185,129,0.1)' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2" style={{ background: 'rgba(0,128,0,0.1)' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>

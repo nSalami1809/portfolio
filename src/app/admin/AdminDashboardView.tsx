@@ -105,9 +105,9 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
             <p className="text-xs flex-1" style={{ color: 'var(--text-subtle)' }}>Pas encore de devis accepté ou refusé.</p>
           ) : (
             <>
-              <p className="text-4xl font-display font-bold mb-3" style={{ color: '#10B981' }}>{overview.quoteAcceptanceRate}%</p>
+              <p className="text-4xl font-display font-bold mb-3" style={{ color: '#008000' }}>{overview.quoteAcceptanceRate}%</p>
               <div className="w-full rounded-full overflow-hidden mb-3" style={{ height: 6, background: 'var(--surface)' }}>
-                <div style={{ width: `${overview.quoteAcceptanceRate}%`, height: '100%', background: '#10B981' }} />
+                <div style={{ width: `${overview.quoteAcceptanceRate}%`, height: '100%', background: '#008000' }} />
               </div>
               <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{overview.acceptedQuotes} devis accepté{overview.acceptedQuotes !== 1 ? 's' : ''} au total</p>
             </>

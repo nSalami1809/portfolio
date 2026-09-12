@@ -86,7 +86,7 @@ export default function AdminContacts() {
         {[
           { label: 'Total', value: messages.length, color: 'var(--text)' },
           { label: 'Non lus', value: unreadCount, color: '#8B5CF6' },
-          { label: 'Lus', value: messages.length - unreadCount, color: '#10B981' },
+          { label: 'Lus', value: messages.length - unreadCount, color: '#008000' },
         ].map(({ label, value, color }) => (
           <div key={label} className="card no-lift p-4 text-center">
             <p className="text-2xl font-display font-bold" style={{ color }}>{value}</p>

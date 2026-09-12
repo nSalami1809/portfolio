@@ -9,7 +9,7 @@ export function trend(current: number, previous: number): Trend {
 
 export default function TrendBadge({ t }: { t: Trend }) {
   if (t.dir === 'flat') return null
-  const color = t.dir === 'down' ? '#EF4444' : '#10B981'
+  const color = t.dir === 'down' ? '#EF4444' : '#008000'
   const label = t.dir === 'new' ? 'Nouveau' : `${t.dir === 'up' ? '+' : '-'}${t.pct}%`
   return (
     <span
