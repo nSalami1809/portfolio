@@ -120,7 +120,7 @@ export default function VerifyPage() {
           </p>
           <p
             className="text-xs mt-2 font-medium"
-            style={{ color: secondsLeft > 0 ? 'var(--text-subtle)' : '#EF4444', fontFamily: 'var(--font-poppins)' }}
+            style={{ color: secondsLeft > 0 ? 'var(--text-subtle)' : '#D90000', fontFamily: 'var(--font-poppins)' }}
             role="timer"
           >
             {secondsLeft > 0 ? `Expire dans ${secondsLeft}s` : 'Code expiré — demandez-en un nouveau'}
@@ -219,7 +219,7 @@ export default function VerifyPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 className="text-sm px-3 py-2.5 rounded-xl text-center"
-                style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.25)', fontFamily: 'var(--font-poppins)' }}
+                style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
                 role="alert"
               >
                 {error}

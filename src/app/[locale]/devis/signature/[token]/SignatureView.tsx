@@ -233,7 +233,7 @@ export default function SignatureView({ token }: Props) {
                     <button onClick={() => setPhase('sign')} disabled={!accepted} className="btn-primary btn-sm">
                       Continuer vers la signature
                     </button>
-                    <button onClick={handleDecline} disabled={declining} className="text-sm font-medium" style={{ color: '#EF4444' }}>
+                    <button onClick={handleDecline} disabled={declining} className="text-sm font-medium" style={{ color: '#D90000' }}>
                       {declining ? 'Envoi…' : 'Refuser le devis'}
                     </button>
                   </div>
@@ -274,7 +274,7 @@ export default function SignatureView({ token }: Props) {
                     </p>
 
                     {error && (
-                      <p className="text-sm px-4 py-3 mb-4" style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.25)' }}>{error}</p>
+                      <p className="text-sm px-4 py-3 mb-4" style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)' }}>{error}</p>
                     )}
 
                     <div className="flex items-center gap-3 flex-wrap">

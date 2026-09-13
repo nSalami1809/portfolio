@@ -120,7 +120,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
               style={{
                 paddingRight: emailTouched && form.email ? '2.5rem' : undefined,
                 borderColor: emailError
-                  ? 'rgba(239,68,68,0.7)'
+                  ? 'rgba(217,0,0,0.7)'
                   : emailValid
                   ? 'rgba(0,128,0,0.6)'
                   : undefined,
@@ -130,7 +130,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             {emailTouched && form.email.length > 0 && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 {emailError ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D90000" strokeWidth="2.5" strokeLinecap="round">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="15" y1="9" x2="9" y2="15"/>
                     <line x1="9" y1="9" x2="15" y2="15"/>
@@ -145,7 +145,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             )}
           </div>
           {emailError && (
-            <p id="cf-email-error" role="alert" className="mt-1.5 text-xs flex items-center gap-1.5" style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }}>
+            <p id="cf-email-error" role="alert" className="mt-1.5 text-xs flex items-center gap-1.5" style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
@@ -238,7 +238,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       {status === 'error' && (
         <p
           className="text-sm px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.25)', fontFamily: 'var(--font-poppins)' }}
+          style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
         >
           {errorMsg}
         </p>

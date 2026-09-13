@@ -269,7 +269,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                 <button
                   onClick={() => onRemoveItem(item)}
                   aria-label={`Supprimer ${item}`}
-                  className="w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(239,68,68,0.15)] flex-shrink-0"
+                  className="w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(217,0,0,0.15)] flex-shrink-0"
                   style={{ color: 'var(--text-muted)', marginLeft: '0.125rem' }}
                 >
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

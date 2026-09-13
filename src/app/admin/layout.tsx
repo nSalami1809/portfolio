@@ -76,7 +76,7 @@ function SidebarFooter() {
           type="submit"
           aria-label={!open ? 'Se déconnecter' : undefined}
           className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 ${!open ? 'justify-center' : ''}`}
-          style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)', outlineColor: '#EF4444' }}
+          style={{ color: '#D90000', fontFamily: 'var(--font-poppins)', outlineColor: '#D90000' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -244,7 +244,7 @@ function SidebarFooterMobile({ onNavigate }: { onNavigate: () => void }) {
         <button
           type="submit"
           className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 hover:bg-red-500/10"
-          style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }}
+          style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>

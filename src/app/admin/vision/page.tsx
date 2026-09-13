@@ -6,7 +6,7 @@ import { useToast } from '@/components/admin/Toast'
 import type { VisionData } from '@/types'
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
-  <label className="field-label">{label}{req && <span style={{ color: '#EF4444' }}> *</span>}</label>
+  <label className="field-label">{label}{req && <span style={{ color: '#D90000' }}> *</span>}</label>
 )
 
 function ParagraphList({

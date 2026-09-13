@@ -24,8 +24,8 @@ const ICONS = {
     </div>
   ),
   error: (
-    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239,68,68,0.15)' }}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(217,0,0,0.15)' }}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D90000" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
   ),
   info: (
@@ -37,7 +37,7 @@ const ICONS = {
 
 const BORDER = {
   success: 'rgba(0,128,0,0.35)',
-  error:   'rgba(239,68,68,0.35)',
+  error:   'rgba(217,0,0,0.35)',
   info:    'var(--glass-border)',
 }
 

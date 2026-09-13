@@ -12,7 +12,7 @@ const CATEGORIES = ['Web', 'DevOps', 'Backend', 'Frontend', 'Mobile', 'IA / ML',
 const FIXED_CATEGORIES = CATEGORIES.slice(0, -1)
 
 function F({ label, req }: { label: string; req?: boolean }) {
-  return <label className="field-label">{label}{req && <span style={{ color: '#EF4444' }}> *</span>}</label>
+  return <label className="field-label">{label}{req && <span style={{ color: '#D90000' }}> *</span>}</label>
 }
 
 const STATUS_LABELS: Record<Project['status'], string> = {

@@ -80,7 +80,7 @@ export default function LoginPage() {
               >
                 <div
                   className="flex items-center gap-2.5 text-sm px-4 py-3 rounded-xl"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)', fontFamily: 'var(--font-poppins)' }}
+                  style={{ background: 'rgba(217,0,0,0.08)', color: '#D90000', border: '1px solid rgba(217,0,0,0.2)', fontFamily: 'var(--font-poppins)' }}
                   role="alert"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

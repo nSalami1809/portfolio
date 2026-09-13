@@ -126,7 +126,7 @@ export default function SignatureSettings({ value, onChange }: Props) {
         </div>
       )}
 
-      {error && <p className="text-xs mt-2" style={{ color: '#EF4444' }} role="alert">{error}</p>}
+      {error && <p className="text-xs mt-2" style={{ color: '#D90000' }} role="alert">{error}</p>}
       {!error && mode !== 'draw' && (
         <p className="text-xs mt-2" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
           PNG (transparence) ou JPG — max {MAX_MB} Mo. Apparaît sur les devis et contrats signés électroniquement.

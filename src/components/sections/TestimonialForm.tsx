@@ -110,7 +110,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
       {status === 'error' && (
         <p
           className="text-sm px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.25)', fontFamily: 'var(--font-poppins)' }}
+          style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
         >
           {errorMsg}
         </p>

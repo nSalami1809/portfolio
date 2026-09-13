@@ -127,7 +127,7 @@ export default function AdminGate() {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     className="text-xs mb-3 overflow-hidden"
-                    style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }}
+                    style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}
                   >
                     {error}
                   </m.p>

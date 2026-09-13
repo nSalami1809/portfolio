@@ -69,7 +69,7 @@ export default function CodePlayground({ t }: Props) {
         className="flex items-center gap-2 px-4 py-3"
         style={{ borderBottom: '1px solid var(--glass-border)' }}
       >
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#EF4444' }} aria-hidden="true" />
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#D90000' }} aria-hidden="true" />
         <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#F59E0B' }} aria-hidden="true" />
         <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#008000' }} aria-hidden="true" />
         <span
@@ -119,7 +119,7 @@ export default function CodePlayground({ t }: Props) {
           {status !== 'idle' && !running && (
             <span
               className="flex items-center gap-1.5 text-xs font-medium"
-              style={{ color: status === 'done' ? '#008000' : '#EF4444', fontFamily: 'var(--font-poppins)' }}
+              style={{ color: status === 'done' ? '#008000' : '#D90000', fontFamily: 'var(--font-poppins)' }}
             >
               {status === 'done' ? (
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -162,7 +162,7 @@ export default function CodePlayground({ t }: Props) {
               <div
                 key={i}
                 className="whitespace-pre-wrap break-words"
-                style={{ color: entry.level === 'error' ? '#EF4444' : entry.level === 'warn' ? '#F59E0B' : 'var(--text)' }}
+                style={{ color: entry.level === 'error' ? '#D90000' : entry.level === 'warn' ? '#F59E0B' : 'var(--text)' }}
               >
                 {entry.text}
               </div>
