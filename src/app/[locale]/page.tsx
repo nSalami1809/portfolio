@@ -213,7 +213,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
         {testimonials.length > 0 && (
           <FadeIn delay={0.1}>
-            <TestimonialsMarquee testimonials={translatedTestimonials} />
+            <TestimonialsMarquee testimonials={translatedTestimonials} locale={locale} verifiedLabel={t.home.testimonialsVerified} />
           </FadeIn>
         )}
       </section>

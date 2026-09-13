@@ -140,9 +140,19 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
         <p className="text-xs font-semibold mb-1" style={{ color: '#EF4444' }}>{t.bookingCancelled}</p>
       )}
       <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{booking.clientNom}</p>
-      <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>
+      <p className="text-xs mb-2" style={{ color: 'var(--text-subtle)' }}>
         {t.trackingCode} : <strong style={{ color: 'var(--text)', letterSpacing: '0.05em' }}>{booking.accessCode}</strong>
       </p>
+      {booking.status !== 'cancelled' && (
+        <a
+          href={booking.meetingUrl} target="_blank" rel="noopener noreferrer"
+          className="text-xs font-semibold inline-flex items-center gap-1"
+          style={{ color: 'var(--accent)' }}
+        >
+          {t.joinMeeting}
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      )}
     </div>
   )
 }

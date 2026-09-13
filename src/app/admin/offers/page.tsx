@@ -8,7 +8,7 @@ import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import type { Offer } from '@/types'
 
-const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false, image: '' }
+const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false, image: '', priceHT: undefined }
 const GRID = '1rem 2.5rem 1fr 8rem 6rem'
 
 function TrashIcon() {
@@ -126,7 +126,20 @@ export default function AdminOffers() {
                 />
               </div>
               <div><F label="Titre" req /><input className="input text-sm" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Site vitrine complet" /></div>
-              <div><F label="Prix" req /><input className="input text-sm" value={form.priceLabel} onChange={(e) => setForm((p) => ({ ...p, priceLabel: e.target.value }))} placeholder="600 000 – 1 000 000 FCFA" /></div>
+              <div><F label="Prix (affiché)" req /><input className="input text-sm" value={form.priceLabel} onChange={(e) => setForm((p) => ({ ...p, priceLabel: e.target.value }))} placeholder="600 000 – 1 000 000 FCFA" /></div>
+              <div>
+                <F label="Prix HT exact (FCFA)" />
+                <input
+                  type="number" min={0} step={1000}
+                  className="input text-sm"
+                  value={form.priceHT ?? ''}
+                  onChange={(e) => setForm((p) => ({ ...p, priceHT: e.target.value === '' ? undefined : Number(e.target.value) }))}
+                  placeholder="800000"
+                />
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                  Optionnel — si renseigné, cette offre devient sélectionnable dans le générateur de devis en ligne (/devis).
+                </p>
+              </div>
               <div className="sm:col-span-2">
                 <F label="Description" req />
                 <textarea className="input text-sm" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={3} style={{ resize: 'vertical', minHeight: '70px' }} placeholder="Une phrase qui présente cette offre…" />

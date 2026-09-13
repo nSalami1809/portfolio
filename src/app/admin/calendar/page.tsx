@@ -235,6 +235,11 @@ export default function AdminCalendar() {
                         {b.source === 'client' && (
                           <p style={{ color: 'var(--text-subtle)' }}>{b.clientEmail}{b.clientTelephone ? ` · ${b.clientTelephone}` : ''}</p>
                         )}
+                        {b.status === 'confirmed' && (
+                          <a href={b.meetingUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-1" style={{ color: 'var(--accent)' }}>
+                            Rejoindre la visio →
+                          </a>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -276,6 +281,16 @@ export default function AdminCalendar() {
                   <p className="text-xs truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{formatDateTime(b.start)}{b.source === 'client' ? ` · ${b.clientEmail}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {b.status === 'confirmed' && (
+                    <a
+                      href={b.meetingUrl} target="_blank" rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="btn-secondary btn-xs"
+                      title="Rejoindre la visioconférence"
+                    >
+                      Visio
+                    </a>
+                  )}
                   {b.status === 'confirmed' && (
                     <button onClick={(e) => { e.stopPropagation(); handleCancel(b.id) }} className="btn-secondary btn-xs">Annuler</button>
                   )}

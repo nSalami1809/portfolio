@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
@@ -207,9 +208,12 @@ export default function OffersView() {
         <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
           {t.offers.title}
         </h1>
-        <p className="text-lg mb-16" style={{ color: 'var(--text-muted)', maxWidth: 560 }}>
+        <p className="text-lg mb-4" style={{ color: 'var(--text-muted)', maxWidth: 560 }}>
           {t.offers.subtitle}
         </p>
+        <Link href={`/${locale}/devis`} className="inline-block text-sm font-semibold mb-16 hover:underline" style={{ color: 'var(--accent)' }}>
+          {t.offers.onlineQuoteCta}
+        </Link>
       </FadeIn>
 
       {data.offers.length === 0 ? (
