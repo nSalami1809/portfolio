@@ -140,7 +140,7 @@ export default function AdminQuotes() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total', value: quotes.length, color: 'var(--text)' },
-          { label: 'Non lus', value: unreadCount, color: '#8B5CF6' },
+          { label: 'Non lus', value: unreadCount, color: '#E45742' },
           { label: 'Lus', value: quotes.length - unreadCount, color: '#008000' },
           { label: 'Montant total', value: fmt(totalTTC), color: 'var(--text)' },
         ].map(({ label, value, color }) => (

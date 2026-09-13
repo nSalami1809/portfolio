@@ -173,7 +173,7 @@ export default function SignatureView({ token }: Props) {
                 </div>
                 <span
                   className="text-xs font-semibold px-2.5 py-1 flex-shrink-0"
-                  style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}
+                  style={{ background: 'rgba(228,87,66,0.12)', color: '#E45742', border: '1px solid rgba(228,87,66,0.3)' }}
                 >
                   En attente de signature
                 </span>
