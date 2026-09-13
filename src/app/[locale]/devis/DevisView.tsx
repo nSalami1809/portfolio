@@ -56,7 +56,8 @@ export default function DevisView({ t }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError('')
-    if (!form.clientNom.trim() || selectedItems.length === 0) {
+    const allFieldsFilled = Object.values(form).every((v) => v.trim() !== '')
+    if (!allFieldsFilled || selectedItems.length === 0) {
       setFormError(t.errorRequired)
       return
     }
@@ -64,11 +65,11 @@ export default function DevisView({ t }: Props) {
     try {
       const quote = await submitQuote({
         clientNom: form.clientNom.trim(),
-        clientSociete: form.clientSociete.trim() || undefined,
-        clientAdresse: form.clientAdresse.trim() || undefined,
-        clientEmail: form.clientEmail.trim() || undefined,
-        clientTelephone: form.clientTelephone.trim() || undefined,
-        descriptionProjet: form.descriptionProjet.trim() || t.formTitle,
+        clientSociete: form.clientSociete.trim(),
+        clientAdresse: form.clientAdresse.trim(),
+        clientEmail: form.clientEmail.trim(),
+        clientTelephone: form.clientTelephone.trim(),
+        descriptionProjet: form.descriptionProjet.trim(),
         items: selectedItems,
       })
       setCreatedQuote(quote)
@@ -150,25 +151,25 @@ export default function DevisView({ t }: Props) {
                 </div>
                 <div>
                   <label htmlFor="dv-societe" className={fieldLabel} style={labelStyle}>{t.companyLabel}</label>
-                  <input id="dv-societe" name="clientSociete" value={form.clientSociete} onChange={handleChange} maxLength={100} placeholder={t.companyPlaceholder} className="input" />
+                  <input id="dv-societe" name="clientSociete" value={form.clientSociete} onChange={handleChange} required maxLength={100} placeholder={t.companyPlaceholder} className="input" />
                 </div>
                 <div>
                   <label htmlFor="dv-email" className={fieldLabel} style={labelStyle}>{t.emailLabel}</label>
-                  <input id="dv-email" type="email" name="clientEmail" value={form.clientEmail} onChange={handleChange} maxLength={200} placeholder={t.emailPlaceholder} className="input" />
+                  <input id="dv-email" type="email" name="clientEmail" value={form.clientEmail} onChange={handleChange} required maxLength={200} placeholder={t.emailPlaceholder} className="input" />
                 </div>
                 <div>
                   <label htmlFor="dv-tel" className={fieldLabel} style={labelStyle}>{t.phoneLabel}</label>
-                  <input id="dv-tel" name="clientTelephone" value={form.clientTelephone} onChange={handleChange} maxLength={30} placeholder={t.phonePlaceholder} className="input" />
+                  <input id="dv-tel" name="clientTelephone" value={form.clientTelephone} onChange={handleChange} required maxLength={30} placeholder={t.phonePlaceholder} className="input" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="dv-adresse" className={fieldLabel} style={labelStyle}>{t.addressLabel}</label>
-                  <input id="dv-adresse" name="clientAdresse" value={form.clientAdresse} onChange={handleChange} maxLength={200} placeholder={t.addressPlaceholder} className="input" />
+                  <input id="dv-adresse" name="clientAdresse" value={form.clientAdresse} onChange={handleChange} required maxLength={200} placeholder={t.addressPlaceholder} className="input" />
                 </div>
               </div>
 
               <div>
                 <label htmlFor="dv-description" className={fieldLabel} style={labelStyle}>{t.descriptionLabel}</label>
-                <textarea id="dv-description" name="descriptionProjet" value={form.descriptionProjet} onChange={handleChange} rows={4} maxLength={1500} placeholder={t.descriptionPlaceholder} className="input" style={{ resize: 'none' }} />
+                <textarea id="dv-description" name="descriptionProjet" value={form.descriptionProjet} onChange={handleChange} required rows={4} maxLength={1500} placeholder={t.descriptionPlaceholder} className="input" style={{ resize: 'none' }} />
               </div>
 
               <div>
