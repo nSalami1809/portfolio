@@ -28,11 +28,18 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
     [projects, t.all],
   )
   const [active, setActive] = useState(t.all)
+  const [query, setQuery] = useState('')
 
-  const filtered = useMemo(
-    () => (active === t.all ? projects : projects.filter((p) => p.category === active)),
-    [projects, active, t.all],
-  )
+  const filtered = useMemo(() => {
+    const byCategory = active === t.all ? projects : projects.filter((p) => p.category === active)
+    const q = query.trim().toLowerCase()
+    if (!q) return byCategory
+    return byCategory.filter((p) =>
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.tags.some((tag) => tag.toLowerCase().includes(q)),
+    )
+  }, [projects, active, t.all, query])
 
   return (
     <div className="relative">
@@ -49,6 +56,29 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
           </p>
         </FadeIn>
       </div>
+
+      {/* Search */}
+      <FadeIn>
+        <div className="relative mb-6 max-w-sm">
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-subtle)' }}
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchAria}
+            className="input"
+            style={{ paddingLeft: '2.5rem' }}
+          />
+        </div>
+      </FadeIn>
 
       {/* Filters */}
       <FadeIn>
@@ -164,7 +194,7 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
 
       {filtered.length === 0 && (
         <div className="py-20 text-center" style={{ color: 'var(--text-muted)' }}>
-          {t.empty}
+          {query.trim() ? t.noResults : t.empty}
         </div>
       )}
       </div>
