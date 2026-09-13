@@ -10,9 +10,13 @@ const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 interface Props {
   quote: Quote
   onClose: () => void
+  // 'contrat' is shown once a quote has been accepted — same document, the
+  // client's proof of an agreed order rather than a pending proposal.
+  variant?: 'devis' | 'contrat'
 }
 
-export default function QuoteView({ quote, onClose }: Props) {
+export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) {
+  const isContract = variant === 'contrat'
   const { data } = usePortfolio()
   const { personal, socials } = data
   const [qrDataUrl, setQrDataUrl] = useState('')
@@ -97,7 +101,7 @@ export default function QuoteView({ quote, onClose }: Props) {
 
         {/* Title + dates */}
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
-          <h1 style={{ fontSize: '2.4rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>DEVIS</h1>
+          <h1 style={{ fontSize: '2.4rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>{isContract ? 'CONTRAT' : 'DEVIS'}</h1>
           <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#333' }}>
             <p style={{ margin: 0 }}>Date d&apos;émission : <em>{dateEmission}</em></p>
             <p style={{ margin: 0 }}>Validité de l&apos;offre : <strong>{quote.validiteJours} jours</strong></p>
@@ -170,14 +174,26 @@ export default function QuoteView({ quote, onClose }: Props) {
         </div>
 
         {/* Conditions */}
-        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>CONDITIONS</p>
-        <ul style={{ fontSize: '0.8rem', color: '#333', paddingLeft: '1.1rem', marginBottom: '1.5rem', lineHeight: 1.8 }}>
-          <li>Acompte de 30% à la commande, solde à la livraison.</li>
-          <li>Devis valable {quote.validiteJours} jours à compter de la date d&apos;émission.</li>
-          <li>Délai de réalisation à convenir après validation du devis.</li>
-        </ul>
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>
+          {isContract ? 'CONFIRMATION' : 'CONDITIONS'}
+        </p>
+        {isContract ? (
+          <ul style={{ fontSize: '0.8rem', color: '#333', paddingLeft: '1.1rem', marginBottom: '1.5rem', lineHeight: 1.8 }}>
+            <li>Devis accepté — cette commande est confirmée pour le montant ci-dessus.</li>
+            <li>Acompte de 30% à régler pour démarrer la prestation, solde à la livraison.</li>
+            <li>Délai de réalisation à convenir directement avec le client.</li>
+          </ul>
+        ) : (
+          <ul style={{ fontSize: '0.8rem', color: '#333', paddingLeft: '1.1rem', marginBottom: '1.5rem', lineHeight: 1.8 }}>
+            <li>Acompte de 30% à la commande, solde à la livraison.</li>
+            <li>Devis valable {quote.validiteJours} jours à compter de la date d&apos;émission.</li>
+            <li>Délai de réalisation à convenir après validation du devis.</li>
+          </ul>
+        )}
 
-        <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '2.5rem' }}>Bon pour accord — Date et signature du client :</p>
+        <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '2.5rem' }}>
+          {isContract ? 'Commande confirmée — Date et signature du client :' : 'Bon pour accord — Date et signature du client :'}
+        </p>
 
         <div style={{ borderTop: '1px solid #ddd', margin: '1.25rem 0' }} />
 

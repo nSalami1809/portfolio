@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { m } from 'framer-motion'
-import { listQuotes, markQuoteRead, deleteQuote, updateQuoteStatus } from '@/actions/quotes'
+import { listQuotes, markQuoteRead, deleteQuote, updateQuoteStatus, requestTestimonial } from '@/actions/quotes'
 import type { AdminQuote, QuoteStatus } from '@/actions/quotes'
+import { useToast } from '@/components/admin/Toast'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
@@ -22,11 +23,13 @@ const STATUS_LABEL: Record<QuoteStatus, string> = { pending: 'En attente', accep
 const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#008000', declined: '#EF4444' }
 
 export default function AdminQuotes() {
+  const toast = useToast()
   const [quotes, setQuotes]     = useState<AdminQuote[]>([])
   const [loading, setLoading]   = useState(true)
   const [filter, setFilter]     = useState<Filter>('tous')
   const [selected, setSelected] = useState<AdminQuote | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [requesting, setRequesting] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -56,6 +59,19 @@ export default function AdminQuotes() {
   const handleStatusChange = async (id: string, status: QuoteStatus) => {
     setQuotes((prev) => prev.map((x) => x.id === id ? { ...x, status } : x))
     await updateQuoteStatus(id, status)
+  }
+
+  const handleRequestTestimonial = async (q: AdminQuote) => {
+    setRequesting(q.id)
+    try {
+      const result = await requestTestimonial(q.id)
+      if (result.ok) {
+        setQuotes((prev) => prev.map((x) => x.id === q.id ? { ...x, testimonialRequestedAt: new Date().toISOString() } : x))
+      }
+      toast(result.message, result.ok ? undefined : 'error')
+    } finally {
+      setRequesting(null)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -219,6 +235,16 @@ export default function AdminQuotes() {
                     <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                   ))}
                 </select>
+                {q.clientEmail && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRequestTestimonial(q) }}
+                    disabled={requesting === q.id}
+                    className="btn-secondary btn-xs hidden sm:inline-flex"
+                    title={q.testimonialRequestedAt ? `Déjà envoyé le ${formatDate(q.testimonialRequestedAt)} — cliquer pour redemander` : 'Demander un avis au client'}
+                  >
+                    {q.testimonialRequestedAt ? 'Redemander un avis' : 'Demander un avis'}
+                  </button>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(q.id) }}
                   disabled={deleting === q.id}

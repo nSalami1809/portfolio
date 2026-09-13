@@ -38,6 +38,10 @@ export interface Booking extends BookingPayload {
   // client attached) — still occupies the slot everywhere (public page,
   // chatbot), just never triggers client emails or rate limiting.
   source: 'admin' | 'client'
+  // Auto-generated Jitsi room (no account/API key needed, unlike Google
+  // Meet) — unique per booking, included in every booking email + the ICS
+  // file's LOCATION field.
+  meetingUrl: string
 }
 
 export interface AdminBooking extends Booking {
@@ -59,6 +63,7 @@ interface BookingRecord {
   createdAt: Date
   source?: 'admin' | 'client'
   reminderSent?: boolean
+  meetingUrl?: string
 }
 
 function bookings() {
@@ -70,6 +75,13 @@ function generateAccessCode(length = 6): string {
   let code = ''
   for (let i = 0; i < length; i++) code += CODE_CHARS[bytes[i] % CODE_CHARS.length]
   return code
+}
+
+// Jitsi needs no account/API key (unlike Google Meet) — a long random room
+// name is the whole access control, so anyone with the link can join but
+// nobody can guess it.
+function generateMeetingUrl(): string {
+  return `https://meet.jit.si/PortfolioNS-${randomBytes(10).toString('hex')}`
 }
 
 function toBooking(doc: WithId<BookingRecord>): Booking {
@@ -85,6 +97,9 @@ function toBooking(doc: WithId<BookingRecord>): Booking {
     status: doc.status,
     createdAt: doc.createdAt.toISOString(),
     source: doc.source ?? 'client',
+    // Bookings created before this feature shipped have no stored room —
+    // derive a stable one from their access code rather than leaving it empty.
+    meetingUrl: doc.meetingUrl ?? `https://meet.jit.si/PortfolioNS-${doc.accessCode}`,
   }
 }
 
@@ -253,6 +268,7 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
 
   const end = new Date(start.getTime() + availability.slotMinutes * 60_000)
   const accessCode = generateAccessCode()
+  const meetingUrl = generateMeetingUrl()
   const record: BookingRecord = {
     clientNom: payload.clientNom.trim(),
     clientEmail: payload.clientEmail.trim(),
@@ -265,6 +281,7 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
     status: 'confirmed',
     read: false,
     createdAt: new Date(),
+    meetingUrl,
   }
 
   await db.collection('booking_ratelimits').insertOne({ ip, createdAt: new Date() })
@@ -280,6 +297,7 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
         start, end,
         summary: `Rendez-vous avec ${booking.clientNom}`,
         description: booking.message,
+        location: booking.meetingUrl,
         organizerEmail: adminEmail,
         attendeeEmail: booking.clientEmail,
       })
@@ -340,6 +358,7 @@ export async function createEvent(payload: { title: string; start: string; durat
     read: true, // created by the admin — no unread notification needed
     createdAt: new Date(),
     source: 'admin',
+    meetingUrl: generateMeetingUrl(),
   }
 
   const { insertedId } = await col.insertOne(record)

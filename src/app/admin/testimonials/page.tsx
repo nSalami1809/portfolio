@@ -178,6 +178,22 @@ export default function AdminTestimonials() {
                 <StarRatingInput value={form.rating ?? 5} onChange={(rating) => setForm((p) => ({ ...p, rating }))} size={20} />
               </div>
               <div className="sm:col-span-2">
+                <F label="Projet lié (avis vérifié)" />
+                <select
+                  className="input text-sm"
+                  value={form.projectSlug ?? ''}
+                  onChange={(e) => setForm((p) => ({ ...p, projectSlug: e.target.value || undefined }))}
+                >
+                  <option value="">Aucun projet lié</option>
+                  {data.projects.map((proj) => (
+                    <option key={proj.slug} value={proj.slug}>{proj.title}</option>
+                  ))}
+                </select>
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                  Si renseigné, un badge « Vérifié » et un lien vers ce projet s&apos;affichent sur la carte publique.
+                </p>
+              </div>
+              <div className="sm:col-span-2">
                 <F label="Témoignage" req />
                 <textarea className="input text-sm" value={form.text} onChange={(e) => setForm((p) => ({ ...p, text: e.target.value }))} rows={4} style={{ resize: 'vertical', minHeight: '90px' }} placeholder="Ce que dit la personne à votre sujet…" />
               </div>
@@ -240,6 +256,7 @@ export default function AdminTestimonials() {
                       <p className="font-medium text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{t.name}</p>
                       {t.company && <span className="text-xs" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>· {t.company}</span>}
                       <StarRating rating={t.rating ?? 5} size={10} showValue={false} />
+                      {t.projectSlug && <span className="tag text-xs">Vérifié</span>}
                     </div>
                     {t.role && <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.role}</p>}
                     <p className="text-xs mt-1 line-clamp-1" style={{ color: 'var(--text-muted)' }}>&ldquo;{t.text}&rdquo;</p>

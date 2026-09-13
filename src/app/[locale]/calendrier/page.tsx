@@ -145,9 +145,20 @@ export default function CalendarPage() {
                   </div>
                   <p className="font-display font-bold text-lg mb-2" style={{ color: 'var(--text)' }}>{tc.confirmedTitle}</p>
                   <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>{tc.confirmedBody}</p>
-                  <div className="p-3 rounded-lg" style={{ background: 'var(--surface)' }}>
+                  <div className="p-3 rounded-lg mb-3" style={{ background: 'var(--surface)' }}>
                     <p className="text-xs mb-1" style={{ color: 'var(--text-subtle)' }}>{tc.accessCodeLabel}</p>
                     <p className="font-display font-bold text-lg tracking-widest" style={{ color: 'var(--text)' }}>{booking.accessCode}</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: 'var(--surface)' }}>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-subtle)' }}>{tc.meetingLinkLabel}</p>
+                    <a
+                      href={booking.meetingUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-sm font-semibold inline-flex items-center gap-1.5"
+                      style={{ color: 'var(--accent)' }}
+                    >
+                      {tc.joinMeeting}
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
                   </div>
                 </m.div>
               ) : !selectedDay ? (

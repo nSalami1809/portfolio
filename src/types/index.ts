@@ -68,6 +68,9 @@ export interface Testimonial {
   text: string
   avatar?: string
   rating?: number
+  // Admin-only link to a real Project — when set, the public card shows a
+  // "Vérifié" badge and links to that project as proof the review is real.
+  projectSlug?: string
 }
 
 export interface Offer {
@@ -78,6 +81,10 @@ export interface Offer {
   features?: string[]
   featured?: boolean
   image?: string
+  // Optional numeric HT price backing the self-service quote builder
+  // (/devis) — priceLabel stays the free-text display shown everywhere
+  // else. An offer without priceHT simply can't be picked in that form.
+  priceHT?: number
 }
 
 export interface SiteSettings {

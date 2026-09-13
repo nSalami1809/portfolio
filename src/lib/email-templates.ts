@@ -16,6 +16,7 @@ const icon = {
   clock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${MUTED}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
   check: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   alert: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  video: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>`,
 }
 
 const phone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
@@ -464,6 +465,60 @@ export function quoteClientCopyEmail(data: {
   }
 }
 
+// ── Quote accepted → confirmation / contract (client) ────────────────────────
+// Sent automatically the moment an admin flips a quote's status to
+// "accepted" — the client gets a confirmation they can open, print, or sign
+// (same document as the devis, now framed as a contract).
+
+export function quoteAcceptedEmail(data: {
+  numero: string
+  accessCode: string
+  clientNom: string
+  totalTTC: number
+}, adminEmail: string) {
+  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
+  const safeNom = esc(data.clientNom)
+
+  return {
+    subject: `Devis accepté — contrat ${data.numero}`,
+    html: base('Devis accepté', `Votre devis ${data.numero} a été accepté — voici votre contrat`, `
+      ${badge(`Devis ${esc(data.numero)}`)}
+      ${heading(`C&rsquo;est parti, ${safeNom.split(' ')[0]}&nbsp;!`)}
+      ${intro(`Votre devis a &eacute;t&eacute; accept&eacute; et vaut d&eacute;sormais confirmation de commande. Retrouvez le contrat correspondant &agrave; tout moment avec votre code de suivi.`)}
+
+      ${infoBox(`
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
+        <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+        <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">Montant total accept&eacute; : <strong style="color:#26262E">${fmt(data.totalTTC)}</strong> TTC.</p>
+      `)}
+
+      ${ctaButton(`${SITE_URL}/fr/devis?ref=${encodeURIComponent(data.accessCode)}`, 'Voir mon contrat')}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos du devis ${data.numero}`)}`, 'Une question ?')}
+    `),
+  }
+}
+
+// ── Testimonial request (client) — manual trigger, automated content ────────
+// The admin decides *when* to ask (after actually delivering the project),
+// but never has to write the email by hand.
+
+export function testimonialRequestEmail(data: { clientNom: string; numero: string }, adminEmail: string) {
+  const safeNom = esc(data.clientNom)
+  const firstName = safeNom.split(' ')[0]
+
+  return {
+    subject: `${firstName}, un avis sur notre collaboration ?`,
+    html: base('Votre avis compte', `Un petit mot sur votre expérience avec Nawaf Nemrod SALAMI ?`, `
+      ${badge(`Devis ${esc(data.numero)}`)}
+      ${heading(`Un avis, ${firstName}&nbsp;?`)}
+      ${intro(`J&rsquo;esp&egrave;re que notre collaboration s&rsquo;est bien pass&eacute;e&nbsp;! Si vous avez deux minutes, un retour honn&ecirc;te m&rsquo;aiderait &eacute;norm&eacute;ment &agrave; faire conna&icirc;tre mon travail aupr&egrave;s d&rsquo;autres clients.`)}
+
+      ${ctaButton(`${SITE_URL}/fr/temoignage`, 'Laisser un avis')}
+      ${secondaryLink(`mailto:${adminEmail}`, 'Répondre directement')}
+    `),
+  }
+}
+
 // ── Booking notification (admin) ───────────────────────────────────────────
 
 function formatSlot(startISO: string): string {
@@ -480,6 +535,7 @@ export function bookingNotificationEmail(data: {
   message?: string
   start: string
   accessCode: string
+  meetingUrl: string
 }) {
   const safeNom = esc(data.clientNom)
   const safeEmail = esc(data.clientEmail)
@@ -498,6 +554,7 @@ export function bookingNotificationEmail(data: {
         ${dataRow(icon.user, 'Client', `<strong>${safeNom}</strong>`)}
         ${dataRow(icon.mail, 'Email', `<a href="mailto:${safeEmail}" style="color:#131318;text-decoration:underline;font-weight:600">${safeEmail}</a>`)}
         ${safePhone ? dataRow(phone, 'T&eacute;l&eacute;phone', `<a href="tel:${safePhone}" style="color:#131318;text-decoration:underline;font-weight:600">${safePhone}</a>`) : ''}
+        ${dataRow(icon.video, 'Visioconf&eacute;rence', `<a href="${esc(data.meetingUrl)}" style="color:#131318;text-decoration:underline;font-weight:600">Rejoindre le salon</a>`)}
       `)}
 
       ${data.message ? infoBox(`
@@ -518,6 +575,7 @@ export function bookingClientCopyEmail(data: {
   message?: string
   start: string
   accessCode: string
+  meetingUrl: string
 }, adminEmail: string) {
   const safeNom = esc(data.clientNom)
   const when = formatSlot(data.start)
@@ -527,17 +585,19 @@ export function bookingClientCopyEmail(data: {
     html: base('Rendez-vous confirmé', `Votre rendez-vous est confirmé pour le ${when}`, `
       ${badge('Rendez-vous confirm&eacute;')}
       ${heading(`C&rsquo;est confirm&eacute;, ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(`Votre rendez-vous avec Nawaf Nemrod SALAMI est bien enregistr&eacute;. Un fichier calendrier est joint &agrave; cet e-mail pour l&rsquo;ajouter directement &agrave; votre agenda.`)}
+      ${intro(`Votre rendez-vous avec Nawaf Nemrod SALAMI est bien enregistr&eacute;. Un fichier calendrier est joint &agrave; cet e-mail pour l&rsquo;ajouter directement &agrave; votre agenda — le lien de visioconf&eacute;rence y est d&eacute;j&agrave; inclus.`)}
 
       ${infoBox(`
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Cr&eacute;neau</p>
         <p style="margin:0 0 16px;font-size:16px;font-weight:800;color:#131318">${esc(when)}</p>
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
-        <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
-        <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">Conservez ce code : donnez-le au chatbot du portfolio pour retrouver ou annuler ce rendez-vous.</p>
+        <p style="margin:0 0 16px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Visioconf&eacute;rence</p>
+        <p style="margin:0;font-size:13px"><a href="${esc(data.meetingUrl)}" style="color:#131318;text-decoration:underline;font-weight:600">${esc(data.meetingUrl)}</a></p>
+        <p style="margin:8px 0 0;font-size:12px;color:#9A9AA6;line-height:1.6">Conservez le code ci-dessus : donnez-le au chatbot du portfolio pour retrouver ou annuler ce rendez-vous.</p>
       `)}
 
-      ${ctaButton(SITE_URL, 'Voir le portfolio')}
+      ${ctaButton(data.meetingUrl, 'Rejoindre la visioconférence')}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent('À propos de mon rendez-vous')}`, 'Une question ?')}
     `),
   }
@@ -549,6 +609,7 @@ export function bookingReminderEmail(data: {
   clientNom: string
   start: string
   accessCode: string
+  meetingUrl: string
 }, adminEmail: string) {
   const safeNom = esc(data.clientNom)
   const when = formatSlot(data.start)
@@ -564,10 +625,12 @@ export function bookingReminderEmail(data: {
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Cr&eacute;neau</p>
         <p style="margin:0 0 16px;font-size:16px;font-weight:800;color:#131318">${esc(when)}</p>
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
-        <p style="margin:0;font-size:14px;font-weight:700;color:#131318;letter-spacing:0.1em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#131318;letter-spacing:0.1em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Visioconf&eacute;rence</p>
+        <p style="margin:0;font-size:13px"><a href="${esc(data.meetingUrl)}" style="color:#131318;text-decoration:underline;font-weight:600">${esc(data.meetingUrl)}</a></p>
       `)}
 
-      ${ctaButton(SITE_URL, 'Voir le portfolio')}
+      ${ctaButton(data.meetingUrl, 'Rejoindre la visioconférence')}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent('À propos de mon rendez-vous')}`, 'Besoin de le déplacer ?')}
     `),
   }

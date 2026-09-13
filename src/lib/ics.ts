@@ -15,6 +15,7 @@ export function buildICS(event: {
   end: Date
   summary: string
   description?: string
+  location?: string
   organizerEmail: string
   attendeeEmail: string
 }): string {
@@ -31,6 +32,7 @@ export function buildICS(event: {
     `DTEND:${stamp(event.end)}`,
     `SUMMARY:${foldEscape(event.summary)}`,
     event.description ? `DESCRIPTION:${foldEscape(event.description)}` : '',
+    event.location ? `LOCATION:${foldEscape(event.location)}` : '',
     `ORGANIZER:mailto:${event.organizerEmail}`,
     `ATTENDEE:mailto:${event.attendeeEmail}`,
     'STATUS:CONFIRMED',

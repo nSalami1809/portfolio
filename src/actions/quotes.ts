@@ -5,7 +5,7 @@ import { ObjectId, type WithId } from 'mongodb'
 import { after } from 'next/server'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
-import { quoteNotificationEmail, quoteClientCopyEmail } from '@/lib/email-templates'
+import { quoteNotificationEmail, quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
 
@@ -46,6 +46,7 @@ export interface AdminQuote extends Quote {
   id: string
   read: boolean
   createdAt: string
+  testimonialRequestedAt?: string
 }
 
 interface QuoteRecord extends QuotePayload {
@@ -59,6 +60,7 @@ interface QuoteRecord extends QuotePayload {
   read: boolean
   createdAt: Date
   status?: QuoteStatus
+  testimonialRequestedAt?: Date
 }
 
 function quotes() {
@@ -198,6 +200,7 @@ export async function listQuotes(): Promise<AdminQuote[]> {
     id: doc._id.toString(),
     read: doc.read ?? false,
     createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : String(doc.createdAt),
+    testimonialRequestedAt: doc.testimonialRequestedAt instanceof Date ? doc.testimonialRequestedAt.toISOString() : undefined,
   }))
 }
 
@@ -210,7 +213,58 @@ export async function markQuoteRead(id: string): Promise<void> {
 export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {
   await requireAdmin()
   const col = await quotes()
+  const doc = await col.findOne({ _id: new ObjectId(id) })
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
+
+  // Contract confirmation fires once, only on the actual pending/declined →
+  // accepted transition — never on a no-op re-save of an already-accepted quote.
+  if (doc && status === 'accepted' && (doc.status ?? 'pending') !== 'accepted' && doc.clientEmail) {
+    const quote = toQuote({ ...doc, status })
+    after(async () => {
+      try {
+        const transporter = getTransporter()
+        const adminEmail = await getAdminEmail()
+        const email = quoteAcceptedEmail(quote, adminEmail)
+        await transporter.sendMail({
+          from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+          to: doc.clientEmail,
+          subject: email.subject,
+          html: email.html,
+        })
+      } catch (e) {
+        console.error('[updateQuoteStatus] contract email error:', e)
+      }
+    })
+  }
+}
+
+// Manually triggered by the admin (after actually delivering the project —
+// not automatically on acceptance, which would be premature) but the email
+// itself is fully automated: no need to write it by hand each time.
+export async function requestTestimonial(id: string): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin()
+  const col = await quotes()
+  const doc = await col.findOne({ _id: new ObjectId(id) })
+  if (!doc) return { ok: false, message: 'Devis introuvable.' }
+  if (!doc.clientEmail) return { ok: false, message: "Ce devis n'a pas d'email client enregistré." }
+
+  try {
+    const transporter = getTransporter()
+    const adminEmail = await getAdminEmail()
+    const email = testimonialRequestEmail({ clientNom: doc.clientNom, numero: doc.numero }, adminEmail)
+    await transporter.sendMail({
+      from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+      to: doc.clientEmail,
+      subject: email.subject,
+      html: email.html,
+    })
+  } catch (e) {
+    console.error('[requestTestimonial] email error:', e)
+    return { ok: false, message: "Échec de l'envoi de l'email." }
+  }
+
+  await col.updateOne({ _id: new ObjectId(id) }, { $set: { testimonialRequestedAt: new Date() } })
+  return { ok: true, message: 'Demande envoyée.' }
 }
 
 export async function deleteQuote(id: string): Promise<void> {
