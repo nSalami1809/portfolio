@@ -1,12 +1,12 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { testimonialNotificationEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
+import { getClientIp } from '@/lib/client-ip'
 
 const MAX_PER_HOUR = 3
 
@@ -64,10 +64,7 @@ export async function submitTestimonial(payload: TestimonialSubmissionPayload): 
   if (!payload.text?.trim() || payload.text.length > 1000) return { ok: false, error: 'Témoignage invalide (1000 caractères maximum).' }
   if (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5) return { ok: false, error: 'Note invalide.' }
 
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim()
-    ?? hdrs.get('x-real-ip')
-    ?? 'unknown'
+  const ip = await getClientIp()
 
   const [db] = await Promise.all([getDb(), getIndexes()])
 

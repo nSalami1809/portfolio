@@ -1,6 +1,6 @@
 'use client'
 
-import { LazyMotion, domMax } from 'framer-motion'
+import { LazyMotion, MotionConfig, domMax } from 'framer-motion'
 
 // Bundled statically (not the async `features={() => import(...)}` form):
 // nearly every page fires an entrance animation immediately on first paint
@@ -26,8 +26,13 @@ import { LazyMotion, domMax } from 'framer-motion'
 // `strict` anymore.
 export default function MotionProvider({ children }: { children: React.ReactNode }) {
   return (
+    // reducedMotion="user" makes every framer-motion animation in the tree
+    // honour the OS "reduce motion" setting — transforms are skipped, opacity
+    // still animates — without each component having to check for itself.
     <LazyMotion features={domMax} strict>
-      {children}
+      <MotionConfig reducedMotion="user">
+        {children}
+      </MotionConfig>
     </LazyMotion>
   )
 }

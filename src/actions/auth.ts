@@ -2,7 +2,7 @@
 
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'crypto'
 import { SignJWT } from 'jose'
-import { cookies, headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getDb } from '@/lib/mongodb'
 import { generateOTP, storeOTP, consumeOTP } from '@/lib/otp'
@@ -10,8 +10,10 @@ import { getTransporter } from '@/lib/mailer'
 import { otpEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
+import { getClientIp } from '@/lib/client-ip'
+import { getJwtSecret } from '@/lib/jwt-secret'
 
-const getSecret   = () => new TextEncoder().encode(process.env.JWT_SECRET!)
+const getSecret   = getJwtSecret
 const COOKIE      = 'admin-token'
 const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 
@@ -71,8 +73,7 @@ export async function loginWithCredentials(
   if (email.toLowerCase() !== adminEmail.toLowerCase()) return { error: 'Identifiants incorrects.' }
 
   // Rate-limit by IP before hitting the DB for password check
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? hdrs.get('x-real-ip') ?? 'unknown'
+  const ip = await getClientIp()
   await ensureLoginRlIndex()
   const db = await getDb()
   const since = new Date(Date.now() - LOGIN_RL_WINDOW_S * 1000)
@@ -135,6 +136,15 @@ export async function verifyOTPAction(
   _: VerifyOTPResult,
   formData: FormData,
 ): Promise<VerifyOTPResult> {
+  // Step 1 (password check) must have actually succeeded — otherwise this
+  // action is a second, independent factor: anyone who intercepts or guesses
+  // a live 6-digit OTP window gets a full admin session without ever
+  // knowing the password, making the login effectively single-factor.
+  const jar = await cookies()
+  if (jar.get('admin-pre')?.value !== '1') {
+    return { error: 'Session expirée — merci de vous reconnecter.' }
+  }
+
   const otp = formData.get('otp')?.toString().trim() ?? ''
   if (!/^\d{6}$/.test(otp)) return { error: 'Code invalide.' }
 
@@ -148,7 +158,6 @@ export async function verifyOTPAction(
     .setExpirationTime('7d')
     .sign(getSecret())
 
-  const jar = await cookies()
   jar.set(COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

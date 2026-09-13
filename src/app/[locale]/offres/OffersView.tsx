@@ -5,14 +5,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
-import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
-import { translateText } from '@/actions/translate'
 import { openChatWithMessage } from '@/lib/chat-bridge'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import type { Offer } from '@/types'
 
-type Translated = Record<string, { title: string; description: string; features: string }>
+export type TranslatedOffers = Record<string, { title: string; description: string; features: string }>
+type Translated = TranslatedOffers
 type OffersDict = ReturnType<typeof useDictionary>['offers']
 
 const HERO_INTERVAL_MS = 3000
@@ -97,28 +96,42 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
       </AnimatePresence>
 
       {offers.length > 1 && (
-        <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2" style={{ zIndex: 1 }}>
+        <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center" style={{ zIndex: 1 }}>
+          {/* Dots stay visually tiny but each sits inside a transparent
+              44×44 button, so they're actually tappable on a phone. */}
           {offers.map((slide, i) => (
             <button
               key={slide.id}
               onClick={() => setIndex(i)}
               aria-label={t.heroGoTo(translated[slide.id]?.title || slide.title)}
               aria-current={i === index}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: i === index ? '20px' : '6px',
-                height: '6px',
-                background: i === index ? '#fff' : 'rgba(255,255,255,0.35)',
-              }}
-            />
+              className="flex items-center justify-center"
+              style={{ width: 24, height: 44 }}
+            >
+              <span
+                aria-hidden="true"
+                className="block rounded-full transition-all duration-300"
+                style={{
+                  width: i === index ? '20px' : '6px',
+                  height: '6px',
+                  background: i === index ? '#fff' : 'rgba(255,255,255,0.35)',
+                }}
+              />
+            </button>
           ))}
           <button
             onClick={() => setUserPaused((p) => !p)}
             aria-label={userPaused ? t.heroPlay : t.heroPause}
-            className="ml-2 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff' }}
+            className="ml-1 flex items-center justify-center"
+            style={{ width: 44, height: 44 }}
           >
-            {userPaused ? <PlayIcon /> : <PauseIcon />}
+            <span
+              aria-hidden="true"
+              className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff' }}
+            >
+              {userPaused ? <PlayIcon /> : <PauseIcon />}
+            </span>
           </button>
         </div>
       )}
@@ -172,32 +185,21 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
   )
 }
 
-export default function OffersView() {
-  const { data } = usePortfolio()
+interface OffersViewProps {
+  // Both resolved on the server and rendered straight into the HTML. This
+  // view used to read the offers out of a client context that started on
+  // placeholder data, and translate them through one Server Action per offer
+  // in an effect — so the first paint showed the wrong cards, then swapped.
+  offers: Offer[]
+  translated: TranslatedOffers
+}
+
+export default function OffersView({ offers, translated }: OffersViewProps) {
   const locale = useLocale()
   const t = useDictionary()
 
-  const [translated, setTranslated] = useState<Translated>({})
-
-  useEffect(() => {
-    if (locale !== 'en' || data.offers.length === 0) { setTranslated({}); return } // eslint-disable-line react-hooks/set-state-in-effect
-    let cancelled = false
-    Promise.all(
-      data.offers.map(async (o) => {
-        const fields = await translateText(`offer:${o.id}`, 'en', {
-          title: o.title,
-          description: o.description,
-          features: (o.features ?? []).join('\n'),
-        })
-        return [o.id, { title: fields.title ?? o.title, description: fields.description ?? o.description, features: fields.features ?? '' }] as const
-      }),
-    ).then((entries) => { if (!cancelled) setTranslated(Object.fromEntries(entries)) }).catch(() => {})
-    return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, data.offers.length])
-
-  const special = data.offers.filter((o) => o.featured)
-  const regular = data.offers.filter((o) => !o.featured)
+  const special = offers.filter((o) => o.featured)
+  const regular = offers.filter((o) => !o.featured)
 
   const requestQuote = (title: string) => openChatWithMessage(t.offers.ctaMessage(title))
 
@@ -219,11 +221,11 @@ export default function OffersView() {
         </Link>
       </FadeIn>
 
-      {data.offers.length === 0 ? (
+      {offers.length === 0 ? (
         <p className="py-10 text-center" style={{ color: 'var(--text-muted)' }}>{t.offers.empty}</p>
       ) : (
         <>
-          <OffersHero offers={data.offers} translated={translated} t={t.offers} ctaLabel={t.offers.cta} onRequest={requestQuote} />
+          <OffersHero offers={offers} translated={translated} t={t.offers} ctaLabel={t.offers.cta} onRequest={requestQuote} />
 
           {special.length > 0 && (
             <div className="mb-16">

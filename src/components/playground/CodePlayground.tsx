@@ -18,7 +18,9 @@ const jsLang = javascript()
 // the vscode theme below. Font matches the system monospace stack already
 // used for inline code elsewhere on the site, so no extra webfont is loaded.
 const editorTheme = EditorView.theme({
-  '&': { fontSize: '13px' },
+  // 16px minimum: CodeMirror's content is a focusable editable region, and
+  // anything smaller makes iOS Safari zoom the page on every tap into it.
+  '&': { fontSize: '16px' },
   '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', padding: '12px 0' },
   '.cm-gutters': { border: 'none' },
 })

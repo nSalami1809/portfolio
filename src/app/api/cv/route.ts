@@ -16,6 +16,13 @@ function cvFileName(fullName: string): string {
   return `${safe || 'CV'}.pdf`
 }
 
+// The CV URL is admin-set today (publishPortfolio is auth-gated), but this
+// route otherwise fetches whatever URL the stored document holds and streams
+// the body straight back to any visitor — a ready-made server-side fetch
+// primitive if the CMS is ever compromised. Restrict it to the actual Blob
+// storage host so it can never be turned into an open proxy/SSRF relay.
+const ALLOWED_CV_HOST_RE = /(^|\.)public\.blob\.vercel-storage\.com$/
+
 export async function GET() {
   const portfolio = await fetchPortfolioSafe('api/cv')
   const cvUrl = portfolio?.personal.cvUrl
@@ -23,7 +30,23 @@ export async function GET() {
     return new NextResponse('CV non disponible', { status: 404 })
   }
 
-  const upstream = await fetch(cvUrl).catch(() => null)
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(cvUrl)
+  } catch {
+    return new NextResponse('CV non disponible', { status: 404 })
+  }
+  if (parsedUrl.protocol !== 'https:' || !ALLOWED_CV_HOST_RE.test(parsedUrl.hostname)) {
+    return new NextResponse('CV non disponible', { status: 404 })
+  }
+
+  // Blob URLs are content-addressed and immutable, so re-fetching the same
+  // bytes from origin on every download was pure waste. Tagged 'portfolio' so
+  // uploading a new CV in the admin invalidates it immediately rather than
+  // waiting out the hour.
+  const upstream = await fetch(parsedUrl, {
+    next: { tags: ['portfolio'], revalidate: 3600 },
+  }).catch(() => null)
   if (!upstream || !upstream.ok || !upstream.body) {
     return new NextResponse('Erreur lors de la récupération du CV', { status: 502 })
   }
@@ -33,8 +56,11 @@ export async function GET() {
   return new NextResponse(upstream.body, {
     headers: {
       'Content-Type': 'application/pdf',
+      // Content-Disposition is what makes this a download rather than an
+      // inline view, so it has to stay on the response even now that the
+      // response itself is cacheable at the edge.
       'Content-Disposition': `attachment; filename="${filename}"`,
-      'Cache-Control': 'no-store',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   })
 }

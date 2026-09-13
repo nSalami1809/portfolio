@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
-
-const getSecret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
+import { getJwtSecret } from '@/lib/jwt-secret'
 
 // Server Actions are callable directly (POST + Next-Action header) by
 // anyone who can read the action reference out of the client bundle —
@@ -14,7 +13,7 @@ export async function requireAdmin(): Promise<void> {
   const token = (await cookies()).get('admin-token')?.value
   if (!token) throw new Error('Non autorisé.')
   try {
-    await jwtVerify(token, getSecret())
+    await jwtVerify(token, getJwtSecret())
   } catch {
     throw new Error('Non autorisé.')
   }

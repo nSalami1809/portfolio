@@ -177,7 +177,7 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
                 </div>
 
                 <div
-                  className="flex items-center gap-2 text-sm font-medium transition-all duration-200 opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1"
+                  className="flex items-center gap-2 text-sm font-medium transition-all duration-200 reveal-on-hover opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1"
                   style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}
                   aria-hidden="true"
                 >

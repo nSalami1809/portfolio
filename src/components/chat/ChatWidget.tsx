@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
@@ -12,6 +12,7 @@ import { requestHumanHelp } from '@/actions/escalation'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { onOpenChatRequest } from '@/lib/chat-bridge'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 // Only needed once a visitor actually opens a generated devis (QR code lib
@@ -182,15 +183,17 @@ function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () 
         <button onClick={onView} className="btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}>
           {t.viewPrintQuote}
         </button>
-        <a
-          href={`/${locale}/devis/signature/${quote.signToken}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary btn-sm"
-          style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
-        >
-          {t.signOnline}
-        </a>
+        {quote.signToken && (
+          <a
+            href={`/${locale}/devis/signature/${quote.signToken}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary btn-sm"
+            style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
+          >
+            {t.signOnline}
+          </a>
+        )}
         {callHref && (
           <a href={callHref} className="text-xs font-medium hover:underline" style={{ color: 'var(--accent)' }}>
             {t.requestCall}
@@ -257,13 +260,24 @@ function HumanHelpForm({ onSubmit, t }: { onSubmit: (fields: { clientNom: string
   )
 }
 
-export default function ChatWidget() {
+interface ChatWidgetProps {
+  // Set by ChatWidgetLoader when the visitor's own click is what triggered
+  // this chunk to load — the panel must open as if the real button had been
+  // there all along, not merely appear.
+  autoOpen?: boolean
+  // A message dispatched through the chat bridge (e.g. "Request a quote" on
+  // the Offers page) *before* this component existed to listen for it. The
+  // loader captures it and replays it here exactly once.
+  initialMessage?: string | null
+}
+
+export default function ChatWidget({ autoOpen = false, initialMessage = null }: ChatWidgetProps) {
   const pathname = usePathname()
   const { data: { personal } } = usePortfolio()
   const locale = useLocale()
   const t = useDictionary()
   const suggestions = personal.cvUrl ? [...t.chat.suggestions, t.chat.cvSuggestion] : t.chat.suggestions
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(autoOpen)
   const [input, setInput] = useState('')
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -275,7 +289,7 @@ export default function ChatWidget() {
   })
 
   const busy = status === 'submitted' || status === 'streaming'
-  const [justOpened, setJustOpened] = useState(false)
+  const [justOpened, setJustOpened] = useState(autoOpen)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -285,11 +299,27 @@ export default function ChatWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 250)
   }, [open])
 
+  // Escape closes the panel — but not while the quote overlay on top of it is
+  // showing, which handles its own Escape.
+  useEscapeKey(open && !viewingQuote, useCallback(() => setOpen(false), []))
+
   useEffect(() => {
     if (!justOpened) return
     const t = setTimeout(() => setJustOpened(false), 1500)
     return () => clearTimeout(t)
   }, [justOpened])
+
+  // Replays a bridge message that fired before this chunk finished loading.
+  // Guarded by a ref rather than the dependency list so a re-render can never
+  // send it twice.
+  const replayedInitial = useRef(false)
+  useEffect(() => {
+    if (!initialMessage || replayedInitial.current) return
+    replayedInitial.current = true
+    setOpen(true)
+    setJustOpened(true)
+    sendMessage({ text: initialMessage })
+  }, [initialMessage, sendMessage])
 
   // Lets other pages (e.g. the Offers page's "Request a quote" buttons) open
   // the widget and start the conversation without lifting chat state up.
@@ -334,8 +364,10 @@ export default function ChatWidget() {
         aria-label={open ? t.chat.toggleClose : t.chat.toggleOpen}
         aria-expanded={open}
         aria-controls="chat-widget-panel"
-        className="fixed bottom-5 right-5 z-40 flex items-center justify-center"
+        className="fixed right-5 z-40 flex items-center justify-center"
         style={{
+          // Clear the iPhone home indicator when installed to the home screen.
+          bottom: 'calc(1.25rem + env(safe-area-inset-bottom))',
           width: 56,
           height: 56,
           background: 'var(--accent)',
@@ -377,6 +409,7 @@ export default function ChatWidget() {
           <m.div
             id="chat-widget-panel"
             role="dialog"
+            aria-modal="false"
             aria-label={t.chat.panelAria}
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -384,10 +417,13 @@ export default function ChatWidget() {
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
             className="fixed z-40 flex flex-col overflow-hidden"
             style={{
-              bottom: 'calc(5rem + 1rem)',
+              bottom: 'calc(5rem + 1rem + env(safe-area-inset-bottom))',
               right: '1.25rem',
               width: 'min(380px, calc(100vw - 2.5rem))',
-              height: 'min(560px, calc(100vh - 8rem))',
+              // dvh tracks the *visible* viewport, so the panel shrinks with
+              // mobile Safari's toolbar and with the soft keyboard instead of
+              // pushing its own input field off-screen.
+              height: 'min(560px, calc(100dvh - 8rem))',
               background: 'var(--glass-bg)',
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',

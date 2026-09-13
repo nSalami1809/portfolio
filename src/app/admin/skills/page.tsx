@@ -346,7 +346,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
               <>
                 <Image src={newItemIcon} alt="" aria-hidden="true" fill sizes="36px" className="object-contain rounded-md" style={{ padding: '2px' }} />
                 <div
-                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                  className="absolute inset-0 flex items-center justify-center reveal-on-hover opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
                   style={{ background: 'rgba(0,0,0,0.5)' }}
                   aria-hidden="true"
                 >

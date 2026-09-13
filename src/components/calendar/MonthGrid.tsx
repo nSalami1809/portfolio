@@ -109,14 +109,14 @@ export default function MonthGrid({
           <button
             onClick={goPrev}
             aria-label={locale === 'en' ? 'Previous month' : 'Mois précédent'}
-            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
+            className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <button
             onClick={goToday}
-            className="px-3 h-8 rounded-lg text-xs font-semibold transition-colors hover:bg-[var(--surface-hover)]"
+            className="px-3 h-11 rounded-lg text-xs font-semibold transition-colors hover:bg-[var(--surface-hover)]"
             style={{ color: 'var(--text)', border: '1px solid var(--border)', fontFamily: 'var(--font-poppins)' }}
           >
             {locale === 'en' ? 'Today' : "Aujourd'hui"}
@@ -124,7 +124,7 @@ export default function MonthGrid({
           <button
             onClick={goNext}
             aria-label={locale === 'en' ? 'Next month' : 'Mois suivant'}
-            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
+            className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>

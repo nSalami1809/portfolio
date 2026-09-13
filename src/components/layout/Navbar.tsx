@@ -5,13 +5,20 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
+import type { Locale } from '@/lib/i18n/locale'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 import ThemeToggle from './ThemeToggle'
 
-export default function Navbar() {
+interface NavbarProps {
+  locale: Locale
+  // Only the `nav` slice, resolved server-side. Reaching for the whole
+  // dictionary through a hook pulled ~30KB of bilingual copy into the shared
+  // client bundle of every page just to label these links.
+  t: Dictionary['nav']
+}
+
+export default function Navbar({ locale, t }: NavbarProps) {
   const pathname = usePathname()
-  const locale = useLocale()
-  const t = useDictionary()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -19,7 +26,7 @@ export default function Navbar() {
   const links = [
     {
       href: `/${locale}`,
-      label: t.nav.about,
+      label: t.about,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
@@ -36,7 +43,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/resume`,
-      label: t.nav.resume,
+      label: t.resume,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
@@ -45,7 +52,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/vision`,
-      label: t.nav.vision,
+      label: t.vision,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"/>
@@ -60,7 +67,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/projects`,
-      label: t.nav.projects,
+      label: t.projects,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
@@ -71,7 +78,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/offres`,
-      label: t.nav.offers,
+      label: t.offers,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2.83 12.83A2 2 0 0 1 2 11.17V4a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.42.59l7.98 7.99a2 2 0 0 1 .02 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
@@ -80,7 +87,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/calendrier`,
-      label: t.nav.calendar,
+      label: t.calendar,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -89,7 +96,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/blog`,
-      label: t.nav.blog,
+      label: t.blog,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
@@ -98,7 +105,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/playground`,
-      label: t.nav.playground,
+      label: t.playground,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="6 9 10 12 6 15"/><line x1="12" y1="15" x2="16" y2="15"/>
@@ -107,7 +114,7 @@ export default function Navbar() {
     },
     {
       href: `/${locale}/contact`,
-      label: t.nav.contact,
+      label: t.contact,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
@@ -150,10 +157,10 @@ export default function Navbar() {
         }}
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       >
-        <nav aria-label={t.nav.ariaMain} className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        <nav aria-label={t.ariaMain} className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* Logo — single black asset, inverted to white in dark mode via
               CSS so switching themes never triggers a second image fetch. */}
-          <Link href={`/${locale}`} aria-label={t.nav.home} className="flex items-center">
+          <Link href={`/${locale}`} aria-label={t.home} className="flex items-center">
             <Image
               src="/logo-black.png"
               alt="Nawaf Nemrod SALAMI"
@@ -173,7 +180,7 @@ export default function Navbar() {
               pill) keep this to a single style recalculation per hover, no
               extra JS. */}
           <div
-            className="hidden lg:flex items-center rounded-xl p-1"
+            className="hidden xl:flex items-center rounded-xl p-1"
             style={{
               border: '1px solid var(--border)',
               background: 'var(--glass-bg)',
@@ -223,12 +230,12 @@ export default function Navbar() {
               {otherLocale.toUpperCase()}
             </Link>
 
-            <ThemeToggle ariaLabel={t.nav.themeToggle} />
+            <ThemeToggle ariaLabel={t.themeToggle} />
           </div>
 
           {/* Right controls (mobile/tablet only — desktop has these inside the pill above) */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <ThemeToggle ariaLabel={t.nav.themeToggle} />
+          <div className="flex items-center gap-2 xl:hidden">
+            <ThemeToggle ariaLabel={t.themeToggle} />
 
             {/* Language switcher */}
             <Link
@@ -243,10 +250,10 @@ export default function Navbar() {
             {/* Hamburger */}
             <button
               onClick={() => setOpen(!open)}
-              aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
+              aria-label={open ? t.closeMenu : t.openMenu}
               aria-expanded={open}
               aria-controls="mobile-menu"
-              className="lg:hidden flex flex-col justify-center gap-1.5 w-9 h-9 rounded-lg transition-colors duration-200"
+              className="xl:hidden flex flex-col justify-center gap-1.5 w-11 h-11 rounded-lg transition-colors duration-200"
               style={{ background: open ? 'var(--surface-hover)' : 'transparent' }}
             >
               <m.span
@@ -275,15 +282,19 @@ export default function Navbar() {
           <m.div
             id="mobile-menu"
             role="dialog"
-            aria-label={t.nav.menuAria}
+            aria-label={t.menuAria}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-40 lg:hidden flex flex-col"
+            className="fixed inset-0 z-40 xl:hidden flex flex-col"
             style={{ background: 'var(--bg)', paddingTop: '5rem' }}
           >
-            <ul className="flex flex-col p-6 gap-1.5">
+            {/* The menu is taller than a phone viewport (9 links + locale +
+                theme rows) and body scroll is locked while it's open, so the
+                list itself has to scroll or the bottom entries are simply
+                unreachable — especially in landscape. */}
+            <ul className="flex flex-col p-6 gap-1.5 flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
               {links.map(({ href, label, icon }, i) => {
                 const isActive = pathname === href
                 return (
@@ -345,7 +356,7 @@ export default function Navbar() {
                   >
                     {otherLocale.toUpperCase()}
                   </span>
-                  {t.nav.switchTo}
+                  {t.switchTo}
                 </Link>
               </m.li>
               <m.li
@@ -355,9 +366,9 @@ export default function Navbar() {
                 className="flex items-center justify-between gap-3 px-4 py-3.5"
               >
                 <span className="text-base font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)' }}>
-                  {t.nav.themeToggle}
+                  {t.themeToggle}
                 </span>
-                <ThemeToggle ariaLabel={t.nav.themeToggle} />
+                <ThemeToggle ariaLabel={t.themeToggle} />
               </m.li>
             </ul>
           </m.div>

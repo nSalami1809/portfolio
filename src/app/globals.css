@@ -139,6 +139,15 @@ body {
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
+  /* Long unbroken strings (URLs pasted into blog bodies or chat messages)
+     would otherwise force a horizontal scroll on narrow screens. `break-word`
+     rather than `anywhere` deliberately: `anywhere` also feeds into
+     min-content sizing and would let flex/table columns collapse further
+     than the layouts here expect. */
+  overflow-wrap: break-word;
+  /* Suppress the grey flash Chrome/Android paints over every tapped
+     element; :active/:focus-visible styles already give the feedback. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* â”€â”€â”€ Scrollbar â”€â”€â”€ */
@@ -167,6 +176,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* â”€â”€â”€ Utility classes â”€â”€â”€ */
+/* Full visible height. 100vh is a *static* number on mobile Safari — it
+   includes the strip hidden behind the browser toolbar, so the bottom of a
+   100vh layout is unreachable whenever the content inside it scrolls on its
+   own. dvh tracks the actually-visible viewport; the vh line stays as a
+   fallback for browsers without dvh. Declared here rather than as two
+   competing Tailwind min-h utilities so the override order is explicit. */
+.min-h-dvh {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .font-display { font-family: var(--font-space-grotesk), system-ui, sans-serif; }
 .font-accent { font-family: var(--font-poppins), system-ui, sans-serif; }
 
@@ -204,10 +224,14 @@ h1, h2, h3, h4, h5, h6 {
   transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 
-.card:hover {
-  box-shadow: var(--glass-shadow), var(--shadow-glow), inset 0 1px 0 var(--glass-highlight);
-  border-color: var(--accent);
-  transform: translateY(-2px);
+/* Guarded on a real pointer: without it, the first tap on a touch screen
+   "sticks" the hover state until the visitor taps somewhere else. */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: var(--glass-shadow), var(--shadow-glow), inset 0 1px 0 var(--glass-highlight);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
 }
 
 /* Fixed black/white liquid-glass panel — deliberately theme-independent
@@ -221,6 +245,35 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-backdrop-filter: blur(10px) saturate(140%);
   backdrop-filter: blur(10px) saturate(140%);
   isolation: isolate;
+}
+
+/* backdrop-filter is the single most expensive thing on this page: it forces
+   the compositor to re-sample everything painted behind the element on every
+   frame, and `.card` is applied dozens of times per page — including on the
+   two routes that also run a live WebGL canvas underneath (/blog, /vision).
+   On phones, where the GPU budget is smallest and the effect is least
+   visible at these sizes, halve the blur radius and drop the saturate()
+   pass entirely. The translucent backgrounds still read as glass. */
+@media (max-width: 768px) {
+  .glass {
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+  }
+
+  .card,
+  .liquid-glass {
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .card,
+  .liquid-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 .liquid-glass::before {
@@ -327,7 +380,10 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-sm);
   color: var(--text);
   font-family: var(--font-inter), sans-serif;
-  font-size: 0.9rem;
+  /* Never below 16px: iOS Safari auto-zooms the whole page whenever a text
+     input smaller than that takes focus, and this class is unlayered so it
+     also wins over any text-sm/text-xs utility put on the same element. */
+  font-size: max(16px, 0.9rem);
   padding: 0.75rem 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   outline: none;
@@ -386,6 +442,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .marquee-track:hover { animation-play-state: paused; }
 
+/* Affordances revealed on hover (the "Voir le projet →" rows, image-edit
+   overlays) never appear on a touch screen — they'd just leave unexplained
+   blank space. Show them unconditionally where there is no hover. */
+@media (hover: none) {
+  .reveal-on-hover { opacity: 1 !important; }
+}
+
 /* â”€â”€â”€ Admin UI system â”€â”€â”€ */
 
 /* Button size modifiers â€” override base btn padding */
@@ -398,12 +461,14 @@ h1, h2, h3, h4, h5, h6 {
 .btn-xs {
   font-size: 0.75rem;
   padding: 0.375rem 0.75rem;
+  /* Keep the visual size but guarantee a finger-sized hit area. */
+  min-height: 2.5rem;
 }
 
 .btn-icon {
   padding: 0.5rem;
-  min-width: 2.25rem;
-  min-height: 2.25rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
   justify-content: center;
 }
 

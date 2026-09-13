@@ -19,7 +19,10 @@ const nextConfig: NextConfig = {
 
   images: {
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 86400,
+    // Every remote image here comes from Vercel Blob, whose URLs are
+    // content-addressed: a replaced image gets a new URL, so the bytes behind
+    // a given URL never change and can be cached for a year.
+    minimumCacheTTL: 31536000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // User-uploaded photos/logos/icons live on Vercel Blob — next/image
@@ -43,23 +46,23 @@ const nextConfig: NextConfig = {
         key: 'Content-Security-Policy',
         value: [
           "default-src 'self'",
-          // React needs unsafe-eval in dev; Spline WASM needs it in prod too
+          // React needs unsafe-eval in dev; WASM instantiation needs it in prod
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
           // Framer Motion + Tailwind write inline styles at runtime
           "style-src 'self' 'unsafe-inline'",
-          // Vercel Blob-hosted uploads (images) + Spline textures/blobs
-          "img-src 'self' data: blob: https://*.spline.design https://*.public.blob.vercel-storage.com",
+          // Vercel Blob-hosted uploads (images)
+          "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
           // Vercel Blob-hosted uploads (video clips)
           "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
           // next/font self-hosts — no external font CDN
           "font-src 'self' data:",
-          // Spline loads scene + assets from CDN; server actions/API same-origin
-          "connect-src 'self' https://*.spline.design https://*.public.blob.vercel-storage.com",
-          // Spline uses Web Workers + WASM via blob: URLs
+          // Server actions/API are same-origin; Vercel Blob for uploaded assets
+          "connect-src 'self' https://*.public.blob.vercel-storage.com",
+          // three.js / CodeMirror instantiate Web Workers from blob: URLs
           "worker-src blob: 'self'",
           "child-src blob: 'self'",
-          // Allow embedding Spline scenes via iframe; block everything else
-          "frame-src https://my.spline.design",
+          // Nothing is embedded in an iframe anywhere in the app
+          "frame-src 'none'",
           "frame-ancestors 'none'",
           "object-src 'none'",
           "base-uri 'self'",

@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { put, del } from '@vercel/blob'
 import sharp from 'sharp'
+import { getJwtSecret } from '@/lib/jwt-secret'
 
-const getSecret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
+// Keeps only characters that are safe in a Blob path segment — strips any
+// `/`, `..`, or other path-altering sequence out of the client-supplied
+// filename so it can never escape the `images/`/`videos/`/`documents/`
+// prefix it's interpolated into below.
+function sanitizeFilename(name: string): string {
+  const base = name.split(/[/\\]/).pop() ?? 'file'
+  const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^\.+/, '')
+  return cleaned.slice(-150) || 'file'
+}
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const MAX_VIDEO_BYTES = 30 * 1024 * 1024
@@ -31,7 +40,7 @@ async function compressImage(file: File): Promise<{ body: Buffer; filename: stri
     // A tiny already-optimized image can occasionally grow slightly once
     // re-encoded — only swap it in when it's actually a real improvement.
     if (compressed.length >= original.length) return null
-    return { body: compressed, filename: file.name.replace(/\.[^./]+$/, '') + '.webp' }
+    return { body: compressed, filename: sanitizeFilename(file.name).replace(/\.[^./]+$/, '') + '.webp' }
   } catch (e) {
     console.error('[upload] compression échouée, envoi du fichier original:', e)
     return null
@@ -42,7 +51,7 @@ async function requireAdmin(req: NextRequest) {
   const token = req.cookies.get('admin-token')?.value
   if (!token) return false
   try {
-    await jwtVerify(token, getSecret())
+    await jwtVerify(token, getJwtSecret())
     return true
   } catch {
     return false
@@ -75,7 +84,7 @@ export async function POST(req: NextRequest) {
   const compressed = isImage ? await compressImage(file) : null
 
   const folder = isVideo ? 'videos' : isDocument ? 'documents' : 'images'
-  const filename = compressed?.filename ?? file.name
+  const filename = compressed?.filename ?? sanitizeFilename(file.name)
   const blob = await put(`${folder}/${Date.now()}-${filename}`, compressed?.body ?? file, {
     access: 'public',
     addRandomSuffix: true,

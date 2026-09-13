@@ -25,17 +25,26 @@ export default function SignaturePad({ onChange, height = 180, disabled = false 
     const container = containerRef.current
     if (!canvas || !container) return
 
-    // Size the backing buffer for the device's pixel ratio once, at mount —
-    // resizing later would force clearing the canvas, which would wipe out
-    // an in-progress signature on e.g. a mobile keyboard-triggered reflow.
-    const ratio = Math.max(window.devicePixelRatio || 1, 1)
-    const rect = container.getBoundingClientRect()
-    canvas.width = rect.width * ratio
-    canvas.height = height * ratio
+    // The canvas is CSS-responsive (width: 100%) but its backing buffer and
+    // the devicePixelRatio transform are numbers that have to be re-applied
+    // whenever the element's real size changes — otherwise signature_pad's
+    // pointer mapping (which goes through getBoundingClientRect) drifts from
+    // the buffer after a rotation or window resize and ink lands away from
+    // the finger. Resizing clears the canvas, so snapshot and restore the
+    // drawing around it.
+    const sizeCanvas = () => {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1)
+      const width = container.getBoundingClientRect().width
+      if (!width) return
+      canvas.width = width * ratio
+      canvas.height = height * ratio
+      canvas.getContext('2d')?.scale(ratio, ratio)
+    }
+
+    sizeCanvas()
 
     const pad = new SignaturePadLib(canvas, { backgroundColor: 'rgba(0,0,0,0)', penColor: '#111111' })
     padRef.current = pad
-    canvas.getContext('2d')?.scale(ratio, ratio)
 
     const handleEnd = () => {
       const isEmpty = pad.isEmpty()
@@ -44,7 +53,30 @@ export default function SignaturePad({ onChange, height = 180, disabled = false 
     }
     pad.addEventListener('endStroke', handleEnd)
 
+    // Debounced: a drag-resize fires this continuously, and each pass costs a
+    // toDataURL + image decode.
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let lastWidth = container.getBoundingClientRect().width
+    const observer = new ResizeObserver(() => {
+      const width = container.getBoundingClientRect().width
+      if (width === lastWidth || !width) return
+      lastWidth = width
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        // Snapshot the strokes as vector point groups rather than a bitmap:
+        // they're in CSS-pixel coordinates, so they survive the resize at
+        // full resolution and redraw synchronously.
+        const strokes = pad.toData()
+        sizeCanvas()
+        pad.clear()
+        if (strokes.length) pad.fromData(strokes)
+      }, 150)
+    })
+    observer.observe(container)
+
     return () => {
+      clearTimeout(timer)
+      observer.disconnect()
       pad.removeEventListener('endStroke', handleEnd)
       pad.off()
     }

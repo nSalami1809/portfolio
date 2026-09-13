@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { ToastProvider } from '@/components/admin/Toast'
+import { PortfolioProvider } from '@/providers/PortfolioContext'
 import NotificationBell from '@/components/admin/NotificationBell'
 import { logout } from '@/actions/auth'
 import { Sidebar, DesktopSidebar, MobileSidebarPanel, SidebarLink, useSidebar } from '@/components/ui/Sidebar'
@@ -98,6 +99,12 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
   )
 }
 
+// The editing portfolio store (fetch + poll + focus-refresh + publish) is
+// scoped to /admin, where it is actually used. It used to live in the root
+// layout, which made every anonymous visitor on every public page pay for a
+// Server Action round trip on mount, on focus, on visibilitychange and every
+// 45s. Public pages get the same data as a server-rendered prop instead
+// (PortfolioStaticProvider, mounted in the root layout).
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -109,8 +116,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <ToastProvider>
+    <PortfolioProvider>
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <div className="min-h-screen flex" style={{ background: 'var(--bg-secondary)' }}>
+        {/* min-h-[100dvh], not min-h-screen: <main> below scrolls internally,
+            so with a static 100vh the bottom strip of the layout stays parked
+            under mobile Safari's toolbar with no way to scroll it into view. */}
+        <div className="min-h-dvh flex" style={{ background: 'var(--bg-secondary)' }}>
 
           {/* ── Sidebar (desktop: hover to expand · mobile: full overlay) ── */}
           <DesktopSidebar className="sticky top-0" style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
@@ -190,6 +201,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
       </Sidebar>
+    </PortfolioProvider>
     </ToastProvider>
   )
 }

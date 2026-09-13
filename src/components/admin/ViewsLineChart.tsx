@@ -65,7 +65,9 @@ export default function ViewsLineChart({ data, bucketSpan, height = 200 }: Views
   const baseline = padding.top + plotHeight
   const areaPath = points.length ? `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${baseline} L ${points[0].x.toFixed(1)} ${baseline} Z` : ''
 
-  const handleMove = (e: React.MouseEvent<SVGRectElement>) => {
+  // Pointer events, not mouse events: one handler covers mouse, trackpad, pen
+  // and touch, so the tooltip actually works on a tablet.
+  const handleMove = (e: React.PointerEvent<SVGRectElement>) => {
     if (!points.length || plotWidth <= 0) return
     const rect = e.currentTarget.getBoundingClientRect()
     const relX = e.clientX - rect.left
@@ -123,8 +125,11 @@ export default function ViewsLineChart({ data, bucketSpan, height = 200 }: Views
           <rect
             x={padding.left} y={padding.top} width={plotWidth} height={plotHeight}
             fill="transparent"
-            onMouseMove={handleMove}
-            onMouseLeave={() => setHoverIndex(null)}
+            style={{ touchAction: 'none' }}
+            onPointerDown={handleMove}
+            onPointerMove={handleMove}
+            onPointerLeave={() => setHoverIndex(null)}
+            onPointerCancel={() => setHoverIndex(null)}
           />
         </svg>
       )}

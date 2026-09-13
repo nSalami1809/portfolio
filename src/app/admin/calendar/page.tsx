@@ -164,7 +164,7 @@ export default function AdminCalendar() {
       </div>
 
       {tab === 'calendrier' && (
-        <div className="grid lg:grid-cols-[1fr,280px] gap-4 items-start">
+        <div className="grid lg:grid-cols-[1fr_280px] gap-4 items-start">
           <MonthGrid
             year={year} month={month}
             onNavigate={(y, m) => { setYear(y); setMonth(m) }}

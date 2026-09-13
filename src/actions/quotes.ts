@@ -16,6 +16,7 @@ import { requireAdmin } from '@/lib/require-admin'
 import { generateQuotePdf } from '@/lib/quote-pdf'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
+import { getClientIp } from '@/lib/client-ip'
 
 const TVA_RATE = 0.18
 const VALIDITE_JOURS = 30
@@ -23,6 +24,13 @@ const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids v
 const SIGN_TOKEN_BYTES = 32 // 256 bits — the public /devis/signature/[token] link must be unguessable
 const MAX_SIGNATURE_DECODED_BYTES = 500 * 1024 // a canvas signature is a few KB; this is a generous cap against abuse
 const SIGN_RATE_LIMIT_PER_HOUR = 10
+const SUBMIT_RATE_LIMIT_PER_HOUR = 5
+const LOOKUP_RATE_LIMIT_PER_HOUR = 20
+const SEND_EMAIL_RATE_LIMIT_PER_HOUR = 5
+const MAX_ITEMS = 30
+const MAX_DESCRIPTION_LENGTH = 5000
+const MAX_TEXT_FIELD_LENGTH = 200
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
 // A visitor who clicked a broken/stale link had to see the document — this
@@ -82,7 +90,10 @@ export interface QuoteEvent {
 export interface Quote extends QuotePayload {
   numero: string
   accessCode: string
-  signToken: string
+  // Absent when this quote was returned by a public lookup keyed on the
+  // guessable `numero` rather than the private `accessCode` — see
+  // lookupQuote()'s docblock in src/actions/quotes.ts.
+  signToken?: string
   dateEmission: string
   validiteJours: number
   totalHT: number
@@ -174,11 +185,6 @@ async function withSignToken(col: Awaited<ReturnType<typeof quotes>>, doc: WithI
   return doc
 }
 
-async function getClientIp(): Promise<string> {
-  const hdrs = await headers()
-  return hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? hdrs.get('x-real-ip') ?? 'unknown'
-}
-
 // Shared with contact.ts's rate limiter (same TTL-indexed collection); a
 // `scope` tag keeps unrelated features from throttling each other.
 // createIndex is idempotent, so calling it here too (contact.ts also does)
@@ -196,19 +202,38 @@ function ensureRateLimitIndex() {
 }
 
 async function checkRateLimit(scope: string, maxPerHour: number): Promise<boolean> {
-  await ensureRateLimitIndex()
-  const db = await getDb()
-  const ip = await getClientIp()
+  // Index setup, the connection and the request headers are three independent
+  // awaits; only the count actually has to happen before the decision.
+  const [, db, ip] = await Promise.all([ensureRateLimitIndex(), getDb(), getClientIp()])
   const since = new Date(Date.now() - 3600 * 1000)
   const count = await db.collection('ratelimits').countDocuments({ scope, ip, createdAt: { $gte: since } })
   if (count >= maxPerHour) return false
-  await db.collection('ratelimits').insertOne({ scope, ip, createdAt: new Date() })
+  // Started immediately so concurrent requests still count against the
+  // window, but not awaited — nothing downstream reads the result, and the
+  // caller shouldn't pay a round trip for bookkeeping.
+  void db
+    .collection('ratelimits')
+    .insertOne({ scope, ip, createdAt: new Date() })
+    .catch((e) => console.error('[checkRateLimit] write failed:', e))
   return true
 }
 
 export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   if (!payload.clientNom?.trim()) throw new Error('Nom du client requis.')
   if (!payload.items?.length) throw new Error('Au moins une prestation est requise.')
+  if (payload.items.length > MAX_ITEMS) throw new Error('Trop de prestations.')
+  if (payload.clientEmail?.trim() && !EMAIL_RE.test(payload.clientEmail.trim())) {
+    throw new Error('Adresse email invalide.')
+  }
+  for (const field of [payload.clientNom, payload.clientSociete, payload.clientAdresse, payload.clientTelephone]) {
+    if (field && field.length > MAX_TEXT_FIELD_LENGTH) throw new Error('Champ trop long.')
+  }
+  if (payload.descriptionProjet && payload.descriptionProjet.length > MAX_DESCRIPTION_LENGTH) {
+    throw new Error('Description trop longue.')
+  }
+  if (!(await checkRateLimit('submit-quote', SUBMIT_RATE_LIMIT_PER_HOUR))) {
+    throw new Error('Trop de tentatives. Réessayez plus tard.')
+  }
 
   const col = await quotes()
   const numero = await nextQuoteNumber()
@@ -257,7 +282,10 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
       })
 
       if (payload.clientEmail) {
-        const clientCopy = quoteClientCopyEmail(quote, adminEmail)
+        // signToken is always freshly generated a few lines above — the
+        // Quote type only marks it optional for lookupQuote()'s reduced
+        // public projection (see its docblock).
+        const clientCopy = quoteClientCopyEmail({ ...quote, signToken: quote.signToken! }, adminEmail)
         await transporter.sendMail({
           from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
           to: payload.clientEmail,
@@ -277,33 +305,90 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
 // Retrieve a previously generated quote by its number (DEV-2026-002) or its
 // short access code, so a visitor can find it again without redoing the chat.
 export async function lookupQuote(reference: string): Promise<Quote | null> {
+  if (typeof reference !== 'string') return null
   const ref = reference.trim().toUpperCase()
   if (!ref) return null
+  if (!(await checkRateLimit('lookup-quote', LOOKUP_RATE_LIMIT_PER_HOUR))) return null
   const col = await quotes()
   const doc = await col.findOne({ $or: [{ numero: ref }, { accessCode: ref }] })
   if (!doc) return null
-  return toQuote(await withSignToken(col, doc))
+  const quote = toQuote(doc)
+  // signToken grants full read+sign access to the quote — only hand it back
+  // when the visitor proved they know the random accessCode (given to the
+  // client privately, ~33^6 keyspace, rate-limited). `numero` is sequential
+  // and guessable (DEV-2026-001, -002, …), so a lookup by numero alone must
+  // never return it — otherwise anyone could enumerate numeros and sign
+  // other clients' contracts. See getQuoteByToken()'s docblock.
+  if (doc.accessCode !== ref) delete quote.signToken
+  return quote
+}
+
+const DOWNLOAD_PDF_RATE_LIMIT_PER_HOUR = 20
+
+// Server-rendered PDF for the "Télécharger PDF" button in QuoteView — reuses
+// the exact same pdf-lib document as the emailed attachment (real text,
+// running header, page numbers) instead of the old client-side
+// html2canvas-screenshot-sliced-into-pages approach, which cut table rows
+// and paragraphs in half at page boundaries.
+// Keyed on accessCode (private, ~33^6 keyspace, rate-limited) rather than
+// trusting a client-supplied Quote object — accepting arbitrary quote JSON
+// from the browser would let anyone render a fake "signed contract" bearing
+// the site owner's name and branding.
+export async function downloadQuotePdf(accessCode: string): Promise<{ ok: true; filename: string; base64: string } | { ok: false; error: string }> {
+  if (typeof accessCode !== 'string') return { ok: false, error: 'Requête invalide.' }
+  const code = accessCode.trim().toUpperCase()
+  if (code.length < 4) return { ok: false, error: 'Code invalide.' }
+  if (!(await checkRateLimit('download-quote-pdf', DOWNLOAD_PDF_RATE_LIMIT_PER_HOUR))) {
+    return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
+  }
+  const col = await quotes()
+  const doc = await col.findOne({ accessCode: code })
+  if (!doc) return { ok: false, error: 'Devis introuvable.' }
+
+  const quote = toQuote(doc)
+  const variant: 'devis' | 'contrat' = quote.status === 'accepted' ? 'contrat' : 'devis'
+  const attachments = await buildQuoteAttachment(quote, variant)
+  if (!attachments.length) return { ok: false, error: 'Erreur lors de la génération du PDF.' }
+  return { ok: true, filename: attachments[0].filename, base64: attachments[0].content.toString('base64') }
 }
 
 // Called when a visitor supplies their email *after* the quote was already
 // generated without one — records the email and sends them their copy.
+// Deliberately refuses to overwrite an already-recorded clientEmail: doing so
+// would let anyone who guesses a quote reference (numero is sequential)
+// redirect that client's future contract/signature emails to themselves.
 export async function sendQuoteEmail(reference: string, email: string): Promise<{ ok: boolean; message: string }> {
+  if (typeof reference !== 'string' || typeof email !== 'string') {
+    return { ok: false, message: 'Requête invalide.' }
+  }
+  const trimmedEmail = email.trim()
+  if (!EMAIL_RE.test(trimmedEmail) || trimmedEmail.length > 254) {
+    return { ok: false, message: 'Adresse email invalide.' }
+  }
+  if (!(await checkRateLimit('send-quote-email', SEND_EMAIL_RATE_LIMIT_PER_HOUR))) {
+    return { ok: false, message: 'Trop de tentatives. Réessayez plus tard.' }
+  }
   const ref = reference.trim().toUpperCase()
   const col = await quotes()
   const doc = await col.findOne({ $or: [{ numero: ref }, { accessCode: ref }] })
   if (!doc) return { ok: false, message: 'Devis introuvable pour cette référence.' }
+  if (doc.clientEmail && doc.clientEmail !== trimmedEmail) {
+    return { ok: false, message: 'Un email est déjà enregistré pour ce devis.' }
+  }
 
-  await col.updateOne({ _id: doc._id }, { $set: { clientEmail: email } })
-  const quote = toQuote(await withSignToken(col, { ...doc, clientEmail: email }))
+  await col.updateOne({ _id: doc._id }, { $set: { clientEmail: trimmedEmail } })
+  const quote = toQuote(await withSignToken(col, { ...doc, clientEmail: trimmedEmail }))
 
   after(async () => {
     try {
       const transporter = getTransporter()
-      const clientCopy = quoteClientCopyEmail(quote, await getAdminEmail())
+      // signToken is guaranteed here — withSignToken() above never returns
+      // without one.
+      const clientCopy = quoteClientCopyEmail({ ...quote, signToken: quote.signToken! }, await getAdminEmail())
       const attachments = await buildQuoteAttachment(quote, quote.status === 'accepted' ? 'contrat' : 'devis')
       await transporter.sendMail({
         from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
-        to: email,
+        to: trimmedEmail,
         subject: clientCopy.subject,
         html: clientCopy.html,
         attachments,
@@ -318,7 +403,6 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
 
 // ── Electronic signature ─────────────────────────────────────────────────────
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 const SIGNATURE_DATA_URL_PREFIX = 'data:image/png;base64,'
 
 export interface SignQuoteInput {
@@ -362,7 +446,7 @@ function isExpired(doc: Pick<QuoteRecord, 'dateEmission' | 'validiteJours'>): bo
 // guessable) — only this dedicated token, generated once in submitQuote()
 // and never exposed to search engines (the page is noindex).
 export async function getQuoteByToken(token: string): Promise<Quote | null> {
-  if (!token || token.length < 20) return null
+  if (typeof token !== 'string' || token.length < 20) return null
   const col = await quotes()
   // Matched by signToken alone — a doc found this way already has one, so
   // no backfill is needed (unlike lookupQuote/listQuotes, reached by
@@ -386,7 +470,7 @@ export async function getQuoteByToken(token: string): Promise<Quote | null> {
 // later change requires a new quote (a fresh numero), never an edit to this
 // one — that immutability is what makes the signed PDF trustworthy.
 export async function signQuote(token: string, input: SignQuoteInput): Promise<SignActionResult> {
-  if (!token || token.length < 20) return { ok: false, error: 'Lien invalide.' }
+  if (typeof token !== 'string' || token.length < 20) return { ok: false, error: 'Lien invalide.' }
 
   const clientName = input.clientName?.trim()
   if (!clientName || clientName.length < 2 || clientName.length > 100) {
@@ -476,7 +560,7 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
 // signed (then it's locked) or already declined (no-op guard against a
 // double click / replayed request).
 export async function declineQuote(token: string): Promise<SignActionResult> {
-  if (!token || token.length < 20) return { ok: false, error: 'Lien invalide.' }
+  if (typeof token !== 'string' || token.length < 20) return { ok: false, error: 'Lien invalide.' }
   if (!(await checkRateLimit('sign-quote', SIGN_RATE_LIMIT_PER_HOUR))) {
     return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
   }

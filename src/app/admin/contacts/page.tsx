@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { listContacts, markContactRead, deleteContact } from '@/actions/contact'
 import type { ContactMessage } from '@/actions/contact'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 
 type Filter = 'tous' | 'unread' | 'read'
 
@@ -26,6 +27,9 @@ export default function AdminContacts() {
   const [filter, setFilter]     = useState<Filter>('tous')
   const [selected, setSelected] = useState<ContactMessage | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+
+  const closeSelected = useCallback(() => setSelected(null), [])
+  useEscapeKey(selected !== null, closeSelected)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -242,7 +246,7 @@ export default function AdminContacts() {
               className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pointer-events-none"
             >
               <div
-                className="pointer-events-auto w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
+                className="pointer-events-auto w-full max-w-lg max-h-[85dvh] overflow-y-auto overscroll-contain rounded-2xl shadow-2xl"
                 style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                 role="dialog"
                 aria-modal="true"

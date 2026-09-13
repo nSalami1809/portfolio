@@ -20,7 +20,7 @@ export default function StarRatingInput({ value, onChange, size = 24 }: { value:
           aria-label={`${i} étoile${i > 1 ? 's' : ''}`}
           onClick={() => onChange(i)}
           onMouseEnter={() => setHover(i)}
-          className="p-0.5 transition-transform hover:scale-110"
+          className="flex items-center justify-center p-2.5 transition-transform hover:scale-110"
         >
           <svg width={size} height={size} viewBox="0 0 24 24" fill={i <= display ? 'var(--accent)' : 'none'} stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round">
             <polygon points={STAR_POINTS} />

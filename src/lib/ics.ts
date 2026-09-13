@@ -2,7 +2,11 @@
 // handful of plain text lines. Attached to booking confirmation emails so
 // the meeting drops straight into whatever calendar app the recipient uses.
 function foldEscape(s: string): string {
-  return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
+  // Strip \r before escaping \n — an un-stripped \r\n would otherwise slip a
+  // raw CRLF (RFC 5545's own line terminator) into a field value, letting
+  // attacker-controlled input (a booking's `message`/`clientNom`) inject
+  // extra ICS lines/properties into the calendar attachment.
+  return s.replace(/\r/g, '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
 }
 
 function stamp(d: Date): string {

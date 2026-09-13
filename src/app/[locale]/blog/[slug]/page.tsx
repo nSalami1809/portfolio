@@ -2,10 +2,26 @@ import type { Metadata } from 'next'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultBlogPosts } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
+import { jsonLdScript } from '@/lib/json-ld'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import BlogPostView from './BlogPostView'
 import NotFoundMessage from '@/components/NotFoundMessage'
+import { LOCALES } from '@/lib/i18n/locale'
+
+// Regenerate at most once every 30s, matching every sibling route;
+// invalidated instantly on admin publish via updateTag('portfolio').
+export const revalidate = 30
+
+// Without this, both locales of every post rendered on demand — and the EN
+// render blocks inside TTFB on a Gemini translation of the full article body
+// the first time it is requested. Prerendering at build time moves that cost
+// off the visitor's request entirely.
+export async function generateStaticParams() {
+  const portfolio = await fetchPortfolioSafe('blog/[slug]/generateStaticParams')
+  const posts = (portfolio?.blog ?? defaultBlogPosts).filter((p) => p.published)
+  return LOCALES.flatMap((locale) => posts.map((p) => ({ locale, slug: p.slug })))
+}
 
 async function getPost(slug: string) {
   const portfolio = await fetchPortfolioSafe('blog/[slug]/page')
@@ -66,7 +82,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ local
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <BlogPostView post={{ ...post, ...translated }} locale={locale} t={t.blog} />
     </>
   )

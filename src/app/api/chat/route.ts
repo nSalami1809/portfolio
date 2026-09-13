@@ -134,27 +134,53 @@ Parler à un humain directement :
 Si le visiteur demande explicitement à parler à ${personal.name} en personne plutôt qu'à toi, ou si tu ne parviens vraiment pas à répondre à sa demande après plusieurs tentatives (information absente, cas trop spécifique), appelle l'outil requestHumanHelp avec un bref résumé de sa demande. Un formulaire s'affiche alors automatiquement dans le chat pour que le visiteur laisse lui-même son nom, son email et son téléphone — ne les lui demande donc pas toi-même avant d'appeler l'outil. Cela envoie une alerte immédiate à ${personal.name} dès que le visiteur valide le formulaire, contrairement aux devis/rendez-vous qui attendent qu'il consulte son tableau de bord. Ne l'utilise pas pour de simples questions auxquelles tu peux répondre toi-même.`
 }
 
+async function countRecentAttempts(ip: string): Promise<number> {
+  await ensureIndex()
+  const db = await getDb()
+  const since = new Date(Date.now() - WINDOW_S * 1000)
+  return db.collection('chat_rl').countDocuments({ ip, createdAt: { $gte: since } })
+}
+
 export async function POST(req: NextRequest) {
   const ip =
     req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
     req.headers.get('x-real-ip') ??
     'unknown'
 
-  await ensureIndex()
-  const db = await getDb()
-  const since = new Date(Date.now() - WINDOW_S * 1000)
-  const attempts = await db.collection('chat_rl').countDocuments({ ip, createdAt: { $gte: since } })
+  // These three are mutually independent, and every one of them used to sit
+  // on the critical path *before* the first token could stream: index check →
+  // connect → rate-limit count → rate-limit write → parse the body → load the
+  // portfolio. Reading the request body has nothing to do with the rate
+  // limiter, and neither does the (cached) portfolio read.
+  const [body, portfolio, attempts] = await Promise.all([
+    req.json().then(
+      (v) => v as { messages?: UIMessage[]; locale?: string },
+      () => null,
+    ),
+    fetchPortfolioSafe('api/chat'),
+    countRecentAttempts(ip),
+  ])
 
   if (attempts >= MAX_ATTEMPTS) {
     return new Response('Trop de messages envoyés. Réessayez dans quelques minutes.', { status: 429 })
   }
-  await db.collection('chat_rl').insertOne({ ip, createdAt: new Date() })
 
-  const { messages, locale }: { messages: UIMessage[]; locale?: string } = await req.json()
-  const portfolio = await fetchPortfolioSafe('api/chat')
+  // Deliberately started, not awaited: the write is recorded from this point
+  // on (so a concurrent burst still counts against the window) but nothing
+  // downstream needs its result, and the request no longer waits a full
+  // round trip for it. Not deferred to `after()` either — on a streaming
+  // response that would only land once the whole answer had been sent.
+  void getDb()
+    .then((db) => db.collection('chat_rl').insertOne({ ip, createdAt: new Date() }))
+    .catch((e) => console.error('[api/chat] rate-limit write failed:', e))
+
+  if (!body || !Array.isArray(body.messages)) {
+    return new Response('Requête invalide.', { status: 400 })
+  }
   if (!portfolio) {
     return new Response('Service temporairement indisponible.', { status: 503 })
   }
+  const { messages, locale } = body
 
   const result = streamText({
     model: google('gemini-3.5-flash-lite'),
