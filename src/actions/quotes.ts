@@ -13,6 +13,9 @@ import {
 } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
+import { generateQuotePdf } from '@/lib/quote-pdf'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { defaultPersonalInfo } from '@/data/defaultData'
 
 const TVA_RATE = 0.18
 const VALIDITE_JOURS = 30
@@ -20,6 +23,24 @@ const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids v
 const SIGN_TOKEN_BYTES = 32 // 256 bits — the public /devis/signature/[token] link must be unguessable
 const MAX_SIGNATURE_DECODED_BYTES = 500 * 1024 // a canvas signature is a few KB; this is a generous cap against abuse
 const SIGN_RATE_LIMIT_PER_HOUR = 10
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+
+// A visitor who clicked a broken/stale link had to see the document — this
+// builds it as a real file attached to the email instead, so opening it
+// never depends on a web page rendering correctly. Never throws: a PDF
+// generation hiccup must not stop the underlying email from sending.
+async function buildQuoteAttachment(quote: Quote, variant: 'devis' | 'contrat') {
+  try {
+    const portfolio = await fetchPortfolioSafe('quote-pdf-attachment')
+    const personal = portfolio?.personal ?? defaultPersonalInfo
+    const content = await generateQuotePdf({ quote, personal, variant, siteUrl: SITE_URL })
+    const filename = `${variant === 'contrat' ? 'Contrat' : 'Devis'}-${quote.numero}.pdf`
+    return [{ filename, content, contentType: 'application/pdf' }]
+  } catch (e) {
+    console.error('[buildQuoteAttachment] PDF generation failed:', e)
+    return []
+  }
+}
 
 export interface QuoteItem {
   designation: string
@@ -225,12 +246,14 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
     try {
       const transporter = getTransporter()
       const adminEmail = await getAdminEmail()
+      const attachments = await buildQuoteAttachment(quote, 'devis')
       const notification = quoteNotificationEmail(quote)
       await transporter.sendMail({
         from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`,
         to: adminEmail,
         subject: notification.subject,
         html: notification.html,
+        attachments,
       })
 
       if (payload.clientEmail) {
@@ -240,6 +263,7 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
           to: payload.clientEmail,
           subject: clientCopy.subject,
           html: clientCopy.html,
+          attachments,
         })
       }
     } catch (e) {
@@ -276,11 +300,13 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
     try {
       const transporter = getTransporter()
       const clientCopy = quoteClientCopyEmail(quote, await getAdminEmail())
+      const attachments = await buildQuoteAttachment(quote, quote.status === 'accepted' ? 'contrat' : 'devis')
       await transporter.sendMail({
         from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
         to: email,
         subject: clientCopy.subject,
         html: clientCopy.html,
+        attachments,
       })
     } catch (e) {
       console.error('[sendQuoteEmail] email error:', e)
@@ -431,11 +457,12 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
     try {
       const transporter = getTransporter()
       const adminEmail = await getAdminEmail()
+      const attachments = await buildQuoteAttachment(quote, 'contrat')
       const clientMail = quoteSignedClientEmail(quote, adminEmail)
       const adminMail = quoteSignedAdminEmail(quote)
       await Promise.all([
-        transporter.sendMail({ from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`, to: clientEmail, subject: clientMail.subject, html: clientMail.html }),
-        transporter.sendMail({ from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`, to: adminEmail, subject: adminMail.subject, html: adminMail.html }),
+        transporter.sendMail({ from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`, to: clientEmail, subject: clientMail.subject, html: clientMail.html, attachments }),
+        transporter.sendMail({ from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`, to: adminEmail, subject: adminMail.subject, html: adminMail.html, attachments }),
       ])
     } catch (e) {
       console.error('[signQuote] email error:', e)
@@ -523,12 +550,14 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus): Promis
       try {
         const transporter = getTransporter()
         const adminEmail = await getAdminEmail()
+        const attachments = await buildQuoteAttachment(quote, 'contrat')
         const email = quoteAcceptedEmail(quote, adminEmail)
         await transporter.sendMail({
           from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
           to: doc.clientEmail,
           subject: email.subject,
           html: email.html,
+          attachments,
         })
       } catch (e) {
         console.error('[updateQuoteStatus] contract email error:', e)

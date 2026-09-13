@@ -117,12 +117,15 @@ export default function DevisView({ t }: Props) {
     setSelections({})
   }
 
-  // ── Lookup an existing quote (also used by the "quote accepted" email's
-  // ?ref= link, which lands here to view the contract) ──
+  // ── Lookup an existing quote (also used by an email's ?ref= link, which
+  // lands here to view the devis/contract instead of the create-quote form
+  // below — a client following that link wants to see their document, not
+  // be prompted to request a new one) ──
   const [lookupRef, setLookupRef] = useState('')
   const [lookupResult, setLookupResult] = useState<Quote | null>(null)
   const [lookupSearching, setLookupSearching] = useState(false)
   const [lookupError, setLookupError] = useState('')
+  const [arrivedViaRef, setArrivedViaRef] = useState(false)
 
   const runLookup = async (ref: string) => {
     if (!ref.trim()) return
@@ -143,8 +146,9 @@ export default function DevisView({ t }: Props) {
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get('ref')
     if (ref) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time prefill from the "quote accepted" email link
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time prefill from an email's ?ref= link
       setLookupRef(ref)
+      setArrivedViaRef(true)
       runLookup(ref)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,6 +172,19 @@ export default function DevisView({ t }: Props) {
               <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{createdQuote.numero}</p>
               <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{fmt(createdQuote.totalTTC)} TTC</p>
               <button onClick={startNewQuote} className="btn-secondary btn-sm">{t.newQuoteButton}</button>
+            </div>
+          </FadeIn>
+        ) : arrivedViaRef ? (
+          <FadeIn>
+            <div className="card p-8 text-center mb-10">
+              {lookupError ? (
+                <p className="text-sm" style={{ color: '#D90000' }}>{lookupError}</p>
+              ) : (
+                <>
+                  <div className="w-6 h-6 rounded-full border-2 animate-spin mx-auto mb-4" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Ouverture de votre document…</p>
+                </>
+              )}
             </div>
           </FadeIn>
         ) : (
