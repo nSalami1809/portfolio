@@ -37,6 +37,7 @@ const fr = {
     offers: 'Offres',
     calendar: 'Calendrier',
     blog: 'Blog',
+    playground: 'Playground',
     contact: 'Contact',
     openMenu: 'Ouvrir le menu',
     closeMenu: 'Fermer le menu',
@@ -152,6 +153,31 @@ const fr = {
     contact: 'Me contacter',
     resourceMentioned: 'Ressource mentionnée',
     discover: 'Découvrir',
+  },
+  playground: {
+    label: 'Bac à sable',
+    title: 'Playground',
+    subtitle: "Un éditeur JavaScript qui tourne entièrement dans votre navigateur — modifiez le code, cliquez sur Exécuter, rien n'est envoyé à un serveur.",
+    filename: 'playground.js',
+    run: 'Exécuter',
+    running: 'Exécution…',
+    reset: 'Réinitialiser',
+    outputLabel: 'Console',
+    outputEmpty: 'Le résultat de votre code s’affichera ici.',
+    timeoutMessage: 'Exécution interrompue : trop de temps écoulé (boucle infinie ?).',
+    statusDone: 'Terminé',
+    statusError: 'Erreur',
+    shortcutHint: 'Astuce : Ctrl+Entrée pour exécuter',
+    starterCode: `// Bienvenue dans le Playground — modifiez le code et cliquez sur Exécuter
+function fibonacci(n) {
+  if (n <= 1) return n
+  return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+for (let i = 0; i < 8; i++) {
+  console.log(\`fib(\${i}) =\`, fibonacci(i))
+}
+`,
   },
   contact: {
     label: 'Discutons',
@@ -308,6 +334,7 @@ const en: typeof fr = {
     offers: 'Offers',
     calendar: 'Calendar',
     blog: 'Blog',
+    playground: 'Playground',
     contact: 'Contact',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
@@ -423,6 +450,31 @@ const en: typeof fr = {
     contact: 'Contact me',
     resourceMentioned: 'Resource mentioned',
     discover: 'Discover',
+  },
+  playground: {
+    label: 'Sandbox',
+    title: 'Playground',
+    subtitle: 'A JavaScript editor that runs entirely in your browser — edit the code, hit Run, nothing is ever sent to a server.',
+    filename: 'playground.js',
+    run: 'Run',
+    running: 'Running…',
+    reset: 'Reset',
+    outputLabel: 'Console',
+    outputEmpty: 'Your code’s output will show up here.',
+    timeoutMessage: 'Execution stopped: took too long (infinite loop?).',
+    statusDone: 'Done',
+    statusError: 'Error',
+    shortcutHint: 'Tip: Ctrl+Enter to run',
+    starterCode: `// Welcome to the Playground — edit the code and click Run
+function fibonacci(n) {
+  if (n <= 1) return n
+  return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+for (let i = 0; i < 8; i++) {
+  console.log(\`fib(\${i}) =\`, fibonacci(i))
+}
+`,
   },
   contact: {
     label: "Let's talk",

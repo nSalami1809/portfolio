@@ -81,6 +81,15 @@ export default function Navbar() {
       ),
     },
     {
+      href: `/${locale}/playground`,
+      label: t.nav.playground,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="6 9 10 12 6 15"/><line x1="12" y1="15" x2="16" y2="15"/>
+        </svg>
+      ),
+    },
+    {
       href: `/${locale}/contact`,
       label: t.nav.contact,
       icon: (
