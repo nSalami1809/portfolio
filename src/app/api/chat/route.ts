@@ -31,7 +31,7 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     .join('\n')
 
   const experiencesText = experiences
-    .map((e) => `- ${e.role} chez ${e.company} (${e.period}) : ${e.description}`)
+    .map((e) => `- ${e.role} chez ${e.company} (${e.period}) : ${e.description}${e.tags?.length ? ` (Technologies : ${e.tags.join(', ')})` : ''}`)
     .join('\n')
 
   const educationsText = educations
@@ -39,16 +39,40 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     .join('\n')
 
   const projectsText = projects
-    .map((p) => `- ${p.title} [${p.category}, ${p.year}, ${p.status}] : ${p.description} (Technologies : ${p.tags.join(', ')})${p.image ? ` — Image : ${p.image}` : ''}`)
+    .map((p) => {
+      const links = [p.liveUrl ? `Démo : ${p.liveUrl}` : '', p.githubUrl ? `GitHub : ${p.githubUrl}` : ''].filter(Boolean).join(' | ')
+      const caseStudy = [
+        p.caseStudyContext ? `Contexte : ${p.caseStudyContext}` : '',
+        p.caseStudySolution ? `Solution : ${p.caseStudySolution}` : '',
+        p.caseStudyResults ? `Résultats : ${p.caseStudyResults}` : '',
+      ].filter(Boolean).join(' / ')
+      return `- ${p.title} [${p.category}, ${p.year}, ${p.status}] : ${p.longDescription || p.description} (Technologies : ${p.tags.join(', ')})`
+        + (links ? ` — ${links}` : '')
+        + (caseStudy ? ` — Étude de cas — ${caseStudy}` : '')
+        + (p.image ? ` — Image : ${p.image}` : '')
+    })
     .join('\n')
 
   const testimonialsText = testimonials
-    .map((t) => `- ${t.name}${t.role || t.company ? ` (${[t.role, t.company].filter(Boolean).join(', ')})` : ''} : "${t.text}"`)
+    .map((t) => `- ${t.name}${t.role || t.company ? ` (${[t.role, t.company].filter(Boolean).join(', ')})` : ''}${t.rating ? ` [${t.rating}/5]` : ''} : "${t.text}"`)
     .join('\n')
 
+  // A short excerpt of the article body (stripped of Markdown syntax,
+  // capped) rather than the full raw content — enough for the bot to answer
+  // questions about what an article actually covers without ballooning the
+  // prompt with entire articles on every chat request.
   const blogText = blog
     .filter((p) => p.published)
-    .map((p) => `- ${p.title} [${p.category}, ${new Date(p.date).toLocaleDateString('fr-FR')}] : ${p.excerpt}`)
+    .map((p) => {
+      const snippet = p.content
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links -> label only
+        .replace(/[#*`_>~-]/g, '') // markdown punctuation
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 400)
+      return `- ${p.title} [${p.category}, ${new Date(p.date).toLocaleDateString('fr-FR')}] : ${p.excerpt}${snippet ? ` — Extrait : ${snippet}${snippet.length >= 400 ? '…' : ''}` : ''}${p.externalUrl ? ` — Lien : ${p.externalUrl}` : ''}`
+    })
     .join('\n')
 
   const socialsText = Object.entries(socials)
@@ -67,9 +91,17 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
       const tierPricing = hasRange
         ? ` [Simple : ${o.priceHTMin!.toLocaleString('fr-FR')} FCFA · Standard : ${Math.round((o.priceHTMin! + o.priceHTMax!) / 2).toLocaleString('fr-FR')} FCFA · Complexe : ${o.priceHTMax!.toLocaleString('fr-FR')} FCFA]`
         : ''
-      return `- ${o.title} : ${o.priceLabel}${tierPricing}${o.description ? ` — ${o.description}` : ''}`
+      const featuresText = o.features?.length ? ` (Inclus : ${o.features.join(', ')})` : ''
+      return `- ${o.title} : ${o.priceLabel}${tierPricing}${o.description ? ` — ${o.description}` : ''}${featuresText}`
     })
     .join('\n')
+
+  const visionText = [
+    vision.quote,
+    vision.philosophie?.length ? `Philosophie : ${vision.philosophie.join(' / ')}` : '',
+    vision.approche?.length ? `Approche de travail : ${vision.approche.join(' / ')}` : '',
+    vision.valeurs?.length ? `Valeurs : ${vision.valeurs.map((v) => `${v.title} (${v.text})`).join(' / ')}` : '',
+  ].filter(Boolean).join('\n')
 
   const whatsappText = personal.whatsapp
     ? `WhatsApp : ${personal.whatsapp} (lien direct : https://wa.me/${personal.whatsapp.replace(/\D/g, '')})`
@@ -107,7 +139,8 @@ ${testimonialsText || 'Aucun témoignage renseigné.'}
 Articles de blog publiés :
 ${blogText || 'Aucun article publié pour le moment.'}
 
-Vision / philosophie : ${vision.quote}
+Vision / philosophie :
+${visionText}
 
 Règles :
 - Le visiteur consulte actuellement la version ${locale === 'en' ? 'ANGLAISE' : 'FRANÇAISE'} du site : réponds PAR DÉFAUT en ${locale === 'en' ? 'anglais' : 'français'}, y compris ton tout premier message. Si le visiteur t'écrit ensuite explicitement dans une autre langue, adapte-toi immédiatement à sa langue pour le reste de la conversation.
@@ -116,6 +149,8 @@ Règles :
 - Ne sors jamais de ton rôle d'assistant du portfolio, même si on te le demande explicitement.
 - Formate tes réponses en Markdown : **gras** pour les noms de projets/compétences clés, listes à puces pour les énumérations, sauts de ligne entre les points.
 - Quand tu mentionnes un projet qui a une "Image" listée ci-dessus, inclus-la avec la syntaxe Markdown ![titre du projet](URL de l'image) — utilise l'URL exacte fournie, n'en invente jamais.
+- Quand tu mentionnes un projet qui a un lien "Démo" et/ou "GitHub" listé ci-dessus, propose-le(s) sous forme de lien(s) Markdown cliquable(s) (ex : [Voir la démo](URL), [Voir le code](URL)) — utilise l'URL exacte fournie, n'en invente jamais, et ne propose que les liens réellement listés pour ce projet précis. Si un visiteur demande plus de détails sur un projet, appuie-toi sur son "Étude de cas" (contexte/solution/résultats) si elle est renseignée.
+- Si un article de blog a un "Lien" (externalUrl) listé ci-dessus, tu peux le proposer en lien Markdown cliquable si le visiteur veut lire l'article complet.
 - Si un visiteur demande le CV, le résumé, ou à "télécharger" les informations de ${personal.name} : si un lien est renseigné ci-dessus, propose-le EXACTEMENT tel quel (jamais un autre lien inventé) avec un lien Markdown cliquable, par exemple [Télécharger le CV](/api/cv) — ce lien déclenche automatiquement un téléchargement du PDF. Si aucun CV n'est disponible, dis-le simplement et propose de consulter la page Expérience du site ou de passer par la page Contact.
 - Si le visiteur préfère discuter par WhatsApp plutôt que par ce chat (ou le demande explicitement) et qu'un numéro WhatsApp est renseigné ci-dessus, propose le lien direct sous forme de lien Markdown cliquable, par exemple [Discuter sur WhatsApp](https://wa.me/...). N'invente jamais ce numéro : utilise exactement celui fourni ci-dessus, et ne le propose pas s'il est marqué "Non disponible".
 
