@@ -222,15 +222,41 @@ export default function DevisView({ t }: Props) {
                                 <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{fmt(o.priceHTMin)} – {fmt(o.priceHTMax)} HT</p>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <label htmlFor={`qty-${o.id}`} className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.quantityLabel}</label>
-                                <input
-                                  id={`qty-${o.id}`}
-                                  type="number" min={0} max={99}
-                                  value={sel.qty}
-                                  onChange={(e) => setQty(o.id, Number(e.target.value))}
-                                  className="input text-sm text-center"
-                                  style={{ width: '4rem', padding: '0.4rem' }}
-                                />
+                                <span id={`qty-label-${o.id}`} className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.quantityLabel}</span>
+                                <div
+                                  className="flex items-center"
+                                  role="group"
+                                  aria-labelledby={`qty-label-${o.id}`}
+                                  style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => setQty(o.id, sel.qty - 1)}
+                                    disabled={sel.qty <= 0}
+                                    aria-label={`Diminuer la quantité de ${o.title}`}
+                                    className="flex items-center justify-center text-sm font-semibold"
+                                    style={{ width: '1.85rem', height: '1.85rem', color: sel.qty <= 0 ? 'var(--text-subtle)' : 'var(--text)', cursor: sel.qty <= 0 ? 'default' : 'pointer' }}
+                                  >
+                                    −
+                                  </button>
+                                  <span
+                                    className="text-sm text-center tabular-nums"
+                                    style={{ width: '2.1rem', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', color: 'var(--text)' }}
+                                    aria-live="polite"
+                                  >
+                                    {sel.qty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setQty(o.id, sel.qty + 1)}
+                                    disabled={sel.qty >= 99}
+                                    aria-label={`Augmenter la quantité de ${o.title}`}
+                                    className="flex items-center justify-center text-sm font-semibold"
+                                    style={{ width: '1.85rem', height: '1.85rem', color: sel.qty >= 99 ? 'var(--text-subtle)' : 'var(--text)', cursor: sel.qty >= 99 ? 'default' : 'pointer' }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center justify-between gap-3 flex-wrap">

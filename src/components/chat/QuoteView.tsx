@@ -45,7 +45,7 @@ function DocBlockView({ block }: { block: DocBlock }) {
 export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) {
   const isContract = variant === 'contrat'
   const { data } = usePortfolio()
-  const { personal, socials } = data
+  const { personal } = data
   const [qrDataUrl, setQrDataUrl] = useState('')
   const [downloading, setDownloading] = useState(false)
 
@@ -484,19 +484,6 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
             <p style={{ fontSize: '0.75rem', color: '#888', margin: 0 }}>Signature numérique — document généré et validé électroniquement</p>
           </div>
         </div>
-
-        <div style={{ borderTop: '1px solid #ddd', margin: '1.25rem 0' }} />
-
-        <p style={{ fontSize: '0.75rem', color: '#888', textAlign: 'center', margin: 0 }}>
-          {siteUrl.replace(/^https?:\/\//, '')} · {personal.email}
-        </p>
-        {(socials.github || socials.linkedin) && (
-          <p style={{ fontSize: '0.75rem', color: '#888', textAlign: 'center', margin: '2px 0 0' }}>
-            {socials.github && `GitHub — ${socials.github.replace(/^https?:\/\//, '')}`}
-            {socials.github && socials.linkedin && ' · '}
-            {socials.linkedin && `LinkedIn — ${socials.linkedin.replace(/^https?:\/\//, '')}`}
-          </p>
-        )}
       </div>
     </div>
   )
