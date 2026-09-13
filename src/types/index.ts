@@ -81,10 +81,14 @@ export interface Offer {
   features?: string[]
   featured?: boolean
   image?: string
-  // Optional numeric HT price backing the self-service quote builder
+  // Optional numeric HT price range backing the self-service quote builder
   // (/devis) — priceLabel stays the free-text display shown everywhere
-  // else. An offer without priceHT simply can't be picked in that form.
-  priceHT?: number
+  // else. The visitor picks a complexity tier (simple/standard/complexe)
+  // that lands the unit price somewhere in [priceHTMin, priceHTMax],
+  // mirroring the real range-based pricing instead of one fixed number.
+  // An offer needs both bounds set to become selectable in that form.
+  priceHTMin?: number
+  priceHTMax?: number
 }
 
 export interface SiteSettings {
