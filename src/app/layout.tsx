@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -7,6 +7,7 @@ import AdminGate from '@/components/AdminGate'
 import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
 import VisitTracker from '@/components/analytics/VisitTracker'
 import MotionProvider from '@/components/MotionProvider'
+import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -59,6 +60,18 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0B0B0F',
 }
 
 // Runs before first paint so the correct theme class is already on <html>
@@ -95,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <VisitTracker />
           </PortfolioProvider>
         </MotionProvider>
+        <ServiceWorkerRegister />
         <Analytics />
       </body>
     </html>
