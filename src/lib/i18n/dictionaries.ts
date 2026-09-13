@@ -168,15 +168,21 @@ const fr = {
     statusDone: 'Terminé',
     statusError: 'Erreur',
     shortcutHint: 'Astuce : Ctrl+Entrée pour exécuter',
-    starterCode: `// Bienvenue dans le Playground — modifiez le code et cliquez sur Exécuter
-function fibonacci(n) {
-  if (n <= 1) return n
-  return fibonacci(n - 1) + fibonacci(n - 2)
+    starterCode: `const prices = [15000, 25000, 10000, 30000];
+
+function calculateTotal(prices) {
+  const total = prices.reduce((sum, price) => sum + price, 0);
+  return total;
 }
 
-for (let i = 0; i < 8; i++) {
-  console.log(\`fib(\${i}) =\`, fibonacci(i))
-}
+const total = calculateTotal(prices);
+const discount = total * 0.1;
+const finalPrice = total - discount;
+
+console.log("Prix :", prices);
+console.log("Total :", total + " FCFA");
+console.log("Réduction :", discount + " FCFA");
+console.log("Prix final :", finalPrice + " FCFA");
 `,
   },
   contact: {
@@ -465,15 +471,21 @@ const en: typeof fr = {
     statusDone: 'Done',
     statusError: 'Error',
     shortcutHint: 'Tip: Ctrl+Enter to run',
-    starterCode: `// Welcome to the Playground — edit the code and click Run
-function fibonacci(n) {
-  if (n <= 1) return n
-  return fibonacci(n - 1) + fibonacci(n - 2)
+    starterCode: `const prices = [15000, 25000, 10000, 30000];
+
+function calculateTotal(prices) {
+  const total = prices.reduce((sum, price) => sum + price, 0);
+  return total;
 }
 
-for (let i = 0; i < 8; i++) {
-  console.log(\`fib(\${i}) =\`, fibonacci(i))
-}
+const total = calculateTotal(prices);
+const discount = total * 0.1;
+const finalPrice = total - discount;
+
+console.log("Prices:", prices);
+console.log("Total:", total + " FCFA");
+console.log("Discount:", discount + " FCFA");
+console.log("Final price:", finalPrice + " FCFA");
 `,
   },
   contact: {
