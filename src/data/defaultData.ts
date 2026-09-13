@@ -9,6 +9,7 @@ export const defaultPersonalInfo: PersonalInfo = {
   photo: '',
   cvUrl: '',
   whatsapp: '',
+  signatureUrl: '',
 }
 
 export const defaultSocials: SocialLinks = {

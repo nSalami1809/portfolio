@@ -22,6 +22,18 @@ const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 const STATUS_LABEL: Record<QuoteStatus, string> = { pending: 'En attente', accepted: 'Accepté', declined: 'Refusé' }
 const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#008000', declined: '#EF4444' }
 
+const EVENT_LABEL: Record<string, string> = {
+  created: 'Devis créé',
+  viewed: 'Devis consulté par le client',
+  signed: 'Devis signé électroniquement',
+  declined: 'Devis refusé par le client',
+  status_changed: 'Statut modifié manuellement',
+}
+
+function formatEventDate(iso: string) {
+  return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 export default function AdminQuotes() {
   const toast = useToast()
   const [quotes, setQuotes]     = useState<AdminQuote[]>([])
@@ -30,6 +42,7 @@ export default function AdminQuotes() {
   const [selected, setSelected] = useState<AdminQuote | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [requesting, setRequesting] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -57,8 +70,27 @@ export default function AdminQuotes() {
   }
 
   const handleStatusChange = async (id: string, status: QuoteStatus) => {
+    const previous = quotes.find((x) => x.id === id)?.status
     setQuotes((prev) => prev.map((x) => x.id === id ? { ...x, status } : x))
-    await updateQuoteStatus(id, status)
+    try {
+      await updateQuoteStatus(id, status)
+    } catch (e) {
+      // Signed quotes are locked server-side — revert the optimistic update
+      // rather than leave the UI showing a status that was never saved.
+      setQuotes((prev) => prev.map((x) => x.id === id && previous ? { ...x, status: previous } : x))
+      toast(e instanceof Error ? e.message : 'Impossible de modifier ce devis.', 'error')
+    }
+  }
+
+  const handleCopySignLink = async (q: AdminQuote) => {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+    const url = `${siteUrl}/fr/devis/signature/${q.signToken}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast('Lien de signature copié')
+    } catch {
+      toast('Impossible de copier le lien', 'error')
+    }
   }
 
   const handleRequestTestimonial = async (q: AdminQuote) => {
@@ -178,8 +210,8 @@ export default function AdminQuotes() {
       ) : (
         <div className="space-y-2">
           {filtered.map((q, i) => (
+          <div key={q.id}>
             <m.div
-              key={q.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: i * 0.03 }}
@@ -223,18 +255,51 @@ export default function AdminQuotes() {
                 <p className="text-xs hidden sm:block" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                   {formatDate(q.createdAt)}
                 </p>
-                <select
-                  value={q.status}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => handleStatusChange(q.id, e.target.value as QuoteStatus)}
-                  className="input text-xs"
-                  style={{ width: 'auto', padding: '0.35rem 1.75rem 0.35rem 0.6rem', color: STATUS_COLOR[q.status], fontWeight: 600 }}
-                  aria-label={`Statut du devis ${q.numero}`}
+                {q.signature ? (
+                  <span
+                    className="text-xs font-semibold px-2.5 py-1 flex-shrink-0"
+                    style={{ background: 'rgba(0,128,0,0.1)', color: '#008000', border: '1px solid rgba(0,128,0,0.3)' }}
+                    title={`Signé électroniquement par ${q.signature.name}`}
+                  >
+                    🟢 Signé
+                  </span>
+                ) : (
+                  <select
+                    value={q.status}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => handleStatusChange(q.id, e.target.value as QuoteStatus)}
+                    className="input text-xs"
+                    style={{ width: 'auto', padding: '0.35rem 1.75rem 0.35rem 0.6rem', color: STATUS_COLOR[q.status], fontWeight: 600 }}
+                    aria-label={`Statut du devis ${q.numero}`}
+                  >
+                    {(Object.keys(STATUS_LABEL) as QuoteStatus[]).map((s) => (
+                      <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                    ))}
+                  </select>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleCopySignLink(q) }}
+                  className="w-7 h-7 items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)] hidden sm:flex"
+                  style={{ color: 'var(--text-subtle)' }}
+                  title="Copier le lien de signature"
+                  aria-label={`Copier le lien de signature du devis ${q.numero}`}
                 >
-                  {(Object.keys(STATUS_LABEL) as QuoteStatus[]).map((s) => (
-                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
-                  ))}
-                </select>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === q.id ? null : q.id) }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
+                  style={{ color: 'var(--text-subtle)' }}
+                  title="Historique"
+                  aria-label={`Historique du devis ${q.numero}`}
+                  aria-expanded={expandedId === q.id}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expandedId === q.id ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s ease' }} aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
                 {q.clientEmail && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleRequestTestimonial(q) }}
@@ -259,6 +324,28 @@ export default function AdminQuotes() {
                 </button>
               </div>
             </m.div>
+
+            {expandedId === q.id && (
+              <div className="card no-lift p-4 mt-1" style={{ background: 'var(--bg-secondary)' }}>
+                <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>Historique</p>
+                {q.events.length === 0 ? (
+                  <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>Aucun événement enregistré.</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {q.events.map((ev, idx) => (
+                      <li key={idx} className="flex items-center justify-between gap-3 text-xs">
+                        <span style={{ color: 'var(--text)' }}>
+                          {EVENT_LABEL[ev.type] ?? ev.type}
+                          {ev.meta?.to && ` → ${STATUS_LABEL[ev.meta.to as QuoteStatus] ?? ev.meta.to}`}
+                        </span>
+                        <span style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{formatEventDate(ev.at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
           ))}
         </div>
       )}
