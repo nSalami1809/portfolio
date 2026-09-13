@@ -22,7 +22,15 @@ export default function Navbar() {
       label: t.nav.about,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
+          <path d="M14 13.12c0 2.38 0 6.38-1 8.88"/>
+          <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/>
+          <path d="M2 12a10 10 0 0 1 18-6"/>
+          <path d="M2 16h.01"/>
+          <path d="M21.8 16c.2-2 .131-5.354 0-6"/>
+          <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/>
+          <path d="M8.65 22c.21-.66.45-1.32.57-2"/>
+          <path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>
         </svg>
       ),
     },
@@ -31,7 +39,7 @@ export default function Navbar() {
       label: t.nav.resume,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+          <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
         </svg>
       ),
     },
@@ -40,7 +48,13 @@ export default function Navbar() {
       label: t.nav.vision,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="14.31" y1="8" x2="20.05" y2="17.94"/>
+          <line x1="9.69" y1="8" x2="21.17" y2="8"/>
+          <line x1="7.38" y1="12" x2="13.12" y2="2.06"/>
+          <line x1="9.69" y1="16" x2="3.95" y2="6.06"/>
+          <line x1="14.31" y1="16" x2="2.83" y2="16"/>
+          <line x1="16.62" y1="12" x2="10.88" y2="21.94"/>
         </svg>
       ),
     },
@@ -49,7 +63,9 @@ export default function Navbar() {
       label: t.nav.projects,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/>
+          <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+          <path d="M9 2v2"/><path d="M15 2v2"/><path d="M9 20v2"/><path d="M15 20v2"/>
+          <path d="M2 9h2"/><path d="M2 15h2"/><path d="M20 9h2"/><path d="M20 15h2"/>
         </svg>
       ),
     },
@@ -94,7 +110,7 @@ export default function Navbar() {
       label: t.nav.contact,
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
         </svg>
       ),
     },
@@ -149,12 +165,15 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav — floating pill dock: one rounded-full capsule
-              holding every link, active item shown as a solid filled pill.
-              Plain conditional backgrounds (no layout-animated pill) keep
-              this to a single style recalculation per hover, no extra JS. */}
+          {/* Desktop nav — floating square capsule (rounded-xl resolves to 0
+              via this site's zeroed --radius tokens, matching the square
+              design language everywhere else) holding every link plus the
+              language switch and theme toggle. Active item shown as a solid
+              filled pill; plain conditional backgrounds (no layout-animated
+              pill) keep this to a single style recalculation per hover, no
+              extra JS. */}
           <div
-            className="hidden lg:flex items-center rounded-full p-1"
+            className="hidden lg:flex items-center rounded-xl p-1"
             style={{
               border: '1px solid var(--border)',
               background: 'var(--glass-bg)',
@@ -172,7 +191,7 @@ export default function Navbar() {
                       href={href}
                       onMouseEnter={() => setHovered(href)}
                       aria-current={isActive ? 'page' : undefined}
-                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full transition-colors duration-150"
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150"
                       style={{
                         background: isActive ? 'var(--accent)' : isHovered ? 'var(--surface-hover)' : 'transparent',
                         color: isActive ? 'var(--accent-contrast)' : isHovered ? 'var(--text)' : 'var(--text-muted)',
@@ -192,10 +211,23 @@ export default function Navbar() {
                 )
               })}
             </ul>
+
+            <div className="w-px h-5 mx-1.5 flex-shrink-0" style={{ background: 'var(--border)' }} aria-hidden="true" />
+
+            <Link
+              href={switchHref}
+              onClick={switchLocale}
+              className="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150"
+              style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
+            >
+              {otherLocale.toUpperCase()}
+            </Link>
+
+            <ThemeToggle ariaLabel={t.nav.themeToggle} />
           </div>
 
-          {/* Right controls */}
-          <div className="flex items-center gap-2">
+          {/* Right controls (mobile/tablet only — desktop has these inside the pill above) */}
+          <div className="flex items-center gap-2 lg:hidden">
             <ThemeToggle ariaLabel={t.nav.themeToggle} />
 
             {/* Language switcher */}
