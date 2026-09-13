@@ -147,8 +147,8 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
       {booking.status !== 'cancelled' && (
         <a
           href={booking.meetingUrl} target="_blank" rel="noopener noreferrer"
-          className="text-xs font-semibold inline-flex items-center gap-1"
-          style={{ color: 'var(--accent)' }}
+          className="btn-primary btn-sm"
+          style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
         >
           {t.joinMeeting}
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -195,7 +195,7 @@ function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () 
           </a>
         )}
         {callHref && (
-          <a href={callHref} className="text-xs font-medium hover:underline" style={{ color: 'var(--accent)' }}>
+          <a href={callHref} className="btn-secondary btn-sm" style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}>
             {t.requestCall}
           </a>
         )}
