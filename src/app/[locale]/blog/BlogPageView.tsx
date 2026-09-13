@@ -75,44 +75,45 @@ export default function BlogPageView({ posts, locale, t }: Props) {
         ) : (
           <>
             <FadeIn delay={0.05}>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-10">
-                <div className="relative max-w-sm w-full">
-                  <svg
-                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{ color: 'var(--text-subtle)' }}
-                    aria-hidden="true"
+              <div className="relative mb-6 max-w-sm">
+                <svg
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: 'var(--text-subtle)' }}
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t.searchPlaceholder}
+                  aria-label={t.searchAria}
+                  className="input"
+                  style={{ paddingLeft: '2.5rem' }}
+                />
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.1}>
+              <div className="flex flex-wrap gap-2 mb-10" role="group" aria-label={t.filterAria}>
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActive(cat)}
+                    aria-pressed={active === cat}
+                    className="px-4 py-2 text-sm font-medium transition-all duration-200"
+                    style={{
+                      fontFamily: 'var(--font-poppins)',
+                      background: active === cat ? 'var(--accent)' : 'var(--surface)',
+                      color: active === cat ? 'var(--accent-contrast)' : 'var(--text-muted)',
+                      border: active === cat ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    }}
                   >
-                    <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
-                  </svg>
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={t.searchPlaceholder}
-                    aria-label={t.searchAria}
-                    className="input"
-                    style={{ paddingLeft: '2.5rem' }}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2" role="group" aria-label={t.filterAria}>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActive(cat)}
-                      aria-pressed={active === cat}
-                      className="px-4 py-2 text-sm font-medium transition-all duration-200"
-                      style={{
-                        fontFamily: 'var(--font-poppins)',
-                        background: active === cat ? 'var(--accent)' : 'var(--surface)',
-                        color: active === cat ? 'var(--accent-contrast)' : 'var(--text-muted)',
-                        border: active === cat ? '1px solid var(--accent)' : '1px solid var(--border)',
-                      }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+                    {cat}
+                  </button>
+                ))}
               </div>
             </FadeIn>
 
