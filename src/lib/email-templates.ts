@@ -400,6 +400,7 @@ export function quoteNotificationEmail(data: {
 export function quoteClientCopyEmail(data: {
   numero: string
   accessCode: string
+  signToken: string
   clientNom: string
   clientSociete?: string
   descriptionProjet: string
@@ -459,8 +460,81 @@ export function quoteClientCopyEmail(data: {
         </tr>
       </table>
 
-      ${ctaButton(SITE_URL, 'Voir le portfolio')}
+      ${ctaButton(`${SITE_URL}/fr/devis/signature/${data.signToken}`, 'Consulter et signer mon devis')}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Question sur le devis ${data.numero}`)}`, 'Une question sur ce devis ?')}
+    `),
+  }
+}
+
+// ── Quote signed electronically (client) ────────────────────────────────────
+
+export function quoteSignedClientEmail(data: {
+  numero: string
+  accessCode: string
+  clientNom: string
+  totalTTC: number
+}, adminEmail: string) {
+  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
+  const safeNom = esc(data.clientNom)
+
+  return {
+    subject: `Votre devis ${data.numero} a bien été signé`,
+    html: base('Devis signé', `Votre signature du devis ${data.numero} a bien été enregistrée`, `
+      ${badge(`Devis ${esc(data.numero)}`)}
+      ${heading(`C&rsquo;est sign&eacute;, ${safeNom.split(' ')[0]}&nbsp;!`)}
+      ${intro(`Votre signature &eacute;lectronique a &eacute;t&eacute; enregistr&eacute;e avec succ&egrave;s. Ce devis vaut d&eacute;sormais confirmation de commande pour un montant de <strong style="color:#26262E">${fmt(data.totalTTC)}</strong> TTC.`)}
+
+      ${infoBox(`
+        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
+        <p style="margin:0;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
+      `)}
+
+      ${ctaButton(`${SITE_URL}/fr/devis?ref=${encodeURIComponent(data.accessCode)}`, 'Voir le document signé')}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos du devis ${data.numero}`)}`, 'Une question ?')}
+    `),
+  }
+}
+
+// ── Quote signed electronically (admin) ─────────────────────────────────────
+
+export function quoteSignedAdminEmail(data: {
+  numero: string
+  clientNom: string
+  totalTTC: number
+  signature?: { name: string; signedAt: string }
+}) {
+  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
+  const safeNom = esc(data.clientNom)
+  const signedBy = data.signature ? esc(data.signature.name) : safeNom
+  const signedAt = data.signature
+    ? new Date(data.signature.signedAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
+    : ''
+
+  return {
+    subject: `Devis ${data.numero} signé par ${data.clientNom}`,
+    html: base('Devis signé', `${signedBy} a signé électroniquement le devis ${data.numero}`, `
+      ${badge('Signature &eacute;lectronique')}
+      ${heading('Un devis vient d&rsquo;&ecirc;tre sign&eacute;')}
+      ${intro(`<strong style="color:#26262E">${signedBy}</strong> a sign&eacute; &eacute;lectroniquement le devis <strong style="color:#26262E">${esc(data.numero)}</strong>${signedAt ? ` le ${signedAt}` : ''}, pour un montant de <strong style="color:#26262E">${fmt(data.totalTTC)}</strong> TTC.`)}
+
+      ${ctaButton(`${SITE_URL}/admin/quotes`, 'Voir dans le tableau de bord')}
+    `),
+  }
+}
+
+// ── Quote declined from the signing page (admin) ────────────────────────────
+
+export function quoteDeclinedAdminEmail(data: { numero: string; clientNom: string }) {
+  const safeNom = esc(data.clientNom)
+
+  return {
+    subject: `Devis ${data.numero} refusé par ${data.clientNom}`,
+    html: base('Devis refusé', `${safeNom} a refusé le devis ${data.numero}`, `
+      ${badge('Devis refus&eacute;')}
+      ${heading('Un devis a &eacute;t&eacute; refus&eacute;')}
+      ${intro(`<strong style="color:#26262E">${safeNom}</strong> a refus&eacute; le devis <strong style="color:#26262E">${esc(data.numero)}</strong> depuis la page de signature.`)}
+
+      ${ctaButton(`${SITE_URL}/admin/quotes`, 'Voir dans le tableau de bord')}
     `),
   }
 }

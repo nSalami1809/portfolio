@@ -463,12 +463,54 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         {blocks.map((block, i) => <DocBlockView key={i} block={block} />)}
 
         {/* Acceptance */}
-        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>
-          {isContract ? 'ARTICLE 19 — SIGNATURE' : '14. ACCEPTATION DU DEVIS'}
-        </p>
-        <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '2.5rem' }}>
-          {isContract ? 'Commande confirmée — Date et signature du client :' : 'Bon pour accord — Date et signature du client :'}
-        </p>
+        {quote.signature ? (
+          <div style={{ marginBottom: '2rem' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>
+              SIGNATURE ÉLECTRONIQUE
+            </p>
+            <div style={{ border: '1px solid #ddd', padding: '1.25rem' }}>
+              <p style={{ display: 'inline-block', background: '#0A7A2E', color: '#fff', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.06em', padding: '0.3rem 0.7rem', marginBottom: 14 }}>
+                STATUT : SIGNÉ
+              </p>
+              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 mb-3">
+                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>Signé par :</strong> {quote.signature.name}</p>
+                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>E-mail :</strong> {quote.signature.email}</p>
+                <p style={{ fontSize: '0.82rem', color: '#333' }}>
+                  <strong>Date et heure :</strong> {new Date(quote.signature.signedAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}
+                </p>
+                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>Document signé :</strong> {quote.numero}</p>
+              </div>
+              <p style={{ fontSize: '0.68rem', color: '#999', marginBottom: 18, wordBreak: 'break-all' }}>
+                <strong>Référence de signature (SHA-256) :</strong> {quote.signature.documentHash}
+              </p>
+              <div className="flex items-end justify-between flex-wrap gap-6">
+                <div>
+                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>Signature du client</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- external blob URL, arbitrary aspect ratio */}
+                  <img src={quote.signature.imageUrl} alt={`Signature de ${quote.signature.name}`} style={{ height: 70, display: 'block' }} />
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>Signature du prestataire</p>
+                  {personal.signatureUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- external blob URL, arbitrary aspect ratio
+                    <img src={personal.signatureUrl} alt={`Signature de ${personal.name}`} style={{ height: 70, display: 'block', marginLeft: 'auto' }} />
+                  ) : (
+                    <p style={{ fontSize: '0.78rem', color: '#aaa', fontStyle: 'italic' }}>Signature du prestataire non configurée</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>
+              {isContract ? 'ARTICLE 19 — SIGNATURE' : '14. ACCEPTATION DU DEVIS'}
+            </p>
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '2.5rem' }}>
+              {isContract ? 'Commande confirmée — Date et signature du client :' : 'Bon pour accord — Date et signature du client :'}
+            </p>
+          </>
+        )}
 
         <div style={{ borderTop: '1px solid #ddd', margin: '1.25rem 0' }} />
 

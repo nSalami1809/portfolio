@@ -7,6 +7,7 @@ export interface PersonalInfo {
   photo: string
   cvUrl?: string
   whatsapp?: string // international format, e.g. "+24177000000"
+  signatureUrl?: string // drawn or imported signature, shown on signed devis/contrats
 }
 
 export interface SocialLinks {

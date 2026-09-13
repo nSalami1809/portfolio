@@ -5,6 +5,7 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import FileUpload from '@/components/admin/FileUpload'
+import SignatureSettings from '@/components/admin/SignatureSettings'
 import type { PersonalInfo, SocialLinks } from '@/types'
 
 export default function AdminPersonal() {
@@ -132,6 +133,15 @@ export default function AdminPersonal() {
             />
           </div>
         </div>
+      </section>
+
+      {/* Signature électronique */}
+      <section className="card no-lift p-6">
+        <p className="section-label mb-2">Signature électronique</p>
+        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+          Utilisée automatiquement sur les devis et contrats signés électroniquement par vos clients.
+        </p>
+        <SignatureSettings value={personal.signatureUrl} onChange={(v) => handlePersonal({ signatureUrl: v })} />
       </section>
 
       {/* Réseaux */}

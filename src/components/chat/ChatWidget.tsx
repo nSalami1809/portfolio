@@ -158,6 +158,7 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
 }
 
 function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () => void; adminEmail?: string; t: Dictionary['chat'] }) {
+  const locale = useLocale()
   const callHref = adminEmail
     ? `mailto:${adminEmail}?subject=${encodeURIComponent(`${t.callSubject} ${quote.numero}`)}&body=${encodeURIComponent(`${t.callBodyIntro} ${quote.numero} (${quote.clientNom}).\n\n${t.callBodyOutro}`)}`
     : undefined
@@ -181,6 +182,15 @@ function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () 
         <button onClick={onView} className="btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}>
           {t.viewPrintQuote}
         </button>
+        <a
+          href={`/${locale}/devis/signature/${quote.signToken}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary btn-sm"
+          style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
+        >
+          {t.signOnline}
+        </a>
         {callHref && (
           <a href={callHref} className="text-xs font-medium hover:underline" style={{ color: 'var(--accent)' }}>
             {t.requestCall}
