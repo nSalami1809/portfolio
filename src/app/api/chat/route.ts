@@ -56,8 +56,19 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     .map(([platform, url]) => `- ${platform} : ${url}`)
     .join('\n')
 
+  // Mirrors DevisView.tsx's tierPrice(): simple -> min, complexe -> max,
+  // standard -> midpoint. Spelling this out (not just the free-text
+  // priceLabel) lets the chatbot price a line item exactly the way the
+  // self-service /devis form would for the same complexity choice, instead
+  // of guessing a number somewhere in the range.
   const offersText = offers
-    .map((o) => `- ${o.title} : ${o.priceLabel}${o.description ? ` — ${o.description}` : ''}`)
+    .map((o) => {
+      const hasRange = typeof o.priceHTMin === 'number' && typeof o.priceHTMax === 'number' && o.priceHTMax >= o.priceHTMin
+      const tierPricing = hasRange
+        ? ` [Simple : ${o.priceHTMin!.toLocaleString('fr-FR')} FCFA · Standard : ${Math.round((o.priceHTMin! + o.priceHTMax!) / 2).toLocaleString('fr-FR')} FCFA · Complexe : ${o.priceHTMax!.toLocaleString('fr-FR')} FCFA]`
+        : ''
+      return `- ${o.title} : ${o.priceLabel}${tierPricing}${o.description ? ` — ${o.description}` : ''}`
+    })
     .join('\n')
 
   const whatsappText = personal.whatsapp
@@ -115,7 +126,8 @@ Déroulé à suivre :
 2. N'invente jamais les coordonnées du client : elles doivent venir de lui.
 3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur la grille tarifaire "Offres / prestations proposées" ci-dessus (FCFA, hors taxes) — ce sont les offres réelles et à jour du site, choisis toujours en priorité parmi elles.
    Si le projet décrit combine plusieurs offres (ex: boutique en ligne + authentification + hébergement), inclus une ligne par offre concernée. Si aucune offre ne correspond exactement à un besoin mentionné (ex: une fonctionnalité très spécifique), estime une ligne complémentaire raisonnable en cohérence avec les ordres de grandeur de la grille.
-   Choisis un montant réaliste dans la fourchette adaptée à la complexité décrite — jamais de prix absurdement bas ou élevé, jamais de centimes.
+   Pour chaque offre utilisée qui a une pricing par palier entre crochets [Simple / Standard / Complexe] : évalue toi-même, à partir de ce que le visiteur a décrit (fonctionnalités demandées, exigences particulières, ampleur du projet), quel palier s'applique — Simple pour un besoin basique/standard sans particularité, Standard par défaut si l'info est insuffisante pour trancher, Complexe si le visiteur mentionne des fonctionnalités avancées, une forte personnalisation, de gros volumes ou des intégrations poussées. Utilise EXACTEMENT le montant correspondant à ce palier (jamais un chiffre inventé entre les paliers), et nomme la ligne "Nom de l'offre (Palier)" — par exemple "Site vitrine simple (Standard)" — pour rester cohérent avec les devis générés depuis le formulaire du site. Pour une offre sans pricing par palier (prix unique ou "sur devis"), garde le nom de l'offre tel quel et estime un montant cohérent avec son priceLabel.
+   Jamais de prix absurdement bas ou élevé, jamais de centimes.
 4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt. Indique-lui aussi le code d'accès du devis (fourni dans le résultat de l'outil) et précise qu'il peut le redonner plus tard pour retrouver ce devis sans tout redemander. Mentionne aussi qu'un bouton "Demander un appel" sous le devis lui permet de proposer directement un créneau par email s'il préfère en discuter de vive voix.
 5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
 
