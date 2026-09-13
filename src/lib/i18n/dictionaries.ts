@@ -37,7 +37,7 @@ const fr = {
     offers: 'Offres',
     calendar: 'Calendrier',
     blog: 'Blog',
-    playground: 'Playground',
+    playground: 'Laboratoire',
     contact: 'Contact',
     openMenu: 'Ouvrir le menu',
     closeMenu: 'Fermer le menu',
@@ -156,7 +156,7 @@ const fr = {
   },
   playground: {
     label: 'Bac à sable',
-    title: 'Playground',
+    title: 'Laboratoire',
     subtitle: "Un éditeur JavaScript qui tourne entièrement dans votre navigateur — modifiez le code, cliquez sur Exécuter, rien n'est envoyé à un serveur.",
     filename: 'playground.js',
     run: 'Exécuter',
