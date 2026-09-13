@@ -9,7 +9,7 @@ import FadeIn from '@/components/animations/FadeIn'
 
 const statusColor: Record<string, string> = {
   completed: '#008000',
-  'in-progress': '#F59E0B',
+  'in-progress': '#E45742',
   concept: '#6B7280',
 }
 

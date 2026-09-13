@@ -52,7 +52,7 @@ export default function AdminPersonal() {
           </p>
         </div>
         {dirty && (
-          <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)', fontFamily: 'var(--font-poppins)' }}>
+          <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'rgba(228,87,66,0.12)', color: '#E45742', border: '1px solid rgba(228,87,66,0.3)', fontFamily: 'var(--font-poppins)' }}>
             Modifications non sauvegardées
           </span>
         )}

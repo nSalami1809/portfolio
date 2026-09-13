@@ -19,7 +19,7 @@ interface MonthGridProps {
 
 const DOT_COLOR: Record<DayStatus, string> = {
   available: 'var(--accent)',
-  booked: '#F59E0B',
+  booked: '#E45742',
   blocked: 'var(--text-subtle)',
 }
 

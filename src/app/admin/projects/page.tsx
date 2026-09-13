@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<Project['status'], string> = {
 }
 const STATUS_COLORS: Record<Project['status'], string> = {
   completed:    '#008000',
-  'in-progress':'#F59E0B',
+  'in-progress':'#E45742',
   concept:      '#6366F1',
 }
 
