@@ -1,9 +1,9 @@
 'use server'
 
 import { randomBytes } from 'crypto'
-import { headers } from 'next/headers'
 import { ObjectId, type WithId } from 'mongodb'
 import { after } from 'next/server'
+import { unstable_cache, updateTag } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { bookingNotificationEmail, bookingClientCopyEmail, bookingReminderEmail } from '@/lib/email-templates'
@@ -12,9 +12,13 @@ import { buildICS } from '@/lib/ics'
 import { fetchPortfolio } from '@/actions/portfolio'
 import { notifyWaitlist } from '@/actions/waitlist'
 import { requireAdmin } from '@/lib/require-admin'
+import { getClientIp } from '@/lib/client-ip'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids visual ambiguity
 const MAX_PER_HOUR = 5
+const LOOKUP_RATE_LIMIT_PER_HOUR = 20
+const CANCEL_RATE_LIMIT_PER_HOUR = 10
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 // Africa/Libreville is a fixed UTC+1 offset with no DST, so wall-clock
 // arithmetic can use a constant offset instead of pulling in a timezone
 // library just for this.
@@ -168,6 +172,33 @@ async function computeSlots(fromISO: string, toISO: string): Promise<Record<stri
   return result
 }
 
+// Read-only view of the same computation, for the browse paths (calendar
+// grid, chatbot suggestions) where a minute of staleness is invisible but the
+// cost is not: every month navigation and every "when are you free?" used to
+// re-read the portfolio, re-query the bookings table and re-derive every slot
+// from scratch. Invalidated on any booking change via updateTag('bookings')
+// and on any admin publish via the shared 'portfolio' tag.
+//
+// Deliberately NOT used by bookMeeting: the final double-booking check has to
+// see the live bookings table, not a cached snapshot of it.
+const cachedComputeSlots = unstable_cache(
+  (fromISO: string, toISO: string) => computeSlots(fromISO, toISO),
+  ['booking-slots'],
+  { tags: ['portfolio', 'bookings'], revalidate: 60 },
+)
+
+// Invalidation is best-effort: `updateTag` needs a genuine Server Action
+// context and bookMeeting/cancelBooking are also reachable from the chatbot's
+// Route Handler. A miss just means falling back to the 60s revalidate, so it
+// must never fail the write that preceded it.
+function invalidateBookingSlots() {
+  try {
+    updateTag('bookings')
+  } catch {
+    /* not a Server Action context — the 60s revalidate covers it */
+  }
+}
+
 // Single day — used by the public slot picker and the chatbot.
 export async function getDaySlots(dateISO: string): Promise<string[]> {
   const map = await computeSlots(dateISO, dateISO)
@@ -179,7 +210,7 @@ export async function getMonthSlots(year: number, month: number): Promise<Record
   const from = `${year}-${String(month).padStart(2, '0')}-01`
   const lastDay = new Date(year, month, 0).getDate()
   const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
-  return computeSlots(from, to)
+  return cachedComputeSlots(from, to)
 }
 
 // `time` is the Africa/Libreville wall-clock label; `iso` is the same slot's
@@ -232,7 +263,7 @@ export async function getDaySchedule(dateISO: string): Promise<DaySlot[]> {
 export async function getUpcomingAvailability(maxDays = 5): Promise<{ date: string; slots: string[] }[]> {
   const from = isoDate(new Date())
   const to = isoDate(new Date(Date.now() + 21 * 86_400_000))
-  const map = await computeSlots(from, to)
+  const map = await cachedComputeSlots(from, to)
   return Object.entries(map)
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, maxDays)
@@ -241,27 +272,64 @@ export async function getUpcomingAvailability(maxDays = 5): Promise<{ date: stri
 
 // ── Public: create a booking ─────────────────────────────────────────────
 
-export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
-  if (!payload.clientNom?.trim()) throw new Error('Nom requis.')
-  if (!payload.clientEmail?.trim()) throw new Error('Email requis.')
-  if (!payload.start) throw new Error('Créneau requis.')
+let bookingRlIndexReady: Promise<void> | null = null
+function ensureBookingRlIndex() {
+  if (!bookingRlIndexReady) {
+    bookingRlIndexReady = getDb()
+      .then((db) => db.collection('booking_ratelimits').createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 }))
+      .then(() => undefined)
+      .catch(() => {})
+  }
+  return bookingRlIndexReady
+}
 
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? hdrs.get('x-real-ip') ?? 'unknown'
-
-  const db = await getDb()
-  await db.collection('booking_ratelimits').createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 }).catch(() => {})
+async function checkBookingRateLimit(scope: string, maxPerHour: number): Promise<boolean> {
+  // Index setup, the connection and the request headers are three independent
+  // awaits; only the count actually has to happen before the decision.
+  const [, db, ip] = await Promise.all([ensureBookingRlIndex(), getDb(), getClientIp()])
   const since = new Date(Date.now() - 3600 * 1000)
-  const count = await db.collection('booking_ratelimits').countDocuments({ ip, createdAt: { $gte: since } })
-  if (count >= MAX_PER_HOUR) throw new Error('Trop de réservations pour le moment. Réessayez dans un instant.')
+  const count = await db.collection('booking_ratelimits').countDocuments({ scope, ip, createdAt: { $gte: since } })
+  if (count >= maxPerHour) return false
+  // Started immediately so concurrent requests still count against the
+  // window, but not awaited — nothing downstream reads the result.
+  void db
+    .collection('booking_ratelimits')
+    .insertOne({ scope, ip, createdAt: new Date() })
+    .catch((e) => console.error('[checkBookingRateLimit] write failed:', e))
+  return true
+}
 
-  const portfolio = await fetchPortfolio()
-  const availability = portfolio?.availability
-  if (!availability) throw new Error('Le calendrier n\'est pas encore configuré.')
+export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
+  if (!payload.clientNom?.trim() || payload.clientNom.length > 200) throw new Error('Nom requis.')
+  if (!payload.clientEmail?.trim() || !EMAIL_RE.test(payload.clientEmail.trim()) || payload.clientEmail.length > 254) {
+    throw new Error('Email invalide.')
+  }
+  if (!payload.start) throw new Error('Créneau requis.')
+  if (payload.clientTelephone && payload.clientTelephone.length > 30) throw new Error('Téléphone invalide.')
+  if (payload.message && payload.message.length > 2000) throw new Error('Message trop long.')
 
   const start = new Date(payload.start)
   const dateISOStr = isoDate(start)
-  const available = await getDaySlots(dateISOStr)
+
+  // The rate-limit gate, the connection and the availability read are
+  // independent of each other, so they run together rather than as four
+  // sequential round trips before the visitor learns whether their slot is
+  // still free. `getDaySlots` is deliberately the UNcached path: it is the
+  // authoritative double-booking check and must see the live bookings table.
+  const [allowed, db, portfolio, available] = await Promise.all([
+    checkBookingRateLimit('book-meeting', MAX_PER_HOUR),
+    getDb(),
+    fetchPortfolio(),
+    getDaySlots(dateISOStr),
+  ])
+
+  if (!allowed) {
+    throw new Error('Trop de réservations pour le moment. Réessayez dans un instant.')
+  }
+
+  const availability = portfolio?.availability
+  if (!availability) throw new Error('Le calendrier n\'est pas encore configuré.')
+
   if (!available.includes(hhmm(start))) {
     throw new Error('Ce créneau n\'est plus disponible — merci d\'en choisir un autre.')
   }
@@ -284,9 +352,9 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
     meetingUrl,
   }
 
-  await db.collection('booking_ratelimits').insertOne({ ip, createdAt: new Date() })
   const { insertedId } = await db.collection<BookingRecord>('bookings').insertOne(record)
   const booking = toBooking({ ...record, _id: insertedId })
+  invalidateBookingSlots()
 
   after(async () => {
     try {
@@ -362,27 +430,35 @@ export async function createEvent(payload: { title: string; start: string; durat
   }
 
   const { insertedId } = await col.insertOne(record)
+  invalidateBookingSlots()
   return toBooking({ ...record, _id: insertedId })
 }
 
 // Retrieve a booking by its access code, so a visitor can find or cancel it
 // again without going through the chat.
 export async function lookupBooking(accessCode: string): Promise<Booking | null> {
+  if (typeof accessCode !== 'string') return null
   const code = accessCode.trim().toUpperCase()
   if (!code) return null
+  if (!(await checkBookingRateLimit('lookup-booking', LOOKUP_RATE_LIMIT_PER_HOUR))) return null
   const col = await bookings()
   const doc = await col.findOne({ accessCode: code })
   return doc ? toBooking(doc) : null
 }
 
 export async function cancelBooking(accessCode: string): Promise<{ ok: boolean; message: string }> {
+  if (typeof accessCode !== 'string') return { ok: false, message: 'Requête invalide.' }
   const code = accessCode.trim().toUpperCase()
+  if (!(await checkBookingRateLimit('cancel-booking', CANCEL_RATE_LIMIT_PER_HOUR))) {
+    return { ok: false, message: 'Trop de tentatives. Réessayez plus tard.' }
+  }
   const col = await bookings()
   const doc = await col.findOne({ accessCode: code })
   if (!doc) return { ok: false, message: 'Rendez-vous introuvable pour ce code.' }
   if (doc.status === 'cancelled') return { ok: true, message: 'Ce rendez-vous était déjà annulé.' }
 
   await col.updateOne({ _id: doc._id }, { $set: { status: 'cancelled' } })
+  invalidateBookingSlots()
   after(() => notifyWaitlist(isoDate(doc.start)))
   return { ok: true, message: 'Le rendez-vous a été annulé.' }
 }
@@ -411,6 +487,7 @@ export async function adminCancelBooking(id: string): Promise<void> {
   const col = await bookings()
   const doc = await col.findOne({ _id: new ObjectId(id) })
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { status: 'cancelled' } })
+  invalidateBookingSlots()
   if (doc) after(() => notifyWaitlist(isoDate(doc.start)))
 }
 
@@ -418,6 +495,7 @@ export async function deleteBooking(id: string): Promise<void> {
   await requireAdmin()
   const col = await bookings()
   await col.deleteOne({ _id: new ObjectId(id) })
+  invalidateBookingSlots()
 }
 
 // ── Reminders ─────────────────────────────────────────────────────────────

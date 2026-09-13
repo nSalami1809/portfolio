@@ -20,7 +20,7 @@ import { publishPortfolio, fetchPortfolio, fetchPortfolioFresh } from '@/actions
 
 const STORAGE_KEY = 'portfolio-data'
 
-const defaultData: PortfolioData = {
+export const defaultPortfolioData: PortfolioData = {
   personal: defaultPersonalInfo,
   socials: defaultSocials,
   projects: defaultProjects,
@@ -57,7 +57,7 @@ const noop = () => {}
 // Non-null default so SSR never throws when the provider isn't mounted yet.
 // The real values are provided by PortfolioProvider once hydrated.
 const PortfolioContext = createContext<PortfolioContextValue>({
-  data: defaultData,
+  data: defaultPortfolioData,
   updatePersonal: noop,
   updateSocials: noop,
   updateProjects: noop,
@@ -75,11 +75,54 @@ const PortfolioContext = createContext<PortfolioContextValue>({
 
 type Key = keyof PortfolioData
 
+// Read-only provider for the PUBLIC site.
+//
+// PortfolioProvider below exists for the admin editor: it fetches, polls every
+// 45s, re-fetches on focus/visibilitychange and publishes back. Mounting it in
+// the root layout meant every anonymous visitor paid for all of that — a
+// Server Action POST (never CDN-cacheable, a full server render + Mongo-backed
+// cache read each time) on mount, on every tab focus, on every visibility
+// change and once every 45 seconds, forever, just to re-derive data the server
+// had already rendered into the page.
+//
+// The public tree now gets the data as a plain prop, resolved server-side at
+// the page's own ISR cadence. Same context object, so every existing
+// `usePortfolio()` consumer keeps working unchanged — it just never hits the
+// network, and the values are correct in the SSR HTML instead of arriving a
+// round trip after hydration. Admin pages nest the real provider inside this
+// one, so `usePortfolio()` there still resolves to the editable version.
+export function PortfolioStaticProvider({
+  data,
+  children,
+}: {
+  data: PortfolioData
+  children: React.ReactNode
+}) {
+  const value = useMemo<PortfolioContextValue>(() => ({
+    data,
+    updatePersonal: noop,
+    updateSocials: noop,
+    updateProjects: noop,
+    updateExperiences: noop,
+    updateEducations: noop,
+    updateSkills: noop,
+    updateTestimonials: noop,
+    updateSettings: noop,
+    updateVision: noop,
+    updateBlogPosts: noop,
+    updateOffers: noop,
+    updateAvailability: noop,
+    resetAll: noop,
+  }), [data])
+
+  return <PortfolioContext.Provider value={value}>{children}</PortfolioContext.Provider>
+}
+
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<PortfolioData>(defaultData)
+  const [data, setData] = useState<PortfolioData>(defaultPortfolioData)
   const hydratedFromMongo = useRef(false)
   const publishTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const latestData = useRef<PortfolioData>(defaultData)
+  const latestData = useRef<PortfolioData>(defaultPortfolioData)
   // Top-level fields edited locally since the last successful publish.
   // Only these are ever pushed on top of a freshly-fetched server copy,
   // so a stale tab can never stomp fields it never touched.
@@ -240,8 +283,8 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
     if (publishTimer.current) { clearTimeout(publishTimer.current); publishTimer.current = null }
     dirtyKeys.current.clear()
-    setData(defaultData)
-    publishPortfolio(defaultData).catch(() => {})
+    setData(defaultPortfolioData)
+    publishPortfolio(defaultPortfolioData).catch(() => {})
   }, [])
 
   const value = useMemo<PortfolioContextValue>(() => ({

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -89,12 +90,31 @@ function MarqueeRow({ items, direction, locale, verifiedLabel }: { items: Testim
   )
 }
 
+// The marquee can only be paused by hovering it, and its viewport clips
+// overflow so it can't be swiped either — on a touch screen that leaves an
+// unpausable, unreadable wall of moving cards. Detect the absence of a
+// hovering pointer and fall back to the same static grid the reduced-motion
+// path already uses.
+function useNoHoverPointer() {
+  const [noHover, setNoHover] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: none)')
+    setNoHover(mq.matches) // eslint-disable-line react-hooks/set-state-in-effect
+    const onChange = () => setNoHover(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return noHover
+}
+
 export default function TestimonialsMarquee({ testimonials, locale, verifiedLabel = 'Vérifié' }: { testimonials: Testimonial[]; locale: Locale; verifiedLabel?: string }) {
   const reducedMotion = usePrefersReducedMotion()
+  const noHover = useNoHoverPointer()
 
-  // Motion-sensitive visitors get a plain, fully-readable grid instead of
-  // the auto-scrolling rows — same content, no animation to fight with.
-  if (reducedMotion) {
+  // Motion-sensitive visitors — and touch visitors, who can neither hover to
+  // pause nor swipe the clipped track — get a plain, fully-readable grid
+  // instead of the auto-scrolling rows.
+  if (reducedMotion || noHover) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {testimonials.map((tm) => <TestimonialCard key={tm.id} tm={tm} locale={locale} verifiedLabel={verifiedLabel} />)}

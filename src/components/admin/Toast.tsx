@@ -64,8 +64,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         role="status"
         aria-live="polite"
         aria-atomic="false"
-        className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none"
-        style={{ maxWidth: 'min(360px, calc(100vw - 48px))' }}
+        className="fixed right-6 z-[9999] flex flex-col gap-2 pointer-events-none"
+        style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', maxWidth: 'min(360px, calc(100vw - 48px))' }}
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {toasts.map((t) => (

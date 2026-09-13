@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { usePortfolio } from '@/providers/PortfolioContext'
-import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
-import { translateText } from '@/actions/translate'
+import { useState } from 'react'
+import type { PersonalInfo, SocialLinks } from '@/types'
+import type { Locale } from '@/lib/i18n/locale'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 function NavItem({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const [hovered, setHovered] = useState(false)
@@ -77,20 +77,20 @@ function SocialItem({
   )
 }
 
-export default function Footer() {
-  const { data } = usePortfolio()
-  const locale = useLocale()
-  const t = useDictionary()
+interface FooterProps {
+  personal: PersonalInfo
+  socials: SocialLinks
+  locale: Locale
+  t: { nav: Dictionary['nav']; footer: Dictionary['footer'] }
+  // Already translated server-side. The footer sits in the locale layout, so
+  // it renders on EVERY public page — translating the role from a client
+  // effect meant one Server Action POST per page view for every English
+  // visitor, plus a visible text swap once it landed.
+  role: string
+}
+
+export default function Footer({ personal, socials, locale, t, role }: FooterProps) {
   const year = new Date().getFullYear()
-
-  const [translatedRole, setTranslatedRole] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (locale !== 'en' || !data.personal.role) { setTranslatedRole(null); return } // eslint-disable-line react-hooks/set-state-in-effect
-    translateText('personal:role', 'en', { role: data.personal.role })
-      .then((fields) => setTranslatedRole(fields.role ?? null))
-      .catch(() => {})
-  }, [locale, data.personal.role])
 
   const navLinks = [
     {
@@ -160,7 +160,7 @@ export default function Footer() {
               <span style={{ color: 'var(--accent)' }}>N</span>·S
             </div>
             <p className="text-sm leading-relaxed max-w-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-              {translatedRole ?? data.personal.role}
+              {role}
             </p>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 flex-shrink-0" style={{ background: '#008000' }} />
@@ -184,10 +184,10 @@ export default function Footer() {
           <div>
             <p className="section-label mb-3">{t.footer.contactSocials}</p>
             <div className="space-y-1.5">
-              {data.personal.email && (
+              {personal.email && (
                 <SocialItem
-                  href={`mailto:${data.personal.email}`}
-                  label={data.personal.email}
+                  href={`mailto:${personal.email}`}
+                  label={personal.email}
                   icon={
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
@@ -195,9 +195,9 @@ export default function Footer() {
                   }
                 />
               )}
-              {data.personal.whatsapp && (
+              {personal.whatsapp && (
                 <SocialItem
-                  href={`https://wa.me/${data.personal.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(t.footer.whatsappMessage)}`}
+                  href={`https://wa.me/${personal.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(t.footer.whatsappMessage)}`}
                   label="WhatsApp"
                   external
                   icon={
@@ -207,9 +207,9 @@ export default function Footer() {
                   }
                 />
               )}
-              {data.socials.github && (
+              {socials.github && (
                 <SocialItem
-                  href={data.socials.github}
+                  href={socials.github}
                   label="GitHub"
                   external
                   icon={
@@ -219,9 +219,9 @@ export default function Footer() {
                   }
                 />
               )}
-              {data.socials.linkedin && (
+              {socials.linkedin && (
                 <SocialItem
-                  href={data.socials.linkedin}
+                  href={socials.linkedin}
                   label="LinkedIn"
                   external
                   icon={
@@ -231,9 +231,9 @@ export default function Footer() {
                   }
                 />
               )}
-              {data.socials.instagram && (
+              {socials.instagram && (
                 <SocialItem
-                  href={data.socials.instagram}
+                  href={socials.instagram}
                   label="Instagram"
                   external
                   icon={
@@ -251,7 +251,7 @@ export default function Footer() {
           className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-center"
           style={{ borderTop: '1px solid var(--border)', color: 'var(--text-subtle)' }}
         >
-          <p>&copy; {year} {data.personal.name}. {t.footer.rights}</p>
+          <p>&copy; {year} {personal.name}. {t.footer.rights}</p>
           <span className="hidden sm:inline" aria-hidden="true">·</span>
           <Link href={`/${locale}/mentions-legales`} className="hover:underline">{t.footer.legalNotice}</Link>
           <span className="hidden sm:inline" aria-hidden="true">·</span>

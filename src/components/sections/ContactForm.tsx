@@ -97,7 +97,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             {t.nameLabel}
           </label>
           <input
-            id="cf-name" type="text" name="name" value={form.name}
+            id="cf-name" type="text" name="name" autoComplete="name" value={form.name}
             onChange={handle} required maxLength={100}
             placeholder={t.namePlaceholder}
             className={fieldClass}
@@ -109,7 +109,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
           </label>
           <div className="relative">
             <input
-              id="cf-email" type="email" name="email" value={form.email}
+              id="cf-email" type="email" inputMode="email" autoComplete="email" name="email" value={form.email}
               onChange={handleEmailChange}
               onBlur={handleEmailBlur}
               required maxLength={254}
@@ -168,7 +168,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             </svg>
           </span>
           <input
-            id="cf-phone" type="tel" name="phone" value={form.phone}
+            id="cf-phone" type="tel" inputMode="tel" autoComplete="tel" name="phone" value={form.phone}
             onChange={handle} maxLength={30}
             placeholder={t.phonePlaceholder}
             className={fieldClass}

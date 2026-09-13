@@ -38,6 +38,9 @@ function renderContent(content: string) {
           key={i}
           src={src}
           controls
+          // Without this, iOS takes every play fullscreen, ejecting the reader
+          // out of the article.
+          playsInline
           className="w-full rounded-xl my-6"
           style={{ border: '1px solid var(--border)' }}
         />
@@ -130,7 +133,7 @@ export default function BlogPostView({ post, locale, t }: { post: BlogPost; loca
 
       {post.coverImage && (
         <FadeIn delay={0.18}>
-          <div className="relative w-full rounded-2xl mb-12 overflow-hidden" style={{ border: '1px solid var(--border)', height: 480 }}>
+          <div className="relative w-full aspect-[16/9] rounded-2xl mb-12 overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <Image
               src={post.coverImage}
               alt={post.title}

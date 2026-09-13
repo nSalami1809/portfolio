@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/locale'
-
-const getSecret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
+import { getJwtSecret } from '@/lib/jwt-secret'
 
 function getPreferredLocale(req: NextRequest): string {
   const cookieLocale = req.cookies.get('NEXT_LOCALE')?.value
@@ -43,7 +42,7 @@ export async function proxy(req: NextRequest) {
     // Déjà connecté → dashboard
     if (jwtToken) {
       try {
-        await jwtVerify(jwtToken, getSecret())
+        await jwtVerify(jwtToken, getJwtSecret())
         return NextResponse.redirect(new URL('/admin', req.url))
       } catch { /* token invalide, continuer */ }
     }
@@ -68,7 +67,7 @@ export async function proxy(req: NextRequest) {
     if (!jwtToken) return new NextResponse(null, { status: 404 })
 
     try {
-      await jwtVerify(jwtToken, getSecret())
+      await jwtVerify(jwtToken, getJwtSecret())
       return NextResponse.next()
     } catch {
       const res = new NextResponse(null, { status: 404 })

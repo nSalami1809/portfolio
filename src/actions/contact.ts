@@ -1,6 +1,5 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { ObjectId } from 'mongodb'
 import { promises as dns } from 'dns'
 import { getDb } from '@/lib/mongodb'
@@ -8,6 +7,7 @@ import { getTransporter } from '@/lib/mailer'
 import { contactNotificationEmail, contactAutoReplyEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
+import { getClientIp } from '@/lib/client-ip'
 
 const MAX_PER_HOUR = 3
 
@@ -93,20 +93,19 @@ export async function submitContact(payload: ContactPayload): Promise<ContactRes
     return { ok: false, error: "Ce domaine email n'existe pas ou ne peut pas recevoir de messages. Vérifiez l'adresse saisie." }
   }
 
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim()
-    ?? hdrs.get('x-real-ip')
-    ?? 'unknown'
+  const ip = await getClientIp()
 
   const [db] = await Promise.all([getDb(), getIndexes()])
 
   const since = new Date(Date.now() - 3600 * 1000)
-  const count = await db.collection('ratelimits').countDocuments({ ip, createdAt: { $gte: since } })
+  // Scoped so a visitor's devis/booking activity (same shared `ratelimits`
+  // collection) never eats into their contact-form quota, and vice versa.
+  const count = await db.collection('ratelimits').countDocuments({ scope: 'contact', ip, createdAt: { $gte: since } })
   if (count >= MAX_PER_HOUR) {
     return { ok: false, error: 'Limite atteinte (3 messages/h). Réessayez plus tard.' }
   }
 
-  await db.collection('ratelimits').insertOne({ ip, createdAt: new Date() })
+  await db.collection('ratelimits').insertOne({ scope: 'contact', ip, createdAt: new Date() })
   await db.collection('contacts').insertOne({ ...payload, ip, createdAt: new Date(), read: false })
 
   // Notification to admin + auto-reply to visitor (non-blocking)

@@ -106,12 +106,41 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
   const providerSigImg = providerSigBytes ? await pdfDoc.embedPng(providerSigBytes).catch(() => null) : null
   const qrImg = qrBytes ? await pdfDoc.embedPng(qrBytes).catch(() => null) : null
 
+  // Every page drawn gets tracked here so a running header/footer (doc
+  // title, small logo, page count) can be stamped across the whole document
+  // in one pass at the end — the total page count isn't known until then,
+  // so per-page "Page X / Y" numbering has to happen after the fact.
+  const allPages: import('pdf-lib').PDFPage[] = []
+
   let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+  allPages.push(page)
   let y = PAGE_HEIGHT - MARGIN
+
+  const docTitle = `${isContract ? 'Contrat' : 'Devis'} ${quote.numero}`
+
+  // Compact repeated header for every page after the first — a multi-page
+  // contract (up to 19 articles) would otherwise start page 2, 3, … with
+  // bare body text and no indication of which document or page the reader
+  // is on. The full masthead (big logo, role, access-code badge) stays
+  // page-1-only; this is deliberately smaller so it doesn't compete with it.
+  function drawContinuationHeader() {
+    const topY = PAGE_HEIGHT - MARGIN
+    if (logoImg) {
+      page.drawImage(logoImg, { x: MARGIN, y: topY - 16, width: 16, height: 16 })
+    }
+    const nameX = logoImg ? MARGIN + 22 : MARGIN
+    page.drawText(safeText(personal.name), { x: nameX, y: topY - 12, size: 9, font: fontBold, color: INK })
+    const titleW = fontRegular.widthOfTextAtSize(docTitle, 8)
+    page.drawText(safeText(docTitle), { x: PAGE_WIDTH - MARGIN - titleW, y: topY - 12, size: 8, font: fontRegular, color: SUBTLE })
+    page.drawLine({ start: { x: MARGIN, y: topY - 22 }, end: { x: PAGE_WIDTH - MARGIN, y: topY - 22 }, thickness: 0.5, color: BORDER })
+    y = topY - 34
+  }
 
   function newPage() {
     page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+    allPages.push(page)
     y = PAGE_HEIGHT - MARGIN
+    drawContinuationHeader()
   }
 
   function ensureSpace(height: number) {
@@ -231,17 +260,23 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
   page.drawLine({ start: { x: MARGIN, y }, end: { x: PAGE_WIDTH - MARGIN, y }, thickness: 1, color: INK })
   y -= 12
 
-  for (const it of quote.items) {
+  quote.items.forEach((it, rowIndex) => {
     const lines = wrapText(it.designation, fontRegular, 9, colQty - colDesignation - 8)
     const rowHeight = Math.max(lines.length * 12, 12)
     ensureSpace(rowHeight + 6)
+    // Alternating row tint (zebra striping) — drawn after ensureSpace() so it
+    // lands on whichever page the row actually ended up on, and before the
+    // text so it sits behind it.
+    if (rowIndex % 2 === 1) {
+      page.drawRectangle({ x: MARGIN, y: y - rowHeight - 2, width: CONTENT_WIDTH, height: rowHeight + 6, color: rgb(0.97, 0.97, 0.97) })
+    }
     lines.forEach((line, i) => page.drawText(line, { x: colDesignation, y: y - 9 - i * 12, size: 9, font: fontRegular, color: INK }))
     page.drawText(String(it.quantite), { x: colQty, y: y - 9, size: 9, font: fontRegular, color: MUTED })
     page.drawText(safeText(fmt(it.prixUnitaireHT)), { x: colUnit, y: y - 9, size: 9, font: fontRegular, color: MUTED })
     page.drawText(safeText(fmt(it.quantite * it.prixUnitaireHT)), { x: colTotal, y: y - 9, size: 9, font: fontRegular, color: INK })
     y -= rowHeight + 6
     page.drawLine({ start: { x: MARGIN, y: y + 3 }, end: { x: PAGE_WIDTH - MARGIN, y: y + 3 }, thickness: 0.5, color: BORDER })
-  }
+  })
   y -= 8
 
   // ── Totals ──
@@ -332,6 +367,15 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
   if (qrImg) page.drawImage(qrImg, { x: MARGIN, y: y - 50, width: 50, height: 50 })
   page.drawText(safeText(personal.name), { x: PAGE_WIDTH - MARGIN - 220, y: y - 14, size: 9.5, font: fontBold, color: INK })
   page.drawText(safeText('Document généré et validé électroniquement'), { x: PAGE_WIDTH - MARGIN - 220, y: y - 26, size: 7.5, font: fontRegular, color: SUBTLE })
+
+  // ── Page numbers ── drawn last, once every page exists, so a multi-page
+  // contract reads "Page 2 / 4" rather than being silently unnumbered.
+  const total = allPages.length
+  allPages.forEach((p, i) => {
+    const label = `Page ${i + 1} / ${total}`
+    const w = fontRegular.widthOfTextAtSize(label, 7.5)
+    p.drawText(label, { x: (PAGE_WIDTH - w) / 2, y: MARGIN - 20, size: 7.5, font: fontRegular, color: SUBTLE })
+  })
 
   const bytes = await pdfDoc.save()
   return Buffer.from(bytes)

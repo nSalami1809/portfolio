@@ -1,8 +1,19 @@
+import { createHash, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongodb'
+import { clientIpFromHeaders } from '@/lib/client-ip'
 
 const MAX_ATTEMPTS = 5
 const WINDOW_S = 15 * 60 // 15 minutes
+
+// Hash both sides to a fixed-length digest before comparing: timingSafeEqual
+// throws on mismatched buffer lengths, which itself leaks the token's length
+// if done directly on the raw strings.
+function safeCodeEquals(a: string, b: string): boolean {
+  const ha = createHash('sha256').update(a).digest()
+  const hb = createHash('sha256').update(b).digest()
+  return timingSafeEqual(ha, hb)
+}
 
 let indexReady: Promise<void> | null = null
 function ensureIndex() {
@@ -16,10 +27,7 @@ function ensureIndex() {
 }
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    req.headers.get('x-real-ip') ??
-    'unknown'
+  const ip = clientIpFromHeaders(req.headers)
 
   await ensureIndex()
   const db = await getDb()
@@ -31,8 +39,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { code } = await req.json().catch(() => ({ code: '' }))
+  const adminToken = process.env.ADMIN_ACCESS_TOKEN
 
-  if (!code || code !== process.env.ADMIN_ACCESS_TOKEN) {
+  if (!code || typeof code !== 'string' || !adminToken || !safeCodeEquals(code, adminToken)) {
     await db.collection('admin_gate_rl').insertOne({ ip, createdAt: new Date() })
     return NextResponse.json({ error: 'Code invalide.' }, { status: 401 })
   }

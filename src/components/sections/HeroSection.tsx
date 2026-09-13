@@ -22,8 +22,14 @@ interface Props {
   socials: SocialLinks
   locale: Locale
   t: Dictionary['home']
-  nextSlot: { date: string; time: string } | null
+  // Rendered on the server behind its own Suspense boundary and slotted in
+  // here, so the bookings query it needs never blocks the headline.
+  nextSlotBadge?: React.ReactNode
 }
+
+// Module-level, so it survives client-side navigations but NOT a fresh
+// document load — exactly the distinction the typewriter below needs.
+let heroMountedOnce = false
 
 function TypingCursor() {
   return (
@@ -35,12 +41,8 @@ function TypingCursor() {
   )
 }
 
-export default function HeroSection({ personal, socials, locale, t, nextSlot }: Props) {
+export default function HeroSection({ personal, socials, locale, t, nextSlotBadge }: Props) {
   const [scrolled, setScrolled] = useState(false)
-
-  const nextSlotLabel = nextSlot
-    ? new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(`${nextSlot.date}T12:00:00`))
-    : null
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -55,12 +57,30 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
   const boundary2 = boundary1 + lastName.length
   const fullLength = boundary2 + firstNames.length
 
-  const [typed, setTyped] = useState(0)
+  // Seeded to the FULL length so the <h1> — the page's LCP element — is
+  // present and complete in the server-rendered HTML. It used to start at 0,
+  // which meant the biggest text block on the site was an empty node until
+  // hydration finished, then spent another ~2.3s (700ms delay + 45ms/char)
+  // filling itself in. The typewriter is now kept only for client-side
+  // navigations back to the homepage, where there is no LCP to spoil.
+  const [typed, setTyped] = useState(fullLength)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const firstPaint = !heroMountedOnce
+    heroMountedOnce = true
+
+    const reduceMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (firstPaint || reduceMotion) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTyped(fullLength)
+      return
+    }
+
     setTyped(0)
-    const startDelay = 700
+    const startDelay = 300
     const speed = 45
     let interval: ReturnType<typeof setInterval> | undefined
     const timeout = setTimeout(() => {
@@ -91,7 +111,13 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
 
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 w-full py-16">
         {/* Text */}
-        <m.div variants={container} initial="hidden" animate="show">
+        {/* initial={false} (not "hidden"): framer-motion serializes whatever
+            `initial` resolves to into the SSR inline style, so `initial="hidden"`
+            shipped the entire above-the-fold hero — heading included — as
+            opacity:0, invisible until hydration. Skipping the initial state
+            paints the real markup immediately; the staggered entrance is kept
+            only for the decorative bits that declare their own initial below. */}
+        <m.div variants={container} initial={false} animate="show">
           {personal.photo && (
             <m.div variants={item} className="mb-6">
               <Image
@@ -117,28 +143,7 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
               </span>
             </div>
 
-            {nextSlot && nextSlotLabel && (
-              <Link
-                href={`/${locale}/calendrier`}
-                className="inline-flex items-center gap-2 pl-2 pr-3 h-8 rounded-xl transition-colors duration-200"
-                style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--glass-border)' }}
-              >
-                <span
-                  className="flex items-center justify-center w-4 h-4 rounded-md flex-shrink-0"
-                  style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}
-                  aria-hidden="true"
-                >
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                </span>
-                <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-                  {t.nextSlotPrefix} <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{nextSlotLabel} {nextSlot.time}</strong>
-                </span>
-              </Link>
-            )}
+            {nextSlotBadge}
           </m.div>
 
           <m.p variants={item} className="section-label mb-5">
@@ -148,7 +153,7 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
           <m.h1
             variants={item}
             className="font-display font-bold leading-[1.05] mb-6"
-            style={{ fontSize: 'clamp(2.8rem, 7vw, 5.5rem)', letterSpacing: '-0.03em' }}
+            style={{ fontSize: 'clamp(2.1rem, 7vw, 5.5rem)', letterSpacing: '-0.03em' }}
           >
             <span style={{ color: 'var(--text)' }}>
               {t1}
@@ -186,8 +191,15 @@ export default function HeroSection({ personal, socials, locale, t, nextSlot }: 
             </Link>
           </m.div>
 
-          {/* Socials */}
-          <m.div variants={item} className="flex items-center gap-4">
+          {/* Socials — purely decorative and below the headline, so this one
+              opts back in to an entrance animation with its own `initial`
+              (the parent's initial={false} suppresses the variant one). */}
+          <m.div
+            className="flex items-center gap-4"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
             {socials.github && (
               <a href={socials.github} target="_blank" rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"

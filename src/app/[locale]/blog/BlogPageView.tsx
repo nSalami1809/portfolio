@@ -173,7 +173,7 @@ export default function BlogPageView({ posts, locale, t }: Props) {
                       <span>{post.readTime} {t.readTime}</span>
                     </div>
                   </div>
-                  <div className="self-center opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1">
+                  <div className="self-center reveal-on-hover opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--accent)' }}>
                       <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>

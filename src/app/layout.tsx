@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { PortfolioProvider } from '@/providers/PortfolioContext'
+import { PortfolioStaticProvider, defaultPortfolioData } from '@/providers/PortfolioContext'
+import { fetchPortfolioSafe } from '@/actions/portfolio'
 import AdminGate from '@/components/AdminGate'
 import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
 import VisitTracker from '@/components/analytics/VisitTracker'
@@ -71,7 +72,15 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0B0B0F',
+  // A single dark value painted near-black browser chrome above a white page
+  // for every light-mode visitor; match the theme instead.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B0B0F' },
+  ],
+  // Lets the page paint under the notch/home indicator, which is what makes
+  // env(safe-area-inset-*) resolve to non-zero values on fixed elements.
+  viewportFit: 'cover',
 }
 
 // Runs before first paint so the correct theme class is already on <html>
@@ -84,7 +93,13 @@ export const viewport: Viewport = {
 // an explicit choice stored in localStorage always wins.
 const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');var dark=t?t!=='light':window.matchMedia('(prefers-color-scheme: dark)').matches;if(dark)document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Resolved server-side (cached + tagged 'portfolio', deduped per request) so
+  // the public tree reads real data straight out of the SSR HTML instead of
+  // re-fetching it over a Server Action after hydration. See
+  // PortfolioStaticProvider for the full rationale.
+  const portfolio = await fetchPortfolioSafe('root layout')
+
   return (
     <html
       lang="fr"
@@ -94,19 +109,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <link rel="preconnect" href="https://prod.spline.design" />
-        <link rel="dns-prefetch" href="https://prod.spline.design" />
-        <link rel="preconnect" href="https://unpkg.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://unpkg.com" />
       </head>
       <body>
         <MotionProvider>
-          <PortfolioProvider>
+          <PortfolioStaticProvider data={portfolio ?? defaultPortfolioData}>
             {children}
             <AdminGate />
             <ChatWidgetLoader />
             <VisitTracker />
-          </PortfolioProvider>
+          </PortfolioStaticProvider>
         </MotionProvider>
         <ServiceWorkerRegister />
         <Analytics />

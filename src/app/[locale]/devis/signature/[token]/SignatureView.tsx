@@ -93,7 +93,7 @@ export default function SignatureView({ token }: Props) {
 
   if (phase === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
       </div>
     )
@@ -101,7 +101,7 @@ export default function SignatureView({ token }: Props) {
 
   if (phase === 'not-found') {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-dvh flex items-center justify-center px-4">
         <div className="card p-8 text-center" style={{ maxWidth: 420 }}>
           <p className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>Lien invalide</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Ce lien de signature est introuvable ou incorrect. Vérifiez qu&apos;il a été copié en entier.</p>
@@ -117,7 +117,7 @@ export default function SignatureView({ token }: Props) {
   const solde = quote.totalTTC - acompte
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-dvh">
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-16">
         <FadeIn>
           <div className="flex items-center gap-3 mb-8">
@@ -251,12 +251,12 @@ export default function SignatureView({ token }: Props) {
                   <div className="grid sm:grid-cols-2 gap-4 mt-5">
                     <div>
                       <label htmlFor="sig-name" className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>Nom complet</label>
-                      <input id="sig-name" className="input" value={clientName} onChange={(e) => setClientName(e.target.value)} maxLength={100} placeholder="Prénom Nom" />
+                      <input id="sig-name" className="input" autoComplete="name" value={clientName} onChange={(e) => setClientName(e.target.value)} maxLength={100} placeholder="Prénom Nom" />
                     </div>
                     <div>
                       <label htmlFor="sig-email" className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>E-mail</label>
                       <input
-                        id="sig-email" type="email" className="input"
+                        id="sig-email" type="email" inputMode="email" autoComplete="email" className="input"
                         value={clientEmail}
                         onChange={(e) => setClientEmail(e.target.value)}
                         disabled={emailKnown}

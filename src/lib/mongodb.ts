@@ -12,7 +12,11 @@ declare global {
 
 function connect(): Promise<MongoClient> {
   const promise = new MongoClient(uri, {
-    maxPoolSize: 5,
+    // Fluid Compute runs many concurrent requests in one instance, so a pool
+    // of 5 was the bottleneck that turned "parallel" queries into serialized
+    // waves. Atlas' free/shared tiers cap around 500 connections total, so 20
+    // per instance is still comfortably within budget.
+    maxPoolSize: 20,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 10000,
   }).connect()

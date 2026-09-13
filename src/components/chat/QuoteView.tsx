@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { buildDevisBlocks, buildContractBlocks, type DocBlock } from '@/lib/quote-document'
-import type { Quote } from '@/actions/quotes'
+import { downloadQuotePdf, type Quote } from '@/actions/quotes'
 
 const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 
@@ -40,6 +41,7 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
   const { personal } = data
   const [qrDataUrl, setQrDataUrl] = useState('')
   const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
@@ -49,49 +51,47 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
       .catch(() => {})
   }, [siteUrl])
 
+  useEscapeKey(true, onClose)
+
+  // This overlay scrolls internally; without locking the page behind it, a
+  // touch that starts outside the document scrolls the page under the modal.
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [])
+
   const dateEmission = new Date(quote.dateEmission).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
 
   const blocks = isContract ? buildContractBlocks(quote, personal) : buildDevisBlocks(quote)
 
+  // Server-rendered PDF (pdf-lib, real text + running header + page
+  // numbers) — the same document the emailed attachment uses, rather than a
+  // client-side html2canvas screenshot sliced into pages, which used to cut
+  // table rows and paragraphs in half wherever a page boundary landed.
   const handleDownloadPdf = async () => {
-    const element = document.getElementById('quote-print-area')
-    if (!element || downloading) return
+    if (downloading) return
     setDownloading(true)
+    setDownloadError('')
     try {
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
-      ])
-      if (typeof document.fonts?.ready?.then === 'function') await document.fonts.ready
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        ignoreElements: (el) => el.classList.contains('quote-no-print'),
-      })
-
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = pageWidth
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      const imgData = canvas.toDataURL('image/jpeg', 0.95)
-
-      let heightLeft = imgHeight
-      let position = 0
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight
+      const result = await downloadQuotePdf(quote.accessCode)
+      if (!result.ok) {
+        setDownloadError(result.error)
+        return
       }
-
-      pdf.save(`${isContract ? 'Contrat' : 'Devis'}-${quote.numero}.pdf`)
+      const bytes = Uint8Array.from(atob(result.base64), (c) => c.charCodeAt(0))
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = result.filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
     } catch (e) {
-      console.error('[QuoteView] PDF generation error:', e)
+      console.error('[QuoteView] PDF download error:', e)
+      setDownloadError('Une erreur est survenue. Réessayez plus tard.')
     } finally {
       setDownloading(false)
     }
@@ -109,6 +109,7 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
           #quote-print-area, #quote-print-area * { visibility: visible; }
           #quote-print-area { position: absolute; inset: 0; width: 100%; max-width: 100%; box-shadow: none !important; margin: 0 !important; }
           .quote-no-print { display: none !important; }
+          .quote-scroll { overflow: visible !important; }
         }
       `}</style>
 
@@ -120,7 +121,10 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
           width: '100%',
           maxWidth: 760,
           borderRadius: 0,
-          padding: '2.5rem',
+          // A flat 2.5rem left only ~248px of usable width on a 360px phone —
+          // this modal is also the public signature page's document view, not
+          // a print-only sheet.
+          padding: 'clamp(1.25rem, 4vw, 2.5rem)',
           fontFamily: 'var(--font-inter), system-ui, -apple-system, sans-serif',
         }}
       >
@@ -152,6 +156,11 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
             </button>
           </div>
         </div>
+        {downloadError && (
+          <p className="quote-no-print" style={{ fontSize: '0.8rem', color: '#D90000', marginTop: '-0.75rem', marginBottom: '1rem' }}>
+            {downloadError}
+          </p>
+        )}
 
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -210,7 +219,8 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
 
         {/* 4. Détail des prestations */}
         <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', margin: '1.5rem 0 0.75rem' }}>4. DÉTAIL DES PRESTATIONS</p>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+        <div className="quote-scroll" style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', minWidth: 440, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #111' }}>
               <th style={{ textAlign: 'left', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>DÉSIGNATION</th>
@@ -230,10 +240,11 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Totals */}
-        <div className="flex justify-end mt-6 mb-8">
-          <table style={{ width: 260, fontSize: '0.85rem' }}>
+        <div className="quote-scroll flex justify-end mt-6 mb-8" style={{ overflowX: 'auto' }}>
+          <table style={{ width: 260, maxWidth: '100%', flexShrink: 0, fontSize: '0.85rem' }}>
             <tbody>
               <tr>
                 <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5' }}>Total HT</td>

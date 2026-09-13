@@ -1,13 +1,16 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import TestimonialsMarquee from '@/components/sections/TestimonialsMarquee'
+import NextSlotBadge, { NEXT_SLOT_BADGE_HEIGHT } from '@/components/sections/NextSlotBadge'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
-import { getUpcomingAvailability } from '@/actions/bookings'
-import { translateFields } from '@/lib/translate'
+import { translateFieldsBatch } from '@/lib/translate'
+import { jsonLdScript } from '@/lib/json-ld'
 import { getDictionary } from '@/lib/i18n/dictionaries'
-import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import { isLocale, DEFAULT_LOCALE, type Locale } from '@/lib/i18n/locale'
+import type { Testimonial } from '@/types'
 import {
   defaultPersonalInfo,
   defaultSocials,
@@ -17,6 +20,47 @@ import {
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
+
+// Reserves the marquee's exact height so the Suspense fallback below swapping
+// for real content can never shift the page (the whole point of giving a
+// boundary a fixed-size skeleton rather than a spinner).
+const MARQUEE_HEIGHT = 240
+
+function TestimonialsSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className="animate-pulse"
+      style={{ height: MARQUEE_HEIGHT, background: 'var(--surface)', opacity: 0.5 }}
+    />
+  )
+}
+
+// Split out of the page body so the testimonial translations — the slowest
+// and least important thing on the homepage — stream in behind their own
+// boundary instead of holding back the hero and the whole document with them.
+async function TranslatedTestimonials({
+  testimonials,
+  fieldsPromise,
+  locale,
+  verifiedLabel,
+}: {
+  testimonials: Testimonial[]
+  fieldsPromise: Promise<{ text: string; role: string; company: string }[]>
+  locale: Locale
+  verifiedLabel: string
+}) {
+  const fields = await fieldsPromise
+  const translated = testimonials.map((tm, i) => ({
+    ...tm,
+    text: fields[i].text,
+    role: fields[i].role,
+    company: fields[i].company,
+  }))
+  return (
+    <TestimonialsMarquee testimonials={translated} locale={locale} verifiedLabel={verifiedLabel} />
+  )
+}
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params
@@ -30,17 +74,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const skills       = portfolio?.skills       ?? defaultSkills
   const testimonials = portfolio?.testimonials ?? defaultTestimonials
 
-  const bioFields = await translateFields('personal:bio', locale, { bio: personal.bio })
-  const translatedPersonal = { ...personal, bio: bioFields.bio }
+  // Deliberately NOT awaited here: this promise is handed to the Suspense
+  // boundary further down so the rest of the page never waits on it.
+  const testimonialFieldsPromise = translateFieldsBatch(
+    locale,
+    testimonials.map((tm) => ({
+      key: `testimonial:${tm.id}`,
+      fields: { text: tm.text, role: tm.role ?? '', company: tm.company ?? '' },
+    })),
+  )
 
-  // Next open slot for the homepage hero badge — same data as the calendar,
-  // just surfaced earlier so a visitor doesn't have to navigate to discover
-  // it. Computed server-side at the page's own 30s ISR cadence, so it's
-  // never an extra client-side fetch.
-  const upcoming = await getUpcomingAvailability(1).catch(() => [])
-  const nextSlot = upcoming[0] && upcoming[0].slots[0]
-    ? { date: upcoming[0].date, time: upcoming[0].slots[0] }
-    : null
+  // The bio translation is the only thing the hero genuinely has to wait for.
+  // The "next open slot" badge, which needs a bookings query, now renders in
+  // its own Suspense boundary inside the hero instead of gating it.
+  const [bioFields] = await translateFieldsBatch(locale, [
+    { key: 'personal:bio', fields: { bio: personal.bio } },
+  ])
+  const translatedPersonal = { ...personal, bio: bioFields.bio }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
   const sameAs = [socials.linkedin, socials.github, socials.facebook, socials.instagram].filter(Boolean)
@@ -74,23 +124,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     ],
   }
 
-  const translatedTestimonials = await Promise.all(
-    testimonials.map(async (tm) => {
-      const fields = await translateFields(`testimonial:${tm.id}`, locale, {
-        text: tm.text,
-        role: tm.role ?? '',
-        company: tm.company ?? '',
-      })
-      return { ...tm, text: fields.text, role: fields.role, company: fields.company }
-    }),
-  )
-
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
 
       {/* ── HERO ── */}
-      <HeroSection personal={translatedPersonal} socials={socials} locale={locale} t={t.home} nextSlot={nextSlot} />
+      <HeroSection
+        personal={translatedPersonal}
+        socials={socials}
+        locale={locale}
+        t={t.home}
+        nextSlotBadge={
+          <Suspense fallback={<div aria-hidden="true" style={{ height: NEXT_SLOT_BADGE_HEIGHT }} />}>
+            <NextSlotBadge locale={locale} prefix={t.home.nextSlotPrefix} />
+          </Suspense>
+        }
+      />
 
       {/* ── À PROPOS ── */}
       <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
@@ -213,7 +262,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
         {testimonials.length > 0 && (
           <FadeIn delay={0.1}>
-            <TestimonialsMarquee testimonials={translatedTestimonials} locale={locale} verifiedLabel={t.home.testimonialsVerified} />
+            <Suspense fallback={<TestimonialsSkeleton />}>
+              <TranslatedTestimonials
+                testimonials={testimonials}
+                fieldsPromise={testimonialFieldsPromise}
+                locale={locale}
+                verifiedLabel={t.home.testimonialsVerified}
+              />
+            </Suspense>
           </FadeIn>
         )}
       </section>

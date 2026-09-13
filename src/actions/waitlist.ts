@@ -1,11 +1,11 @@
 'use server'
 
-import { headers } from 'next/headers'
 import type { WithId } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { waitlistSlotOpenEmail } from '@/lib/email-templates'
 import { requireAdmin } from '@/lib/require-admin'
+import { getClientIp } from '@/lib/client-ip'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 const MAX_PER_HOUR = 5
@@ -37,8 +37,7 @@ export async function joinWaitlist(payload: { date: string; email: string; name?
   if (!payload.date) return { ok: false, message: 'Date requise.' }
   if (!EMAIL_RE.test(payload.email)) return { ok: false, message: 'Adresse email invalide.' }
 
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? hdrs.get('x-real-ip') ?? 'unknown'
+  const ip = await getClientIp()
 
   const [db] = await Promise.all([getDb(), getIndexes()])
   const since = new Date(Date.now() - 3600 * 1000)

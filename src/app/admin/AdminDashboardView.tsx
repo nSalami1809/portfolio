@@ -96,7 +96,7 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
       </div>
 
       {/* Views analytics + quote acceptance rate */}
-      <div className="grid lg:grid-cols-[1fr,280px] gap-4">
+      <div className="grid lg:grid-cols-[1fr_280px] gap-4">
         <ViewsWidget initial={initialViews} />
 
         <div className="card no-lift p-5 flex flex-col">

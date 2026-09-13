@@ -195,23 +195,23 @@ export default function DevisView({ t }: Props) {
               <div className="grid sm:grid-cols-2 gap-5">
                 <div>
                   <label htmlFor="dv-nom" className={fieldLabel} style={labelStyle}>{t.nameLabel}</label>
-                  <input id="dv-nom" name="clientNom" value={form.clientNom} onChange={handleChange} required maxLength={100} placeholder={t.namePlaceholder} className="input" />
+                  <input id="dv-nom" name="clientNom" autoComplete="name" value={form.clientNom} onChange={handleChange} required maxLength={100} placeholder={t.namePlaceholder} className="input" />
                 </div>
                 <div>
                   <label htmlFor="dv-societe" className={fieldLabel} style={labelStyle}>{t.companyLabel}</label>
-                  <input id="dv-societe" name="clientSociete" value={form.clientSociete} onChange={handleChange} required maxLength={100} placeholder={t.companyPlaceholder} className="input" />
+                  <input id="dv-societe" name="clientSociete" autoComplete="organization" value={form.clientSociete} onChange={handleChange} required maxLength={100} placeholder={t.companyPlaceholder} className="input" />
                 </div>
                 <div>
                   <label htmlFor="dv-email" className={fieldLabel} style={labelStyle}>{t.emailLabel}</label>
-                  <input id="dv-email" type="email" name="clientEmail" value={form.clientEmail} onChange={handleChange} required maxLength={200} placeholder={t.emailPlaceholder} className="input" />
+                  <input id="dv-email" type="email" inputMode="email" autoComplete="email" name="clientEmail" value={form.clientEmail} onChange={handleChange} required maxLength={200} placeholder={t.emailPlaceholder} className="input" />
                 </div>
                 <div>
                   <label htmlFor="dv-tel" className={fieldLabel} style={labelStyle}>{t.phoneLabel}</label>
-                  <input id="dv-tel" name="clientTelephone" value={form.clientTelephone} onChange={handleChange} required maxLength={30} placeholder={t.phonePlaceholder} className="input" />
+                  <input id="dv-tel" type="tel" inputMode="tel" autoComplete="tel" name="clientTelephone" value={form.clientTelephone} onChange={handleChange} required maxLength={30} placeholder={t.phonePlaceholder} className="input" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="dv-adresse" className={fieldLabel} style={labelStyle}>{t.addressLabel}</label>
-                  <input id="dv-adresse" name="clientAdresse" value={form.clientAdresse} onChange={handleChange} required maxLength={200} placeholder={t.addressPlaceholder} className="input" />
+                  <input id="dv-adresse" name="clientAdresse" autoComplete="street-address" value={form.clientAdresse} onChange={handleChange} required maxLength={200} placeholder={t.addressPlaceholder} className="input" />
                 </div>
               </div>
 
@@ -251,14 +251,14 @@ export default function DevisView({ t }: Props) {
                                     onClick={() => setQty(o.id, sel.qty - 1)}
                                     disabled={sel.qty <= 0}
                                     aria-label={`Diminuer la quantité de ${o.title}`}
-                                    className="flex items-center justify-center text-sm font-semibold"
-                                    style={{ width: '1.85rem', height: '1.85rem', color: sel.qty <= 0 ? 'var(--text-subtle)' : 'var(--text)', cursor: sel.qty <= 0 ? 'default' : 'pointer' }}
+                                    className="flex items-center justify-center text-base font-semibold"
+                                    style={{ width: '2.5rem', height: '2.5rem', color: sel.qty <= 0 ? 'var(--text-subtle)' : 'var(--text)', cursor: sel.qty <= 0 ? 'default' : 'pointer' }}
                                   >
                                     −
                                   </button>
                                   <span
                                     className="text-sm text-center tabular-nums"
-                                    style={{ width: '2.1rem', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', color: 'var(--text)' }}
+                                    style={{ width: '2.75rem', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', color: 'var(--text)', lineHeight: '2.5rem' }}
                                     aria-live="polite"
                                   >
                                     {sel.qty}
@@ -268,8 +268,8 @@ export default function DevisView({ t }: Props) {
                                     onClick={() => setQty(o.id, sel.qty + 1)}
                                     disabled={sel.qty >= 99}
                                     aria-label={`Augmenter la quantité de ${o.title}`}
-                                    className="flex items-center justify-center text-sm font-semibold"
-                                    style={{ width: '1.85rem', height: '1.85rem', color: sel.qty >= 99 ? 'var(--text-subtle)' : 'var(--text)', cursor: sel.qty >= 99 ? 'default' : 'pointer' }}
+                                    className="flex items-center justify-center text-base font-semibold"
+                                    style={{ width: '2.5rem', height: '2.5rem', color: sel.qty >= 99 ? 'var(--text-subtle)' : 'var(--text)', cursor: sel.qty >= 99 ? 'default' : 'pointer' }}
                                   >
                                     +
                                   </button>
@@ -284,8 +284,9 @@ export default function DevisView({ t }: Props) {
                                     type="button"
                                     onClick={() => setTier(o.id, tier)}
                                     aria-pressed={sel.tier === tier}
-                                    className="px-2.5 py-1 text-xs font-medium transition-colors duration-150"
+                                    className="px-3 text-xs font-medium transition-colors duration-150"
                                     style={{
+                                      minHeight: '2.5rem',
                                       background: sel.tier === tier ? 'var(--accent)' : 'transparent',
                                       color: sel.tier === tier ? 'var(--accent-contrast)' : 'var(--text-muted)',
                                       border: '1px solid var(--border)',
