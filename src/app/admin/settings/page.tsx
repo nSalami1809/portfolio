@@ -132,9 +132,9 @@ export default function AdminSettings() {
                     <div
                       className="flex items-center gap-2.5 text-sm px-4 py-3 rounded-xl"
                       style={{
-                        background: 'rgba(239,68,68,0.08)',
-                        border: '1px solid rgba(239,68,68,0.2)',
-                        color: '#EF4444',
+                        background: 'rgba(217,0,0,0.08)',
+                        border: '1px solid rgba(217,0,0,0.2)',
+                        color: '#D90000',
                         fontFamily: 'var(--font-poppins)',
                       }}
                       role="alert"
@@ -237,9 +237,9 @@ export default function AdminSettings() {
                     <div
                       className="flex items-center gap-2.5 text-sm px-4 py-3 rounded-xl"
                       style={{
-                        background: 'rgba(239,68,68,0.08)',
-                        border: '1px solid rgba(239,68,68,0.2)',
-                        color: '#EF4444',
+                        background: 'rgba(217,0,0,0.08)',
+                        border: '1px solid rgba(217,0,0,0.2)',
+                        color: '#D90000',
                         fontFamily: 'var(--font-poppins)',
                       }}
                       role="alert"

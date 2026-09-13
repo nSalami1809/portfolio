@@ -334,7 +334,7 @@ export default function AdminContacts() {
                     onClick={() => handleDelete(selected.id)}
                     disabled={deleting === selected.id}
                     className="btn-secondary btn-sm px-4 flex items-center gap-1.5"
-                    style={{ color: '#EF4444', borderColor: 'rgba(239,68,68,0.25)' }}
+                    style={{ color: '#D90000', borderColor: 'rgba(217,0,0,0.25)' }}
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
                     Supprimer

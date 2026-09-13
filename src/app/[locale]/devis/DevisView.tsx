@@ -296,7 +296,7 @@ export default function DevisView({ t }: Props) {
               )}
 
               {formError && (
-                <p className="text-sm px-4 py-3" style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.25)' }}>{formError}</p>
+                <p className="text-sm px-4 py-3" style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)' }}>{formError}</p>
               )}
 
               <button type="submit" disabled={submitting} className="btn-primary w-full justify-center">
@@ -321,7 +321,7 @@ export default function DevisView({ t }: Props) {
                 {lookupSearching ? t.lookupSearching : t.lookupButton}
               </button>
             </div>
-            {lookupError && <p className="text-sm mt-3" style={{ color: '#EF4444' }}>{lookupError}</p>}
+            {lookupError && <p className="text-sm mt-3" style={{ color: '#D90000' }}>{lookupError}</p>}
           </div>
         </FadeIn>
       </div>

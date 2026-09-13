@@ -137,7 +137,7 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
       <p className="text-xs font-bold mb-1 capitalize" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>{t.bookingPrefix}</p>
       <p className="text-sm font-semibold mb-1 capitalize" style={{ color: 'var(--text)' }}>{when}</p>
       {booking.status === 'cancelled' && (
-        <p className="text-xs font-semibold mb-1" style={{ color: '#EF4444' }}>{t.bookingCancelled}</p>
+        <p className="text-xs font-semibold mb-1" style={{ color: '#D90000' }}>{t.bookingCancelled}</p>
       )}
       <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{booking.clientNom}</p>
       <p className="text-xs mb-2" style={{ color: 'var(--text-subtle)' }}>

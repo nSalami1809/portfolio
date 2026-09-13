@@ -87,7 +87,7 @@ export default function ImageUpload({
             width: dim,
             height: dim,
             borderRadius: radius,
-            border: `2px ${value ? 'solid' : 'dashed'} ${error ? '#EF4444' : 'var(--border)'}`,
+            border: `2px ${value ? 'solid' : 'dashed'} ${error ? '#D90000' : 'var(--border)'}`,
             background: value ? 'transparent' : 'var(--surface)',
             flexShrink: 0,
             cursor: loading ? 'wait' : 'pointer',
@@ -142,7 +142,7 @@ export default function ImageUpload({
             </button>
           )}
           {error && (
-            <p className="text-xs" style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }} role="alert">
+            <p className="text-xs" style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }} role="alert">
               {error}
             </p>
           )}

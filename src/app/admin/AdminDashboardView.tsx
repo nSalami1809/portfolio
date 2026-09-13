@@ -174,11 +174,11 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
       {/* Danger zone */}
       <div
         className="rounded-xl p-6"
-        style={{ border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.04)' }}
+        style={{ border: '1px solid rgba(217,0,0,0.2)', background: 'rgba(217,0,0,0.04)' }}
         role="region"
         aria-label="Zone dangereuse"
       >
-        <p className="text-sm font-semibold mb-1" style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}>
           Zone dangereuse
         </p>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>

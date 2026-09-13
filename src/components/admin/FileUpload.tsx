@@ -90,7 +90,7 @@ export default function FileUpload({ value, onChange, accept, maxSizeMb = 5, hin
           onClick={() => !loading && inputRef.current?.click()}
           disabled={loading}
           className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-[var(--surface-hover)]"
-          style={{ border: `1.5px dashed ${error ? '#EF4444' : 'var(--border)'}`, color: 'var(--text-muted)', cursor: loading ? 'wait' : 'pointer' }}
+          style={{ border: `1.5px dashed ${error ? '#D90000' : 'var(--border)'}`, color: 'var(--text-muted)', cursor: loading ? 'wait' : 'pointer' }}
         >
           {loading ? (
             <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
@@ -104,7 +104,7 @@ export default function FileUpload({ value, onChange, accept, maxSizeMb = 5, hin
       )}
 
       {error && (
-        <p className="text-xs mt-2" style={{ color: '#EF4444', fontFamily: 'var(--font-poppins)' }} role="alert">
+        <p className="text-xs mt-2" style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }} role="alert">
           {error}
         </p>
       )}

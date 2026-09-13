@@ -45,7 +45,7 @@ function EyeIcon({ off }: { off?: boolean }) {
 }
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
-  <label className="field-label">{label}{req && <span style={{ color: '#EF4444' }}> *</span>}</label>
+  <label className="field-label">{label}{req && <span style={{ color: '#D90000' }}> *</span>}</label>
 )
 
 const GRID = '1rem 1fr 7rem 5.5rem 7rem'
@@ -666,7 +666,7 @@ export default function AdminBlog() {
                     <button
                       onClick={() => remove(p.slug, p.title)}
                       className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
-                      style={{ color: '#EF4444' }}
+                      style={{ color: '#D90000' }}
                       aria-label={`Supprimer ${p.title}`}
                     >
                       <TrashIcon />

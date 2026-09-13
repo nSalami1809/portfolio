@@ -19,7 +19,7 @@ function PencilIcon() {
 }
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
-  <label className="field-label">{label}{req && <span style={{ color: '#EF4444' }}> *</span>}</label>
+  <label className="field-label">{label}{req && <span style={{ color: '#D90000' }}> *</span>}</label>
 )
 
 export default function AdminOffers() {

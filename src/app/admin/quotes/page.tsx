@@ -20,7 +20,7 @@ function formatDate(iso: string) {
 const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 
 const STATUS_LABEL: Record<QuoteStatus, string> = { pending: 'En attente', accepted: 'Accepté', declined: 'Refusé' }
-const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#008000', declined: '#EF4444' }
+const STATUS_COLOR: Record<QuoteStatus, string> = { pending: 'var(--text-subtle)', accepted: '#008000', declined: '#D90000' }
 
 const EVENT_LABEL: Record<string, string> = {
   created: 'Devis créé',
