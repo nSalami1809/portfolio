@@ -7,6 +7,7 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { submitQuote, lookupQuote } from '@/actions/quotes'
 import type { Quote } from '@/actions/quotes'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import type { Offer } from '@/types'
 
 // QuoteView (qrcode dependency) is only needed once a quote actually exists
 // — lazy-loaded so it never adds weight to visitors filling the form.
@@ -22,28 +23,58 @@ const labelStyle = { color: 'var(--text-muted)', fontFamily: 'var(--font-poppins
 
 const EMPTY_FORM = { clientNom: '', clientSociete: '', clientAdresse: '', clientEmail: '', clientTelephone: '', descriptionProjet: '' }
 
+type Tier = 'simple' | 'standard' | 'complexe'
+const TIERS: Tier[] = ['simple', 'standard', 'complexe']
+
+function tierPrice(min: number, max: number, tier: Tier): number {
+  if (tier === 'simple') return min
+  if (tier === 'complexe') return max
+  return Math.round((min + max) / 2)
+}
+
+function tierLabel(t: Dictionary['devis'], tier: Tier): string {
+  if (tier === 'simple') return t.tierSimple
+  if (tier === 'complexe') return t.tierComplexe
+  return t.tierStandard
+}
+
+interface Selection { qty: number; tier: Tier }
+const DEFAULT_SELECTION: Selection = { qty: 0, tier: 'standard' }
+
 export default function DevisView({ t }: Props) {
   const { data } = usePortfolio()
-  // Only offers the admin has given a real numeric price can be picked here
-  // — offers priced "sur devis" (priceLabel only) stay chat/contact-only.
+  // Only offers with a full min/max range set can be picked here — offers
+  // priced "sur devis" (priceLabel only) stay chat/contact-only.
   const priceableOffers = useMemo(
-    () => data.offers.filter((o) => typeof o.priceHT === 'number' && o.priceHT > 0),
+    () => data.offers.filter((o) =>
+      typeof o.priceHTMin === 'number' && typeof o.priceHTMax === 'number' && o.priceHTMin > 0 && o.priceHTMax >= o.priceHTMin,
+    ) as (Offer & { priceHTMin: number; priceHTMax: number })[],
     [data.offers],
   )
 
   const [form, setForm] = useState(EMPTY_FORM)
-  const [quantities, setQuantities] = useState<Record<string, number>>({})
+  const [selections, setSelections] = useState<Record<string, Selection>>({})
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [createdQuote, setCreatedQuote] = useState<Quote | null>(null)
 
-  const setQty = (id: string, qty: number) => setQuantities((p) => ({ ...p, [id]: Math.max(0, Math.min(99, qty)) }))
+  const setQty = (id: string, qty: number) =>
+    setSelections((p) => ({ ...p, [id]: { ...(p[id] ?? DEFAULT_SELECTION), qty: Math.max(0, Math.min(99, qty)) } }))
+  const setTier = (id: string, tier: Tier) =>
+    setSelections((p) => ({ ...p, [id]: { ...(p[id] ?? DEFAULT_SELECTION), tier } }))
 
   const selectedItems = useMemo(
     () => priceableOffers
-      .filter((o) => (quantities[o.id] ?? 0) > 0)
-      .map((o) => ({ designation: o.title, quantite: quantities[o.id], prixUnitaireHT: o.priceHT as number })),
-    [priceableOffers, quantities],
+      .filter((o) => (selections[o.id]?.qty ?? 0) > 0)
+      .map((o) => {
+        const sel = selections[o.id] ?? DEFAULT_SELECTION
+        return {
+          designation: `${o.title} (${tierLabel(t, sel.tier)})`,
+          quantite: sel.qty,
+          prixUnitaireHT: tierPrice(o.priceHTMin, o.priceHTMax, sel.tier),
+        }
+      }),
+    [priceableOffers, selections, t],
   )
   const estimatedTotal = useMemo(
     () => selectedItems.reduce((sum, it) => sum + it.quantite * it.prixUnitaireHT, 0),
@@ -83,7 +114,7 @@ export default function DevisView({ t }: Props) {
   const startNewQuote = () => {
     setCreatedQuote(null)
     setForm(EMPTY_FORM)
-    setQuantities({})
+    setSelections({})
   }
 
   // ── Lookup an existing quote (also used by the "quote accepted" email's
@@ -177,27 +208,57 @@ export default function DevisView({ t }: Props) {
                 {priceableOffers.length === 0 ? (
                   <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>{t.noOffers}</p>
                 ) : (
-                  <div className="space-y-2">
-                    {priceableOffers.map((o) => (
-                      <div key={o.id} className="flex items-center justify-between gap-3 p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{o.title}</p>
-                          <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{fmt(o.priceHT as number)} HT</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <label htmlFor={`qty-${o.id}`} className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.quantityLabel}</label>
-                          <input
-                            id={`qty-${o.id}`}
-                            type="number" min={0} max={99}
-                            value={quantities[o.id] ?? 0}
-                            onChange={(e) => setQty(o.id, Number(e.target.value))}
-                            className="input text-sm text-center"
-                            style={{ width: '4rem', padding: '0.4rem' }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>{t.rangeNote}</p>
+                    <div className="space-y-3">
+                      {priceableOffers.map((o) => {
+                        const sel = selections[o.id] ?? DEFAULT_SELECTION
+                        const unitPrice = tierPrice(o.priceHTMin, o.priceHTMax, sel.tier)
+                        return (
+                          <div key={o.id} className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                            <div className="flex items-center justify-between gap-3 mb-2.5">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{o.title}</p>
+                                <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{fmt(o.priceHTMin)} – {fmt(o.priceHTMax)} HT</p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <label htmlFor={`qty-${o.id}`} className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.quantityLabel}</label>
+                                <input
+                                  id={`qty-${o.id}`}
+                                  type="number" min={0} max={99}
+                                  value={sel.qty}
+                                  onChange={(e) => setQty(o.id, Number(e.target.value))}
+                                  className="input text-sm text-center"
+                                  style={{ width: '4rem', padding: '0.4rem' }}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div className="flex items-center gap-1.5" role="group" aria-label={t.complexityLabel}>
+                                {TIERS.map((tier) => (
+                                  <button
+                                    key={tier}
+                                    type="button"
+                                    onClick={() => setTier(o.id, tier)}
+                                    aria-pressed={sel.tier === tier}
+                                    className="px-2.5 py-1 text-xs font-medium transition-colors duration-150"
+                                    style={{
+                                      background: sel.tier === tier ? 'var(--accent)' : 'transparent',
+                                      color: sel.tier === tier ? 'var(--accent-contrast)' : 'var(--text-muted)',
+                                      border: '1px solid var(--border)',
+                                    }}
+                                  >
+                                    {tierLabel(t, tier)}
+                                  </button>
+                                ))}
+                              </div>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{fmt(unitPrice)} HT</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
 

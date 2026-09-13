@@ -8,7 +8,7 @@ import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import type { Offer } from '@/types'
 
-const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false, image: '', priceHT: undefined }
+const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false, image: '', priceHTMin: undefined, priceHTMax: undefined }
 const GRID = '1rem 2.5rem 1fr 8rem 6rem'
 
 function TrashIcon() {
@@ -127,17 +127,29 @@ export default function AdminOffers() {
               </div>
               <div><F label="Titre" req /><input className="input text-sm" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Site vitrine complet" /></div>
               <div><F label="Prix (affiché)" req /><input className="input text-sm" value={form.priceLabel} onChange={(e) => setForm((p) => ({ ...p, priceLabel: e.target.value }))} placeholder="600 000 – 1 000 000 FCFA" /></div>
-              <div>
-                <F label="Prix HT exact (FCFA)" />
-                <input
-                  type="number" min={0} step={1000}
-                  className="input text-sm"
-                  value={form.priceHT ?? ''}
-                  onChange={(e) => setForm((p) => ({ ...p, priceHT: e.target.value === '' ? undefined : Number(e.target.value) }))}
-                  placeholder="800000"
-                />
-                <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                  Optionnel — si renseigné, cette offre devient sélectionnable dans le générateur de devis en ligne (/devis).
+              <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                  <F label="Prix HT minimum (FCFA)" />
+                  <input
+                    type="number" min={0} step={1000}
+                    className="input text-sm"
+                    value={form.priceHTMin ?? ''}
+                    onChange={(e) => setForm((p) => ({ ...p, priceHTMin: e.target.value === '' ? undefined : Number(e.target.value) }))}
+                    placeholder="600000"
+                  />
+                </div>
+                <div>
+                  <F label="Prix HT maximum (FCFA)" />
+                  <input
+                    type="number" min={0} step={1000}
+                    className="input text-sm"
+                    value={form.priceHTMax ?? ''}
+                    onChange={(e) => setForm((p) => ({ ...p, priceHTMax: e.target.value === '' ? undefined : Number(e.target.value) }))}
+                    placeholder="1000000"
+                  />
+                </div>
+                <p className="text-xs col-span-2" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                  Optionnel — si les deux sont renseignés, cette offre devient sélectionnable dans le générateur de devis en ligne (/devis), où le client choisit un niveau de complexité (simple/standard/complexe) qui détermine le prix dans cette fourchette.
                 </p>
               </div>
               <div className="sm:col-span-2">
