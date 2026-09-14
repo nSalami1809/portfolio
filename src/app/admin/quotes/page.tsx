@@ -222,7 +222,7 @@ export default function AdminQuotes() {
               onKeyDown={(e) => e.key === 'Enter' && handleOpen(q)}
             >
               {/* Unread dot */}
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: q.read ? 'transparent' : 'var(--accent)', border: q.read ? '1.5px solid var(--border)' : 'none' }} />
+              <div className="w-2 h-2 flex-shrink-0" style={{ background: q.read ? 'transparent' : 'var(--accent)', border: q.read ? '1.5px solid var(--border)' : 'none' }} />
 
               {/* Avatar */}
               <div

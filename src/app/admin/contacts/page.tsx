@@ -171,7 +171,7 @@ export default function AdminContacts() {
               onKeyDown={(e) => e.key === 'Enter' && handleOpen(msg)}
             >
               {/* Unread dot */}
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: msg.read ? 'transparent' : 'var(--accent)', border: msg.read ? '1.5px solid var(--border)' : 'none' }} />
+              <div className="w-2 h-2 flex-shrink-0" style={{ background: msg.read ? 'transparent' : 'var(--accent)', border: msg.read ? '1.5px solid var(--border)' : 'none' }} />
 
               {/* Avatar */}
               <div

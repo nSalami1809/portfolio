@@ -268,7 +268,7 @@ export default function AdminCalendar() {
                 onClick={() => handleOpen(b)}
                 role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleOpen(b)}
               >
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: b.read ? 'transparent' : 'var(--accent)', border: b.read ? '1.5px solid var(--border)' : 'none' }} />
+                <div className="w-2 h-2 flex-shrink-0" style={{ background: b.read ? 'transparent' : 'var(--accent)', border: b.read ? '1.5px solid var(--border)' : 'none' }} />
                 <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold" style={{ background: 'var(--accent-glow)', color: 'var(--accent)', fontFamily: 'var(--font-space-grotesk)' }} aria-hidden="true">
                   {b.clientNom.charAt(0).toUpperCase()}
                 </div>
