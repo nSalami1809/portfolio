@@ -121,7 +121,7 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
                   <span className="tag">{project.category}</span>
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-2 h-2 rounded-full"
+                      className="w-2 h-2"
                       style={{ background: statusColor[project.status] ?? '#6B7280' }}
                       aria-hidden="true"
                     />

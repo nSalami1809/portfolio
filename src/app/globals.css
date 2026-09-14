@@ -33,8 +33,9 @@
      shadow since this block loads after the tailwindcss import) — is
      flattened to 0, so every rounded utility class and every card, button,
      input and tag renders with sharp corners site-wide. rounded-full (true
-     circles: avatars, status dots, spinners) is untouched by design — it
-     isn't driven by a radius variable in Tailwind v4. */
+     circles: avatars, spinners) is untouched by design — it isn't driven
+     by a radius variable in Tailwind v4. Status/unread dots are plain
+     squares (no rounded-full) to match, unlike avatars and spinners. */
   --radius: 0px;
   --radius-xs: 0px;
   --radius-sm: 0px;

@@ -474,12 +474,12 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   {t.chat.headerTitle}
                 </p>
                 <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                  <span className="rounded-full flex-shrink-0" style={{ width: 6, height: 6, background: '#22c55e' }} aria-hidden="true" />
+                  <span className="flex-shrink-0" style={{ width: 6, height: 6, background: '#22c55e' }} aria-hidden="true" />
                   {t.chat.headerStatus}
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <button
+                <m.button
                   type="button"
                   onClick={handleClear}
                   disabled={messages.length === 0}
@@ -487,23 +487,27 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   title={t.chat.clearChat}
                   className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ color: 'var(--text-subtle)' }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                   </svg>
-                </button>
-                <button
+                </m.button>
+                <m.button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={toggleOpen}
                   aria-label={t.chat.toggleClose}
                   title={t.chat.toggleClose}
                   className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
                   style={{ color: 'var(--text-subtle)' }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
-                </button>
+                </m.button>
               </div>
             </div>
 

@@ -123,7 +123,7 @@ export default function AdminTestimonials() {
       {pending.length > 0 && (
         <div className="card no-lift p-5" style={{ borderColor: 'var(--accent)' }}>
           <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--accent)' }} aria-hidden="true" />
+            <span className="w-2 h-2 flex-shrink-0" style={{ background: 'var(--accent)' }} aria-hidden="true" />
             <p className="font-display font-semibold text-sm" style={{ color: 'var(--text)' }}>
               {pending.length} témoignage{pending.length !== 1 ? 's' : ''} en attente de validation
             </p>
