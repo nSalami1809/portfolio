@@ -51,7 +51,8 @@ const fr = {
     contactSocials: 'Contact & Réseaux',
     available: 'Disponible pour missions',
     rights: 'Tous droits réservés.',
-    whatsappMessage: 'Bonjour, je vous contacte depuis votre portfolio.',
+    whatsappMessage:
+      'Bonjour Nawaf 👋\n\nJe vous contacte via votre portfolio pour un projet que j’aimerais vous présenter. Je souhaiterais échanger avec vous afin de voir comment nous pourrions le concrétiser.\n\nMerci !',
     legalNotice: 'Mentions légales',
     privacyPolicy: 'Confidentialité',
   },
@@ -397,7 +398,8 @@ const en: typeof fr = {
     contactSocials: 'Contact & Socials',
     available: 'Available for work',
     rights: 'All rights reserved.',
-    whatsappMessage: "Hello, I'm reaching out from your portfolio.",
+    whatsappMessage:
+      "Hi Nawaf 👋\n\nI'm reaching out via your portfolio about a project I'd like to present to you. I'd love to chat and see how we could bring it to life.\n\nThanks!",
     legalNotice: 'Legal notice',
     privacyPolicy: 'Privacy',
   },
