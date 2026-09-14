@@ -103,8 +103,16 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     vision.valeurs?.length ? `Valeurs : ${vision.valeurs.map((v) => `${v.title} (${v.text})`).join(' / ')}` : '',
   ].filter(Boolean).join('\n')
 
+  const whatsappPrefillMessage = locale === 'en'
+    ? "Hi Nawaf \u{1F44B}\n\nI'm reaching out via your portfolio's AI assistant about a project I'd like to present to you. I'd love to chat and see how we could bring it to life.\n\nThanks!"
+    : "Bonjour Nawaf \u{1F44B}\n\nJe vous contacte via l'IA de votre portfolio pour un projet que j'aimerais vous présenter. Je souhaiterais échanger avec vous afin de voir comment nous pourrions le concrétiser.\n\nMerci !"
+
+  const whatsappLink = personal.whatsapp
+    ? `https://wa.me/${personal.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappPrefillMessage)}`
+    : ''
+
   const whatsappText = personal.whatsapp
-    ? `WhatsApp : ${personal.whatsapp} (lien direct : https://wa.me/${personal.whatsapp.replace(/\D/g, '')})`
+    ? `WhatsApp : ${personal.whatsapp} (lien direct à utiliser EXACTEMENT tel quel, message pré-rempli inclus : ${whatsappLink})`
     : 'Non disponible.'
 
   return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, témoignages, réseaux sociaux), pas seulement une partie.
@@ -152,7 +160,7 @@ Règles :
 - Quand tu mentionnes un projet qui a un lien "Démo" et/ou "GitHub" listé ci-dessus, propose-le(s) sous forme de lien(s) Markdown cliquable(s) (ex : [Voir la démo](URL), [Voir le code](URL)) — utilise l'URL exacte fournie, n'en invente jamais, et ne propose que les liens réellement listés pour ce projet précis. Si un visiteur demande plus de détails sur un projet, appuie-toi sur son "Étude de cas" (contexte/solution/résultats) si elle est renseignée.
 - Si un article de blog a un "Lien" (externalUrl) listé ci-dessus, tu peux le proposer en lien Markdown cliquable si le visiteur veut lire l'article complet.
 - Si un visiteur demande le CV, le résumé, ou à "télécharger" les informations de ${personal.name} : si un lien est renseigné ci-dessus, propose-le EXACTEMENT tel quel (jamais un autre lien inventé) avec un lien Markdown cliquable, par exemple [Télécharger le CV](/api/cv) — ce lien déclenche automatiquement un téléchargement du PDF. Si aucun CV n'est disponible, dis-le simplement et propose de consulter la page Expérience du site ou de passer par la page Contact.
-- Si le visiteur préfère discuter par WhatsApp plutôt que par ce chat (ou le demande explicitement) et qu'un numéro WhatsApp est renseigné ci-dessus, propose le lien direct sous forme de lien Markdown cliquable, par exemple [Discuter sur WhatsApp](https://wa.me/...). N'invente jamais ce numéro : utilise exactement celui fourni ci-dessus, et ne le propose pas s'il est marqué "Non disponible".
+- Si le visiteur préfère discuter par WhatsApp plutôt que par ce chat (ou le demande explicitement) et qu'un numéro WhatsApp est renseigné ci-dessus, propose le lien direct sous forme de lien Markdown cliquable, par exemple [Discuter sur WhatsApp](https://wa.me/...). Utilise EXACTEMENT le lien fourni ci-dessus (avec son message pré-rempli), sans le modifier ni le raccourcir, et ne le propose pas s'il est marqué "Non disponible".
 
 Service de devis automatique :
 Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. Mentionne cette possibilité si le visiteur parle de tarifs, de prix, ou d'un projet qu'il aimerait réaliser.
