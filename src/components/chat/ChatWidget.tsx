@@ -283,13 +283,34 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { messages, sendMessage, status, addToolOutput } = useChat({
+  const { messages, sendMessage, setMessages, status, addToolOutput } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat', body: { locale } }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   })
 
   const busy = status === 'submitted' || status === 'streaming'
   const [justOpened, setJustOpened] = useState(autoOpen)
+
+  // Messages carry no timestamp of their own — remember when each one first
+  // appeared so it can be shown under its bubble, without re-stamping it on
+  // every re-render.
+  const [messageTimes, setMessageTimes] = useState<Record<string, number>>({})
+  useEffect(() => {
+    setMessageTimes((prev) => {
+      const next = { ...prev }
+      let changed = false
+      for (const message of messages) {
+        if (!(message.id in next)) {
+          next[message.id] = Date.now()
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [messages])
+
+  const timeFormatter = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const formatMessageTime = (id: string) => timeFormatter.format(messageTimes[id] ?? Date.now())
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -337,6 +358,11 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
       if (next) setJustOpened(true)
       return next
     })
+  }
+
+  const handleClear = () => {
+    setMessages([])
+    setMessageTimes({})
   }
 
   const headerMood: BotMood = busy ? 'thinking' : justOpened ? 'happy' : 'idle'
@@ -443,13 +469,41 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
               >
                 <BotIcon width={17} height={17} color="white" mood={headerMood} />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
                   {t.chat.headerTitle}
                 </p>
-                <p className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                  {t.chat.headerSubtitle}
+                <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                  <span className="rounded-full flex-shrink-0" style={{ width: 6, height: 6, background: '#22c55e' }} aria-hidden="true" />
+                  {t.chat.headerStatus}
                 </p>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  disabled={messages.length === 0}
+                  aria-label={t.chat.clearChat}
+                  title={t.chat.clearChat}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ color: 'var(--text-subtle)' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label={t.chat.toggleClose}
+                  title={t.chat.toggleClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
+                  style={{ color: 'var(--text-subtle)' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -468,19 +522,22 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {suggestions.map(({ label, text }) => (
-                      <button
+                      <m.button
                         key={label}
                         onClick={() => quickSend(text)}
-                        className="text-xs font-medium transition-colors"
+                        className="text-xs font-medium"
                         style={{
                           background: 'var(--accent-glow)',
                           color: 'var(--accent)',
                           border: '1px solid var(--accent)',
                           padding: '0.45rem 0.9rem',
                         }}
+                        whileHover={{ scale: 1.05, opacity: 0.8 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ duration: 0.15 }}
                       >
                         {label}
-                      </button>
+                      </m.button>
                     ))}
                   </div>
                 </div>
@@ -488,7 +545,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
               {messages.map((message) => {
                 const isUser = message.role === 'user'
                 return (
-                  <div key={message.id} className="space-y-2">
+                  <div key={message.id} className="space-y-1">
                     {message.parts.map((part, i) => {
                       if (part.type === 'text') {
                         if (isUser) {
@@ -800,6 +857,17 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
                       return null
                     })}
+                    <p
+                      className="text-[10px]"
+                      style={{
+                        color: 'var(--text-subtle)',
+                        textAlign: isUser ? 'right' : 'left',
+                        paddingLeft: isUser ? 0 : 32,
+                        paddingRight: isUser ? 2 : 0,
+                      }}
+                    >
+                      {formatMessageTime(message.id)}
+                    </p>
                   </div>
                 )
               })}
