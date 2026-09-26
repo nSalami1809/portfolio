@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
+import { useLocale } from '@/lib/i18n/useLocale'
 import { submitQuote, lookupQuote } from '@/actions/quotes'
 import type { Quote, QuoteBrief } from '@/actions/quotes'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -52,6 +53,7 @@ interface Selection { qty: number; tier: Tier }
 const DEFAULT_SELECTION: Selection = { qty: 0, tier: 'standard' }
 
 export default function DevisView({ t }: Props) {
+  const locale = useLocale()
   const { data } = usePortfolio()
   // Only offers with a full min/max range set can be picked here — offers
   // priced "sur devis" (priceLabel only) stay chat/contact-only.
@@ -114,6 +116,7 @@ export default function DevisView({ t }: Props) {
         descriptionProjet: form.descriptionProjet.trim(),
         items: selectedItems,
         brief,
+        locale: locale === 'en' ? 'en' : 'fr',
       })
       setCreatedQuote(quote)
     } catch {

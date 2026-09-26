@@ -33,7 +33,7 @@ function playChime() {
 }
 
 export default function NotificationBell() {
-  const [counts, setCounts] = useState({ unreadContacts: 0, unreadQuotes: 0, unreadBookings: 0, pendingTestimonials: 0 })
+  const [counts, setCounts] = useState({ unreadContacts: 0, unreadQuotes: 0, unreadBookings: 0, pendingTestimonials: 0, failedMails: 0 })
   const [open, setOpen] = useState(false)
   const prevTotal = useRef<number | null>(null)
 
@@ -42,7 +42,7 @@ export default function NotificationBell() {
       const res = await fetch('/api/admin-notifications')
       if (!res.ok) return
       const data = await res.json()
-      const total = (data.unreadContacts ?? 0) + (data.unreadQuotes ?? 0) + (data.unreadBookings ?? 0) + (data.pendingTestimonials ?? 0)
+      const total = (data.unreadContacts ?? 0) + (data.unreadQuotes ?? 0) + (data.unreadBookings ?? 0) + (data.pendingTestimonials ?? 0) + (data.failedMails ?? 0)
       if (prevTotal.current !== null && total > prevTotal.current) playChime()
       prevTotal.current = total
       setCounts({
@@ -50,6 +50,7 @@ export default function NotificationBell() {
         unreadQuotes: data.unreadQuotes ?? 0,
         unreadBookings: data.unreadBookings ?? 0,
         pendingTestimonials: data.pendingTestimonials ?? 0,
+        failedMails: data.failedMails ?? 0,
       })
     } catch {
       // Silent — a missed poll just gets retried on the next tick
@@ -62,7 +63,7 @@ export default function NotificationBell() {
     return () => clearInterval(id)
   }, [poll])
 
-  const total = counts.unreadContacts + counts.unreadQuotes + counts.unreadBookings + counts.pendingTestimonials
+  const total = counts.unreadContacts + counts.unreadQuotes + counts.unreadBookings + counts.pendingTestimonials + counts.failedMails
 
   return (
     <div className="relative">
@@ -145,6 +146,19 @@ export default function NotificationBell() {
                   {counts.pendingTestimonials}
                 </span>
               </Link>
+              {counts.failedMails > 0 && (
+                <Link
+                  href="/admin/emails"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-[var(--surface-hover)]"
+                  style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}
+                >
+                  Emails non envoyés
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(217,0,0,0.12)', color: '#D90000' }}>
+                    {counts.failedMails}
+                  </span>
+                </Link>
+              )}
               {total === 0 && (
                 <p className="px-4 py-3 text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                   Rien de nouveau pour le moment.

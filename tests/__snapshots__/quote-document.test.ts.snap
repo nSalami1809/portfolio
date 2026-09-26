@@ -1,0 +1,411 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden wording (released version 1) > avenant 1`] = `
+[
+  {
+    "bullets": [
+      "Site vitrine (Standard)",
+      "Hébergement et mise en ligne",
+    ],
+    "paragraphs": [
+      "Le présent avenant n° AVN-2026-001 modifie le contrat de prestation lié au devis n° DEV-2026-001, conclu entre les mêmes Parties. Il porte sur les prestations complémentaires suivantes :",
+    ],
+    "title": "ARTICLE 1 — OBJET DE L'AVENANT",
+  },
+  {
+    "bullets": [
+      "Acompte de 30 % à la signature : 115 050 FCFA",
+      "Solde de 70 % à la livraison finale : 268 450 FCFA",
+      "Total : 383 500 FCFA TTC",
+    ],
+    "paragraphs": [
+      "Les prestations complémentaires sont facturées 383 500 FCFA TTC (325 000 FCFA HT), en sus du prix du contrat initial, selon l'échéancier suivant :",
+    ],
+    "title": "ARTICLE 2 — INCIDENCE SUR LE PRIX",
+  },
+  {
+    "paragraphs": [
+      "Le délai de réalisation du contrat initial est prolongé de 5 jours ouvrés, à compter de la réception du paiement prévu ci-dessus et des éléments nécessaires aux prestations complémentaires.",
+    ],
+    "title": "ARTICLE 3 — INCIDENCE SUR LE DÉLAI",
+  },
+  {
+    "paragraphs": [
+      "Toutes les autres clauses du contrat initial (devis n° DEV-2026-001) demeurent inchangées et s'appliquent aux prestations complémentaires, notamment les conditions de paiement, de recette, de garantie et de propriété intellectuelle.",
+    ],
+    "title": "ARTICLE 4 — CLAUSES INCHANGÉES",
+  },
+  {
+    "paragraphs": [
+      "Le Prestataire émet le présent document comme offre ferme et le signe électroniquement, par l'apposition de sa signature enregistrée, au moment de son émission. Le Client l'accepte en le signant électroniquement depuis le lien sécurisé qui lui est adressé. Les Parties reconnaissent à la signature électronique, à l'horodatage, à l'adresse IP, à l'empreinte numérique (SHA-256) et au journal d'événements qui y sont associés la valeur probante d'un écrit signé, et conviennent de ne pas en contester la recevabilité au seul motif de sa forme électronique. Le signataire déclare avoir la capacité de contracter et, lorsqu'il agit pour le compte d'une société, avoir le pouvoir de l'engager.",
+    ],
+    "title": "ARTICLE 5 — SIGNATURE ÉLECTRONIQUE ET PREUVE",
+  },
+  {
+    "paragraphs": [
+      "La signature du présent avenant vaut acceptation de ses conditions. Fait à Libreville, le 15 janvier 2026.",
+    ],
+    "title": "ARTICLE 6 — ACCEPTATION DE L'AVENANT",
+  },
+]
+`;
+
+exports[`golden wording (released version 1) > contrat 1`] = `
+[
+  {
+    "bullets": [
+      "Site vitrine (Standard)",
+      "Hébergement et mise en ligne",
+    ],
+    "paragraphs": [
+      "Le présent contrat a pour objet de définir les conditions dans lesquelles le Prestataire réalisera pour le Client la prestation de développement informatique décrite ci-dessus, conformément au devis n° DEV-2026-001 du 15 janvier 2026, accepté par le Client.",
+      "Nature de la prestation :",
+    ],
+    "title": "ARTICLE 1 — OBJET DU CONTRAT",
+  },
+  {
+    "bullets": [
+      "Le présent contrat",
+      "Les avenants signés, le cas échéant",
+      "Le devis accepté n° DEV-2026-001",
+      "Les Conditions Générales de Vente du Prestataire (https://site.example/fr/cgv)",
+    ],
+    "paragraphs": [
+      "Les documents suivants constituent l'accord des Parties. En cas de contradiction, ils prévalent dans l'ordre où ils sont cités :",
+    ],
+    "title": "ARTICLE 2 — DOCUMENTS CONTRACTUELS ET ORDRE DE PRIORITÉ",
+  },
+  {
+    "paragraphs": [
+      "Le Prestataire s'engage à réaliser uniquement les prestations expressément prévues dans le devis accepté.",
+      "2 cycles de révision sont inclus par phase de validation. Un cycle est un lot unique et regroupé de demandes de modification écrites, transmis en une fois après une livraison intermédiaire ou finale (par exemple, au premier cycle : « changer la couleur, modifier un texte, déplacer une section » ; au second : les dernières corrections). Des demandes transmises séparément comptent chacune pour un cycle.",
+      "Une révision ajuste ce qui existe déjà (couleurs, textes, images, position ou style d'un élément). Elle ne comprend pas l'ajout de nouvelles fonctionnalités, de nouveaux modules ou de nouvelles pages structurantes, même demandés après la validation : ceux-ci sont facturés séparément.",
+      "Toute modification supplémentaire, ainsi que toute demande sortant du périmètre initial (nouvelle fonctionnalité, changement de cahier des charges, refonte d'éléments déjà validés), fait l'objet d'un avenant signé précisant son prix et son incidence sur le délai ; elle n'est réalisée qu'après signature de cet avenant.",
+    ],
+    "title": "ARTICLE 3 — PÉRIMÈTRE ET RÉVISIONS",
+  },
+  {
+    "bullets": [
+      "Les contenus, textes et images",
+      "Les logos et éléments graphiques",
+      "Les accès et informations techniques nécessaires",
+    ],
+    "paragraphs": [
+      "Le délai de réalisation est estimé à 30 jours ouvrés, en fonction de la taille et de la complexité du projet décrit dans le devis. Il court à compter de la dernière des deux dates suivantes : la réception de l'acompte (ou du premier paiement prévu), et la réception de l'ensemble des contenus, accès et informations nécessaires au projet.",
+      "Ce délai est suspendu pendant les périodes de validation ou de réponse du Client, et prolongé d'autant en cas de retard dans la transmission des éléments à fournir. Il est revu par avenant si le périmètre du projet évolue.",
+      "Si le délai est dépassé pour une cause imputable exclusivement au Prestataire, le Client peut le mettre en demeure par écrit de livrer ; à défaut de livraison sous 15 jours à compter de cette mise en demeure, il peut résilier la prestation et obtenir le remboursement des sommes versées correspondant aux prestations non réalisées.",
+      "Le Client fournit dans les délais nécessaires :",
+    ],
+    "title": "ARTICLE 4 — DÉLAIS DE RÉALISATION",
+  },
+  {
+    "bullets": [
+      "Acompte de 30 % à la signature : 115 050 FCFA",
+      "Solde de 70 % à la livraison finale : 268 450 FCFA",
+      "Total : 383 500 FCFA TTC",
+    ],
+    "paragraphs": [
+      "Le montant total de la prestation est fixé à 383 500 FCFA TTC (325 000 FCFA HT, TVA 18 % incluse), payable selon l'échéancier suivant :",
+    ],
+    "title": "ARTICLE 5 — PRIX ET MODALITÉS DE PAIEMENT",
+  },
+  {
+    "paragraphs": [
+      "Le développement débute après réception de l'acompte.",
+      "Une facture est émise pour chaque échéance. La facture d'acompte est payable dès sa réception, le développement débutant après son paiement ; la facture de solde est payable sous 7 jours à compter de son émission. Un reçu est remis à réception de chaque paiement.",
+      "Moyens de paiement acceptés : Virement bancaire, Airtel Money.",
+      "Tout retard de paiement entraîne de plein droit, sans mise en demeure préalable, des pénalités de retard au taux de 1,5 % par mois de retard (tout mois commencé étant dû), et autorise le Prestataire à suspendre l'exécution de la prestation jusqu'au règlement complet des sommes exigibles.",
+      "L'acompte est non remboursable en cas d'annulation ou d'abandon du projet à l'initiative du Client ; il reste acquis au Prestataire en contrepartie de la réservation de sa disponibilité et des travaux engagés.",
+    ],
+    "title": "ARTICLE 6 — FACTURATION ET PÉNALITÉS DE RETARD",
+  },
+  {
+    "paragraphs": [
+      "À la livraison, le Client dispose de 7 jours ouvrés pour signer le procès-verbal de recette ou formuler ses réserves par écrit, en les décrivant précisément. Le Prestataire corrige les anomalies relevant du périmètre initial. À défaut de retour dans ce délai, la livraison est réputée acceptée sans réserve.",
+      "À compter de la livraison, le Prestataire assure pendant 30 jours la correction gratuite des anomalies (bugs) liées directement au développement réalisé. Cette garantie ne couvre pas les modifications effectuées par un tiers, les problèmes d'hébergement ou de services externes, ni les nouvelles fonctionnalités, lesquelles relèvent d'un avenant.",
+    ],
+    "title": "ARTICLE 7 — VALIDATION, RECETTE ET GARANTIE",
+  },
+  {
+    "paragraphs": [
+      "Sauf mention contraire, les services externes nécessaires à l'exploitation de la solution (nom de domaine, hébergement, API tierces, services d'envoi d'e-mails ou de SMS, stockage cloud, etc.) ne sont pas inclus dans le prix et restent à la charge du Client, qui doit en être titulaire ou en confier l'accès au Prestataire pour la durée de la mission.",
+    ],
+    "title": "ARTICLE 8 — HÉBERGEMENT ET SERVICES TIERS",
+  },
+  {
+    "paragraphs": [
+      "Jusqu'au paiement intégral du prix, le Prestataire demeure seul titulaire de tous les droits sur les livrables ; le Client dispose uniquement d'un droit d'usage provisoire pour les besoins de la recette.",
+      "À compter du paiement intégral, le Prestataire cède au Client, à titre exclusif, les droits patrimoniaux (reproduction, représentation, adaptation, modification) sur les éléments spécifiquement développés pour lui, pour le monde entier et pour toute la durée légale de protection.",
+      "Le Prestataire conserve la propriété de ses bibliothèques, composants réutilisables, outils internes et savoir-faire préexistants ; il concède au Client, pour les besoins de l'exploitation de la solution, une licence non exclusive, mondiale et perpétuelle sur ceux qui y sont intégrés. Les composants tiers et open source restent soumis à leurs licences respectives.",
+      "Le code source des éléments spécifiquement développés pour le Client (dépôt ou archive), ainsi que les fichiers nécessaires au déploiement, lui sont remis après paiement intégral du prix.",
+    ],
+    "title": "ARTICLE 9 — PROPRIÉTÉ INTELLECTUELLE ET CODE SOURCE",
+  },
+  {
+    "paragraphs": [
+      "Les Parties s'engagent à conserver strictement confidentielles les informations techniques, commerciales ou stratégiques échangées dans le cadre du projet, y compris après la fin du présent contrat.",
+    ],
+    "title": "ARTICLE 10 — CONFIDENTIALITÉ",
+  },
+  {
+    "paragraphs": [
+      "Le Client demeure responsable des données à caractère personnel qu'il collecte, stocke ou traite au moyen de la solution, ainsi que de la légalité de ces traitements au regard de la législation applicable en matière de protection des données personnelles. Le Prestataire n'agit que sur instruction documentée du Client pour les données auxquelles il accède dans le cadre de la mission, ne les utilise pas pour son propre compte, ne les communique à aucun tiers non nécessaire à la mission et les supprime ou les restitue à l'issue de celle-ci.",
+      "Le Prestataire met en œuvre des mesures raisonnables de sécurité adaptées à la nature du projet. Les données personnelles du Client lui-même, collectées pour la conclusion et l'exécution du contrat, sont traitées conformément à la politique de confidentialité du Prestataire.",
+    ],
+    "title": "ARTICLE 11 — DONNÉES PERSONNELLES ET SÉCURITÉ",
+  },
+  {
+    "bullets": [
+      "Fournir des informations et contenus exacts et licites",
+      "Respecter les délais de validation",
+      "Effectuer les paiements conformément au contrat",
+      "Signaler rapidement toute anomalie constatée",
+    ],
+    "paragraphs": [
+      "Le Client s’engage à :",
+    ],
+    "title": "ARTICLE 12 — RESPONSABILITÉS DU CLIENT",
+  },
+  {
+    "bullets": [
+      "Réaliser la prestation conformément au devis accepté",
+      "Respecter les bonnes pratiques de développement",
+      "Corriger les anomalies relevant de sa responsabilité pendant la garantie",
+    ],
+    "paragraphs": [
+      "Le Prestataire s’engage à :",
+    ],
+    "title": "ARTICLE 13 — RESPONSABILITÉS DU PRESTATAIRE",
+  },
+  {
+    "paragraphs": [
+      "Le Prestataire est tenu d'une obligation de moyens. Sa responsabilité est limitée aux dommages directs et ne saurait excéder le montant effectivement payé par le Client au titre du présent contrat ; il ne répond pas des dommages indirects (perte d'exploitation, de clientèle, de données non sauvegardées par le Client). Cette limitation ne s'applique pas en cas de faute lourde ou de dol.",
+    ],
+    "title": "ARTICLE 14 — LIMITATION DE RESPONSABILITÉ",
+  },
+  {
+    "paragraphs": [
+      "En cas de manquement grave de l'une des Parties, l'autre Partie peut demander la résiliation du contrat après mise en demeure restée sans effet pendant 15 jours. En cas d'abandon du projet à l'initiative du Client après le début des travaux, les sommes correspondant aux prestations déjà réalisées restent dues.",
+    ],
+    "title": "ARTICLE 15 — RÉSILIATION",
+  },
+  {
+    "paragraphs": [
+      "Sauf opposition écrite du Client, le Prestataire peut mentionner le projet réalisé dans son portfolio professionnel à des fins de démonstration commerciale, sans jamais publier d'informations confidentielles ou de données personnelles du Client.",
+    ],
+    "title": "ARTICLE 16 — PORTFOLIO ET COMMUNICATION",
+  },
+  {
+    "paragraphs": [
+      "Aucune Partie ne peut être tenue responsable d'un retard ou d'une inexécution résultant d'un événement indépendant de sa volonté répondant aux conditions de la force majeure.",
+    ],
+    "title": "ARTICLE 17 — FORCE MAJEURE",
+  },
+  {
+    "paragraphs": [
+      "Le Prestataire émet le présent document comme offre ferme et le signe électroniquement, par l'apposition de sa signature enregistrée, au moment de son émission. Le Client l'accepte en le signant électroniquement depuis le lien sécurisé qui lui est adressé. Les Parties reconnaissent à la signature électronique, à l'horodatage, à l'adresse IP, à l'empreinte numérique (SHA-256) et au journal d'événements qui y sont associés la valeur probante d'un écrit signé, et conviennent de ne pas en contester la recevabilité au seul motif de sa forme électronique. Le signataire déclare avoir la capacité de contracter et, lorsqu'il agit pour le compte d'une société, avoir le pouvoir de l'engager.",
+    ],
+    "title": "ARTICLE 18 — SIGNATURE ÉLECTRONIQUE ET PREUVE",
+  },
+  {
+    "paragraphs": [
+      "Le présent contrat est soumis au droit en vigueur au Gabon. En cas de différend, les Parties s'engagent à rechercher en priorité une solution amiable ; à défaut, le litige est soumis aux juridictions compétentes de Libreville.",
+    ],
+    "title": "ARTICLE 19 — DROIT APPLICABLE ET RÈGLEMENT DES LITIGES",
+  },
+  {
+    "paragraphs": [
+      "La signature du présent contrat vaut acceptation pleine et entière de ses conditions ainsi que du devis n° DEV-2026-001 qui lui est annexé. Fait à Libreville, le 15 janvier 2026.",
+    ],
+    "title": "ARTICLE 20 — ACCEPTATION DU CONTRAT",
+  },
+]
+`;
+
+exports[`golden wording (released version 1) > devis 1`] = `
+[
+  {
+    "bullets": [
+      "Site vitrine (Standard)",
+      "Hébergement et mise en ligne",
+      "Tests et corrections avant livraison finale",
+      "Accompagnement à la mise en ligne",
+      "Remise du code source après paiement intégral",
+    ],
+    "paragraphs": [
+      "La prestation comprend notamment :",
+    ],
+    "title": "5. LIVRABLES",
+  },
+  {
+    "paragraphs": [
+      "Les technologies (frontend, backend, base de données, hébergement) sont choisies selon les besoins techniques du projet et peuvent être ajustées en concertation avec le Client, sans incidence sur le prix convenu tant que le périmètre de la prestation reste inchangé.",
+    ],
+    "title": "6. TECHNOLOGIES",
+  },
+  {
+    "paragraphs": [
+      "Le délai de réalisation est estimé à 30 jours ouvrés, en fonction de la taille et de la complexité du projet décrit dans le devis. Il court à compter de la dernière des deux dates suivantes : la réception de l'acompte (ou du premier paiement prévu), et la réception de l'ensemble des contenus, accès et informations nécessaires au projet.",
+      "Ce délai est suspendu pendant les périodes de validation ou de réponse du Client, et prolongé d'autant en cas de retard dans la transmission des éléments à fournir. Il est revu par avenant si le périmètre du projet évolue.",
+      "Si le délai est dépassé pour une cause imputable exclusivement au Prestataire, le Client peut le mettre en demeure par écrit de livrer ; à défaut de livraison sous 15 jours à compter de cette mise en demeure, il peut résilier la prestation et obtenir le remboursement des sommes versées correspondant aux prestations non réalisées.",
+    ],
+    "title": "7. DÉLAI DE RÉALISATION",
+  },
+  {
+    "bullets": [
+      "Acompte de 30 % à la signature : 115 050 FCFA",
+      "Solde de 70 % à la livraison finale : 268 450 FCFA",
+      "Total : 383 500 FCFA TTC",
+    ],
+    "paragraphs": [
+      "Le prix est payable selon l'échéancier suivant :",
+    ],
+    "title": "8. MODALITÉS DE PAIEMENT",
+  },
+  {
+    "paragraphs": [
+      "Le développement débute après réception de l'acompte.",
+      "Une facture est émise pour chaque échéance. La facture d'acompte est payable dès sa réception, le développement débutant après son paiement ; la facture de solde est payable sous 7 jours à compter de son émission. Un reçu est remis à réception de chaque paiement.",
+      "Moyens de paiement acceptés : Virement bancaire, Airtel Money.",
+      "Tout retard de paiement entraîne de plein droit, sans mise en demeure préalable, des pénalités de retard au taux de 1,5 % par mois de retard (tout mois commencé étant dû), et autorise le Prestataire à suspendre l'exécution de la prestation jusqu'au règlement complet des sommes exigibles.",
+      "L'acompte est non remboursable en cas d'annulation ou d'abandon du projet à l'initiative du Client ; il reste acquis au Prestataire en contrepartie de la réservation de sa disponibilité et des travaux engagés.",
+    ],
+    "title": "9. FACTURATION ET PÉNALITÉS DE RETARD",
+  },
+  {
+    "paragraphs": [
+      "Sauf mention contraire, les services externes nécessaires à l'exploitation de la solution (nom de domaine, hébergement, API tierces, services d'envoi d'e-mails ou de SMS, stockage cloud, etc.) ne sont pas inclus dans le prix et restent à la charge du Client, qui doit en être titulaire ou en confier l'accès au Prestataire pour la durée de la mission.",
+    ],
+    "title": "10. HÉBERGEMENT ET SERVICES TIERS",
+  },
+  {
+    "paragraphs": [
+      "2 cycles de révision sont inclus par phase de validation. Un cycle est un lot unique et regroupé de demandes de modification écrites, transmis en une fois après une livraison intermédiaire ou finale (par exemple, au premier cycle : « changer la couleur, modifier un texte, déplacer une section » ; au second : les dernières corrections). Des demandes transmises séparément comptent chacune pour un cycle.",
+      "Une révision ajuste ce qui existe déjà (couleurs, textes, images, position ou style d'un élément). Elle ne comprend pas l'ajout de nouvelles fonctionnalités, de nouveaux modules ou de nouvelles pages structurantes, même demandés après la validation : ceux-ci sont facturés séparément.",
+      "Toute modification supplémentaire, ainsi que toute demande sortant du périmètre initial (nouvelle fonctionnalité, changement de cahier des charges, refonte d'éléments déjà validés), fait l'objet d'un avenant signé précisant son prix et son incidence sur le délai ; elle n'est réalisée qu'après signature de cet avenant.",
+    ],
+    "title": "11. RÉVISIONS ET MODIFICATIONS",
+  },
+  {
+    "paragraphs": [
+      "À la livraison, le Client dispose de 7 jours ouvrés pour signer le procès-verbal de recette ou formuler ses réserves par écrit, en les décrivant précisément. Le Prestataire corrige les anomalies relevant du périmètre initial. À défaut de retour dans ce délai, la livraison est réputée acceptée sans réserve.",
+      "À compter de la livraison, le Prestataire assure pendant 30 jours la correction gratuite des anomalies (bugs) liées directement au développement réalisé. Cette garantie ne couvre pas les modifications effectuées par un tiers, les problèmes d'hébergement ou de services externes, ni les nouvelles fonctionnalités, lesquelles relèvent d'un avenant.",
+    ],
+    "title": "12. RECETTE ET GARANTIE",
+  },
+  {
+    "bullets": [
+      "Les fonctionnalités demandées après validation du présent devis",
+      "Les cycles de révision au-delà de ceux prévus",
+      "Les abonnements à des services tiers, l'hébergement et le nom de domaine",
+      "La création de contenus, textes, photographies ou vidéos",
+      "Les prestations graphiques non prévues dans le périmètre initial",
+      "Les interventions d'un tiers sur le code source",
+    ],
+    "paragraphs": [
+      "Sauf mention contraire, le présent devis n'inclut pas :",
+    ],
+    "title": "13. ÉLÉMENTS NON INCLUS",
+  },
+  {
+    "paragraphs": [
+      "Jusqu'au paiement intégral du prix, le Prestataire demeure seul titulaire de tous les droits sur les livrables ; le Client dispose uniquement d'un droit d'usage provisoire pour les besoins de la recette.",
+      "À compter du paiement intégral, le Prestataire cède au Client, à titre exclusif, les droits patrimoniaux (reproduction, représentation, adaptation, modification) sur les éléments spécifiquement développés pour lui, pour le monde entier et pour toute la durée légale de protection.",
+      "Le Prestataire conserve la propriété de ses bibliothèques, composants réutilisables, outils internes et savoir-faire préexistants ; il concède au Client, pour les besoins de l'exploitation de la solution, une licence non exclusive, mondiale et perpétuelle sur ceux qui y sont intégrés. Les composants tiers et open source restent soumis à leurs licences respectives.",
+      "Le code source des éléments spécifiquement développés pour le Client (dépôt ou archive), ainsi que les fichiers nécessaires au déploiement, lui sont remis après paiement intégral du prix.",
+    ],
+    "title": "14. PROPRIÉTÉ INTELLECTUELLE ET CODE SOURCE",
+  },
+  {
+    "paragraphs": [
+      "Le présent devis est soumis aux Conditions Générales de Vente du Prestataire, consultables à l'adresse https://site.example/fr/cgv. Le devis accepté, complété par le contrat de prestation qui en découle et, le cas échéant, par le brief du projet renseigné ci-dessus, constitue l'accord des Parties.",
+    ],
+    "title": "15. CONDITIONS GÉNÉRALES ET DOCUMENTS CONTRACTUELS",
+  },
+  {
+    "paragraphs": [
+      "Le présent devis est valable 30 jours à compter de sa date d'émission, soit jusqu'au 14 février 2026. Passé ce délai, les prix et conditions peuvent être révisés.",
+    ],
+    "title": "16. VALIDITÉ DU DEVIS",
+  },
+  {
+    "paragraphs": [
+      "Le Prestataire émet le présent document comme offre ferme et le signe électroniquement, par l'apposition de sa signature enregistrée, au moment de son émission. Le Client l'accepte en le signant électroniquement depuis le lien sécurisé qui lui est adressé. Les Parties reconnaissent à la signature électronique, à l'horodatage, à l'adresse IP, à l'empreinte numérique (SHA-256) et au journal d'événements qui y sont associés la valeur probante d'un écrit signé, et conviennent de ne pas en contester la recevabilité au seul motif de sa forme électronique. Le signataire déclare avoir la capacité de contracter et, lorsqu'il agit pour le compte d'une société, avoir le pouvoir de l'engager.",
+    ],
+    "title": "17. SIGNATURE ÉLECTRONIQUE ET PREUVE",
+  },
+]
+`;
+
+exports[`golden wording (released version 1) > procès-verbal de recette 1`] = `
+[
+  {
+    "paragraphs": [
+      "Le présent procès-verbal constate la livraison des prestations prévues par le devis n° DEV-2026-001, et la recette de ces prestations par le Client.",
+    ],
+    "title": "1. OBJET",
+  },
+  {
+    "bullets": [
+      "1 × Site vitrine (Standard)",
+      "2 × Hébergement et mise en ligne",
+    ],
+    "paragraphs": [
+      "Livraison effectuée le 10 février 2026.",
+      "Adresse de mise à disposition : https://client.example",
+      "Remarques du Prestataire : Livré.",
+    ],
+    "title": "2. PRESTATIONS LIVRÉES",
+  },
+  {
+    "paragraphs": [
+      "Le Client dispose de 7 jours ouvrés à compter de la livraison, soit jusqu'au 19 février 2026, pour signer le présent procès-verbal ou formuler ses réserves par écrit. À défaut, la livraison est réputée acceptée sans réserve à cette date.",
+    ],
+    "title": "3. DÉCLARATION DU CLIENT",
+  },
+  {
+    "paragraphs": [
+      "La recette marque la fin de la phase de développement. Elle rend exigible le solde du prix prévu au contrat.",
+      "La garantie de correction des anomalies de 30 jours court à compter de la livraison, soit jusqu'au 12 mars 2026. Les réserves éventuelles sont corrigées par le Prestataire dans ce cadre.",
+    ],
+    "title": "4. EFFETS DE LA RECETTE",
+  },
+]
+`;
+
+exports[`golden wording (released version 1) > procès-verbal signé avec réserves 1`] = `
+[
+  {
+    "paragraphs": [
+      "Le présent procès-verbal constate la livraison des prestations prévues par le devis n° DEV-2026-001, et la recette de ces prestations par le Client.",
+    ],
+    "title": "1. OBJET",
+  },
+  {
+    "bullets": [
+      "1 × Site vitrine (Standard)",
+      "2 × Hébergement et mise en ligne",
+    ],
+    "paragraphs": [
+      "Livraison effectuée le 10 février 2026.",
+      "Adresse de mise à disposition : https://client.example",
+      "Remarques du Prestataire : Livré.",
+    ],
+    "title": "2. PRESTATIONS LIVRÉES",
+  },
+  {
+    "paragraphs": [
+      "Le Client reconnaît avoir reçu les prestations et prononce la recette AVEC RÉSERVES, décrites ci-après :",
+      "La page contact.",
+    ],
+    "title": "3. DÉCLARATION DU CLIENT",
+  },
+  {
+    "paragraphs": [
+      "La recette marque la fin de la phase de développement. Elle rend exigible le solde du prix prévu au contrat.",
+      "La garantie de correction des anomalies de 30 jours court à compter de la livraison, soit jusqu'au 12 mars 2026. Les réserves éventuelles sont corrigées par le Prestataire dans ce cadre.",
+    ],
+    "title": "4. EFFETS DE LA RECETTE",
+  },
+]
+`;

@@ -252,7 +252,7 @@ function devisBlockDefs(quote: Quote, t: QuoteTerms, siteUrl: string): DocBlock[
   ]
 }
 
-export function buildDevisBlocks(quote: Quote, personal: PersonalInfo, siteUrl: string): DocBlock[] {
+function devisBlocksV1(quote: Quote, personal: PersonalInfo, siteUrl: string): DocBlock[] {
   const t = resolveTerms(quote, personal)
   return numbered(devisBlockDefs(quote, t, siteUrl), DEVIS_FIRST_BLOCK_NUMBER, 'section')
 }
@@ -263,7 +263,7 @@ export function devisAcceptanceLabel(blockCount: number): string {
 
 // ── Contrat ──────────────────────────────────────────────────────────────────
 
-export function buildContractBlocks(quote: Quote, personal: PersonalInfo, siteUrl: string): DocBlock[] {
+function contractBlocksV1(quote: Quote, personal: PersonalInfo, siteUrl: string): DocBlock[] {
   const t = resolveTerms(quote, personal)
   const { dateEmission } = computeQuoteDates(quote)
   const { ville, pays } = parseLocation(t.provider.location)
@@ -389,7 +389,7 @@ export const CONTRACT_SIGNATURE_LABEL = 'SIGNATURE DES PARTIES'
 // short: it only states what changes; everything else stays governed by the
 // contract it amends.
 
-export function buildAvenantBlocks(quote: Quote, personal: PersonalInfo): DocBlock[] {
+function avenantBlocksV1(quote: Quote, personal: PersonalInfo): DocBlock[] {
   const t = resolveTerms(quote, personal)
   const payment = paymentBlock(quote, t)
   const parent = quote.parentNumero ?? ''
@@ -439,7 +439,7 @@ export function buildAvenantBlocks(quote: Quote, personal: PersonalInfo): DocBlo
 
 // ── Procès-verbal de recette ─────────────────────────────────────────────────
 
-export function buildAcceptanceBlocks(quote: Quote, personal: PersonalInfo): DocBlock[] {
+function acceptanceBlocksV1(quote: Quote, personal: PersonalInfo): DocBlock[] {
   const t = resolveTerms(quote, personal)
   const delivery = quote.delivery
   const deemedBy = delivery ? formatLongDate(addBusinessDays(delivery.deliveredAt, RECETTE_DAYS)) : ''
@@ -489,3 +489,36 @@ export function buildAcceptanceBlocks(quote: Quote, personal: PersonalInfo): Doc
   ]
   return numbered(defs, 1, 'section')
 }
+
+// ── Wording versions ─────────────────────────────────────────────────────────
+// The legal wording is versioned. A quote keeps the version it was issued under
+// (quote.docVersion), so editing a clause later can never silently rewrite a
+// contract somebody already signed — the PDF and the on-screen document of a
+// signed quote must read exactly as they did the day it was signed.
+//
+// To change any clause text (in the functions above or the shared clause
+// helpers they call): do NOT edit it in place. Copy the affected builders into
+// a new set, register it as version N+1 below, and bump CURRENT_DOC_VERSION.
+// The golden tests (tests/quote-document.test.ts) pin what every released
+// version prints, so an accidental in-place edit fails the test suite.
+export const CURRENT_DOC_VERSION = 1
+
+interface DocBuilders {
+  devis: (quote: Quote, personal: PersonalInfo, siteUrl: string) => DocBlock[]
+  contrat: (quote: Quote, personal: PersonalInfo, siteUrl: string) => DocBlock[]
+  avenant: (quote: Quote, personal: PersonalInfo) => DocBlock[]
+  pv: (quote: Quote, personal: PersonalInfo) => DocBlock[]
+}
+
+const BUILDERS: Record<number, DocBuilders> = {
+  1: { devis: devisBlocksV1, contrat: contractBlocksV1, avenant: avenantBlocksV1, pv: acceptanceBlocksV1 },
+}
+
+function buildersFor(quote: Pick<Quote, 'docVersion'>): DocBuilders {
+  return BUILDERS[quote.docVersion ?? 1] ?? BUILDERS[CURRENT_DOC_VERSION]
+}
+
+export const buildDevisBlocks = (quote: Quote, personal: PersonalInfo, siteUrl: string) => buildersFor(quote).devis(quote, personal, siteUrl)
+export const buildContractBlocks = (quote: Quote, personal: PersonalInfo, siteUrl: string) => buildersFor(quote).contrat(quote, personal, siteUrl)
+export const buildAvenantBlocks = (quote: Quote, personal: PersonalInfo) => buildersFor(quote).avenant(quote, personal)
+export const buildAcceptanceBlocks = (quote: Quote, personal: PersonalInfo) => buildersFor(quote).pv(quote, personal)

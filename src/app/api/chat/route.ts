@@ -303,7 +303,7 @@ export async function POST(req: NextRequest) {
             .min(1)
             .max(6),
         }),
-        execute: async (input) => submitQuote(input),
+        execute: async (input) => submitQuote({ ...input, locale: locale === 'en' ? 'en' : 'fr' }),
       }),
       lookupQuote: tool({
         description:

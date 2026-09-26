@@ -271,6 +271,16 @@ interface ChatWidgetProps {
   initialMessage?: string | null
 }
 
+// Messages carry no timestamp of their own. Each bubble renders one of these,
+// which stamps the moment it first mounts — the moment the message appeared —
+// and never changes afterwards (a lazy state initializer runs once), without
+// any effect or per-render clock read.
+function MessageTime({ locale }: { locale: string }) {
+  const [stamp] = useState(() => Date.now())
+  const label = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'fr-FR', { hour: '2-digit', minute: '2-digit' }).format(stamp)
+  return <>{label}</>
+}
+
 export default function ChatWidget({ autoOpen = false, initialMessage = null }: ChatWidgetProps) {
   const pathname = usePathname()
   const { data: { personal } } = usePortfolio()
@@ -290,27 +300,6 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
   const busy = status === 'submitted' || status === 'streaming'
   const [justOpened, setJustOpened] = useState(autoOpen)
-
-  // Messages carry no timestamp of their own — remember when each one first
-  // appeared so it can be shown under its bubble, without re-stamping it on
-  // every re-render.
-  const [messageTimes, setMessageTimes] = useState<Record<string, number>>({})
-  useEffect(() => {
-    setMessageTimes((prev) => {
-      const next = { ...prev }
-      let changed = false
-      for (const message of messages) {
-        if (!(message.id in next)) {
-          next[message.id] = Date.now()
-          changed = true
-        }
-      }
-      return changed ? next : prev
-    })
-  }, [messages])
-
-  const timeFormatter = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })
-  const formatMessageTime = (id: string) => timeFormatter.format(messageTimes[id] ?? Date.now())
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -362,7 +351,6 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
   const handleClear = () => {
     setMessages([])
-    setMessageTimes({})
   }
 
   const headerMood: BotMood = busy ? 'thinking' : justOpened ? 'happy' : 'idle'
@@ -870,7 +858,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                         paddingRight: isUser ? 2 : 0,
                       }}
                     >
-                      {formatMessageTime(message.id)}
+                      <MessageTime locale={locale} />
                     </p>
                   </div>
                 )

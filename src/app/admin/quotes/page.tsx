@@ -11,7 +11,9 @@ import { useToast } from '@/components/admin/Toast'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
-type Filter = 'tous' | 'unread' | 'read'
+type Filter = 'tous' | 'unread' | 'read' | 'pending' | 'accepted' | 'declined' | 'delivered' | 'unpaid'
+
+const PAGE_SIZE = 50
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -53,6 +55,8 @@ export default function AdminQuotes() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [requesting, setRequesting] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [search, setSearch]   = useState('')
+  const [visible, setVisible] = useState(PAGE_SIZE)
 
   // `silent` refreshes in place (after an action in a row's panel) instead of
   // swapping the whole list for skeletons and collapsing the open panel.
@@ -68,11 +72,33 @@ export default function AdminQuotes() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
 
+  // A link from the invoices page (?q=DEV-2026-001) opens the list already searched.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (q) setSearch(q) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [])
+
+  // Quotes that still have an unpaid invoice behind them.
+  const unpaidNumeros = useMemo(
+    () => new Set(invoices.filter((i) => i.status === 'issued').map((i) => i.quoteNumero)),
+    [invoices],
+  )
+
   const filtered = useMemo(() => {
-    if (filter === 'unread') return quotes.filter((q) => !q.read)
-    if (filter === 'read')   return quotes.filter((q) => q.read)
-    return quotes
-  }, [quotes, filter])
+    const needle = search.trim().toLowerCase()
+    return quotes.filter((q) => {
+      if (filter === 'unread' && q.read) return false
+      if (filter === 'read' && !q.read) return false
+      if (filter === 'pending' && q.status !== 'pending') return false
+      if (filter === 'accepted' && q.status !== 'accepted') return false
+      if (filter === 'declined' && q.status !== 'declined') return false
+      if (filter === 'delivered' && !q.delivery) return false
+      if (filter === 'unpaid' && !unpaidNumeros.has(q.numero)) return false
+      if (!needle) return true
+      return [q.numero, q.clientNom, q.clientSociete ?? '', q.clientEmail ?? '', q.clientTelephone ?? '', q.accessCode, q.descriptionProjet]
+        .some((v) => v.toLowerCase().includes(needle))
+    })
+  }, [quotes, filter, search, unpaidNumeros])
 
   const unreadCount = useMemo(() => quotes.filter((q) => !q.read).length, [quotes])
   const totalTTC = useMemo(() => quotes.reduce((sum, q) => sum + q.totalTTC, 0), [quotes])
@@ -146,6 +172,11 @@ export default function AdminQuotes() {
     { id: 'tous',   label: `Tous (${quotes.length})` },
     { id: 'unread', label: `Non lus (${unreadCount})` },
     { id: 'read',   label: `Lus` },
+    { id: 'pending',   label: `En attente (${quotes.filter((x) => x.status === 'pending').length})` },
+    { id: 'accepted',  label: `Acceptés (${quotes.filter((x) => x.status === 'accepted').length})` },
+    { id: 'declined',  label: `Refusés (${quotes.filter((x) => x.status === 'declined').length})` },
+    { id: 'delivered', label: `Livrés (${quotes.filter((x) => !!x.delivery).length})` },
+    { id: 'unpaid',    label: `Impayés (${unpaidNumeros.size})` },
   ]
 
   return (
@@ -178,12 +209,12 @@ export default function AdminQuotes() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-0 mb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="flex gap-0 mb-3 overflow-x-auto" style={{ borderBottom: '1px solid var(--border)' }}>
         {TABS.map(({ id, label }) => (
           <button
             key={id}
-            onClick={() => setFilter(id)}
-            className="relative px-4 py-2.5 text-xs font-semibold tracking-wide transition-colors"
+            onClick={() => { setFilter(id); setVisible(PAGE_SIZE) }}
+            className="relative px-4 py-2.5 text-xs font-semibold tracking-wide transition-colors whitespace-nowrap"
             style={{
               fontFamily: 'var(--font-poppins)',
               color: filter === id ? 'var(--text)' : 'var(--text-subtle)',
@@ -216,6 +247,14 @@ export default function AdminQuotes() {
         </button>
       </div>
 
+      <input
+        className="input mb-4"
+        value={search}
+        onChange={(e) => { setSearch(e.target.value); setVisible(PAGE_SIZE) }}
+        placeholder="Rechercher : numéro, client, société, email, téléphone, code de suivi…"
+        aria-label="Rechercher un devis"
+      />
+
       {/* List */}
       {loading ? (
         <div className="space-y-2">
@@ -230,12 +269,12 @@ export default function AdminQuotes() {
           </svg>
           <p className="font-display font-semibold mb-1" style={{ color: 'var(--text)' }}>Aucun devis</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-            {filter === 'unread' ? 'Tous les devis ont été consultés.' : 'Aucun devis généré pour le moment.'}
+            {search || filter !== 'tous' ? 'Aucun devis ne correspond à cette recherche.' : 'Aucun devis généré pour le moment.'}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((q, i) => (
+          {filtered.slice(0, visible).map((q, i) => (
           <div key={q.id}>
             <m.div
               initial={{ opacity: 0, y: 8 }}
@@ -374,6 +413,13 @@ export default function AdminQuotes() {
             )}
           </div>
           ))}
+          {filtered.length > visible && (
+            <div className="pt-2 text-center">
+              <button className="btn-secondary btn-sm" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+                Afficher plus ({filtered.length - visible} restant{filtered.length - visible > 1 ? 's' : ''})
+              </button>
+            </div>
+          )}
         </div>
       )}
 

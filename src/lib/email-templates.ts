@@ -6,7 +6,7 @@ const vatRowLabel = (t?: VatTerms) => vatLabel(t ?? DEFAULT_BUSINESS)
 const noun = (kind?: string) => (kind === 'avenant' ? 'avenant' : 'devis')
 const Noun = (kind?: string) => (kind === 'avenant' ? 'Avenant' : 'Devis')
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
@@ -38,14 +38,14 @@ function starRow(rating: number): string {
   ).join('')
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
 // ── Base layout — light, centered, monochrome boutique-agency style ─────────
 
-const base = (title: string, preheader: string, body: string) => {
+export const base = (title: string, preheader: string, body: string, locale: 'fr' | 'en' = 'fr') => {
   const year = new Date().getFullYear()
   return `<!DOCTYPE html>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="${locale}" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -85,7 +85,7 @@ const base = (title: string, preheader: string, body: string) => {
                 &copy; ${year} Nawaf Nemrod SALAMI &nbsp;&middot;&nbsp; Libreville, Gabon
               </p>
               <p style="margin:0;font-size:11px;color:#C0C0CB">
-                Cet e-mail est g&eacute;n&eacute;r&eacute; automatiquement &mdash; merci de ne pas y r&eacute;pondre directement.
+                ${locale === 'en' ? 'This email is generated automatically &mdash; please do not reply to it directly.' : 'Cet e-mail est g&eacute;n&eacute;r&eacute; automatiquement &mdash; merci de ne pas y r&eacute;pondre directement.'}
               </p>
             </td>
           </tr>
@@ -100,7 +100,7 @@ const base = (title: string, preheader: string, body: string) => {
 
 // ── Shared components — monochrome only ──────────────────────────────────────
 
-const badge = (label: string) => `
+export const badge = (label: string) => `
   <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 18px">
     <tr>
       <td style="background:#131318;color:#FFFFFF;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 15px">
@@ -109,20 +109,20 @@ const badge = (label: string) => `
     </tr>
   </table>`
 
-const heading = (text: string) => `
+export const heading = (text: string) => `
   <p style="margin:0 0 12px;font-size:24px;font-weight:800;color:#131318;letter-spacing:-0.4px;line-height:1.25">${text}</p>`
 
-const intro = (html: string) => `
+export const intro = (html: string) => `
   <p style="margin:0 0 28px;font-size:14.5px;color:#6B6B76;line-height:1.7">${html}</p>`
 
 // Rounded light-gray box for structured, left-aligned content (data, message
 // bodies, tables) — plain card, no accent stripe.
-const infoBox = (contentHtml: string) => `
+export const infoBox = (contentHtml: string) => `
   <div style="background:#F9F9FB;border:1px solid #ECECF1;padding:22px 24px;text-align:left;margin-bottom:24px">
     ${contentHtml}
   </div>`
 
-const ctaButton = (href: string, label: string) => `
+export const ctaButton = (href: string, label: string) => `
   <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 8px;width:100%">
     <tr>
       <td>
@@ -134,7 +134,7 @@ const ctaButton = (href: string, label: string) => `
     </tr>
   </table>`
 
-const secondaryLink = (href: string, label: string) => `
+export const secondaryLink = (href: string, label: string) => `
   <p style="margin:14px 0 0;text-align:center">
     <a href="${href}" style="font-size:12.5px;color:#9A9AA6;text-decoration:underline">${label}</a>
   </p>`
@@ -407,107 +407,7 @@ export function quoteNotificationEmail(data: {
 
 // ── Quote copy (client) ────────────────────────────────────────────────────
 
-export function quoteClientCopyEmail(data: {
-  numero: string
-  accessCode: string
-  signToken: string
-  clientNom: string
-  clientSociete?: string
-  descriptionProjet: string
-  items: { designation: string; quantite: number; prixUnitaireHT: number }[]
-  totalHT: number
-  tva: number
-  totalTTC: number
-  validiteJours: number
-  terms?: VatTerms & { provider: { name: string } }
-  kind?: string
-}, adminEmail: string) {
-  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
-  const safeNom = esc(data.clientNom)
-  const safeSociete = data.clientSociete ? esc(data.clientSociete) : undefined
-
-  const itemsRows = data.items.map((it) => `
-    <tr>
-      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#26262E">${esc(it.designation)}</td>
-      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#9A9AA6;text-align:center">${it.quantite}</td>
-      <td style="padding:9px 0;border-bottom:1px solid #ECECF1;font-size:13px;color:#9A9AA6;text-align:right">${fmt(it.prixUnitaireHT)}</td>
-    </tr>`).join('')
-
-  return {
-    subject: `Votre ${noun(data.kind)} ${data.numero} — ${data.terms?.provider.name ?? 'Nawaf Nemrod SALAMI'}`,
-    html: base(`Votre ${noun(data.kind)}`, `Votre ${noun(data.kind)} ${data.numero} est pr&ecirc;t — ${fmt(data.totalTTC)} TTC`, `
-      ${badge(`${Noun(data.kind)} ${esc(data.numero)}`)}
-      ${heading(`Votre ${noun(data.kind)} est pr&ecirc;t, ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(`${data.kind === 'avenant' ? 'Voici l&rsquo;avenant correspondant &agrave; votre demande de prestations compl&eacute;mentaires' : `Merci pour les d&eacute;tails de votre projet${safeSociete ? ` chez <strong style="color:#26262E">${safeSociete}</strong>` : ''}. Voici le devis correspondant`}, valable <strong style="color:#26262E">${data.validiteJours} jours</strong>.`)}
-
-      ${infoBox(`
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
-        <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
-        <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">Conservez ce code : donnez-le au chatbot du portfolio pour retrouver ce devis &agrave; tout moment, sans tout redemander.</p>
-      `)}
-
-      ${infoBox(`
-        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Votre projet</p>
-        <p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${esc(data.descriptionProjet)}</p>
-      `)}
-
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="text-align:left;margin-bottom:24px">
-        <tr>
-          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase">D&eacute;signation</td>
-          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase;text-align:center">Qt&eacute;</td>
-          <td style="padding:0 0 8px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.08em;text-transform:uppercase;text-align:right">Prix unit. HT</td>
-        </tr>
-        ${itemsRows}
-        <tr>
-          <td colspan="2" style="padding:12px 0 0;font-size:13px;color:#9A9AA6">Total HT</td>
-          <td style="padding:12px 0 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.totalHT)}</td>
-        </tr>
-        <tr>
-          <td colspan="2" style="padding:6px 0;font-size:13px;color:#9A9AA6">${vatRowLabel(data.terms)}</td>
-          <td style="padding:6px 0;font-size:13px;color:#26262E;text-align:right;font-weight:600">${fmt(data.tva)}</td>
-        </tr>
-        <tr>
-          <td colspan="2" style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;background:#131318">Total TTC</td>
-          <td style="padding:12px 14px;font-size:14px;font-weight:800;color:#FFFFFF;text-align:right;background:#131318">${fmt(data.totalTTC)}</td>
-        </tr>
-      </table>
-
-      ${ctaButton(`${SITE_URL}/fr/devis/signature/${data.signToken}`, `Consulter et signer mon ${noun(data.kind)}`)}
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Question sur le ${noun(data.kind)} ${data.numero}`)}`, `Une question sur ce ${noun(data.kind)} ?`)}
-    `),
-  }
-}
-
 // ── Quote signed electronically (client) ────────────────────────────────────
-
-export function quoteSignedClientEmail(data: {
-  numero: string
-  accessCode: string
-  clientNom: string
-  totalTTC: number
-  kind?: string
-}, adminEmail: string) {
-  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
-  const safeNom = esc(data.clientNom)
-
-  return {
-    subject: `Votre ${noun(data.kind)} ${data.numero} a bien été signé`,
-    html: base(`${Noun(data.kind)} signé`, `Votre signature du ${noun(data.kind)} ${data.numero} a bien été enregistrée`, `
-      ${badge(`${Noun(data.kind)} ${esc(data.numero)}`)}
-      ${heading(`C&rsquo;est sign&eacute;, ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(`Votre signature &eacute;lectronique a &eacute;t&eacute; enregistr&eacute;e avec succ&egrave;s. Ce ${noun(data.kind)} vaut d&eacute;sormais confirmation de commande pour un montant de <strong style="color:#26262E">${fmt(data.totalTTC)}</strong> TTC. Le contrat sign&eacute; est joint &agrave; cet e-mail au format PDF.`)}
-
-      ${infoBox(`
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
-        <p style="margin:0;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
-      `)}
-
-      ${ctaButton(`${SITE_URL}/fr/devis?ref=${encodeURIComponent(data.accessCode)}`, 'Voir le document signé')}
-      ${secondaryLink(`${SITE_URL}/fr/suivi?ref=${encodeURIComponent(data.accessCode)}`, "Suivre l'avancement du projet")}
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos du devis ${data.numero}`)}`, 'Une question ?')}
-    `),
-  }
-}
 
 // ── Quote signed electronically (admin) ─────────────────────────────────────
 
@@ -554,98 +454,7 @@ export function quoteDeclinedAdminEmail(data: { numero: string; clientNom: strin
   }
 }
 
-// ── Quote accepted → confirmation / contract (client) ────────────────────────
-// Sent automatically the moment an admin flips a quote's status to
-// "accepted" — the client gets a confirmation they can open, print, or sign
-// (same document as the devis, now framed as a contract).
-
-export function quoteAcceptedEmail(data: {
-  numero: string
-  accessCode: string
-  clientNom: string
-  totalTTC: number
-}, adminEmail: string) {
-  const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
-  const safeNom = esc(data.clientNom)
-
-  return {
-    subject: `Devis accepté — contrat ${data.numero}`,
-    html: base('Devis accepté', `Votre devis ${data.numero} a été accepté — voici votre contrat`, `
-      ${badge(`Devis ${esc(data.numero)}`)}
-      ${heading(`C&rsquo;est parti, ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(`Votre devis a &eacute;t&eacute; accept&eacute; et vaut d&eacute;sormais confirmation de commande. Retrouvez le contrat correspondant &agrave; tout moment avec votre code de suivi.`)}
-
-      ${infoBox(`
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Code de suivi</p>
-        <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#131318;letter-spacing:0.12em;font-family:'Courier New',Courier,monospace">${esc(data.accessCode)}</p>
-        <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">Montant total accept&eacute; : <strong style="color:#26262E">${fmt(data.totalTTC)}</strong> TTC.</p>
-      `)}
-
-      ${ctaButton(`${SITE_URL}/fr/devis?ref=${encodeURIComponent(data.accessCode)}`, 'Voir mon contrat')}
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos du devis ${data.numero}`)}`, 'Une question ?')}
-    `),
-  }
-}
-
-// ── Delivery → procès-verbal de recette (client) ─────────────────────────────
-
-export function deliveryEmail(data: {
-  numero: string
-  deliveryToken: string
-  clientNom: string
-  kind?: string
-  delivery?: { deliveredAt: string; note?: string; liveUrl?: string }
-}, adminEmail: string) {
-  const safeNom = esc(data.clientNom)
-  const liveUrl = data.delivery?.liveUrl ? esc(data.delivery.liveUrl) : undefined
-  const note = data.delivery?.note ? esc(data.delivery.note) : undefined
-
-  return {
-    subject: `Votre projet est livré — procès-verbal de recette ${data.numero}`,
-    html: base('Projet livré', `Votre projet est livré : merci de signer le procès-verbal de recette`, `
-      ${badge(`${Noun(data.kind)} ${esc(data.numero)}`)}
-      ${heading(`Votre projet est livr&eacute;, ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(`Les prestations pr&eacute;vues sont livr&eacute;es. Merci de les v&eacute;rifier puis de signer le proc&egrave;s-verbal de recette (joint en PDF) &mdash; avec ou sans r&eacute;serves &mdash; depuis le lien ci-dessous. &Agrave; d&eacute;faut de retour sous <strong style="color:#26262E">7 jours ouvr&eacute;s</strong>, la livraison est r&eacute;put&eacute;e accept&eacute;e.`)}
-
-      ${liveUrl || note ? infoBox(`
-        ${liveUrl ? `<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Acc&egrave;s</p><p style="margin:0 0 ${note ? '14px' : '0'};font-size:14px"><a href="${liveUrl}" style="color:#131318;font-weight:600">${liveUrl}</a></p>` : ''}
-        ${note ? `<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Remarques</p><p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.7;white-space:pre-wrap">${note}</p>` : ''}
-      `) : ''}
-
-      ${ctaButton(`${SITE_URL}/fr/recette/${data.deliveryToken}`, 'Consulter et signer le procès-verbal de recette')}
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Livraison ${data.numero}`)}`, 'Signaler un problème')}
-    `),
-  }
-}
-
-// ── Recette signed (client + admin) ──────────────────────────────────────────
-
-export function acceptanceSignedClientEmail(data: {
-  numero: string
-  deliveryToken: string
-  accessCode: string
-  clientNom: string
-  kind?: string
-  acceptance?: { reserves?: string }
-}, adminEmail: string) {
-  const safeNom = esc(data.clientNom)
-  const withReserves = !!data.acceptance?.reserves
-
-  return {
-    subject: `Recette ${withReserves ? 'avec réserves ' : ''}enregistrée — ${data.numero}`,
-    html: base('Recette enregistrée', `Votre procès-verbal de recette ${data.numero} a bien été enregistré`, `
-      ${badge(`${Noun(data.kind)} ${esc(data.numero)}`)}
-      ${heading(`Merci, ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(withReserves
-        ? 'Votre proc&egrave;s-verbal de recette a &eacute;t&eacute; enregistr&eacute; <strong style="color:#26262E">avec r&eacute;serves</strong>. Elles seront trait&eacute;es dans le cadre de la garantie. Le proc&egrave;s-verbal sign&eacute; est joint &agrave; cet e-mail.'
-        : 'Votre proc&egrave;s-verbal de recette a &eacute;t&eacute; enregistr&eacute; <strong style="color:#26262E">sans r&eacute;serve</strong>. Le proc&egrave;s-verbal sign&eacute; est joint &agrave; cet e-mail. La facture de solde vous sera adress&eacute;e s&rsquo;il y a lieu.')}
-
-      ${ctaButton(`${SITE_URL}/fr/recette/${data.deliveryToken}`, 'Voir le procès-verbal signé')}
-      ${secondaryLink(`${SITE_URL}/fr/suivi?ref=${encodeURIComponent(data.accessCode)}`, "Suivre l'avancement du projet")}
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos de la recette ${data.numero}`)}`, 'Une question ?')}
-    `),
-  }
-}
+// ── Recette signed (admin) ───────────────────────────────────────────────────
 
 export function acceptanceSignedAdminEmail(data: {
   numero: string
@@ -669,84 +478,6 @@ export function acceptanceSignedAdminEmail(data: {
       `) : ''}
 
       ${ctaButton(`${SITE_URL}/admin/quotes`, 'Voir dans le tableau de bord')}
-    `),
-  }
-}
-
-// ── Invoice + receipt (client) ───────────────────────────────────────────────
-
-const fmtFcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
-const shortDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Libreville' })
-
-interface InvoiceMailData {
-  numero: string
-  quoteNumero: string
-  kind: 'acompte' | 'solde'
-  dueAt: string
-  netToPay: number
-  client: { nom: string }
-  terms: { paymentMethods: string; paymentDetails: string }
-  payment?: { paidAt: string; method: string; receiptNumero: string }
-}
-
-export function invoiceEmail(data: InvoiceMailData, adminEmail: string) {
-  const safeNom = esc(data.client.nom)
-  const label = data.kind === 'acompte' ? 'd&rsquo;acompte' : 'de solde'
-
-  return {
-    subject: `Facture ${data.kind === 'acompte' ? "d'acompte" : 'de solde'} ${data.numero} — ${fmtFcfa(data.netToPay)}`,
-    html: base('Votre facture', `Facture ${data.numero} — ${fmtFcfa(data.netToPay)} ${data.kind === 'acompte' ? 'à régler dès réception' : `à régler avant le ${shortDate(data.dueAt)}`}`, `
-      ${badge(`Facture ${esc(data.numero)}`)}
-      ${heading(`Votre facture ${label}`)}
-      ${intro(`Bonjour ${safeNom.split(' ')[0]}, vous trouverez ci-joint la facture ${label} relative au devis <strong style="color:#26262E">${esc(data.quoteNumero)}</strong>.`)}
-
-      ${infoBox(`
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Montant &agrave; r&eacute;gler</p>
-        <p style="margin:0 0 14px;font-size:22px;font-weight:800;color:#131318">${fmtFcfa(data.netToPay)}</p>
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">&Eacute;ch&eacute;ance</p>
-        <p style="margin:0 0 14px;font-size:14px;color:#26262E">${data.kind === 'acompte' ? 'D&egrave;s r&eacute;ception (le d&eacute;veloppement d&eacute;bute apr&egrave;s le paiement)' : esc(shortDate(data.dueAt))}</p>
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Moyens de paiement</p>
-        <p style="margin:0;font-size:13.5px;color:#26262E;line-height:1.6;white-space:pre-wrap">${esc(data.terms.paymentMethods)}${data.terms.paymentDetails ? `\n${esc(data.terms.paymentDetails)}` : ''}</p>
-      `)}
-
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Facture ${data.numero}`)}`, 'Une question sur cette facture ?')}
-    `),
-  }
-}
-
-export function receiptEmail(data: InvoiceMailData, adminEmail: string) {
-  const safeNom = esc(data.client.nom)
-  const receipt = data.payment?.receiptNumero ?? ''
-
-  return {
-    subject: `Reçu de paiement ${receipt} — ${fmtFcfa(data.netToPay)}`,
-    html: base('Paiement reçu', `Nous avons bien reçu votre paiement de ${fmtFcfa(data.netToPay)}`, `
-      ${badge(`Reçu ${esc(receipt)}`)}
-      ${heading(`Paiement re&ccedil;u, merci ${safeNom.split(' ')[0]}&nbsp;!`)}
-      ${intro(`Nous avons bien re&ccedil;u votre r&egrave;glement de <strong style="color:#26262E">${fmtFcfa(data.netToPay)}</strong>${data.payment ? ` le ${esc(shortDate(data.payment.paidAt))} (${esc(data.payment.method)})` : ''}, pour la facture <strong style="color:#26262E">${esc(data.numero)}</strong>. Le re&ccedil;u est joint &agrave; cet e-mail.`)}
-
-      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Reçu ${receipt}`)}`, 'Une question ?')}
-    `),
-  }
-}
-
-// ── Testimonial request (client) — manual trigger, automated content ────────
-// The admin decides *when* to ask (after actually delivering the project),
-// but never has to write the email by hand.
-
-export function testimonialRequestEmail(data: { clientNom: string; numero: string }, adminEmail: string) {
-  const safeNom = esc(data.clientNom)
-  const firstName = safeNom.split(' ')[0]
-
-  return {
-    subject: `${firstName}, un avis sur notre collaboration ?`,
-    html: base('Votre avis compte', `Un petit mot sur votre expérience avec Nawaf Nemrod SALAMI ?`, `
-      ${badge(`Devis ${esc(data.numero)}`)}
-      ${heading(`Un avis, ${firstName}&nbsp;?`)}
-      ${intro(`J&rsquo;esp&egrave;re que notre collaboration s&rsquo;est bien pass&eacute;e&nbsp;! Si vous avez deux minutes, un retour honn&ecirc;te m&rsquo;aiderait &eacute;norm&eacute;ment &agrave; faire conna&icirc;tre mon travail aupr&egrave;s d&rsquo;autres clients.`)}
-
-      ${ctaButton(`${SITE_URL}/fr/temoignage`, 'Laisser un avis')}
-      ${secondaryLink(`mailto:${adminEmail}`, 'Répondre directement')}
     `),
   }
 }

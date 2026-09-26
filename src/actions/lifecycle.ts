@@ -3,14 +3,14 @@
 import { ObjectId } from 'mongodb'
 import { after } from 'next/server'
 import { headers } from 'next/headers'
-import { put } from '@vercel/blob'
-import { getTransporter } from '@/lib/mailer'
+import { uploadPublicImage } from '@/lib/blob-upload'
+import { loggedMailer } from '@/lib/mail-safe'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
-import {
-  deliveryEmail, acceptanceSignedClientEmail, acceptanceSignedAdminEmail, quoteClientCopyEmail,
-} from '@/lib/email-templates'
+import { acceptanceSignedAdminEmail } from '@/lib/email-templates'
+import { deliveryEmail, acceptanceSignedClientEmail, quoteClientCopyEmail } from '@/lib/email-client'
 import { computeTotals, resolveTerms, snapshotTerms } from '@/lib/business'
+import { CURRENT_DOC_VERSION } from '@/lib/quote-document'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
@@ -97,7 +97,7 @@ export async function markDelivered(quoteId: string, input: { note?: string; liv
   if (quote.clientEmail) {
     after(async () => {
       try {
-        const transporter = getTransporter()
+        const transporter = loggedMailer({ kind: 'pv', quoteId: doc._id.toString() })
         const adminEmail = await getAdminEmail()
         const attachments = await buildQuoteAttachment(quote, 'pv')
         const mail = deliveryEmail({ ...quote, deliveryToken: delivery.token }, adminEmail)
@@ -160,10 +160,7 @@ export async function signAcceptance(token: string, input: SignAcceptanceInput):
 
   let imageUrl: string
   try {
-    const blob = await put(`signatures/pv-${doc._id.toString()}-${Date.now()}.png`, Buffer.from(base64, 'base64'), {
-      access: 'public', contentType: 'image/png', addRandomSuffix: true,
-    })
-    imageUrl = blob.url
+    imageUrl = await uploadPublicImage(`signatures/pv-${doc._id.toString()}-${Date.now()}.png`, Buffer.from(base64, 'base64'))
   } catch (e) {
     console.error('[signAcceptance] blob upload error:', e)
     return { ok: false, error: "Erreur lors de l'enregistrement de la signature." }
@@ -190,7 +187,7 @@ export async function signAcceptance(token: string, input: SignAcceptanceInput):
   const quote = toQuote((await col.findOne({ _id: doc._id }))!)
   after(async () => {
     try {
-      const transporter = getTransporter()
+      const transporter = loggedMailer({ kind: 'pv', quoteId: doc._id.toString() })
       const adminEmail = await getAdminEmail()
       const attachments = await buildQuoteAttachment(quote, 'pv')
       const clientMail = acceptanceSignedClientEmail({ ...quote, deliveryToken: token }, adminEmail)
@@ -243,12 +240,13 @@ export async function createAvenant(parentId: string, input: AvenantInput): Prom
 
   const record: QuoteRecord = {
     clientNom: parent.clientNom, clientSociete: parent.clientSociete, clientAdresse: parent.clientAdresse,
-    clientEmail: parent.clientEmail, clientTelephone: parent.clientTelephone,
+    clientEmail: parent.clientEmail, clientTelephone: parent.clientTelephone, locale: parent.locale,
     descriptionProjet: description, items,
     numero, accessCode: generateAccessCode(), signToken: generateSignToken(),
     dateEmission, validiteJours: 30, totalHT, tva, totalTTC,
     read: true, createdAt: dateEmission, status: 'pending', kind: 'avenant', parentNumero: parent.numero,
     ...(extraDelayDays ? { extraDelayDays } : {}),
+    docVersion: CURRENT_DOC_VERSION,
     terms, events: [createdEvent],
   }
   const { insertedId } = await col.insertOne(record)
@@ -258,7 +256,7 @@ export async function createAvenant(parentId: string, input: AvenantInput): Prom
   if (quote.clientEmail) {
     after(async () => {
       try {
-        const transporter = getTransporter()
+        const transporter = loggedMailer({ kind: 'devis', quoteId: insertedId.toString() })
         const adminEmail = await getAdminEmail()
         const attachments = await buildQuoteAttachment(quote, 'devis')
         const mail = quoteClientCopyEmail({ ...quote, signToken: quote.signToken! }, adminEmail)

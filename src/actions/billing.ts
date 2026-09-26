@@ -3,10 +3,10 @@
 import { ObjectId, type WithId } from 'mongodb'
 import { after } from 'next/server'
 import { getDb } from '@/lib/mongodb'
-import { getTransporter } from '@/lib/mailer'
+import { loggedMailer } from '@/lib/mail-safe'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
-import { invoiceEmail, receiptEmail } from '@/lib/email-templates'
+import { invoiceEmail, receiptEmail } from '@/lib/email-client'
 import { generateInvoicePdf } from '@/lib/invoice-pdf'
 import { resolveTerms, splitPayment, splitTTC, type QuoteTerms } from '@/lib/business'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
@@ -72,6 +72,8 @@ export interface Invoice {
   netToPay: number
   client: InvoiceClient
   terms: QuoteTerms
+  // Language of the client's emails (from the quote).
+  locale?: 'fr' | 'en'
   payment?: InvoicePayment
   cancelledAt?: string
 }
@@ -117,15 +119,15 @@ async function pushQuoteEvent(quoteNumero: string, event: QuoteRecordEvent) {
   await col.updateOne({ numero: quoteNumero }, { $push: { events: event } })
 }
 
-async function sendInvoiceMail(invoice: Invoice, document: 'facture' | 'recu') {
-  if (!invoice.client.email) return
+async function sendInvoiceMail(invoice: Invoice, document: 'facture' | 'recu', record = true): Promise<boolean> {
+  if (!invoice.client.email) return false
   try {
-    const transporter = getTransporter()
+    const transporter = loggedMailer({ kind: document, invoiceId: invoice.id }, { record })
     const adminEmail = await getAdminEmail()
     const content = await generateInvoicePdf({ invoice, document, siteUrl: SITE_URL, signatureUrl: await providerSignatureUrl() })
     const mail = document === 'facture' ? invoiceEmail(invoice, adminEmail) : receiptEmail(invoice, adminEmail)
     const number = document === 'facture' ? invoice.numero : invoice.payment?.receiptNumero
-    await transporter.sendMail({
+    return await transporter.sendMail({
       from: `"${invoice.terms.provider.name}" <${process.env.GMAIL_USER}>`,
       to: invoice.client.email,
       subject: mail.subject,
@@ -134,7 +136,18 @@ async function sendInvoiceMail(invoice: Invoice, document: 'facture' | 'recu') {
     })
   } catch (e) {
     console.error('[billing] email error:', e)
+    return false
   }
+}
+
+// Admin retry of a failed invoice / receipt email: awaited (unlike the
+// background send after issuing), so the admin learns the real outcome.
+export async function retryInvoiceEmail(invoiceId: string, document: 'facture' | 'recu'): Promise<boolean> {
+  await requireAdmin()
+  const col = await invoicesCol()
+  const doc = await col.findOne({ _id: new ObjectId(invoiceId) })
+  if (!doc) return false
+  return sendInvoiceMail(toInvoice(doc), document, false)
 }
 
 // ── Admin actions ────────────────────────────────────────────────────────────
@@ -212,6 +225,7 @@ export async function issueInvoice(quoteId: string, kind: InvoiceKind): Promise<
       email: quote.clientEmail, telephone: quote.clientTelephone,
     },
     terms,
+    locale: quote.locale,
   }
   const { insertedId } = await col.insertOne(record)
   const invoice = toInvoice({ ...record, _id: insertedId })

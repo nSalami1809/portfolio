@@ -3,7 +3,7 @@
 // module may only export async functions that become public endpoints, and
 // none of what is below (collection handles, hashing, rate limiting, PDF
 // attachment building) should ever be callable from a browser.
-import { randomBytes, createHash } from 'crypto'
+import { randomBytes } from 'crypto'
 import type { WithId } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 import { getClientIp } from '@/lib/client-ip'
@@ -66,6 +66,7 @@ export interface QuoteRecord extends QuotePayload {
   kind?: QuoteKind
   parentNumero?: string
   extraDelayDays?: number
+  docVersion?: number
   terms?: QuoteTerms
   delivery?: QuoteRecordDelivery
   acceptance?: QuoteRecordAcceptance
@@ -129,12 +130,12 @@ export async function nextQuoteNumber(kind: QuoteKind = 'devis'): Promise<string
 const iso = (d: Date | string) => (d instanceof Date ? d.toISOString() : d)
 
 export function toQuote(doc: WithId<QuoteRecord>): Quote {
-  const { clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items, brief,
+  const { clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items, brief, locale,
     numero, accessCode, signToken, dateEmission, validiteJours, totalHT, tva, totalTTC, signature, events,
-    parentNumero, extraDelayDays, terms, delivery, acceptance } = doc
+    parentNumero, extraDelayDays, docVersion, terms, delivery, acceptance } = doc
   return {
-    clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items, brief,
-    numero, accessCode, signToken, validiteJours, totalHT, tva, totalTTC, parentNumero, extraDelayDays,
+    clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items, brief, locale,
+    numero, accessCode, signToken, validiteJours, totalHT, tva, totalTTC, parentNumero, extraDelayDays, docVersion,
     // Payment coordinates (an Airtel/IBAN number) belong on invoices, not in a
     // quote payload that lookupQuote() serves by its guessable numero.
     terms: terms ? { ...terms, paymentDetails: '' } : undefined,
@@ -195,50 +196,7 @@ export async function checkRateLimit(scope: string, maxPerHour: number): Promise
   return true
 }
 
-// Canonical snapshot of everything the client actually agreed to — hashed at
-// the moment of signing so any later, hypothetical tampering with the stored
-// document can be detected. Key order is fixed by construction, so the same
-// quote content always produces the same hash. Optional parts (brief, terms,
-// avenant parent) are only included when present, which keeps the hash of a
-// quote signed before those existed identical to what it was then.
-export function computeDocumentHash(doc: QuoteRecord): string {
-  const canonical = JSON.stringify({
-    numero: doc.numero,
-    client: { nom: doc.clientNom, societe: doc.clientSociete ?? '', adresse: doc.clientAdresse ?? '', email: doc.clientEmail ?? '', telephone: doc.clientTelephone ?? '' },
-    description: doc.descriptionProjet,
-    items: doc.items,
-    totalHT: doc.totalHT,
-    tva: doc.tva,
-    totalTTC: doc.totalTTC,
-    dateEmission: iso(doc.dateEmission),
-    validiteJours: doc.validiteJours,
-    ...(doc.brief ? { brief: doc.brief } : {}),
-    ...(doc.terms ? { terms: doc.terms } : {}),
-    ...(doc.parentNumero ? { parentNumero: doc.parentNumero } : {}),
-    ...(doc.extraDelayDays ? { extraDelayDays: doc.extraDelayDays } : {}),
-  })
-  return createHash('sha256').update(canonical).digest('hex')
-}
-
-// Hash of what the client accepted at the delivery report (PV de recette):
-// the contract it belongs to, what was delivered, and the reserves stated.
-export function computeAcceptanceHash(doc: QuoteRecord, reserves: string, acceptedAt: Date): string {
-  const canonical = JSON.stringify({
-    numero: doc.numero,
-    contractHash: doc.signature?.documentHash ?? '',
-    items: doc.items,
-    delivery: doc.delivery ? { deliveredAt: iso(doc.delivery.deliveredAt), note: doc.delivery.note ?? '', liveUrl: doc.delivery.liveUrl ?? '' } : null,
-    reserves,
-    acceptedAt: acceptedAt.toISOString(),
-  })
-  return createHash('sha256').update(canonical).digest('hex')
-}
-
-export function isExpired(doc: Pick<QuoteRecord, 'dateEmission' | 'validiteJours'>): boolean {
-  const expiry = new Date(doc.dateEmission)
-  expiry.setDate(expiry.getDate() + doc.validiteJours)
-  return Date.now() > expiry.getTime()
-}
+export { computeDocumentHash, computeAcceptanceHash, isExpired } from '@/lib/quote-hash'
 
 export type QuoteDocumentVariant = 'devis' | 'contrat' | 'pv'
 

@@ -3,19 +3,19 @@
 import { ObjectId } from 'mongodb'
 import { after } from 'next/server'
 import { headers } from 'next/headers'
-import { put } from '@vercel/blob'
+import { uploadPublicImage } from '@/lib/blob-upload'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
-import {
-  quoteNotificationEmail, quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail,
-  quoteSignedClientEmail, quoteSignedAdminEmail, quoteDeclinedAdminEmail,
-} from '@/lib/email-templates'
+import { loggedMailer } from '@/lib/mail-safe'
+import { quoteNotificationEmail, quoteSignedAdminEmail, quoteDeclinedAdminEmail } from '@/lib/email-templates'
+import { quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail, quoteSignedClientEmail } from '@/lib/email-client'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
 import { computeTotals, snapshotTerms, type QuoteTerms } from '@/lib/business'
+import { CURRENT_DOC_VERSION } from '@/lib/quote-document'
 import {
   quotesCol, generateAccessCode, generateSignToken, nextQuoteNumber, toQuote, withSignToken, checkRateLimit,
   computeDocumentHash, isExpired, buildQuoteAttachment, cleanBrief, cleanItems,
@@ -60,6 +60,8 @@ export interface QuotePayload {
   descriptionProjet: string
   items: QuoteItem[]
   brief?: QuoteBrief
+  // Language of the site version the client used: their emails and links follow it.
+  locale?: 'fr' | 'en'
 }
 
 export type QuoteStatus = 'pending' | 'accepted' | 'declined'
@@ -120,6 +122,9 @@ export interface Quote extends QuotePayload {
   // working days it adds to that contract's delivery delay.
   parentNumero?: string
   extraDelayDays?: number
+  // Version of the legal wording this quote was issued under (see
+  // CURRENT_DOC_VERSION in lib/quote-document.ts). Absent = version 1.
+  docVersion?: number
   // Commercial terms + provider identity frozen when the quote was issued.
   // Absent on quotes that predate them (see resolveTerms in lib/business).
   terms?: QuoteTerms
@@ -168,7 +173,7 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   const createdEvent: QuoteRecordEvent = { type: 'created', at: dateEmission }
 
   const { brief: _rawBrief, ...rest } = payload
-  const stored: QuotePayload = { ...rest, items, ...(brief ? { brief } : {}) }
+  const stored: QuotePayload = { ...rest, items, locale: payload.locale === 'en' ? 'en' : 'fr', ...(brief ? { brief } : {}) }
 
   const quote: Quote = {
     ...stored,
@@ -183,12 +188,13 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
     status: 'pending',
     kind: 'devis',
     terms,
+    docVersion: CURRENT_DOC_VERSION,
     events: [{ ...createdEvent, at: createdEvent.at.toISOString() }],
   }
 
-  await col.insertOne({
+  const { insertedId } = await col.insertOne({
     ...stored, numero, accessCode, signToken, dateEmission, validiteJours: VALIDITE_JOURS, totalHT, tva, totalTTC,
-    read: false, createdAt: new Date(), status: 'pending', kind: 'devis', terms, events: [createdEvent],
+    read: false, createdAt: new Date(), status: 'pending', kind: 'devis', terms, docVersion: CURRENT_DOC_VERSION, events: [createdEvent],
   })
 
   // Notify the admin (+ send the client their own copy if we already have an
@@ -196,7 +202,7 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   // delay the devis appearing in the chat.
   after(async () => {
     try {
-      const transporter = getTransporter()
+      const transporter = loggedMailer({ kind: 'devis', quoteId: insertedId.toString() })
       const adminEmail = await getAdminEmail()
       const attachments = await buildQuoteAttachment(quote, 'devis')
       const notification = quoteNotificationEmail(quote)
@@ -311,7 +317,7 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
 
   after(async () => {
     try {
-      const transporter = getTransporter()
+      const transporter = loggedMailer({ kind: quote.status === 'accepted' ? 'contrat' : 'devis', quoteId: doc._id.toString() })
       // signToken is guaranteed here — withSignToken() above never returns
       // without one.
       const clientCopy = quoteClientCopyEmail({ ...quote, signToken: quote.signToken! }, await getAdminEmail())
@@ -416,13 +422,7 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
 
   let imageUrl: string
   try {
-    const buffer = Buffer.from(base64, 'base64')
-    const blob = await put(`signatures/${doc._id.toString()}-${Date.now()}.png`, buffer, {
-      access: 'public',
-      contentType: 'image/png',
-      addRandomSuffix: true,
-    })
-    imageUrl = blob.url
+    imageUrl = await uploadPublicImage(`signatures/${doc._id.toString()}-${Date.now()}.png`, Buffer.from(base64, 'base64'))
   } catch (e) {
     console.error('[signQuote] blob upload error:', e)
     return { ok: false, error: "Erreur lors de l'enregistrement de la signature." }
@@ -455,7 +455,7 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
 
   after(async () => {
     try {
-      const transporter = getTransporter()
+      const transporter = loggedMailer({ kind: 'contrat', quoteId: doc._id.toString() })
       const adminEmail = await getAdminEmail()
       const attachments = await buildQuoteAttachment(quote, 'contrat')
       const clientMail = quoteSignedClientEmail(quote, adminEmail)
@@ -499,7 +499,7 @@ export async function declineQuote(token: string): Promise<SignActionResult> {
 
   after(async () => {
     try {
-      const transporter = getTransporter()
+      const transporter = loggedMailer({ kind: 'admin', quoteId: doc._id.toString() })
       const adminMail = quoteDeclinedAdminEmail(quote)
       await transporter.sendMail({ from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`, to: await getAdminEmail(), subject: adminMail.subject, html: adminMail.html })
     } catch (e) {
@@ -515,7 +515,7 @@ export async function declineQuote(token: string): Promise<SignActionResult> {
 export async function listQuotes(): Promise<AdminQuote[]> {
   await requireAdmin()
   const col = await quotesCol()
-  const docs = await col.find({}).sort({ createdAt: -1 }).limit(200).toArray()
+  const docs = await col.find({}).sort({ createdAt: -1 }).limit(1000).toArray()
   return Promise.all(docs.map(async (rawDoc) => {
     const doc = await withSignToken(col, rawDoc)
     // A delivery recorded before PV links had their own token gets one now.
@@ -559,7 +559,7 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus): Promis
     const quote = toQuote({ ...doc, status })
     after(async () => {
       try {
-        const transporter = getTransporter()
+        const transporter = loggedMailer({ kind: 'contrat', quoteId: id })
         const adminEmail = await getAdminEmail()
         const attachments = await buildQuoteAttachment(quote, 'contrat')
         const email = quoteAcceptedEmail(quote, adminEmail)
@@ -591,7 +591,7 @@ export async function requestTestimonial(id: string): Promise<{ ok: boolean; mes
   try {
     const transporter = getTransporter()
     const adminEmail = await getAdminEmail()
-    const email = testimonialRequestEmail({ clientNom: doc.clientNom, numero: doc.numero }, adminEmail)
+    const email = testimonialRequestEmail({ clientNom: doc.clientNom, numero: doc.numero, locale: doc.locale }, adminEmail)
     await transporter.sendMail({
       from: `"${doc.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`,
       to: doc.clientEmail,

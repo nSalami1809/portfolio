@@ -22,6 +22,8 @@ export default function Navbar({ locale, t }: NavbarProps) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
+  // Dropdown opened by a tap (touch screens have no hover) or a click.
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
   const links = [
     {
@@ -132,7 +134,17 @@ export default function Navbar({ locale, t }: NavbarProps) {
   }, [])
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setOpen(false) }, [pathname])
+  useEffect(() => { setOpen(false); setMenuOpen(null) }, [pathname])
+
+  // A tap (or click) anywhere outside an open dropdown closes it.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!(e.target as Element | null)?.closest?.('[data-nav-dropdown]')) setMenuOpen(null)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [menuOpen])
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -189,11 +201,39 @@ export default function Navbar({ locale, t }: NavbarProps) {
                 const isActive = pathname === href || !!children?.some((c) => pathname === c.href)
                 const isHovered = hovered === href
                 return (
-                  <li key={href} className="relative group">
+                  <li
+                    key={href}
+                    className="relative group"
+                    data-nav-dropdown={children ? '' : undefined}
+                    onKeyDown={children ? (e) => {
+                      if (e.key === 'Escape') {
+                        setMenuOpen(null)
+                        // Dropping focus is what hides the keyboard-focus panel.
+                        ;(document.activeElement as HTMLElement | null)?.blur()
+                      }
+                    } : undefined}
+                  >
                     <Link
                       href={href}
                       onMouseEnter={() => setHovered(href)}
                       aria-current={isActive ? 'page' : undefined}
+                      aria-haspopup={children ? 'menu' : undefined}
+                      aria-expanded={children ? menuOpen === href : undefined}
+                      onClick={children ? (e) => {
+                        // No hover on a touch screen: the first tap opens the
+                        // menu instead of navigating; a second tap closes it.
+                        // (With a mouse, hover already shows it and a click
+                        // goes to the page.)
+                        if (window.matchMedia('(hover: none)').matches) {
+                          e.preventDefault()
+                          if (menuOpen === href) {
+                            setMenuOpen(null)
+                            e.currentTarget.blur()
+                          } else {
+                            setMenuOpen(href)
+                          }
+                        }
+                      } : undefined}
                       className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150"
                       style={{
                         background: isActive ? 'var(--accent)' : isHovered ? 'var(--surface-hover)' : 'transparent',
@@ -210,7 +250,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                       </span>
                       {label}
                       {children && (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform duration-150 group-hover:rotate-180 group-focus-within:rotate-180">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`transition-transform duration-150 group-focus-within:rotate-180 [@media(hover:hover)]:group-hover:rotate-180 ${menuOpen === href ? 'rotate-180' : ''}`}>
                           <polyline points="6 9 12 15 18 9" />
                         </svg>
                       )}
@@ -218,7 +258,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                     {children && (
                       // The top padding bridges the gap between the entry and
                       // the panel so the pointer never leaves the hover area.
-                      <div className="absolute left-0 top-full pt-2 hidden group-hover:block group-focus-within:block" style={{ zIndex: 60 }}>
+                      <div className={`absolute left-0 top-full pt-2 ${menuOpen === href ? 'block' : 'hidden'} [@media(hover:hover)]:group-hover:block group-focus-within:block`} style={{ zIndex: 60 }}>
                         <ul
                           className="py-1.5"
                           style={{ minWidth: 220, border: '1px solid var(--border)', background: 'var(--bg)', boxShadow: '0 12px 32px rgba(0,0,0,0.25)' }}

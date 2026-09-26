@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
-import { getProjectTracking, type ProjectTracking, type TrackState } from '@/actions/tracking'
+import { getProjectTracking, type ProjectTracking } from '@/actions/tracking'
+import type { TrackState } from '@/lib/tracking-steps'
 
 const STATE_COLOR: Record<TrackState, string> = {
   done: '#008000',

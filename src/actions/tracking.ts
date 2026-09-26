@@ -3,21 +3,10 @@
 import { getDb } from '@/lib/mongodb'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { resolveTerms } from '@/lib/business'
-import { addBusinessDays, RECETTE_DAYS } from '@/lib/quote-document'
+import { computeTrackSteps, type TrackStep } from '@/lib/tracking-steps'
 import { quotesCol, toQuote, checkRateLimit, isExpired } from '@/lib/quotes-core'
 
 const TRACK_RATE_LIMIT_PER_HOUR = 30
-
-export type TrackKey = 'issued' | 'signed' | 'deposit' | 'build' | 'delivered' | 'acceptance' | 'balance' | 'warranty'
-export type TrackState = 'done' | 'current' | 'pending' | 'blocked'
-
-// Language-neutral: the page turns keys + data into sentences (fr/en).
-export interface TrackStep {
-  key: TrackKey
-  state: TrackState
-  at?: string
-  data?: { outcome?: 'declined' | 'expired' | 'reserves' | 'clean' | 'issued' | 'paid' | 'deemed'; days?: number; until?: string }
-}
 
 export interface ProjectTracking {
   numero: string
@@ -56,7 +45,6 @@ export async function getProjectTracking(code: string, locale: string): Promise<
   if (!doc) return { ok: false, error: 'notfound' }
   const quote = toQuote(doc)
   const terms = resolveTerms(quote, defaultPersonalInfo)
-  const hasDeposit = terms.depositPercent > 0 && terms.depositPercent < 100
   const lang = locale === 'en' ? 'en' : 'fr'
 
   const db = await getDb()
@@ -64,70 +52,9 @@ export async function getProjectTracking(code: string, locale: string): Promise<
   const deposit = invoices.find((i) => i.kind === 'acompte')
   const balance = invoices.find((i) => i.kind === 'solde')
 
-  const accepted = quote.status === 'accepted'
-  const declined = quote.status === 'declined'
-  const expired = !accepted && !declined && isExpired({ dateEmission: new Date(quote.dateEmission), validiteJours: quote.validiteJours })
-
-  type Draft = Omit<TrackStep, 'state'> & { done: boolean; blocked?: boolean }
-  const drafts: Draft[] = []
-
-  drafts.push({ key: 'issued', done: true, at: quote.dateEmission })
-  drafts.push({
-    key: 'signed',
-    done: accepted,
-    blocked: declined || expired,
-    at: quote.signature?.signedAt,
-    data: declined ? { outcome: 'declined' } : expired ? { outcome: 'expired' } : undefined,
-  })
-  if (hasDeposit) {
-    drafts.push({
-      key: 'deposit',
-      done: deposit?.status === 'paid',
-      at: deposit?.payment ? iso(deposit.payment.paidAt) : undefined,
-      data: { outcome: deposit ? (deposit.status === 'paid' ? 'paid' : 'issued') : undefined },
-    })
-  }
-  drafts.push({ key: 'build', done: !!quote.delivery, data: { days: terms.deliveryDays + (quote.extraDelayDays ?? 0) } })
-  drafts.push({ key: 'delivered', done: !!quote.delivery, at: quote.delivery?.deliveredAt })
-
-  const deemedAt = quote.delivery ? addBusinessDays(quote.delivery.deliveredAt, RECETTE_DAYS) : undefined
-  const deemed = !quote.acceptance && !!deemedAt && deemedAt.getTime() < Date.now()
-  drafts.push({
-    key: 'acceptance',
-    done: !!quote.acceptance || deemed,
-    at: quote.acceptance?.signedAt ?? (deemed ? deemedAt!.toISOString() : undefined),
-    data: quote.acceptance
-      ? { outcome: quote.acceptance.reserves ? 'reserves' : 'clean' }
-      : deemed
-        ? { outcome: 'deemed' }
-        : deemedAt ? { until: deemedAt.toISOString() } : undefined,
-  })
-  drafts.push({
-    key: 'balance',
-    done: balance?.status === 'paid',
-    at: balance?.payment ? iso(balance.payment.paidAt) : undefined,
-    data: { outcome: balance ? (balance.status === 'paid' ? 'paid' : 'issued') : undefined },
-  })
-  if (terms.warrantyDays > 0) {
-    const end = quote.delivery ? new Date(new Date(quote.delivery.deliveredAt).getTime() + terms.warrantyDays * 86_400_000) : undefined
-    drafts.push({
-      key: 'warranty',
-      done: !!end && end.getTime() < Date.now(),
-      data: { days: terms.warrantyDays, until: end?.toISOString() },
-    })
-  }
-
-  // Exactly one step is "current": the first one that is neither done nor
-  // blocked (a declined/expired quote blocks everything after it).
-  let currentTaken = false
-  let stopped = false
-  const steps: TrackStep[] = drafts.map((d) => {
-    if (d.blocked) { stopped = true; return { key: d.key, state: 'blocked', at: d.at, data: d.data } }
-    if (d.done) return { key: d.key, state: 'done', at: d.at, data: d.data }
-    if (stopped || currentTaken) return { key: d.key, state: 'pending', at: d.at, data: d.data }
-    currentTaken = true
-    return { key: d.key, state: 'current', at: d.at, data: d.data }
-  })
+  const expired = quote.status === 'pending' && isExpired({ dateEmission: new Date(quote.dateEmission), validiteJours: quote.validiteJours })
+  const progress = (inv?: InvoiceRow) => inv ? { status: inv.status, paidAt: inv.payment ? iso(inv.payment.paidAt) : undefined } : undefined
+  const steps = computeTrackSteps({ quote, terms, expired, deposit: progress(deposit), balance: progress(balance), now: Date.now() })
 
   const avenantDocs = quote.kind === 'devis'
     ? await col.find({ parentNumero: quote.numero }).sort({ createdAt: 1 }).toArray()
