@@ -7,6 +7,7 @@ import { defaultPersonalInfo, defaultSocials } from '@/data/defaultData'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
+import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd'
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))
@@ -39,8 +40,12 @@ export default async function LocaleLayout({
   const socials = portfolio?.socials ?? defaultSocials
   const { role } = await translateFields('personal:role', locale, { role: personal.role })
 
+  // The root <html> element cannot know the URL's language without making
+  // every page dynamic, so the language is declared on the public tree itself:
+  // screen readers and translation tools honour the nearest `lang` ancestor.
   return (
-    <>
+    <div lang={locale} style={{ display: 'contents' }}>
+      <BreadcrumbJsonLd locale={locale} t={t.nav} />
       {/* Visible only once focused, so keyboard and screen-reader users can
           jump past the nine-item nav on every page. */}
       <a
@@ -61,6 +66,6 @@ export default async function LocaleLayout({
         t={{ nav: t.nav, footer: t.footer }}
         role={role}
       />
-    </>
+    </div>
   )
 }

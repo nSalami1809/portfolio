@@ -8,6 +8,7 @@ import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import BlogPostView from './BlogPostView'
 import NotFoundMessage from '@/components/NotFoundMessage'
 import { LOCALES } from '@/lib/i18n/locale'
+import { pageMeta } from '@/lib/seo'
 
 // Regenerate at most once every 30s, matching every sibling route;
 // invalidated instantly on admin publish via updateTag('portfolio').
@@ -29,28 +30,36 @@ async function getPost(slug: string) {
   return posts.find((p) => p.slug === slug && p.published) ?? null
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
+  const { slug, locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const post = await getPost(slug)
   if (!post) return { robots: { index: false, follow: false } }
 
-  return {
-    title: post.title,
-    description: post.excerpt,
-    authors: post.author ? [{ name: post.author }] : undefined,
-    openGraph: {
-      type: 'article',
-      title: post.title,
-      description: post.excerpt,
-      publishedTime: post.date,
-      authors: post.author ? [post.author] : undefined,
+  // Same cached translation the page itself uses: the title and description
+  // shown in search results are in the language of the page.
+  const translated = await translateFields(`blog:${slug}`, locale, { title: post.title, excerpt: post.excerpt, content: post.content })
+
+  return pageMeta({
+    locale,
+    path: `/blog/${slug}`,
+    title: translated.title,
+    description: translated.excerpt,
+    image: post.coverImage || undefined,
+    type: 'article',
+    extra: {
+      authors: post.author ? [{ name: post.author }] : undefined,
+      openGraph: {
+        type: 'article',
+        url: `/${locale}/blog/${slug}`,
+        title: translated.title,
+        description: translated.excerpt,
+        publishedTime: post.date,
+        authors: post.author ? [post.author] : undefined,
+        ...(post.coverImage ? { images: [{ url: post.coverImage }] } : {}),
+      },
     },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.excerpt,
-    },
-  }
+  })
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {

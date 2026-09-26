@@ -4,7 +4,7 @@
 // none of what is below (collection handles, hashing, rate limiting, PDF
 // attachment building) should ever be callable from a browser.
 import { randomBytes } from 'crypto'
-import type { WithId } from 'mongodb'
+import type { Collection, WithId } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 import { getClientIp } from '@/lib/client-ip'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
@@ -14,8 +14,8 @@ import type { QuoteTerms } from '@/lib/business'
 import type { Quote, QuotePayload, QuoteStatus, QuoteEventType, QuoteKind, QuoteBrief, QuoteItem } from '@/actions/quotes'
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
-export const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids visual ambiguity when read aloud
-export const SIGN_TOKEN_BYTES = 32 // 256 bits — the public /devis/signature/[token] link must be unguessable
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids visual ambiguity when read aloud
+const SIGN_TOKEN_BYTES = 32 // 256 bits — the public /devis/signature/[token] link must be unguessable
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 export const MAX_SIGNATURE_DECODED_BYTES = 500 * 1024 // a canvas signature is a few KB; this is a generous cap against abuse
 export const SIGNATURE_DATA_URL_PREFIX = 'data:image/png;base64,'
@@ -102,8 +102,28 @@ export function cleanItems(items: QuoteItem[]): QuoteItem[] {
   })
 }
 
-export function quotesCol() {
-  return getDb().then((db) => db.collection<QuoteRecord>('quotes'))
+// Lookups are all by a private code / token / numero — index them so they stay
+// instant as the collection grows, and make `numero` unique so a race can never
+// hand out the same number twice. Created once per server instance, off the
+// request path (createIndex is idempotent; a failure just means "no index yet").
+let quoteIndexes: Promise<unknown> | null = null
+function ensureQuoteIndexes(col: Collection<QuoteRecord>) {
+  if (!quoteIndexes) {
+    quoteIndexes = Promise.all([
+      col.createIndex({ numero: 1 }, { unique: true }),
+      col.createIndex({ accessCode: 1 }),
+      col.createIndex({ signToken: 1 }),
+      col.createIndex({ 'delivery.token': 1 }, { sparse: true }),
+      col.createIndex({ parentNumero: 1 }, { sparse: true }),
+      col.createIndex({ createdAt: -1 }),
+    ]).catch((e) => console.error('[quotes] index creation failed:', e))
+  }
+}
+
+export async function quotesCol() {
+  const col = (await getDb()).collection<QuoteRecord>('quotes')
+  ensureQuoteIndexes(col)
+  return col
 }
 
 export function generateAccessCode(length = 6): string {
@@ -118,13 +138,21 @@ export function generateSignToken(): string {
 }
 
 // DEV-2026-001 for a devis, AVN-2026-001 for an avenant — one counter per
-// prefix and year.
+// prefix and year. The counter is bumped atomically (two quotes created at the
+// same instant can never share a number) and seeded, the first time, from the
+// quotes that already exist.
 export async function nextQuoteNumber(kind: QuoteKind = 'devis'): Promise<string> {
   const col = await quotesCol()
+  const db = await getDb()
   const year = new Date().getFullYear()
   const prefix = kind === 'avenant' ? 'AVN' : 'DEV'
-  const count = await col.countDocuments({ numero: { $regex: `^${prefix}-${year}-` } })
-  return `${prefix}-${year}-${String(count + 1).padStart(3, '0')}`
+  const existing = await col.countDocuments({ numero: { $regex: `^${prefix}-${year}-` } })
+  const counter = await db.collection<{ _id: string; seq: number }>('counters').findOneAndUpdate(
+    { _id: `quote-${prefix}-${year}` },
+    [{ $set: { seq: { $add: [{ $ifNull: ['$seq', existing] }, 1] } } }],
+    { upsert: true, returnDocument: 'after' },
+  )
+  return `${prefix}-${year}-${String(counter?.seq ?? existing + 1).padStart(3, '0')}`
 }
 
 const iso = (d: Date | string) => (d instanceof Date ? d.toISOString() : d)

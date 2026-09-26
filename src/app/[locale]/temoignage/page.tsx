@@ -2,9 +2,12 @@ import FadeIn from '@/components/animations/FadeIn'
 import TestimonialForm from '@/components/sections/TestimonialForm'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import { pageMeta } from '@/lib/seo'
 
-export async function generateMetadata() {
-  return { title: 'Témoignage' }
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  return pageMeta({ locale, path: '/temoignage', title: locale === 'en' ? 'Leave a review' : 'Laisser un avis', extra: { robots: { index: false, follow: true } } })
 }
 
 export default async function TestimonialPage({ params }: { params: Promise<{ locale: string }> }) {

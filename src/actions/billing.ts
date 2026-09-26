@@ -105,9 +105,20 @@ async function providerSignatureUrl(): Promise<string | undefined> {
   return (portfolio?.personal ?? defaultPersonalInfo).signatureUrl || undefined
 }
 
+let invoiceIndexes: Promise<unknown> | null = null
+
 async function invoicesCol() {
   const db = await getDb()
-  return db.collection<InvoiceRecord>('invoices')
+  const col = db.collection<InvoiceRecord>('invoices')
+  if (!invoiceIndexes) {
+    // Once per instance, off the request path; a failure just means "no index yet".
+    invoiceIndexes = Promise.all([
+      col.createIndex({ numero: 1 }, { unique: true }),
+      col.createIndex({ quoteNumero: 1 }),
+      col.createIndex({ status: 1, issuedAt: -1 }),
+    ]).catch((e) => console.error('[invoices] index creation failed:', e))
+  }
+  return col
 }
 
 export type BillingResult = { ok: true; message: string; invoice?: Invoice } | { ok: false; message: string }

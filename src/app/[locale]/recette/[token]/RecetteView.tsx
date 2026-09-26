@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import FadeIn from '@/components/animations/FadeIn'
-import { usePortfolio } from '@/providers/PortfolioContext'
+import { usePortfolio } from '@/providers/portfolio-core'
 import { getAcceptanceByToken } from '@/actions/lifecycle'
 import type { Quote } from '@/actions/quotes'
 import AcceptanceCard from './AcceptanceCard'

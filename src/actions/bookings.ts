@@ -199,8 +199,8 @@ function invalidateBookingSlots() {
   }
 }
 
-// Single day — used by the public slot picker and the chatbot.
-export async function getDaySlots(dateISO: string): Promise<string[]> {
+// Single day — used internally when booking / cancelling.
+async function getDaySlots(dateISO: string): Promise<string[]> {
   const map = await computeSlots(dateISO, dateISO)
   return map[dateISO] ?? []
 }

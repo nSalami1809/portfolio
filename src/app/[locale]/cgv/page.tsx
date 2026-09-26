@@ -3,6 +3,7 @@ import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { frNumber, identityLines, resolveBusiness, type ResolvedBusiness } from '@/lib/business'
+import { pageMeta } from '@/lib/seo'
 import {
   deliveryDelayParagraphs, hostingParagraph, intellectualPropertyParagraphs, parseLocation, recetteParagraphs, revisionsParagraphs,
   RECETTE_DAYS,
@@ -10,8 +11,12 @@ import {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params
-  const isEn = (isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE) === 'en'
-  return { title: isEn ? 'Terms of sale' : 'Conditions générales de vente' }
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  return pageMeta({
+    locale, path: '/cgv',
+    title: locale === 'en' ? 'Terms of sale' : 'Conditions générales de vente',
+    description: locale === 'en' ? 'General terms of sale: quotes, payment, lead times, revisions, warranty, intellectual property.' : 'Conditions générales de vente : devis, paiement, délais, révisions, garantie, propriété intellectuelle.',
+  })
 }
 
 interface Section { h: string; b: string[] }

@@ -6,6 +6,7 @@ import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { defaultVision } from '@/data/defaultData'
 import type { VisionData } from '@/types'
 import VisionView from './VisionView'
+import { pageMeta } from '@/lib/seo'
 
 export const revalidate = 30
 
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
-  return { title: t.vision.title }
+  return pageMeta({ locale, path: '/vision', title: t.vision.title })
 }
 
 export default async function VisionPage({ params }: { params: Promise<{ locale: string }> }) {

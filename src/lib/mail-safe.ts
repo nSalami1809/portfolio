@@ -61,6 +61,7 @@ export async function sendMailLogged(message: SendMailOptions, ctx: MailContext,
       try {
         const adminEmail = await getAdminEmail()
         const db = await getDb()
+        void db.collection('mail_failures').createIndex({ resolved: 1, createdAt: -1 }).catch(() => {})
         await db.collection<MailFailure>('mail_failures').insertOne({
           // An email to the admin themselves cannot be "retried for the client".
           kind: to === adminEmail ? 'admin' : ctx.kind,

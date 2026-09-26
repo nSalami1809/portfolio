@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer, Availability } from '@/types'
 import {
   defaultPersonalInfo,
@@ -17,10 +17,15 @@ import {
   defaultAvailability,
 } from '@/data/defaultData'
 import { publishPortfolio, fetchPortfolio, fetchPortfolioFresh } from '@/actions/portfolio'
+import { PortfolioContext, type PortfolioContextValue } from './portfolio-core'
+
+// Admin code imports these from here; the public tree imports them from
+// portfolio-core directly so it never loads this (heavy) module.
+export { usePortfolio } from './portfolio-core'
 
 const STORAGE_KEY = 'portfolio-data'
 
-export const defaultPortfolioData: PortfolioData = {
+const defaultPortfolioData: PortfolioData = {
   personal: defaultPersonalInfo,
   socials: defaultSocials,
   projects: defaultProjects,
@@ -35,88 +40,7 @@ export const defaultPortfolioData: PortfolioData = {
   availability: defaultAvailability,
 }
 
-interface PortfolioContextValue {
-  data: PortfolioData
-  updatePersonal: (info: PersonalInfo) => void
-  updateSocials: (socials: SocialLinks) => void
-  updateProjects: (projects: Project[]) => void
-  updateExperiences: (experiences: Experience[]) => void
-  updateEducations: (educations: Education[]) => void
-  updateSkills: (skills: Skill[]) => void
-  updateTestimonials: (testimonials: Testimonial[]) => void
-  updateSettings: (settings: SiteSettings) => void
-  updateVision: (vision: VisionData) => void
-  updateBlogPosts: (blog: BlogPost[]) => void
-  updateOffers: (offers: Offer[]) => void
-  updateAvailability: (availability: Availability) => void
-  resetAll: () => void
-}
-
-const noop = () => {}
-
-// Non-null default so SSR never throws when the provider isn't mounted yet.
-// The real values are provided by PortfolioProvider once hydrated.
-const PortfolioContext = createContext<PortfolioContextValue>({
-  data: defaultPortfolioData,
-  updatePersonal: noop,
-  updateSocials: noop,
-  updateProjects: noop,
-  updateExperiences: noop,
-  updateEducations: noop,
-  updateSkills: noop,
-  updateTestimonials: noop,
-  updateSettings: noop,
-  updateVision: noop,
-  updateBlogPosts: noop,
-  updateOffers: noop,
-  updateAvailability: noop,
-  resetAll: noop,
-})
-
 type Key = keyof PortfolioData
-
-// Read-only provider for the PUBLIC site.
-//
-// PortfolioProvider below exists for the admin editor: it fetches, polls every
-// 45s, re-fetches on focus/visibilitychange and publishes back. Mounting it in
-// the root layout meant every anonymous visitor paid for all of that — a
-// Server Action POST (never CDN-cacheable, a full server render + Mongo-backed
-// cache read each time) on mount, on every tab focus, on every visibility
-// change and once every 45 seconds, forever, just to re-derive data the server
-// had already rendered into the page.
-//
-// The public tree now gets the data as a plain prop, resolved server-side at
-// the page's own ISR cadence. Same context object, so every existing
-// `usePortfolio()` consumer keeps working unchanged — it just never hits the
-// network, and the values are correct in the SSR HTML instead of arriving a
-// round trip after hydration. Admin pages nest the real provider inside this
-// one, so `usePortfolio()` there still resolves to the editable version.
-export function PortfolioStaticProvider({
-  data,
-  children,
-}: {
-  data: PortfolioData
-  children: React.ReactNode
-}) {
-  const value = useMemo<PortfolioContextValue>(() => ({
-    data,
-    updatePersonal: noop,
-    updateSocials: noop,
-    updateProjects: noop,
-    updateExperiences: noop,
-    updateEducations: noop,
-    updateSkills: noop,
-    updateTestimonials: noop,
-    updateSettings: noop,
-    updateVision: noop,
-    updateBlogPosts: noop,
-    updateOffers: noop,
-    updateAvailability: noop,
-    resetAll: noop,
-  }), [data])
-
-  return <PortfolioContext.Provider value={value}>{children}</PortfolioContext.Provider>
-}
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<PortfolioData>(defaultPortfolioData)
@@ -303,6 +227,3 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function usePortfolio() {
-  return useContext(PortfolioContext)
-}

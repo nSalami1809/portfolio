@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
-import { usePortfolio } from '@/providers/PortfolioContext'
+import { usePortfolio } from '@/providers/portfolio-core'
 import {
   buildDevisBlocks, buildContractBlocks, buildAvenantBlocks, briefEntries, devisAcceptanceLabel, documentKind,
   parseLocation, CONTRACT_SIGNATURE_LABEL, DOCUMENT_TITLE, type DocBlock,

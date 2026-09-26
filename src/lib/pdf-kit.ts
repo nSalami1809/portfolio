@@ -7,7 +7,7 @@ import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFImage, 
 import type { DocBlock } from '@/lib/quote-document'
 
 export const PAGE_WIDTH = 595.28 // A4 in points
-export const PAGE_HEIGHT = 841.89
+const PAGE_HEIGHT = 841.89
 export const MARGIN = 48
 export const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2
 export const INK = rgb(0.07, 0.07, 0.07)
@@ -15,8 +15,8 @@ export const MUTED = rgb(0.33, 0.33, 0.33)
 export const SUBTLE = rgb(0.55, 0.55, 0.55)
 export const BORDER = rgb(0.85, 0.85, 0.85)
 export const WHITE = rgb(1, 1, 1)
-export const SOFT = rgb(0.96, 0.96, 0.96)
-export const ZEBRA = rgb(0.97, 0.97, 0.97)
+const SOFT = rgb(0.96, 0.96, 0.96)
+const ZEBRA = rgb(0.97, 0.97, 0.97)
 
 // pdf-lib's standard fonts only encode WinAnsi (cp1252) — safe for French
 // accents and typographic dashes/quotes, but a stray character outside that
@@ -58,7 +58,7 @@ export async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
   }
 }
 
-export function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   const words = safeText(text).split(/\s+/).filter(Boolean)
   const lines: string[] = []
   let current = ''

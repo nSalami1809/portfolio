@@ -993,7 +993,7 @@ console.log("Final price:", finalPrice + " FCFA");
   },
 }
 
-export const dictionaries = { fr, en } satisfies Record<Locale, typeof fr>
+const dictionaries = { fr, en } satisfies Record<Locale, typeof fr>
 
 export type Dictionary = typeof fr
 

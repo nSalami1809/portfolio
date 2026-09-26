@@ -5,6 +5,7 @@ import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { defaultPersonalInfo, defaultExperiences, defaultEducations, defaultSkills } from '@/data/defaultData'
 import ResumeView from './ResumeView'
+import { pageMeta } from '@/lib/seo'
 
 // Regenerate at most once every 30s — same trade-off as the homepage and
 // /offres: an admin publish can take up to 30s to show here instead of the
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
-  return { title: t.resume.title, description: t.resume.subtitle }
+  return pageMeta({ locale, path: '/resume', title: t.resume.title, description: t.resume.subtitle })
 }
 
 export default async function ResumePage({ params }: { params: Promise<{ locale: string }> }) {

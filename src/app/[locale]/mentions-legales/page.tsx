@@ -4,8 +4,13 @@ import { defaultPersonalInfo } from '@/data/defaultData'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { identityLines, resolveBusiness, type ResolvedBusiness } from '@/lib/business'
 import { parseLocation } from '@/lib/quote-document'
+import { pageMeta } from '@/lib/seo'
 
-export const metadata: Metadata = { robots: { index: false, follow: true } }
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  return pageMeta({ locale, path: '/mentions-legales', title: locale === 'en' ? 'Legal notice' : 'Mentions légales', extra: { robots: { index: false, follow: true } } })
+}
 
 function content(locale: 'fr' | 'en', name: string, email: string, location: string, b: ResolvedBusiness) {
   const identity = identityLines(b).join(' · ')

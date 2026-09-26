@@ -11,6 +11,8 @@ import { jsonLdScript } from '@/lib/json-ld'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE, type Locale } from '@/lib/i18n/locale'
 import type { Testimonial } from '@/types'
+import type { Metadata } from 'next'
+import { pageMeta, HOME_COPY } from '@/lib/seo'
 import {
   defaultPersonalInfo,
   defaultSocials,
@@ -62,6 +64,17 @@ async function TranslatedTestimonials({
   )
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  const { title, description } = HOME_COPY[locale]
+  return {
+    ...pageMeta({ locale, title, description }),
+    // The home page carries the full "Name — role" title, without the "| Name" suffix.
+    title: { absolute: `Nawaf Nemrod Salami — ${title}` },
+  }
+}
+
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
@@ -110,6 +123,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         address: personal.location ? { '@type': 'PostalAddress', addressLocality: personal.location } : undefined,
         knowsAbout: skills.flatMap((s) => s.items),
         knowsLanguage: ['fr', 'en'],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: personal.name,
+        inLanguage: ['fr', 'en'],
+        publisher: { '@id': `${siteUrl}/#person` },
       },
       {
         '@type': 'ProfessionalService',

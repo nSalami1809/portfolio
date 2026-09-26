@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import FadeIn from '@/components/animations/FadeIn'
-import { usePortfolio } from '@/providers/PortfolioContext'
 import { useLocale } from '@/lib/i18n/useLocale'
 import { submitQuote, lookupQuote } from '@/actions/quotes'
 import type { Quote, QuoteBrief } from '@/actions/quotes'
@@ -16,6 +15,8 @@ const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: fa
 
 interface Props {
   t: Dictionary['devis']
+  // Resolved server-side by the page — the public context no longer carries the offers.
+  offers: Offer[]
 }
 
 const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
@@ -52,16 +53,15 @@ function tierLabel(t: Dictionary['devis'], tier: Tier): string {
 interface Selection { qty: number; tier: Tier }
 const DEFAULT_SELECTION: Selection = { qty: 0, tier: 'standard' }
 
-export default function DevisView({ t }: Props) {
+export default function DevisView({ t, offers }: Props) {
   const locale = useLocale()
-  const { data } = usePortfolio()
   // Only offers with a full min/max range set can be picked here — offers
   // priced "sur devis" (priceLabel only) stay chat/contact-only.
   const priceableOffers = useMemo(
-    () => data.offers.filter((o) =>
+    () => offers.filter((o) =>
       typeof o.priceHTMin === 'number' && typeof o.priceHTMax === 'number' && o.priceHTMin > 0 && o.priceHTMax >= o.priceHTMin,
     ) as (Offer & { priceHTMin: number; priceHTMax: number })[],
-    [data.offers],
+    [offers],
   )
 
   const [form, setForm] = useState(EMPTY_FORM)

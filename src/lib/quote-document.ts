@@ -77,7 +77,7 @@ export const DOCUMENT_TITLE: Record<DocumentKind, string> = {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`
 
-export const BRIEF_LABELS = {
+const BRIEF_LABELS = {
   objectifs: 'Objectifs du projet',
   publicCible: 'Public visé',
   fonctionnalites: 'Fonctionnalités attendues',
@@ -195,7 +195,7 @@ function numbered(blocks: DocBlock[], start: number, style: 'section' | 'article
 // Sections 1–4 (prestataire, client, projet, détail) are rendered directly by
 // each consumer; this covers 5 onward. The acceptance block that follows is
 // numbered by acceptanceLabel().
-export const DEVIS_FIRST_BLOCK_NUMBER = 5
+const DEVIS_FIRST_BLOCK_NUMBER = 5
 
 function devisBlockDefs(quote: Quote, t: QuoteTerms, siteUrl: string): DocBlock[] {
   const { expiryStr } = computeQuoteDates(quote)

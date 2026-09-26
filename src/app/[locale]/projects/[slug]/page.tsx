@@ -8,6 +8,7 @@ import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import ProjectDetailView from './ProjectDetailView'
 import NotFoundMessage from '@/components/NotFoundMessage'
 import { LOCALES } from '@/lib/i18n/locale'
+import { pageMeta } from '@/lib/seo'
 
 // Regenerate at most once every 30s, matching every sibling route;
 // invalidated instantly on admin publish via updateTag('portfolio').
@@ -29,26 +30,29 @@ async function getProject(slug: string) {
   return projects.find((p) => p.slug === slug) ?? null
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
+  const { slug, locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const project = await getProject(slug)
   if (!project) return { robots: { index: false, follow: false } }
 
-  return {
+  const translated = await translateFields(`project:${slug}`, locale, {
     title: project.title,
     description: project.description,
-    openGraph: {
-      type: 'article',
-      title: project.title,
-      description: project.description,
-      images: project.image ? [{ url: project.image }] : undefined,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: project.title,
-      description: project.description,
-    },
-  }
+    longDescription: project.longDescription,
+    caseStudyContext: project.caseStudyContext ?? '',
+    caseStudySolution: project.caseStudySolution ?? '',
+    caseStudyResults: project.caseStudyResults ?? '',
+  })
+
+  return pageMeta({
+    locale,
+    path: `/projects/${slug}`,
+    title: translated.title,
+    description: translated.description,
+    image: project.image || undefined,
+    type: 'article',
+  })
 }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {

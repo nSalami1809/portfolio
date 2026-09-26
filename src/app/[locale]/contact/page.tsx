@@ -2,9 +2,13 @@ import FadeIn from '@/components/animations/FadeIn'
 import ContactForm from '@/components/sections/ContactForm'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import { pageMeta } from '@/lib/seo'
 
-export async function generateMetadata() {
-  return { title: 'Contact' }
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale: rawLocale } = await params
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  const t = getDictionary(locale)
+  return pageMeta({ locale, path: '/contact', title: 'Contact', description: t.contact.subtitle })
 }
 
 export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {

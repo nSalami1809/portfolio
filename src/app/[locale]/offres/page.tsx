@@ -6,14 +6,16 @@ import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import type { Metadata } from 'next'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import OffersView, { type TranslatedOffers } from './OffersView'
+import { pageMeta } from '@/lib/seo'
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params
-  const t = getDictionary(isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE)
-  return { title: t.offers.title, description: t.offers.subtitle }
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  const t = getDictionary(locale)
+  return pageMeta({ locale, path: '/offres', title: t.offers.title, description: t.offers.subtitle })
 }
 
 export default async function OffersPage({ params }: { params: Promise<{ locale: string }> }) {

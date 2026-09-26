@@ -77,7 +77,7 @@ export interface QuoteTerms extends ResolvedBusiness {
   provider: ProviderIdentity
 }
 
-export function providerIdentity(personal: PersonalInfo): ProviderIdentity {
+function providerIdentity(personal: PersonalInfo): ProviderIdentity {
   return {
     name: personal.name,
     role: personal.role,

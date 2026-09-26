@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { PortfolioStaticProvider, defaultPortfolioData } from '@/providers/PortfolioContext'
+import { PortfolioStaticProvider } from '@/providers/portfolio-core'
+import { emptyPublicPortfolio, slimPublicPortfolio } from '@/lib/public-portfolio'
+import { defaultPersonalInfo } from '@/data/defaultData'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import AdminGate from '@/components/AdminGate'
 import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
@@ -26,7 +28,7 @@ const poppins = Poppins({
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  // Variable font: one file covers every weight (it used to fetch four).
   display: 'swap',
 })
 
@@ -112,7 +114,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <MotionProvider>
-          <PortfolioStaticProvider data={portfolio ?? defaultPortfolioData}>
+          <PortfolioStaticProvider data={portfolio ? slimPublicPortfolio(portfolio) : { ...emptyPublicPortfolio, personal: defaultPersonalInfo }}>
             {children}
             <AdminGate />
             <ChatWidgetLoader />

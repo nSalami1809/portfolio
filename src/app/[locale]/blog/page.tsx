@@ -5,6 +5,7 @@ import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { defaultBlogPosts } from '@/data/defaultData'
 import BlogPageView from './BlogPageView'
+import { pageMeta } from '@/lib/seo'
 
 export const revalidate = 30
 
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
-  return { title: t.blog.title, description: t.blog.subtitle }
+  return pageMeta({ locale, path: '/blog', title: t.blog.title, description: t.blog.subtitle })
 }
 
 export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
