@@ -30,6 +30,7 @@ const EVENT_LABEL: Record<string, string> = {
   signed: 'Devis signé électroniquement',
   declined: 'Devis refusé par le client',
   status_changed: 'Statut modifié manuellement',
+  delay_changed: 'Délai de réalisation ajusté',
   delivered: 'Projet livré — procès-verbal envoyé',
   delivery_accepted: 'Procès-verbal de recette signé par le client',
   avenant_created: 'Avenant créé',

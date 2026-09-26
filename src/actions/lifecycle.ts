@@ -10,7 +10,7 @@ import { requireAdmin } from '@/lib/require-admin'
 import {
   deliveryEmail, acceptanceSignedClientEmail, acceptanceSignedAdminEmail, quoteClientCopyEmail,
 } from '@/lib/email-templates'
-import { computeTotals, snapshotTerms } from '@/lib/business'
+import { computeTotals, resolveTerms, snapshotTerms } from '@/lib/business'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
@@ -37,6 +37,35 @@ function cleanUrl(raw: string | undefined): string | undefined {
   try { parsed = new URL(v) } catch { throw new Error('Adresse (URL) invalide.') }
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('Adresse (URL) invalide.')
   return parsed.toString()
+}
+
+// The delivery delay depends on the size and constraints of each project, so
+// the default from the settings can be adjusted quote by quote — but only while
+// the quote is still an offer. Once the client has signed, the delay is part of
+// what they agreed to (and of the signed hash): changing it then needs an avenant.
+export async function updateQuoteDelay(quoteId: string, deliveryDays: number): Promise<LifecycleResult> {
+  await requireAdmin()
+  const days = Math.round(Number(deliveryDays))
+  if (!Number.isFinite(days) || days < 1 || days > 730) return { ok: false, message: 'Indiquez un délai entre 1 et 730 jours ouvrés.' }
+
+  const col = await quotesCol()
+  const doc = await col.findOne({ _id: new ObjectId(quoteId) })
+  if (!doc) return { ok: false, message: 'Devis introuvable.' }
+  if (doc.signature || (doc.status ?? 'pending') !== 'pending') {
+    return { ok: false, message: 'Ce devis est déjà signé, accepté ou refusé : pour modifier le délai, créez un avenant.' }
+  }
+
+  const portfolio = await fetchPortfolioSafe('updateQuoteDelay')
+  const previous = resolveTerms(doc, portfolio?.personal ?? defaultPersonalInfo)
+  if (previous.deliveryDays === days) return { ok: true, message: 'Délai inchangé.' }
+  const terms = { ...previous, deliveryDays: days }
+  const event: QuoteRecordEvent = { type: 'delay_changed', at: new Date(), meta: { from: String(previous.deliveryDays), to: String(days) } }
+  const result = await col.updateOne(
+    { _id: doc._id, signature: { $exists: false }, status: 'pending' },
+    { $set: { terms }, $push: { events: event } },
+  )
+  if (result.matchedCount === 0) return { ok: false, message: "Ce devis vient d'être signé ou modifié." }
+  return { ok: true, message: `Délai fixé à ${days} jours ouvrés. Le lien de signature l'affiche déjà ; un PDF envoyé avant ce changement indique l'ancien délai.` }
 }
 
 // ── Livraison → procès-verbal de recette ────────────────────────────────────

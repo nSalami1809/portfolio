@@ -111,15 +111,16 @@ function sectionsEn(name: string, b: ResolvedBusiness): Section[] {
     {
       h: '4. Lead time',
       b: [
-        `The lead time is ${b.deliveryDays} working days, starting on the later of receipt of the deposit (or first payment) and receipt of all content, access and information needed. It is suspended while the Client's validation or answers are pending. If the deadline is exceeded for a reason solely attributable to the Provider, the Client may give written notice; failing delivery within 15 days of that notice, the Client may terminate and be refunded the sums paid for undelivered work.`,
+        `The lead time is estimated at ${b.deliveryDays} working days, depending on the size and complexity of the project described in the quote, starting on the later of receipt of the deposit (or first payment) and receipt of all content, access and information needed. It is suspended while the Client's validation or answers are pending. If the deadline is exceeded for a reason solely attributable to the Provider, the Client may give written notice; failing delivery within 15 days of that notice, the Client may terminate and be refunded the sums paid for undelivered work.`,
       ],
     },
     {
       h: '5. Scope, revisions and changes',
       b: [
         b.includedRevisions > 0
-          ? `${b.includedRevisions} revision round${b.includedRevisions > 1 ? 's are' : ' is'} included per validation phase. A round is a single, consolidated batch of written change requests within the agreed scope.`
+          ? `${b.includedRevisions} revision round${b.includedRevisions > 1 ? 's are' : ' is'} included per validation phase. A round is a single, consolidated batch of written change requests sent at once after a delivery (e.g. round 1: “change the colour, edit a text, move a section”; round 2: the last corrections). Requests sent separately each count as a round.`
           : 'No revision round is included in the price; any change requested after delivery requires an amendment.',
+        'A revision adjusts what already exists (colours, texts, images, position or style of an element). It does not include adding new features, modules or structural pages, even when requested after validation: these are billed separately.',
         'Any additional change or out-of-scope request requires a signed amendment stating its price and effect on the lead time, and is carried out only once signed.',
       ],
     },

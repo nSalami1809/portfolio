@@ -133,8 +133,8 @@ export function paymentBlock(quote: Pick<Quote, 'totalTTC'>, t: ResolvedBusiness
 
 export function deliveryDelayParagraphs(t: ResolvedBusiness): string[] {
   return [
-    `Le délai de réalisation est de ${plural(t.deliveryDays, 'jour ouvré', 'jours ouvrés')}. Il court à compter de la dernière des deux dates suivantes : la réception de l'acompte (ou du premier paiement prévu), et la réception de l'ensemble des contenus, accès et informations nécessaires au projet.`,
-    "Ce délai est suspendu pendant les périodes de validation ou de réponse du Client, et prolongé d'autant en cas de retard dans la transmission des éléments à fournir.",
+    `Le délai de réalisation est estimé à ${plural(t.deliveryDays, 'jour ouvré', 'jours ouvrés')}, en fonction de la taille et de la complexité du projet décrit dans le devis. Il court à compter de la dernière des deux dates suivantes : la réception de l'acompte (ou du premier paiement prévu), et la réception de l'ensemble des contenus, accès et informations nécessaires au projet.`,
+    "Ce délai est suspendu pendant les périodes de validation ou de réponse du Client, et prolongé d'autant en cas de retard dans la transmission des éléments à fournir. Il est revu par avenant si le périmètre du projet évolue.",
     `Si le délai est dépassé pour une cause imputable exclusivement au Prestataire, le Client peut le mettre en demeure par écrit de livrer ; à défaut de livraison sous ${plural(FORMAL_NOTICE_DAYS, 'jour', 'jours')} à compter de cette mise en demeure, il peut résilier la prestation et obtenir le remboursement des sommes versées correspondant aux prestations non réalisées.`,
   ]
 }
@@ -142,10 +142,11 @@ export function deliveryDelayParagraphs(t: ResolvedBusiness): string[] {
 export function revisionsParagraphs(t: ResolvedBusiness): string[] {
   const included =
     t.includedRevisions > 0
-      ? `${plural(t.includedRevisions, 'cycle de révision est inclus', 'cycles de révision sont inclus')} par phase de validation. Un cycle correspond à un lot unique et regroupé de demandes de modification écrites, portant sur des éléments du périmètre déjà prévu, transmis après une livraison intermédiaire ou finale.`
+      ? `${plural(t.includedRevisions, 'cycle de révision est inclus', 'cycles de révision sont inclus')} par phase de validation. Un cycle est un lot unique et regroupé de demandes de modification écrites, transmis en une fois après une livraison intermédiaire ou finale (par exemple, au premier cycle : « changer la couleur, modifier un texte, déplacer une section » ; au second : les dernières corrections). Des demandes transmises séparément comptent chacune pour un cycle.`
       : "Aucun cycle de révision n'est inclus dans le prix : toute modification demandée après une livraison fait l'objet d'un avenant."
   return [
     included,
+    "Une révision ajuste ce qui existe déjà (couleurs, textes, images, position ou style d'un élément). Elle ne comprend pas l'ajout de nouvelles fonctionnalités, de nouveaux modules ou de nouvelles pages structurantes, même demandés après la validation : ceux-ci sont facturés séparément.",
     "Toute modification supplémentaire, ainsi que toute demande sortant du périmètre initial (nouvelle fonctionnalité, changement de cahier des charges, refonte d'éléments déjà validés), fait l'objet d'un avenant signé précisant son prix et son incidence sur le délai ; elle n'est réalisée qu'après signature de cet avenant.",
   ]
 }

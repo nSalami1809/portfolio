@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { downloadQuotePdf, type AdminQuote, type QuoteItem } from '@/actions/quotes'
 import { issueInvoice, markInvoicePaid, cancelInvoice, resendInvoiceEmail, downloadInvoicePdf, type Invoice } from '@/actions/billing'
-import { markDelivered, createAvenant } from '@/actions/lifecycle'
+import { markDelivered, createAvenant, updateQuoteDelay } from '@/actions/lifecycle'
 import { saveBase64Pdf } from '@/lib/browser-download'
 import { formatLongDate, RECETTE_DAYS, addBusinessDays } from '@/lib/quote-document'
+import { DEFAULT_BUSINESS } from '@/lib/business'
 
 interface Props {
   quote: AdminQuote
@@ -36,6 +37,7 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
   const [payMethod, setPayMethod] = useState(PAYMENT_METHODS[0])
   const [payRef, setPayRef] = useState('')
   const [payDate, setPayDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [delayDays, setDelayDays] = useState(String(quote.terms?.deliveryDays ?? DEFAULT_BUSINESS.deliveryDays))
   const [showAvenant, setShowAvenant] = useState(false)
   const [avDescription, setAvDescription] = useState('')
   const [avDelay, setAvDelay] = useState('')
@@ -106,6 +108,22 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
           )}
         </div>
       </div>
+
+      {quote.status === 'pending' && !quote.signature && (
+        <div>
+          <p className={sectionTitle} style={sectionTitleStyle}>Délai de réalisation</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input className="input" style={{ width: '7rem' }} type="number" min={1} max={730} value={delayDays} onChange={(e) => setDelayDays(e.target.value)} aria-label="Délai de réalisation en jours ouvrés" />
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>jours ouvrés</span>
+            <button className="btn-primary btn-xs" disabled={busy === 'delay'} onClick={() => run('delay', () => updateQuoteDelay(quote.id, Number(delayDays)))}>
+              Enregistrer le délai
+            </button>
+          </div>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)' }}>
+            Valeur par défaut reprise de vos réglages. Ajustez-la selon la taille et les contraintes de ce projet avant que le client ne signe ; après signature, un changement passe par un avenant.
+          </p>
+        </div>
+      )}
 
       {!accepted ? (
         <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>

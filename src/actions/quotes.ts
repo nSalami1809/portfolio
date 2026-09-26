@@ -81,7 +81,7 @@ export interface QuoteSignature {
 
 export type QuoteEventType =
   | 'created' | 'viewed' | 'signed' | 'declined' | 'status_changed'
-  | 'delivered' | 'delivery_accepted' | 'avenant_created' | 'invoice_issued' | 'invoice_paid' | 'invoice_cancelled'
+  | 'delay_changed' | 'delivered' | 'delivery_accepted' | 'avenant_created' | 'invoice_issued' | 'invoice_paid' | 'invoice_cancelled'
 
 export interface QuoteEvent {
   type: QuoteEventType

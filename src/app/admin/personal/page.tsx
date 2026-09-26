@@ -219,12 +219,18 @@ export default function AdminPersonal() {
         <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>Exécution</p>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="field-label" htmlFor="bz-delivery">Délai de réalisation (jours ouvrés)</label>
+            <label className="field-label" htmlFor="bz-delivery">Délai de réalisation par défaut (jours ouvrés)</label>
             <input id="bz-delivery" className="input" type="number" min={1} max={730} value={business.deliveryDays ?? ''} onChange={(e) => handleBusiness({ deliveryDays: numberOrUndefined(e.target.value) })} placeholder={String(DEFAULT_BUSINESS.deliveryDays)} />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+              Valeur de départ de chaque devis. Elle se règle ensuite projet par projet dans l&apos;admin des devis, tant que le client n&apos;a pas signé.
+            </p>
           </div>
           <div>
             <label className="field-label" htmlFor="bz-revisions">Cycles de révision inclus</label>
             <input id="bz-revisions" className="input" type="number" min={0} max={50} value={business.includedRevisions ?? ''} onChange={(e) => handleBusiness({ includedRevisions: numberOrUndefined(e.target.value) })} placeholder={String(DEFAULT_BUSINESS.includedRevisions)} />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+              Un cycle = un lot groupé de demandes d&apos;ajustement (couleur, texte, position d&apos;une section…). Ajouter un vrai module ou une fonctionnalité n&apos;est pas une révision : c&apos;est facturé à part, par avenant.
+            </p>
           </div>
           <div>
             <label className="field-label" htmlFor="bz-warranty">Garantie après livraison (jours)</label>
