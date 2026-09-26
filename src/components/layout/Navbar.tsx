@@ -79,18 +79,19 @@ export default function Navbar({ locale, t }: NavbarProps) {
     {
       href: `/${locale}/offres`,
       label: t.offers,
+      // Everything about working together lives under one entry: the price
+      // list and method, the instant quote, booking a call, tracking a
+      // project, and the terms of sale.
+      children: [
+        { href: `/${locale}/offres`, label: t.workOffers },
+        { href: `/${locale}/devis`, label: t.workQuote },
+        { href: `/${locale}/calendrier`, label: t.workCall },
+        { href: `/${locale}/suivi`, label: t.workTrack },
+        { href: `/${locale}/cgv`, label: t.workTerms },
+      ],
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2.83 12.83A2 2 0 0 1 2 11.17V4a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.42.59l7.98 7.99a2 2 0 0 1 .02 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
-        </svg>
-      ),
-    },
-    {
-      href: `/${locale}/calendrier`,
-      label: t.calendar,
-      icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
       ),
     },
@@ -189,11 +190,11 @@ export default function Navbar({ locale, t }: NavbarProps) {
             }}
           >
             <ul className="flex items-center" onMouseLeave={() => setHovered(null)}>
-              {links.map(({ href, label, icon }) => {
-                const isActive = pathname === href
+              {links.map(({ href, label, icon, children }) => {
+                const isActive = pathname === href || !!children?.some((c) => pathname === c.href)
                 const isHovered = hovered === href
                 return (
-                  <li key={href}>
+                  <li key={href} className="relative group">
                     <Link
                       href={href}
                       onMouseEnter={() => setHovered(href)}
@@ -213,7 +214,35 @@ export default function Navbar({ locale, t }: NavbarProps) {
                         {icon}
                       </span>
                       {label}
+                      {children && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform duration-150 group-hover:rotate-180 group-focus-within:rotate-180">
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      )}
                     </Link>
+                    {children && (
+                      // The top padding bridges the gap between the entry and
+                      // the panel so the pointer never leaves the hover area.
+                      <div className="absolute left-0 top-full pt-2 hidden group-hover:block group-focus-within:block" style={{ zIndex: 60 }}>
+                        <ul
+                          className="py-1.5"
+                          style={{ minWidth: 220, border: '1px solid var(--border)', background: 'var(--bg)', boxShadow: '0 12px 32px rgba(0,0,0,0.25)' }}
+                        >
+                          {children.map((child) => (
+                            <li key={child.href}>
+                              <Link
+                                href={child.href}
+                                aria-current={pathname === child.href ? 'page' : undefined}
+                                className="block px-4 py-2.5 text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)]"
+                                style={{ color: pathname === child.href ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)', whiteSpace: 'nowrap' }}
+                              >
+                                {child.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </li>
                 )
               })}
@@ -295,7 +324,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                 list itself has to scroll or the bottom entries are simply
                 unreachable — especially in landscape. */}
             <ul className="flex flex-col p-6 gap-1.5 flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
-              {links.map(({ href, label, icon }, i) => {
+              {links.map(({ href, label, icon, children }, i) => {
                 const isActive = pathname === href
                 return (
                   <m.li
@@ -335,6 +364,22 @@ export default function Navbar({ locale, t }: NavbarProps) {
                         </m.span>
                       )}
                     </Link>
+                    {children && (
+                      <ul className="mt-1 mb-1 ml-12 flex flex-col gap-0.5">
+                        {children.filter((c) => c.href !== href).map((child) => (
+                          <li key={child.href}>
+                            <Link
+                              href={child.href}
+                              aria-current={pathname === child.href ? 'page' : undefined}
+                              className="block px-3 py-2.5 rounded-lg text-sm transition-colors duration-200"
+                              style={{ color: pathname === child.href ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </m.li>
                 )
               })}

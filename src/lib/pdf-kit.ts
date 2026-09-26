@@ -3,7 +3,7 @@
 // runs reliably in a Vercel serverless function. Handles the parts that must
 // look identical across documents: masthead, running header on continuation
 // pages, wrapped text/bullets, item table, totals, and "Page X / Y".
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage } from 'pdf-lib'
+import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFImage, type PDFPage } from 'pdf-lib'
 import type { DocBlock } from '@/lib/quote-document'
 
 export const PAGE_WIDTH = 595.28 // A4 in points
@@ -111,6 +111,8 @@ interface KitOptions {
   // Shown top-left / top-right on every page after the first.
   runningName: string
   runningTitle: string
+  // A sample document: stamped on every page so it can never pass for a real one.
+  watermark?: string
 }
 
 export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
@@ -306,6 +308,20 @@ export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
       // Page numbers drawn last, once every page exists, so a multi-page
       // document reads "Page 2 / 4" rather than being silently unnumbered.
       const total = allPages.length
+      if (opts.watermark) {
+        const text = safeText(opts.watermark)
+        const size = 44
+        const w = fonts.bold.widthOfTextAtSize(text, size)
+        const half = (w / 2) * Math.SQRT1_2
+        for (const p of allPages) {
+          p.drawText(text, {
+            x: PAGE_WIDTH / 2 - half, y: PAGE_HEIGHT / 2 - half, size, font: fonts.bold,
+            color: rgb(0.8, 0.1, 0.1), opacity: 0.13, rotate: degrees(45),
+          })
+          const banner = safeText(`${opts.watermark} - document fictif, sans valeur`)
+          p.drawText(banner, { x: MARGIN, y: PAGE_HEIGHT - 26, size: 7.5, font: fonts.bold, color: rgb(0.8, 0.1, 0.1) })
+        }
+      }
       allPages.forEach((p, i) => {
         const label = `Page ${i + 1} / ${total}`
         const w = fonts.regular.widthOfTextAtSize(label, 7.5)

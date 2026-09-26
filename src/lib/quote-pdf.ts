@@ -23,6 +23,7 @@ interface GenerateOptions {
   personal: PersonalInfo
   variant: 'devis' | 'contrat' | 'pv'
   siteUrl: string
+  watermark?: string
 }
 
 const GREEN = rgb(0.04, 0.48, 0.18)
@@ -117,7 +118,7 @@ function drawSignatureBox(kit: PdfKit, o: SignatureBoxOptions) {
   state.y = boxTop - boxHeight - 16
 }
 
-export async function generateQuotePdf({ quote, personal, variant, siteUrl }: GenerateOptions): Promise<Buffer> {
+export async function generateQuotePdf({ quote, personal, variant, siteUrl, watermark }: GenerateOptions): Promise<Buffer> {
   const isPv = variant === 'pv'
   const t = resolveTerms(quote, personal)
   const { dateEmission } = computeQuoteDates(quote)
@@ -131,6 +132,7 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
     producer: `Portfolio ${t.provider.name}`,
     runningName: t.provider.name,
     runningTitle: fileTitle,
+    watermark,
   })
   const { state, fonts } = kit
 

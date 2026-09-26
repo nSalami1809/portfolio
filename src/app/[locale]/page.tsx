@@ -242,8 +242,46 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
+      {/* ── MÉTHODE ── */}
+      <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <FadeIn className="text-center mb-14">
+            <p className="section-label mb-4">{t.work.homeLabel}</p>
+            <h2 className="section-title mb-4">{t.work.homeTitle}</h2>
+            <p className="max-w-xl mx-auto" style={{ color: 'var(--text-muted)' }}>{t.work.homeText}</p>
+          </FadeIn>
+          <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 list-none p-0 m-0 mb-10">
+            {t.work.homeSteps.map((step, i) => (
+              <li key={step.title}>
+                <FadeIn delay={Math.min(i * 0.07, 0.28)}>
+                  <div className="card p-6 h-full">
+                    <span
+                      className="inline-flex items-center justify-center font-display font-bold text-sm mb-4"
+                      style={{ width: 32, height: 32, background: 'var(--accent-glow)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                    <h3 className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{step.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.text}</p>
+                  </div>
+                </FadeIn>
+              </li>
+            ))}
+          </ol>
+          <div className="text-center">
+            <Link href={`/${locale}/offres`} className="btn-secondary">
+              {t.work.homeCta}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── TÉMOIGNAGES ── */}
-      <section className="py-24 overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+      <section className="py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <FadeIn className="text-center mb-16">
             <p className="section-label mb-4">{t.home.testimonialsLabel}</p>

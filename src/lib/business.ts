@@ -133,3 +133,11 @@ export function identityLines(b: Pick<ResolvedBusiness, 'legalStatus' | 'registr
   if (b.taxId) lines.push(`NIF : ${b.taxId}`)
   return lines
 }
+
+// The subset of the terms the public "Travailler avec moi" page talks about —
+// read from the same settings as the documents, so the page can never promise
+// something the contract does not say.
+export type WorkTerms = Pick<
+  ResolvedBusiness,
+  'depositPercent' | 'depositRefundable' | 'deliveryDays' | 'includedRevisions' | 'warrantyDays' | 'paymentMethods' | 'paymentDueDays' | 'sourceCodeDelivery'
+>

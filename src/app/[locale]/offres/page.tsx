@@ -3,10 +3,21 @@ import { defaultOffers } from '@/data/defaultData'
 import { jsonLdScript } from '@/lib/json-ld'
 import { translateFieldsBatch } from '@/lib/translate'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import type { Metadata } from 'next'
+import { getDictionary } from '@/lib/i18n/dictionaries'
+import { defaultPersonalInfo } from '@/data/defaultData'
+import { resolveBusiness } from '@/lib/business'
+import WorkProcess from '@/components/sections/WorkProcess'
 import OffersView, { type TranslatedOffers } from './OffersView'
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale: rawLocale } = await params
+  const t = getDictionary(isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE)
+  return { title: t.offers.title, description: t.work.processSubtitle }
+}
 
 export default async function OffersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params
@@ -14,6 +25,8 @@ export default async function OffersPage({ params }: { params: Promise<{ locale:
 
   const portfolio = await fetchPortfolioSafe('offres/page')
   const offers = portfolio?.offers ?? defaultOffers
+  const terms = resolveBusiness(portfolio?.personal ?? defaultPersonalInfo)
+  const t = getDictionary(locale)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
   // Translated here rather than in the view. OffersView used to fire one
@@ -54,7 +67,9 @@ export default async function OffersPage({ params }: { params: Promise<{ locale:
       {offers.length > 0 && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       )}
-      <OffersView offers={offers} translated={translated} />
+      <OffersView offers={offers} translated={translated}>
+        <WorkProcess t={t.work} terms={terms} locale={locale} />
+      </OffersView>
     </>
   )
 }

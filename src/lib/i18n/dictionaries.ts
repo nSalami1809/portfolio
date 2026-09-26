@@ -1,4 +1,5 @@
 import type { Locale } from './locale'
+import type { WorkTerms } from '@/lib/business'
 
 const chatSuggestionsFr = [
   { label: 'Voir les projets', text: 'Quels sont tes projets les plus intéressants ?' },
@@ -34,7 +35,12 @@ const fr = {
     resume: 'Expérience',
     vision: 'Vision',
     projects: 'Projets',
-    offers: 'Offres',
+    offers: 'Travailler avec moi',
+    workOffers: 'Offres et méthode',
+    workQuote: 'Devis instantané',
+    workCall: 'Prendre rendez-vous',
+    workTrack: 'Suivre mon dossier',
+    workTerms: 'Conditions générales (CGV)',
     calendar: 'Calendrier',
     blog: 'Blog',
     playground: 'Laboratoire',
@@ -270,8 +276,8 @@ console.log("Prix final :", finalPrice + " FCFA");
     },
   },
   offers: {
-    label: 'Tarifs',
-    title: 'Nos Offres',
+    label: 'Business',
+    title: 'Travailler avec moi',
     subtitle: "Des solutions conçues pour répondre à vos besoins, avec des tarifs indicatifs adaptés à chaque type de projet. Chaque prestation est entièrement personnalisable et fait l'objet d'un devis sur mesure. Les prix affichés sont des fourchettes estimatives et peuvent être ajustés en fonction de vos exigences, de votre budget et de la complexité du projet.",
     specialTitle: 'Offres Spéciales',
     cta: 'Demander un devis',
@@ -281,6 +287,124 @@ console.log("Prix final :", finalPrice + " FCFA");
     heroGoTo: (title: string) => `Aller à l'offre : ${title}`,
     heroPause: 'Mettre en pause le défilement',
     heroPlay: 'Reprendre le défilement',
+  },
+  work: {
+    independentNote: "Je travaille en prestataire indépendant : chaque projet est cadré par un devis et un contrat signés en ligne, puis suivi jusqu'à la recette.",
+    processLabel: 'Comment ça marche',
+    processTitle: 'De votre idée à la livraison, chaque étape est cadrée',
+    processSubtitle: "Pas de surprise : voici le déroulé standard d'un projet, avec les délais et les conditions que je m'engage à respecter.",
+    steps: (b: WorkTerms) => [
+      { title: 'Brief et devis instantané', text: "Vous décrivez votre projet (objectifs, fonctionnalités, échéance) et choisissez vos prestations : le devis est généré tout de suite, sans attendre une réponse." },
+      { title: 'Signature en ligne', text: "Vous relisez le devis et le signez électroniquement depuis un lien sécurisé. Un contrat de prestation en découle, avec toutes les conditions écrites noir sur blanc." },
+      { title: 'Acompte et démarrage', text: `${b.depositPercent > 0 && b.depositPercent < 100 ? `Un acompte de ${b.depositPercent} % à la signature lance le développement` : 'Le développement démarre après la signature'}, dans un délai estimé à ${b.deliveryDays} jours ouvrés, confirmé dans votre devis selon la taille du projet.` },
+      { title: 'Développement et révisions', text: `Vous validez par étapes. ${b.includedRevisions > 0 ? `${b.includedRevisions} cycle${b.includedRevisions > 1 ? 's' : ''} de révision ${b.includedRevisions > 1 ? 'sont inclus' : 'est inclus'}` : 'Les modifications après livraison passent par un avenant'} ; une nouvelle fonctionnalité hors périmètre fait l'objet d'un avenant signé.` },
+      { title: 'Livraison et recette', text: "Je livre le projet, vous le vérifiez puis vous signez le procès-verbal de recette, avec ou sans réserves. Sans retour sous 7 jours ouvrés, la livraison est réputée acceptée." },
+      { title: 'Solde, reçu et garantie', text: `${b.depositPercent > 0 && b.depositPercent < 100 ? 'Le solde est réglé sur facture' : 'Le paiement est réglé sur facture'}, un reçu vous est remis, puis ${b.warrantyDays > 0 ? `${b.warrantyDays} jours de correction gratuite des anomalies` : 'le projet est clôturé'}.` },
+    ],
+    commitmentsLabel: 'Mes engagements',
+    commitmentsTitle: 'Ce que vous pouvez attendre',
+    commitmentsNote: 'Ces valeurs sont celles de mes conditions standard ; elles sont reprises telles quelles dans votre devis et votre contrat.',
+    commitments: (b: WorkTerms) => [
+      { value: `${b.deliveryDays} j`, label: 'Délai standard', hint: 'En jours ouvrés, ajusté selon la taille et les contraintes de votre projet, puis fixé dans le devis.' },
+      ...(b.depositPercent > 0 && b.depositPercent < 100
+        ? [{ value: `${b.depositPercent} %`, label: 'Acompte à la signature', hint: `Le solde est payé à la livraison. ${b.depositRefundable ? "L'acompte est remboursable en cas d'annulation." : "L'acompte n'est pas remboursable en cas d'annulation de votre part."}` }]
+        : []),
+      { value: `${b.includedRevisions}`, label: b.includedRevisions > 1 ? 'Cycles de révision' : 'Cycle de révision', hint: "Modifications de l'existant (couleurs, textes, position d'un élément). Un nouveau module est facturé à part." },
+      ...(b.warrantyDays > 0 ? [{ value: `${b.warrantyDays} j`, label: 'Garantie après livraison', hint: 'Correction gratuite des anomalies liées au développement réalisé.' }] : []),
+      { value: b.sourceCodeDelivery ? 'Remis' : 'Sur accord', label: 'Code source', hint: b.sourceCodeDelivery ? 'Vous recevez le code source et les droits sur ce qui est développé pour vous, après paiement intégral.' : "Le code source n'est remis que sur accord écrit ; vous pouvez exploiter la solution livrée." },
+      { value: 'Écrit', label: 'Tout est signé', hint: 'Devis, contrat, procès-verbal de recette, factures et reçus : chaque étape laisse une trace claire.' },
+    ],
+    faqLabel: 'Questions fréquentes',
+    faqTitle: 'Avant de vous lancer',
+    faq: (b: WorkTerms) => [
+      { q: "Qu'est-ce qu'un cycle de révision ?", a: "C'est un lot groupé de demandes d'ajustement envoyé en une fois, par exemple « changer la couleur, modifier un texte, déplacer une section ». Un second cycle regroupe les dernières corrections. Des demandes envoyées séparément comptent chacune pour un cycle." },
+      { q: 'Et si je veux ajouter une fonctionnalité après la validation ?', a: "Une révision ajuste ce qui existe déjà : elle n'inclut pas un nouveau module ou une nouvelle fonctionnalité importante. Ceux-ci sont facturés à part, par un avenant signé qui précise le prix et l'effet sur le délai." },
+      { q: 'Le délai est-il le même pour tous les projets ?', a: `Non. Mon délai standard est de ${b.deliveryDays} jours ouvrés, mais il est estimé selon la taille et la complexité de votre projet, puis fixé dans votre devis avant que vous ne signiez.` },
+      { q: 'Comment se passe le paiement ?', a: `${b.depositPercent > 0 && b.depositPercent < 100 ? `Un acompte de ${b.depositPercent} % est dû à la signature (le développement démarre après son paiement), le solde à la livraison, sur facture payable sous ${b.paymentDueDays} jour${b.paymentDueDays > 1 ? 's' : ''}.` : `Le paiement se fait à la livraison, sur facture payable sous ${b.paymentDueDays} jour${b.paymentDueDays > 1 ? 's' : ''}.`} Moyens acceptés : ${b.paymentMethods}. Un reçu vous est remis pour chaque paiement.` },
+      { q: 'À qui appartient le code ?', a: "Après paiement intégral, les droits sur les éléments développés spécifiquement pour vous vous sont cédés. Je conserve mes outils et composants réutilisables, que vous pouvez utiliser dans votre projet." },
+      { q: "Et si je ne suis pas satisfait à la livraison ?", a: `Vous signez le procès-verbal de recette avec vos réserves, que je corrige${b.warrantyDays > 0 ? ` dans le cadre de la garantie de ${b.warrantyDays} jours` : ''}. Rien n'est réputé accepté sans que vous ayez pu vérifier le travail.` },
+    ],
+    samplesLabel: 'Documents types',
+    samplesTitle: 'Voyez à quoi ressemblent vos documents',
+    samplesText: "Des exemples fictifs (client inventé, filigrane « EXEMPLE »), générés avec mes conditions actuelles : ce que vous recevrez vraiment, à chaque étape.",
+    samplesOpen: 'Voir un exemple (PDF)',
+    samples: [
+      { key: 'devis', title: 'Le devis', text: 'Prestations, prix, délai, paiement, révisions, propriété du code.' },
+      { key: 'contrat', title: 'Le contrat', text: 'Toutes les clauses écrites, signées en ligne avec le devis.' },
+      { key: 'pv', title: 'Le procès-verbal de recette', text: 'La réception du projet, avec ou sans réserves.' },
+      { key: 'facture', title: 'La facture', text: "Montant, échéance, moyens de paiement, pénalités." },
+      { key: 'recu', title: 'Le reçu', text: 'Remis à chaque paiement reçu.' },
+    ],
+    ctaTitle: 'Prêt à démarrer ?',
+    ctaText: "Décrivez votre projet et recevez votre devis tout de suite, ou échangeons d'abord de vive voix.",
+    ctaQuote: 'Obtenir mon devis',
+    ctaCall: 'Prendre rendez-vous',
+    ctaTerms: 'Lire les conditions générales',
+    ctaTrack: 'Suivre mon dossier',
+    homeLabel: 'Méthode',
+    homeTitle: 'Comment je travaille',
+    homeText: "Un cadre clair de bout en bout : vous savez ce que vous payez, quand c'est livré et ce qui est garanti.",
+    homeSteps: [
+      { title: 'Devis instantané', text: 'Décrivez votre projet, votre devis est généré tout de suite.' },
+      { title: 'Signature et acompte', text: 'Vous signez en ligne ; le développement démarre.' },
+      { title: 'Développement et révisions', text: 'Vous validez par étapes, avec des cycles de révision inclus.' },
+      { title: 'Livraison, recette, garantie', text: 'Procès-verbal de recette, facture, reçu puis correction gratuite.' },
+    ],
+    homeCta: 'Voir le détail',
+  },
+  track: {
+    label: 'Espace client',
+    title: 'Suivre mon dossier',
+    subtitle: "Saisissez le code de suivi reçu avec votre devis pour voir où en est votre projet, étape par étape.",
+    placeholder: 'Code de suivi (ex. AB3K9X)',
+    button: 'Suivre',
+    searching: 'Recherche…',
+    invalid: 'Merci de saisir votre code de suivi.',
+    notFound: 'Aucun dossier trouvé pour ce code. Vérifiez-le dans votre email de devis.',
+    rate: 'Trop de tentatives. Réessayez plus tard.',
+    generic: 'Une erreur est survenue. Réessayez.',
+    devisLabel: 'Devis',
+    avenantLabel: 'Avenant',
+    totalLabel: 'Montant total (TTC)',
+    states: { done: 'Terminé', current: 'En cours', pending: 'À venir', blocked: 'Interrompu' },
+    actionsTitle: 'À faire de votre côté',
+    signCta: 'Signer mon devis',
+    pvCta: 'Signer le procès-verbal de recette',
+    docCta: 'Voir mon devis et mon contrat',
+    nothingToDo: 'Rien à faire de votre côté pour le moment.',
+    avenantsTitle: 'Avenants',
+    avenantStatus: { pending: 'En attente de signature', accepted: 'Signé', declined: 'Refusé' } as Record<string, string>,
+    followAvenant: 'Suivre',
+    describeStep: (key: string, state: string, d: { outcome?: string; days?: number; until?: string }): { label: string; detail: string } => {
+      switch (key) {
+        case 'issued': return { label: 'Devis émis', detail: '' }
+        case 'signed':
+          if (d.outcome === 'declined') return { label: 'Devis refusé', detail: '' }
+          if (d.outcome === 'expired') return { label: 'Devis expiré', detail: 'Contactez-moi pour une mise à jour.' }
+          return state === 'done' ? { label: 'Devis signé', detail: '' } : { label: 'Signature du devis', detail: 'En attente de votre signature.' }
+        case 'deposit':
+          if (state === 'done') return { label: 'Acompte reçu', detail: '' }
+          if (d.outcome === 'issued') return { label: 'Acompte à régler', detail: "La facture d'acompte vous a été envoyée : le développement démarre après son paiement." }
+          return { label: 'Acompte', detail: "La facture d'acompte vous est envoyée après la signature." }
+        case 'build':
+          if (state === 'done') return { label: 'Développement terminé', detail: '' }
+          return { label: state === 'current' ? 'Développement en cours' : 'Développement', detail: `Délai estimé : ${d.days} jours ouvrés.` }
+        case 'delivered': return { label: state === 'done' ? 'Projet livré' : 'Livraison', detail: '' }
+        case 'acceptance':
+          if (d.outcome === 'clean') return { label: 'Recette signée sans réserve', detail: '' }
+          if (d.outcome === 'reserves') return { label: 'Recette signée avec réserves', detail: 'Vos réserves sont traitées dans le cadre de la garantie.' }
+          if (d.outcome === 'deemed') return { label: 'Recette réputée acceptée', detail: "Sans retour dans le délai, la livraison est réputée acceptée." }
+          return { label: 'Recette (procès-verbal)', detail: d.until ? `À signer avant le ${d.until} ; sans retour, la livraison est réputée acceptée.` : '' }
+        case 'balance':
+          if (state === 'done') return { label: 'Solde réglé', detail: '' }
+          if (d.outcome === 'issued') return { label: 'Solde à régler', detail: 'La facture de solde vous a été envoyée.' }
+          return { label: 'Solde', detail: 'La facture de solde suit la recette.' }
+        case 'warranty':
+          if (state === 'done') return { label: 'Garantie terminée', detail: '' }
+          return { label: state === 'current' ? 'Garantie en cours' : 'Garantie', detail: state === 'current' && d.until ? `Correction gratuite des anomalies jusqu'au ${d.until}.` : `${d.days} jours de correction gratuite après la livraison.` }
+        default: return { label: key, detail: '' }
+      }
+    },
   },
   calendar: {
     label: 'Rendez-vous',
@@ -392,7 +516,12 @@ const en: typeof fr = {
     resume: 'Experience',
     vision: 'Vision',
     projects: 'Projects',
-    offers: 'Offers',
+    offers: 'Work with me',
+    workOffers: 'Offers and method',
+    workQuote: 'Instant quote',
+    workCall: 'Book a call',
+    workTrack: 'Track my project',
+    workTerms: 'Terms of sale',
     calendar: 'Calendar',
     blog: 'Blog',
     playground: 'Playground',
@@ -628,8 +757,8 @@ console.log("Final price:", finalPrice + " FCFA");
     },
   },
   offers: {
-    label: 'Pricing',
-    title: 'Our Offers',
+    label: 'Business',
+    title: 'Work with me',
     subtitle: 'Solutions designed around your needs, with indicative rates tailored to each type of project. Every service is fully customizable and quoted individually. The prices shown are estimated ranges and can be adjusted based on your requirements, budget, and project complexity.',
     specialTitle: 'Special Offers',
     cta: 'Request a quote',
@@ -639,6 +768,124 @@ console.log("Final price:", finalPrice + " FCFA");
     heroGoTo: (title: string) => `Go to offer: ${title}`,
     heroPause: 'Pause the slideshow',
     heroPlay: 'Resume the slideshow',
+  },
+  work: {
+    independentNote: "I work as an independent provider: every project is framed by a quote and a contract signed online, then followed through to acceptance.",
+    processLabel: 'How it works',
+    processTitle: 'From your idea to delivery, every step is framed',
+    processSubtitle: "No surprises: here is the standard flow of a project, with the lead times and conditions I commit to.",
+    steps: (b: WorkTerms) => [
+      { title: 'Brief and instant quote', text: "You describe your project (goals, features, deadline) and pick your services: the quote is generated right away, no waiting for a reply." },
+      { title: 'Online signature', text: "You review the quote and sign it electronically from a secure link. A service contract follows, with every condition in writing." },
+      { title: 'Deposit and kick-off', text: `${b.depositPercent > 0 && b.depositPercent < 100 ? `A ${b.depositPercent}% deposit at signature starts the development` : 'Development starts after signature'}, within an estimated ${b.deliveryDays} working days, confirmed in your quote according to the size of the project.` },
+      { title: 'Development and revisions', text: `You validate step by step. ${b.includedRevisions > 0 ? `${b.includedRevisions} revision round${b.includedRevisions > 1 ? 's are' : ' is'} included` : 'Changes after delivery go through an amendment'}; a new out-of-scope feature is handled by a signed amendment.` },
+      { title: 'Delivery and acceptance', text: "I deliver the project, you check it and sign the acceptance report, with or without reservations. With no answer within 7 working days, delivery is deemed accepted." },
+      { title: 'Balance, receipt and warranty', text: `${b.depositPercent > 0 && b.depositPercent < 100 ? 'The balance is paid against an invoice' : 'Payment is made against an invoice'}, you receive a receipt, then ${b.warrantyDays > 0 ? `${b.warrantyDays} days of free bug fixing` : 'the project is closed'}.` },
+    ],
+    commitmentsLabel: 'My commitments',
+    commitmentsTitle: 'What you can expect',
+    commitmentsNote: 'These are my standard terms; they are carried over as-is into your quote and contract.',
+    commitments: (b: WorkTerms) => [
+      { value: `${b.deliveryDays} d`, label: 'Standard lead time', hint: 'In working days, adjusted to the size and constraints of your project, then fixed in the quote.' },
+      ...(b.depositPercent > 0 && b.depositPercent < 100
+        ? [{ value: `${b.depositPercent}%`, label: 'Deposit at signature', hint: `The balance is paid on delivery. ${b.depositRefundable ? 'The deposit is refundable if you cancel.' : 'The deposit is non-refundable if you cancel.'}` }]
+        : []),
+      { value: `${b.includedRevisions}`, label: b.includedRevisions > 1 ? 'Revision rounds' : 'Revision round', hint: 'Adjustments to what exists (colours, texts, position of an element). A new module is billed separately.' },
+      ...(b.warrantyDays > 0 ? [{ value: `${b.warrantyDays} d`, label: 'Warranty after delivery', hint: 'Free fixes for bugs tied to the work delivered.' }] : []),
+      { value: b.sourceCodeDelivery ? 'Handed over' : 'By agreement', label: 'Source code', hint: b.sourceCodeDelivery ? 'You receive the source code and the rights to what is built for you, after full payment.' : 'The source code is only handed over by written agreement; you may still operate the delivered solution.' },
+      { value: 'In writing', label: 'Everything is signed', hint: 'Quote, contract, acceptance report, invoices and receipts: every step leaves a clear record.' },
+    ],
+    faqLabel: 'FAQ',
+    faqTitle: 'Before you start',
+    faq: (b: WorkTerms) => [
+      { q: 'What is a revision round?', a: 'A consolidated batch of adjustment requests sent at once, for example “change the colour, edit a text, move a section”. A second round groups the final fixes. Requests sent separately each count as a round.' },
+      { q: 'What if I want to add a feature after validation?', a: 'A revision adjusts what already exists: it does not include a new module or a major new feature. Those are billed separately through a signed amendment stating the price and the effect on the lead time.' },
+      { q: 'Is the lead time the same for every project?', a: `No. My standard is ${b.deliveryDays} working days, but it is estimated from the size and complexity of your project and fixed in your quote before you sign.` },
+      { q: 'How does payment work?', a: `${b.depositPercent > 0 && b.depositPercent < 100 ? `A ${b.depositPercent}% deposit is due at signature (development starts once it is paid) and the balance on delivery, against an invoice payable within ${b.paymentDueDays} day${b.paymentDueDays > 1 ? 's' : ''}.` : `Payment is made on delivery, against an invoice payable within ${b.paymentDueDays} day${b.paymentDueDays > 1 ? 's' : ''}.`} Accepted methods: ${b.paymentMethods}. You receive a receipt for every payment.` },
+      { q: 'Who owns the code?', a: 'After full payment, the rights to the elements developed specifically for you are assigned to you. I keep my tools and reusable components, which you may use in your project.' },
+      { q: "What if I'm not satisfied at delivery?", a: `You sign the acceptance report with your reservations, which I fix${b.warrantyDays > 0 ? ` under the ${b.warrantyDays}-day warranty` : ''}. Nothing is deemed accepted before you have had the chance to check the work.` },
+    ],
+    samplesLabel: 'Sample documents',
+    samplesTitle: 'See what your documents look like',
+    samplesText: 'Fictional samples (made-up client, “EXEMPLE” watermark) generated with my current terms: what you will actually receive at each step. The documents are written in French.',
+    samplesOpen: 'View a sample (PDF)',
+    samples: [
+      { key: 'devis', title: 'The quote', text: 'Services, prices, lead time, payment, revisions, code ownership.' },
+      { key: 'contrat', title: 'The contract', text: 'Every clause in writing, signed online along with the quote.' },
+      { key: 'pv', title: 'The acceptance report', text: 'Reception of the project, with or without reservations.' },
+      { key: 'facture', title: 'The invoice', text: 'Amount, due date, payment methods, late fees.' },
+      { key: 'recu', title: 'The receipt', text: 'Handed over for every payment received.' },
+    ],
+    ctaTitle: 'Ready to start?',
+    ctaText: 'Describe your project and get your quote right away, or let us talk it through first.',
+    ctaQuote: 'Get my quote',
+    ctaCall: 'Book a call',
+    ctaTerms: 'Read the terms of sale',
+    ctaTrack: 'Track my project',
+    homeLabel: 'Method',
+    homeTitle: 'How I work',
+    homeText: 'A clear framework from start to finish: you know what you pay, when it is delivered and what is guaranteed.',
+    homeSteps: [
+      { title: 'Instant quote', text: 'Describe your project, your quote is generated right away.' },
+      { title: 'Signature and deposit', text: 'You sign online; development starts.' },
+      { title: 'Development and revisions', text: 'You validate step by step, with revision rounds included.' },
+      { title: 'Delivery, acceptance, warranty', text: 'Acceptance report, invoice, receipt, then free fixes.' },
+    ],
+    homeCta: 'See the details',
+  },
+  track: {
+    label: 'Client area',
+    title: 'Track my project',
+    subtitle: 'Enter the tracking code you received with your quote to see where your project stands, step by step.',
+    placeholder: 'Tracking code (e.g. AB3K9X)',
+    button: 'Track',
+    searching: 'Searching…',
+    invalid: 'Please enter your tracking code.',
+    notFound: 'No project found for this code. Check it in your quote email.',
+    rate: 'Too many attempts. Please try again later.',
+    generic: 'Something went wrong. Please try again.',
+    devisLabel: 'Quote',
+    avenantLabel: 'Amendment',
+    totalLabel: 'Total amount (incl. tax)',
+    states: { done: 'Done', current: 'In progress', pending: 'Upcoming', blocked: 'Stopped' },
+    actionsTitle: 'What is left for you to do',
+    signCta: 'Sign my quote',
+    pvCta: 'Sign the acceptance report',
+    docCta: 'View my quote and contract',
+    nothingToDo: 'Nothing to do on your side for now.',
+    avenantsTitle: 'Amendments',
+    avenantStatus: { pending: 'Awaiting signature', accepted: 'Signed', declined: 'Declined' } as Record<string, string>,
+    followAvenant: 'Track',
+    describeStep: (key: string, state: string, d: { outcome?: string; days?: number; until?: string }): { label: string; detail: string } => {
+      switch (key) {
+        case 'issued': return { label: 'Quote issued', detail: '' }
+        case 'signed':
+          if (d.outcome === 'declined') return { label: 'Quote declined', detail: '' }
+          if (d.outcome === 'expired') return { label: 'Quote expired', detail: 'Contact me for an update.' }
+          return state === 'done' ? { label: 'Quote signed', detail: '' } : { label: 'Quote signature', detail: 'Waiting for your signature.' }
+        case 'deposit':
+          if (state === 'done') return { label: 'Deposit received', detail: '' }
+          if (d.outcome === 'issued') return { label: 'Deposit to pay', detail: 'The deposit invoice has been sent to you: development starts once it is paid.' }
+          return { label: 'Deposit', detail: 'The deposit invoice is sent to you after signature.' }
+        case 'build':
+          if (state === 'done') return { label: 'Development complete', detail: '' }
+          return { label: state === 'current' ? 'Development in progress' : 'Development', detail: `Estimated lead time: ${d.days} working days.` }
+        case 'delivered': return { label: state === 'done' ? 'Project delivered' : 'Delivery', detail: '' }
+        case 'acceptance':
+          if (d.outcome === 'clean') return { label: 'Acceptance signed, no reservations', detail: '' }
+          if (d.outcome === 'reserves') return { label: 'Acceptance signed with reservations', detail: 'Your reservations are handled under the warranty.' }
+          if (d.outcome === 'deemed') return { label: 'Acceptance deemed given', detail: 'With no answer in time, delivery is deemed accepted.' }
+          return { label: 'Acceptance (report)', detail: d.until ? `To sign before ${d.until}; with no answer, delivery is deemed accepted.` : '' }
+        case 'balance':
+          if (state === 'done') return { label: 'Balance paid', detail: '' }
+          if (d.outcome === 'issued') return { label: 'Balance to pay', detail: 'The balance invoice has been sent to you.' }
+          return { label: 'Balance', detail: 'The balance invoice follows acceptance.' }
+        case 'warranty':
+          if (state === 'done') return { label: 'Warranty ended', detail: '' }
+          return { label: state === 'current' ? 'Warranty in progress' : 'Warranty', detail: state === 'current' && d.until ? `Free bug fixes until ${d.until}.` : `${d.days} days of free fixes after delivery.` }
+        default: return { label: key, detail: '' }
+      }
+    },
   },
   calendar: {
     label: 'Appointments',

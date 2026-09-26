@@ -503,6 +503,7 @@ export function quoteSignedClientEmail(data: {
       `)}
 
       ${ctaButton(`${SITE_URL}/fr/devis?ref=${encodeURIComponent(data.accessCode)}`, 'Voir le document signé')}
+      ${secondaryLink(`${SITE_URL}/fr/suivi?ref=${encodeURIComponent(data.accessCode)}`, "Suivre l'avancement du projet")}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos du devis ${data.numero}`)}`, 'Une question ?')}
     `),
   }
@@ -640,6 +641,7 @@ export function acceptanceSignedClientEmail(data: {
         : 'Votre proc&egrave;s-verbal de recette a &eacute;t&eacute; enregistr&eacute; <strong style="color:#26262E">sans r&eacute;serve</strong>. Le proc&egrave;s-verbal sign&eacute; est joint &agrave; cet e-mail. La facture de solde vous sera adress&eacute;e s&rsquo;il y a lieu.')}
 
       ${ctaButton(`${SITE_URL}/fr/recette/${data.deliveryToken}`, 'Voir le procès-verbal signé')}
+      ${secondaryLink(`${SITE_URL}/fr/suivi?ref=${encodeURIComponent(data.accessCode)}`, "Suivre l'avancement du projet")}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos de la recette ${data.numero}`)}`, 'Une question ?')}
     `),
   }

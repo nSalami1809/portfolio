@@ -192,9 +192,11 @@ interface OffersViewProps {
   // in an effect — so the first paint showed the wrong cards, then swapped.
   offers: Offer[]
   translated: TranslatedOffers
+  // Server-rendered sections shown under the price list (see WorkProcess).
+  children?: React.ReactNode
 }
 
-export default function OffersView({ offers, translated }: OffersViewProps) {
+export default function OffersView({ offers, translated, children }: OffersViewProps) {
   const locale = useLocale()
   const t = useDictionary()
 
@@ -251,6 +253,8 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
           </div>
         </>
       )}
+
+      {children}
     </div>
   )
 }

@@ -15,6 +15,7 @@ interface GenerateOptions {
   siteUrl: string
   // The provider's current signature image, stamped on every invoice and receipt.
   signatureUrl?: string
+  watermark?: string
 }
 
 const GREEN = rgb(0.04, 0.48, 0.18)
@@ -22,7 +23,7 @@ const RED = rgb(0.75, 0.1, 0.1)
 
 const TITLE = { acompte: "FACTURE D'ACOMPTE", solde: 'FACTURE DE SOLDE' } as const
 
-export async function generateInvoicePdf({ invoice, document, siteUrl, signatureUrl }: GenerateOptions): Promise<Buffer> {
+export async function generateInvoicePdf({ invoice, document, siteUrl, signatureUrl, watermark }: GenerateOptions): Promise<Buffer> {
   const t = invoice.terms
   const isReceipt = document === 'recu'
   const number = isReceipt ? invoice.payment?.receiptNumero ?? invoice.numero : invoice.numero
@@ -30,7 +31,7 @@ export async function generateInvoicePdf({ invoice, document, siteUrl, signature
   const fileTitle = `${isReceipt ? 'Reçu' : 'Facture'} ${number}`
   const docWord = invoice.quoteKind === 'avenant' ? 'avenant' : 'devis'
 
-  const kit = await createPdfKit({ title: fileTitle, producer: `Portfolio ${t.provider.name}`, runningName: t.provider.name, runningTitle: fileTitle })
+  const kit = await createPdfKit({ title: fileTitle, producer: `Portfolio ${t.provider.name}`, runningName: t.provider.name, runningTitle: fileTitle, watermark })
   const { state, fonts } = kit
   kit.logo = await kit.embedImage(await fetchImageBytes(`${siteUrl}/logo-black.png`))
   const signatureImg = await kit.embedImage(signatureUrl ? await fetchImageBytes(signatureUrl) : null)
