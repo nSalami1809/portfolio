@@ -28,6 +28,22 @@ export default function AdminGate() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Phone-friendly entry: opening any page of the site with "#admin" at the end
+  // (bookmark it) shows the same code prompt — there is no keyboard shortcut on
+  // a phone. The hash is removed straight away; the access code is still required.
+  useEffect(() => {
+    const openFromHash = () => {
+      if (window.location.hash !== '#admin') return
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      setOpen(true)
+      setCode('')
+      setError('')
+    }
+    openFromHash()
+    window.addEventListener('hashchange', openFromHash)
+    return () => window.removeEventListener('hashchange', openFromHash)
+  }, [])
+
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 80)
   }, [open])
