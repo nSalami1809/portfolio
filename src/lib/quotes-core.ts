@@ -134,7 +134,10 @@ export function toQuote(doc: WithId<QuoteRecord>): Quote {
     parentNumero, extraDelayDays, terms, delivery, acceptance } = doc
   return {
     clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items, brief,
-    numero, accessCode, signToken, validiteJours, totalHT, tva, totalTTC, parentNumero, extraDelayDays, terms,
+    numero, accessCode, signToken, validiteJours, totalHT, tva, totalTTC, parentNumero, extraDelayDays,
+    // Payment coordinates (an Airtel/IBAN number) belong on invoices, not in a
+    // quote payload that lookupQuote() serves by its guessable numero.
+    terms: terms ? { ...terms, paymentDetails: '' } : undefined,
     dateEmission: iso(dateEmission),
     kind: doc.kind ?? 'devis',
     status: doc.status ?? 'pending',

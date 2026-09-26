@@ -158,7 +158,7 @@ export async function issueInvoice(quoteId: string, kind: InvoiceKind): Promise<
   }
   const quote = toQuote(qdoc)
   const portfolio = await fetchPortfolioSafe('issueInvoice')
-  const terms = resolveTerms(quote, portfolio?.personal ?? defaultPersonalInfo)
+  const terms = resolveTerms(qdoc, portfolio?.personal ?? defaultPersonalInfo)
   const hasDeposit = terms.depositPercent > 0 && terms.depositPercent < 100
 
   const col = await invoicesCol()

@@ -8,6 +8,7 @@ import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import { joinWaitlist } from '@/actions/waitlist'
 import type { PortfolioData } from '@/types'
+import { resolveBusiness } from '@/lib/business'
 
 const MAX_ATTEMPTS = 20
 const WINDOW_S = 10 * 60 // 10 minutes
@@ -103,6 +104,20 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     vision.valeurs?.length ? `Valeurs : ${vision.valeurs.map((v) => `${v.title} (${v.text})`).join(' / ')}` : '',
   ].filter(Boolean).join('\n')
 
+  // The working framework the site publishes on /methode, read from the same
+  // settings as the quote and the contract — so the bot answers "how does it
+  // work / how much upfront / who owns the code" with the real, current terms
+  // instead of improvising.
+  const b = resolveBusiness(personal)
+  const hasDeposit = b.depositPercent > 0 && b.depositPercent < 100
+  const workFramework = `- Déroulé d'un projet : (1) brief + devis instantané ; (2) signature électronique du devis, qui donne lieu à un contrat ; (3) ${hasDeposit ? `acompte de ${b.depositPercent} % à la signature — la facture d'acompte est payable dès réception et le développement démarre après son paiement` : 'démarrage après signature'} ; (4) développement avec ${b.includedRevisions} cycle(s) de révision inclus ; (5) livraison puis procès-verbal de recette signé par le client (avec ou sans réserves ; sans retour sous 7 jours ouvrés, la livraison est réputée acceptée) ; (6) ${hasDeposit ? 'solde' : 'paiement'} sur facture payable sous ${b.paymentDueDays} jour(s), reçu remis pour chaque paiement, puis ${b.warrantyDays > 0 ? `${b.warrantyDays} jours de correction gratuite des anomalies` : 'clôture du projet'}.
+- Délai standard : ${b.deliveryDays} jours ouvrés, ESTIMÉ selon la taille et la complexité du projet, puis fixé dans le devis avant la signature (il peut donc différer d'un projet à l'autre).
+- Révisions : un cycle est un lot groupé de demandes d'ajustement de l'existant (couleurs, textes, position d'un élément), par exemple « cycle 1 : changer la couleur, modifier un texte, déplacer une section ; cycle 2 : les dernières corrections ». Une nouvelle fonctionnalité ou un nouveau module n'est PAS une révision : il est facturé à part, par un avenant signé.
+- Paiement : moyens acceptés — ${b.paymentMethods}. ${hasDeposit ? (b.depositRefundable ? "L'acompte est remboursable en cas d'annulation du client." : "L'acompte n'est pas remboursable en cas d'annulation du client.") : ''}
+- Propriété du code : après paiement intégral, les droits sur les éléments développés spécifiquement pour le client lui sont cédés ; ${personal.name} garde ses outils et composants réutilisables. ${b.sourceCodeDelivery ? 'Le code source est remis après paiement intégral.' : "Le code source n'est remis que sur accord écrit."}
+- Statut : ${personal.name} travaille en prestataire indépendant. Ne parle jamais d'entreprise, de société ou de garanties légales particulières, et n'invente aucune mention légale (numéro d'immatriculation, NIF…).
+- Ces conditions sont les conditions STANDARD : pour tout cas particulier (délai précis, remise, paiement échelonné, autre mode de paiement), dis que cela se discute avec ${personal.name} et propose un rendez-vous ou la page Contact ; ne promets jamais rien au-delà de ce qui est écrit ici.`
+
   const whatsappPrefillMessage = locale === 'en'
     ? "Hi Nawaf \u{1F44B}\n\nI'm reaching out via your portfolio's AI assistant about a project I'd like to present to you. I'd love to chat and see how we could bring it to life.\n\nThanks!"
     : "Bonjour Nawaf \u{1F44B}\n\nJe vous contacte via l'IA de votre portfolio pour un projet que j'aimerais vous présenter. Je souhaiterais échanger avec vous afin de voir comment nous pourrions le concrétiser.\n\nMerci !"
@@ -138,8 +153,20 @@ ${educationsText || 'Aucune formation renseignée.'}
 Projets :
 ${projectsText || 'Aucun projet renseigné.'}
 
-Offres / prestations proposées (page "Nos Offres" du site) :
+Offres / prestations proposées (page "Travailler avec moi > Offres" du site) :
 ${offersText || 'Aucune offre renseignée.'}
+
+Cadre de travail (conditions standard, reprises dans chaque devis et contrat) :
+${workFramework}
+
+Pages utiles du site pour orienter le visiteur (liens Markdown relatifs, à utiliser tels quels) :
+- Offres et tarifs : /${locale}/offres
+- Ma méthode (déroulé, engagements, FAQ, exemples de devis/contrat/facture/procès-verbal en PDF) : /${locale}/methode
+- Devis instantané en ligne : /${locale}/devis
+- Prendre rendez-vous : /${locale}/calendrier
+- Suivre l'avancement d'un projet (le client saisit son code de suivi) : /${locale}/suivi — avec le code en main tu peux donner /${locale}/suivi?ref=CODE
+- Conditions générales de vente : /${locale}/cgv
+- Contact : /${locale}/contact
 
 Témoignages reçus :
 ${testimonialsText || 'Aucun témoignage renseigné.'}
@@ -175,7 +202,7 @@ Déroulé à suivre :
 5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
 
 Retrouver un devis déjà généré :
-Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis. Le résultat inclut un statut ("pending" = en attente de réponse de ${personal.name}, "accepted" = accepté, "declined" = refusé) — communique-le naturellement au visiteur s'il demande où en est son devis.
+Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis. Pour une question de suivi plus large (livraison, recette, paiements), oriente le visiteur vers la page de suivi avec son code. Le résultat inclut un statut ("pending" = en attente de réponse de ${personal.name}, "accepted" = accepté, "declined" = refusé) — communique-le naturellement au visiteur s'il demande où en est son devis.
 
 Prise de rendez-vous :
 Tu peux réserver directement un appel avec ${personal.name} dans la conversation, sans passer par un email. Propose-le si le visiteur veut discuter de vive voix, après avoir généré un devis, ou s'il demande explicitement un rendez-vous. Tous les horaires sont dans le fuseau de ${personal.name} (Afrique/Libreville, UTC+1) — précise-le si utile.

@@ -6,6 +6,7 @@ const chatSuggestionsFr = [
   { label: 'Compétences & stack', text: 'Quelles sont tes compétences techniques ?' },
   { label: 'Combien coûte un site vitrine ?', text: 'Combien coûterait un site vitrine simple ?' },
   { label: 'Demander un devis', text: "J'aimerais obtenir un devis pour mon projet." },
+  { label: 'Comment se passe un projet ?', text: 'Comment se déroule un projet avec toi, du devis à la livraison ?' },
 ]
 
 const chatSuggestionsEn = [
@@ -13,6 +14,7 @@ const chatSuggestionsEn = [
   { label: 'Skills & stack', text: 'What are your technical skills?' },
   { label: 'How much for a showcase website?', text: 'How much would a simple showcase website cost?' },
   { label: 'Request a quote', text: "I'd like to get a quote for my project." },
+  { label: 'How does a project run?', text: 'How does a project with you run, from the quote to delivery?' },
 ]
 
 const fr = {
