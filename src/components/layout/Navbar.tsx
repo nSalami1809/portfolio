@@ -84,6 +84,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
       // project, and the terms of sale.
       children: [
         { href: `/${locale}/offres`, label: t.workOffers },
+        { href: `/${locale}/contact`, label: t.contact },
         { href: `/${locale}/devis`, label: t.workQuote },
         { href: `/${locale}/calendrier`, label: t.workCall },
         { href: `/${locale}/suivi`, label: t.workTrack },
@@ -110,15 +111,6 @@ export default function Navbar({ locale, t }: NavbarProps) {
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="6 9 10 12 6 15"/><line x1="12" y1="15" x2="16" y2="15"/>
-        </svg>
-      ),
-    },
-    {
-      href: `/${locale}/contact`,
-      label: t.contact,
-      icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
         </svg>
       ),
     },
