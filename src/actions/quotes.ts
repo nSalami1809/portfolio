@@ -1,7 +1,6 @@
 'use server'
 
-import { randomBytes, createHash } from 'crypto'
-import { ObjectId, type WithId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { after } from 'next/server'
 import { headers } from 'next/headers'
 import { put } from '@vercel/blob'
@@ -13,47 +12,43 @@ import {
 } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
-import { generateQuotePdf } from '@/lib/quote-pdf'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
+import { computeTotals, snapshotTerms, type QuoteTerms } from '@/lib/business'
+import {
+  quotesCol, generateAccessCode, generateSignToken, nextQuoteNumber, toQuote, withSignToken, checkRateLimit,
+  computeDocumentHash, isExpired, buildQuoteAttachment, cleanBrief, cleanItems,
+  EMAIL_RE, MAX_SIGNATURE_DECODED_BYTES, SIGNATURE_DATA_URL_PREFIX,
+  type QuoteRecordEvent, type QuoteRecordSignature,
+} from '@/lib/quotes-core'
 
-const TVA_RATE = 0.18
 const VALIDITE_JOURS = 30
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O/1/I — avoids visual ambiguity when read aloud
-const SIGN_TOKEN_BYTES = 32 // 256 bits — the public /devis/signature/[token] link must be unguessable
-const MAX_SIGNATURE_DECODED_BYTES = 500 * 1024 // a canvas signature is a few KB; this is a generous cap against abuse
 const SIGN_RATE_LIMIT_PER_HOUR = 10
 const SUBMIT_RATE_LIMIT_PER_HOUR = 5
 const LOOKUP_RATE_LIMIT_PER_HOUR = 20
 const SEND_EMAIL_RATE_LIMIT_PER_HOUR = 5
+const DOWNLOAD_PDF_RATE_LIMIT_PER_HOUR = 20
 const MAX_ITEMS = 30
 const MAX_DESCRIPTION_LENGTH = 5000
 const MAX_TEXT_FIELD_LENGTH = 200
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
-
-// A visitor who clicked a broken/stale link had to see the document — this
-// builds it as a real file attached to the email instead, so opening it
-// never depends on a web page rendering correctly. Never throws: a PDF
-// generation hiccup must not stop the underlying email from sending.
-async function buildQuoteAttachment(quote: Quote, variant: 'devis' | 'contrat') {
-  try {
-    const portfolio = await fetchPortfolioSafe('quote-pdf-attachment')
-    const personal = portfolio?.personal ?? defaultPersonalInfo
-    const content = await generateQuotePdf({ quote, personal, variant, siteUrl: SITE_URL })
-    const filename = `${variant === 'contrat' ? 'Contrat' : 'Devis'}-${quote.numero}.pdf`
-    return [{ filename, content, contentType: 'application/pdf' }]
-  } catch (e) {
-    console.error('[buildQuoteAttachment] PDF generation failed:', e)
-    return []
-  }
-}
 
 export interface QuoteItem {
   designation: string
   quantite: number
   prixUnitaireHT: number
+}
+
+// Structured project brief (cahier des charges) — every field optional, all
+// free text. Printed under "3. PROJET" and listed as a contractual document.
+export interface QuoteBrief {
+  objectifs?: string
+  publicCible?: string
+  fonctionnalites?: string
+  contenus?: string
+  references?: string
+  contraintes?: string
+  echeance?: string
 }
 
 export interface QuotePayload {
@@ -64,9 +59,14 @@ export interface QuotePayload {
   clientTelephone?: string
   descriptionProjet: string
   items: QuoteItem[]
+  brief?: QuoteBrief
 }
 
 export type QuoteStatus = 'pending' | 'accepted' | 'declined'
+
+// 'avenant' = a complementary quote amending an already-signed contract
+// (extra scope, extra price, extra delay). Same lifecycle as a devis.
+export type QuoteKind = 'devis' | 'avenant'
 
 // A signature is only ever written once, server-side, by signQuote() below —
 // its presence on a quote is what makes that quote legally locked (see
@@ -79,12 +79,27 @@ export interface QuoteSignature {
   documentHash: string
 }
 
-export type QuoteEventType = 'created' | 'viewed' | 'signed' | 'declined' | 'status_changed'
+export type QuoteEventType =
+  | 'created' | 'viewed' | 'signed' | 'declined' | 'status_changed'
+  | 'delivered' | 'delivery_accepted' | 'avenant_created' | 'invoice_issued' | 'invoice_paid' | 'invoice_cancelled'
 
 export interface QuoteEvent {
   type: QuoteEventType
   at: string
   meta?: Record<string, string>
+}
+
+// Delivery of the finished work — opens the recette period and unlocks the
+// balance invoice.
+export interface QuoteDelivery {
+  deliveredAt: string
+  note?: string
+  liveUrl?: string
+}
+
+// The client's signed procès-verbal de recette.
+export interface QuoteAcceptance extends QuoteSignature {
+  reserves?: string
 }
 
 export interface Quote extends QuotePayload {
@@ -100,7 +115,17 @@ export interface Quote extends QuotePayload {
   tva: number
   totalTTC: number
   status: QuoteStatus
+  kind: QuoteKind
+  // For an avenant: the numero of the signed contract it amends, and the
+  // working days it adds to that contract's delivery delay.
+  parentNumero?: string
+  extraDelayDays?: number
+  // Commercial terms + provider identity frozen when the quote was issued.
+  // Absent on quotes that predate them (see resolveTerms in lib/business).
+  terms?: QuoteTerms
   signature?: QuoteSignature
+  delivery?: QuoteDelivery
+  acceptance?: QuoteAcceptance
   events: QuoteEvent[]
 }
 
@@ -109,113 +134,6 @@ export interface AdminQuote extends Quote {
   read: boolean
   createdAt: string
   testimonialRequestedAt?: string
-}
-
-interface QuoteRecordSignature {
-  name: string
-  email: string
-  imageUrl: string
-  signedAt: Date
-  documentHash: string
-}
-
-interface QuoteRecordEvent {
-  type: QuoteEventType
-  at: Date
-  meta?: Record<string, string>
-}
-
-interface QuoteRecord extends QuotePayload {
-  numero: string
-  accessCode: string
-  signToken: string
-  dateEmission: Date
-  validiteJours: number
-  totalHT: number
-  tva: number
-  totalTTC: number
-  read: boolean
-  createdAt: Date
-  status?: QuoteStatus
-  testimonialRequestedAt?: Date
-  signature?: QuoteRecordSignature
-  events?: QuoteRecordEvent[]
-}
-
-function quotes() {
-  return getDb().then((db) => db.collection<QuoteRecord>('quotes'))
-}
-
-function generateAccessCode(length = 6): string {
-  const bytes = randomBytes(length)
-  let code = ''
-  for (let i = 0; i < length; i++) code += CODE_CHARS[bytes[i] % CODE_CHARS.length]
-  return code
-}
-
-async function nextQuoteNumber(): Promise<string> {
-  const col = await quotes()
-  const year = new Date().getFullYear()
-  const count = await col.countDocuments({ numero: { $regex: `^DEV-${year}-` } })
-  return `DEV-${year}-${String(count + 1).padStart(3, '0')}`
-}
-
-function toQuote(doc: WithId<QuoteRecord>): Quote {
-  const { clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items,
-    numero, accessCode, signToken, dateEmission, validiteJours, totalHT, tva, totalTTC, signature, events } = doc
-  return {
-    clientNom, clientSociete, clientAdresse, clientEmail, clientTelephone, descriptionProjet, items,
-    numero, accessCode, signToken, validiteJours, totalHT, tva, totalTTC,
-    dateEmission: dateEmission instanceof Date ? dateEmission.toISOString() : dateEmission,
-    status: doc.status ?? 'pending',
-    signature: signature ? { ...signature, signedAt: signature.signedAt instanceof Date ? signature.signedAt.toISOString() : signature.signedAt } : undefined,
-    events: (events ?? []).map((e) => ({ ...e, at: e.at instanceof Date ? e.at.toISOString() : e.at })),
-  }
-}
-
-// Quotes created before the electronic-signature feature shipped have no
-// signToken in MongoDB — backfill one lazily on first read rather than
-// requiring a migration script, so every existing quote gets a working
-// signing link the moment it's next looked at.
-async function withSignToken(col: Awaited<ReturnType<typeof quotes>>, doc: WithId<QuoteRecord>): Promise<WithId<QuoteRecord>> {
-  if (doc.signToken) return doc
-  const signToken = randomBytes(SIGN_TOKEN_BYTES).toString('base64url')
-  await col.updateOne({ _id: doc._id }, { $set: { signToken } })
-  doc.signToken = signToken
-  return doc
-}
-
-// Shared with contact.ts's rate limiter (same TTL-indexed collection); a
-// `scope` tag keeps unrelated features from throttling each other.
-// createIndex is idempotent, so calling it here too (contact.ts also does)
-// is harmless — it just means this file doesn't rely on contact.ts having
-// run first to get automatic cleanup of old rate-limit entries.
-let rateLimitIndexReady: Promise<void> | null = null
-function ensureRateLimitIndex() {
-  if (!rateLimitIndexReady) {
-    rateLimitIndexReady = getDb()
-      .then((db) => db.collection('ratelimits').createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 }))
-      .then(() => undefined)
-      .catch(() => {})
-  }
-  return rateLimitIndexReady
-}
-
-async function checkRateLimit(scope: string, maxPerHour: number): Promise<boolean> {
-  // Index setup, the connection and the request headers are three independent
-  // awaits; only the count actually has to happen before the decision.
-  const [, db, ip] = await Promise.all([ensureRateLimitIndex(), getDb(), getClientIp()])
-  const since = new Date(Date.now() - 3600 * 1000)
-  const count = await db.collection('ratelimits').countDocuments({ scope, ip, createdAt: { $gte: since } })
-  if (count >= maxPerHour) return false
-  // Started immediately so concurrent requests still count against the
-  // window, but not awaited — nothing downstream reads the result, and the
-  // caller shouldn't pay a round trip for bookkeeping.
-  void db
-    .collection('ratelimits')
-    .insertOne({ scope, ip, createdAt: new Date() })
-    .catch((e) => console.error('[checkRateLimit] write failed:', e))
-  return true
 }
 
 export async function submitQuote(payload: QuotePayload): Promise<Quote> {
@@ -231,22 +149,27 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   if (payload.descriptionProjet && payload.descriptionProjet.length > MAX_DESCRIPTION_LENGTH) {
     throw new Error('Description trop longue.')
   }
+  const items = cleanItems(payload.items)
+  const brief = cleanBrief(payload.brief)
   if (!(await checkRateLimit('submit-quote', SUBMIT_RATE_LIMIT_PER_HOUR))) {
     throw new Error('Trop de tentatives. Réessayez plus tard.')
   }
 
-  const col = await quotes()
-  const numero = await nextQuoteNumber()
+  const col = await quotesCol()
+  const portfolio = await fetchPortfolioSafe('submitQuote')
+  const terms = snapshotTerms(portfolio?.personal ?? defaultPersonalInfo)
+  const numero = await nextQuoteNumber('devis')
   const accessCode = generateAccessCode()
-  const signToken = randomBytes(SIGN_TOKEN_BYTES).toString('base64url')
-  const totalHT = payload.items.reduce((sum, it) => sum + it.quantite * it.prixUnitaireHT, 0)
-  const tva = Math.round(totalHT * TVA_RATE)
-  const totalTTC = totalHT + tva
+  const signToken = generateSignToken()
+  const { totalHT, tva, totalTTC } = computeTotals(items, terms)
   const dateEmission = new Date()
   const createdEvent: QuoteRecordEvent = { type: 'created', at: dateEmission }
 
+  const { brief: _rawBrief, ...rest } = payload
+  const stored: QuotePayload = { ...rest, items, ...(brief ? { brief } : {}) }
+
   const quote: Quote = {
-    ...payload,
+    ...stored,
     numero,
     accessCode,
     signToken,
@@ -256,12 +179,14 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
     tva,
     totalTTC,
     status: 'pending',
+    kind: 'devis',
+    terms,
     events: [{ ...createdEvent, at: createdEvent.at.toISOString() }],
   }
 
   await col.insertOne({
-    ...payload, numero, accessCode, signToken, dateEmission, validiteJours: VALIDITE_JOURS, totalHT, tva, totalTTC,
-    read: false, createdAt: new Date(), status: 'pending', events: [createdEvent],
+    ...stored, numero, accessCode, signToken, dateEmission, validiteJours: VALIDITE_JOURS, totalHT, tva, totalTTC,
+    read: false, createdAt: new Date(), status: 'pending', kind: 'devis', terms, events: [createdEvent],
   })
 
   // Notify the admin (+ send the client their own copy if we already have an
@@ -287,7 +212,7 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
         // public projection (see its docblock).
         const clientCopy = quoteClientCopyEmail({ ...quote, signToken: quote.signToken! }, adminEmail)
         await transporter.sendMail({
-          from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+          from: `"${terms.provider.name}" <${process.env.GMAIL_USER}>`,
           to: payload.clientEmail,
           subject: clientCopy.subject,
           html: clientCopy.html,
@@ -309,7 +234,7 @@ export async function lookupQuote(reference: string): Promise<Quote | null> {
   const ref = reference.trim().toUpperCase()
   if (!ref) return null
   if (!(await checkRateLimit('lookup-quote', LOOKUP_RATE_LIMIT_PER_HOUR))) return null
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ $or: [{ numero: ref }, { accessCode: ref }] })
   if (!doc) return null
   const quote = toQuote(doc)
@@ -323,8 +248,6 @@ export async function lookupQuote(reference: string): Promise<Quote | null> {
   return quote
 }
 
-const DOWNLOAD_PDF_RATE_LIMIT_PER_HOUR = 20
-
 // Server-rendered PDF for the "Télécharger PDF" button in QuoteView — reuses
 // the exact same pdf-lib document as the emailed attachment (real text,
 // running header, page numbers) instead of the old client-side
@@ -334,19 +257,24 @@ const DOWNLOAD_PDF_RATE_LIMIT_PER_HOUR = 20
 // trusting a client-supplied Quote object — accepting arbitrary quote JSON
 // from the browser would let anyone render a fake "signed contract" bearing
 // the site owner's name and branding.
-export async function downloadQuotePdf(accessCode: string): Promise<{ ok: true; filename: string; base64: string } | { ok: false; error: string }> {
+// `document: 'pv'` returns the delivery report instead of the devis/contract.
+export async function downloadQuotePdf(
+  accessCode: string,
+  document: 'auto' | 'pv' = 'auto',
+): Promise<{ ok: true; filename: string; base64: string } | { ok: false; error: string }> {
   if (typeof accessCode !== 'string') return { ok: false, error: 'Requête invalide.' }
   const code = accessCode.trim().toUpperCase()
   if (code.length < 4) return { ok: false, error: 'Code invalide.' }
   if (!(await checkRateLimit('download-quote-pdf', DOWNLOAD_PDF_RATE_LIMIT_PER_HOUR))) {
     return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
   }
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ accessCode: code })
   if (!doc) return { ok: false, error: 'Devis introuvable.' }
 
   const quote = toQuote(doc)
-  const variant: 'devis' | 'contrat' = quote.status === 'accepted' ? 'contrat' : 'devis'
+  if (document === 'pv' && !quote.delivery) return { ok: false, error: "Ce projet n'a pas encore été livré." }
+  const variant = document === 'pv' ? 'pv' : quote.status === 'accepted' ? 'contrat' : 'devis'
   const attachments = await buildQuoteAttachment(quote, variant)
   if (!attachments.length) return { ok: false, error: 'Erreur lors de la génération du PDF.' }
   return { ok: true, filename: attachments[0].filename, base64: attachments[0].content.toString('base64') }
@@ -369,7 +297,7 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
     return { ok: false, message: 'Trop de tentatives. Réessayez plus tard.' }
   }
   const ref = reference.trim().toUpperCase()
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ $or: [{ numero: ref }, { accessCode: ref }] })
   if (!doc) return { ok: false, message: 'Devis introuvable pour cette référence.' }
   if (doc.clientEmail && doc.clientEmail !== trimmedEmail) {
@@ -387,7 +315,7 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
       const clientCopy = quoteClientCopyEmail({ ...quote, signToken: quote.signToken! }, await getAdminEmail())
       const attachments = await buildQuoteAttachment(quote, quote.status === 'accepted' ? 'contrat' : 'devis')
       await transporter.sendMail({
-        from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+        from: `"${quote.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`,
         to: trimmedEmail,
         subject: clientCopy.subject,
         html: clientCopy.html,
@@ -403,42 +331,20 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
 
 // ── Electronic signature ─────────────────────────────────────────────────────
 
-const SIGNATURE_DATA_URL_PREFIX = 'data:image/png;base64,'
-
 export interface SignQuoteInput {
   clientName: string
   clientEmail?: string
   signatureDataUrl: string
+  // The signer ticked "I have read the conditions and I am authorised to bind
+  // myself / the company I represent" — required, and recorded in the audit
+  // trail next to the IP, so a company can't later say the signer had no
+  // authority without that statement being on record.
+  acceptedTerms: boolean
 }
 
 export type SignActionResult =
   | { ok: true; quote: Quote }
   | { ok: false; error: string }
-
-// Canonical snapshot of everything the client actually agreed to — hashed at
-// the moment of signing so any later, hypothetical tampering with the stored
-// document can be detected. Key order is fixed by construction, so the same
-// quote content always produces the same hash.
-function computeDocumentHash(doc: QuoteRecord): string {
-  const canonical = JSON.stringify({
-    numero: doc.numero,
-    client: { nom: doc.clientNom, societe: doc.clientSociete ?? '', adresse: doc.clientAdresse ?? '', email: doc.clientEmail ?? '', telephone: doc.clientTelephone ?? '' },
-    description: doc.descriptionProjet,
-    items: doc.items,
-    totalHT: doc.totalHT,
-    tva: doc.tva,
-    totalTTC: doc.totalTTC,
-    dateEmission: doc.dateEmission instanceof Date ? doc.dateEmission.toISOString() : doc.dateEmission,
-    validiteJours: doc.validiteJours,
-  })
-  return createHash('sha256').update(canonical).digest('hex')
-}
-
-function isExpired(doc: Pick<QuoteRecord, 'dateEmission' | 'validiteJours'>): boolean {
-  const expiry = new Date(doc.dateEmission)
-  expiry.setDate(expiry.getDate() + doc.validiteJours)
-  return Date.now() > expiry.getTime()
-}
 
 // Public: fetch a quote by its long, unguessable signing token — used by the
 // /devis/signature/[token] page. Deliberately never matched against
@@ -447,7 +353,7 @@ function isExpired(doc: Pick<QuoteRecord, 'dateEmission' | 'validiteJours'>): bo
 // and never exposed to search engines (the page is noindex).
 export async function getQuoteByToken(token: string): Promise<Quote | null> {
   if (typeof token !== 'string' || token.length < 20) return null
-  const col = await quotes()
+  const col = await quotesCol()
   // Matched by signToken alone — a doc found this way already has one, so
   // no backfill is needed (unlike lookupQuote/listQuotes, reached by
   // numero/accessCode, which can still hit pre-signature-feature records).
@@ -467,8 +373,9 @@ export async function getQuoteByToken(token: string): Promise<Quote | null> {
 // Finalizes a client's electronic signature. Once this succeeds, the quote
 // is legally locked: updateQuoteStatus() above refuses to touch a quote that
 // has a `signature`, and no code path in this file ever clears one. Any
-// later change requires a new quote (a fresh numero), never an edit to this
-// one — that immutability is what makes the signed PDF trustworthy.
+// later change requires a new quote (a fresh numero) or an avenant, never an
+// edit to this one — that immutability is what makes the signed PDF
+// trustworthy.
 export async function signQuote(token: string, input: SignQuoteInput): Promise<SignActionResult> {
   if (typeof token !== 'string' || token.length < 20) return { ok: false, error: 'Lien invalide.' }
 
@@ -478,6 +385,9 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
   }
   if (input.clientEmail && (!EMAIL_RE.test(input.clientEmail) || input.clientEmail.length > 254)) {
     return { ok: false, error: 'Adresse email invalide.' }
+  }
+  if (input.acceptedTerms !== true) {
+    return { ok: false, error: 'Vous devez confirmer avoir pris connaissance des conditions et être habilité à signer.' }
   }
   if (typeof input.signatureDataUrl !== 'string' || !input.signatureDataUrl.startsWith(SIGNATURE_DATA_URL_PREFIX)) {
     return { ok: false, error: 'Signature invalide.' }
@@ -492,7 +402,7 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
     return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
   }
 
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ signToken: token })
   if (!doc) return { ok: false, error: 'Devis introuvable.' }
   if (doc.signature) return { ok: false, error: 'Ce devis a déjà été signé.' }
@@ -522,7 +432,11 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
   const userAgent = (await headers()).get('user-agent') ?? undefined
 
   const signature: QuoteRecordSignature = { name: clientName, email: clientEmail, imageUrl, signedAt, documentHash }
-  const signedEvent: QuoteRecordEvent = { type: 'signed', at: signedAt, meta: { ip, ...(userAgent ? { userAgent } : {}) } }
+  const signedEvent: QuoteRecordEvent = {
+    type: 'signed',
+    at: signedAt,
+    meta: { ip, authority: 'confirmed', ...(userAgent ? { userAgent } : {}) },
+  }
 
   // Atomic compare-and-set: the filter re-checks `signature` still doesn't
   // exist at write time, so two concurrent signing requests for the same
@@ -545,7 +459,7 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
       const clientMail = quoteSignedClientEmail(quote, adminEmail)
       const adminMail = quoteSignedAdminEmail(quote)
       await Promise.all([
-        transporter.sendMail({ from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`, to: clientEmail, subject: clientMail.subject, html: clientMail.html, attachments }),
+        transporter.sendMail({ from: `"${quote.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`, to: clientEmail, subject: clientMail.subject, html: clientMail.html, attachments }),
         transporter.sendMail({ from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`, to: adminEmail, subject: adminMail.subject, html: adminMail.html, attachments }),
       ])
     } catch (e) {
@@ -565,7 +479,7 @@ export async function declineQuote(token: string): Promise<SignActionResult> {
     return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
   }
 
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ signToken: token })
   if (!doc) return { ok: false, error: 'Devis introuvable.' }
   if (doc.signature) return { ok: false, error: 'Ce devis a déjà été signé et ne peut plus être refusé.' }
@@ -598,7 +512,7 @@ export async function declineQuote(token: string): Promise<SignActionResult> {
 
 export async function listQuotes(): Promise<AdminQuote[]> {
   await requireAdmin()
-  const col = await quotes()
+  const col = await quotesCol()
   const docs = await col.find({}).sort({ createdAt: -1 }).limit(200).toArray()
   return Promise.all(docs.map(async (doc) => ({
     ...toQuote(await withSignToken(col, doc)),
@@ -611,13 +525,13 @@ export async function listQuotes(): Promise<AdminQuote[]> {
 
 export async function markQuoteRead(id: string): Promise<void> {
   await requireAdmin()
-  const col = await quotes()
+  const col = await quotesCol()
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { read: true } })
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {
   await requireAdmin()
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ _id: new ObjectId(id) })
   // A quote the client has electronically signed is legally locked — the
   // admin can no longer flip its status by hand (see signQuote()'s docblock).
@@ -637,7 +551,7 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus): Promis
         const attachments = await buildQuoteAttachment(quote, 'contrat')
         const email = quoteAcceptedEmail(quote, adminEmail)
         await transporter.sendMail({
-          from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+          from: `"${quote.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`,
           to: doc.clientEmail,
           subject: email.subject,
           html: email.html,
@@ -655,7 +569,7 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus): Promis
 // itself is fully automated: no need to write it by hand each time.
 export async function requestTestimonial(id: string): Promise<{ ok: boolean; message: string }> {
   await requireAdmin()
-  const col = await quotes()
+  const col = await quotesCol()
   const doc = await col.findOne({ _id: new ObjectId(id) })
   if (!doc) return { ok: false, message: 'Devis introuvable.' }
   if (!doc.clientEmail) return { ok: false, message: "Ce devis n'a pas d'email client enregistré." }
@@ -665,7 +579,7 @@ export async function requestTestimonial(id: string): Promise<{ ok: boolean; mes
     const adminEmail = await getAdminEmail()
     const email = testimonialRequestEmail({ clientNom: doc.clientNom, numero: doc.numero }, adminEmail)
     await transporter.sendMail({
-      from: `"Nawaf Nemrod SALAMI" <${process.env.GMAIL_USER}>`,
+      from: `"${doc.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`,
       to: doc.clientEmail,
       subject: email.subject,
       html: email.html,
@@ -681,6 +595,15 @@ export async function requestTestimonial(id: string): Promise<{ ok: boolean; mes
 
 export async function deleteQuote(id: string): Promise<void> {
   await requireAdmin()
-  const col = await quotes()
+  const col = await quotesCol()
+  const doc = await col.findOne({ _id: new ObjectId(id) })
+  // Invoices are accounting evidence and must stay traceable to their
+  // contract — a quote that has any may not simply disappear.
+  if (doc) {
+    const db = await getDb()
+    if (await db.collection('invoices').countDocuments({ quoteNumero: doc.numero })) {
+      throw new Error('Ce devis a des factures émises et ne peut pas être supprimé.')
+    }
+  }
   await col.deleteOne({ _id: new ObjectId(id) })
 }

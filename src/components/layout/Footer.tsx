@@ -256,6 +256,8 @@ export default function Footer({ personal, socials, locale, t, role }: FooterPro
           <Link href={`/${locale}/mentions-legales`} className="hover:underline">{t.footer.legalNotice}</Link>
           <span className="hidden sm:inline" aria-hidden="true">·</span>
           <Link href={`/${locale}/confidentialite`} className="hover:underline">{t.footer.privacyPolicy}</Link>
+          <span className="hidden sm:inline" aria-hidden="true">·</span>
+          <Link href={`/${locale}/cgv`} className="hover:underline">{t.footer.terms}</Link>
         </div>
       </div>
     </footer>

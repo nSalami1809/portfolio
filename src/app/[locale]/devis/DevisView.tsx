@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import FadeIn from '@/components/animations/FadeIn'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { submitQuote, lookupQuote } from '@/actions/quotes'
-import type { Quote } from '@/actions/quotes'
+import type { Quote, QuoteBrief } from '@/actions/quotes'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import type { Offer } from '@/types'
 
@@ -22,6 +22,16 @@ const fieldLabel = 'block text-xs font-medium mb-2'
 const labelStyle = { color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' } as const
 
 const EMPTY_FORM = { clientNom: '', clientSociete: '', clientAdresse: '', clientEmail: '', clientTelephone: '', descriptionProjet: '' }
+
+const BRIEF_FIELDS: { key: keyof QuoteBrief; label: keyof Dictionary['devis']; rows: number }[] = [
+  { key: 'objectifs', label: 'briefObjectifs', rows: 2 },
+  { key: 'publicCible', label: 'briefPublicCible', rows: 2 },
+  { key: 'fonctionnalites', label: 'briefFonctionnalites', rows: 3 },
+  { key: 'contenus', label: 'briefContenus', rows: 2 },
+  { key: 'references', label: 'briefReferences', rows: 2 },
+  { key: 'contraintes', label: 'briefContraintes', rows: 2 },
+  { key: 'echeance', label: 'briefEcheance', rows: 1 },
+]
 
 type Tier = 'simple' | 'standard' | 'complexe'
 const TIERS: Tier[] = ['simple', 'standard', 'complexe']
@@ -53,6 +63,7 @@ export default function DevisView({ t }: Props) {
   )
 
   const [form, setForm] = useState(EMPTY_FORM)
+  const [brief, setBrief] = useState<QuoteBrief>({})
   const [selections, setSelections] = useState<Record<string, Selection>>({})
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
@@ -102,6 +113,7 @@ export default function DevisView({ t }: Props) {
         clientTelephone: form.clientTelephone.trim(),
         descriptionProjet: form.descriptionProjet.trim(),
         items: selectedItems,
+        brief,
       })
       setCreatedQuote(quote)
     } catch {
@@ -114,6 +126,7 @@ export default function DevisView({ t }: Props) {
   const startNewQuote = () => {
     setCreatedQuote(null)
     setForm(EMPTY_FORM)
+    setBrief({})
     setSelections({})
   }
 
@@ -219,6 +232,27 @@ export default function DevisView({ t }: Props) {
                 <label htmlFor="dv-description" className={fieldLabel} style={labelStyle}>{t.descriptionLabel}</label>
                 <textarea id="dv-description" name="descriptionProjet" value={form.descriptionProjet} onChange={handleChange} required rows={4} maxLength={1500} placeholder={t.descriptionPlaceholder} className="input" style={{ resize: 'none' }} />
               </div>
+
+              <details className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <summary className="text-sm font-medium cursor-pointer" style={{ color: 'var(--text)' }}>{t.briefTitle}</summary>
+                <p className="text-xs mt-3 mb-4" style={{ color: 'var(--text-subtle)' }}>{t.briefHint}</p>
+                <div className="space-y-4">
+                  {BRIEF_FIELDS.map(({ key, label, rows }) => (
+                    <div key={key}>
+                      <label htmlFor={`dv-brief-${key}`} className={fieldLabel} style={labelStyle}>{t[label] as string}</label>
+                      <textarea
+                        id={`dv-brief-${key}`}
+                        value={brief[key] ?? ''}
+                        onChange={(e) => setBrief((p) => ({ ...p, [key]: e.target.value }))}
+                        rows={rows}
+                        maxLength={1000}
+                        className="input"
+                        style={{ resize: 'none' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </details>
 
               <div>
                 <p className={fieldLabel} style={labelStyle}>{t.offersLabel}</p>

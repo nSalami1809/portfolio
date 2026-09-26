@@ -7,6 +7,9 @@ import SignaturePad from '@/components/admin/SignaturePad'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { getQuoteByToken, signQuote, declineQuote } from '@/actions/quotes'
 import type { Quote } from '@/actions/quotes'
+import { useLocale } from '@/lib/i18n/useLocale'
+import { resolveTerms, splitPayment } from '@/lib/business'
+import AcceptanceCard from './AcceptanceCard'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
@@ -27,6 +30,7 @@ function isQuoteExpired(quote: Quote): boolean {
 export default function SignatureView({ token }: Props) {
   const { data } = usePortfolio()
   const { personal } = data
+  const locale = useLocale()
 
   const [phase, setPhase] = useState<Phase>('loading')
   const [quote, setQuote] = useState<Quote | null>(null)
@@ -83,6 +87,7 @@ export default function SignatureView({ token }: Props) {
         clientName: clientName.trim(),
         clientEmail: emailKnown ? undefined : clientEmail.trim(),
         signatureDataUrl,
+        acceptedTerms: accepted,
       })
       if (result.ok) { setQuote(result.quote); setPhase('signed') }
       else setError(result.error)
@@ -113,8 +118,12 @@ export default function SignatureView({ token }: Props) {
   if (!quote) return null
 
   const dateEmission = new Date(quote.dateEmission).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
-  const acompte = Math.round(quote.totalTTC * 0.3)
-  const solde = quote.totalTTC - acompte
+  const terms = resolveTerms(quote, personal)
+  const hasDeposit = terms.depositPercent > 0 && terms.depositPercent < 100
+  const { acompte, solde } = splitPayment(quote.totalTTC, terms.depositPercent)
+  const isAvenant = quote.kind === 'avenant'
+  const noun = isAvenant ? 'avenant' : 'devis'
+  const Noun = isAvenant ? 'Avenant' : 'Devis'
 
   return (
     <div className="relative min-h-dvh">
@@ -138,7 +147,7 @@ export default function SignatureView({ token }: Props) {
                   <div className="w-14 h-14 flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(0,128,0,0.1)' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                   </div>
-                  <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>Devis signé — {quote.numero}</p>
+                  <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{Noun} signé — {quote.numero}</p>
                   <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
                     Signé par {quote.signature?.name} le {quote.signature ? new Date(quote.signature.signedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                   </p>
@@ -146,21 +155,25 @@ export default function SignatureView({ token }: Props) {
               )}
               {phase === 'declined' && (
                 <>
-                  <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>Devis refusé — {quote.numero}</p>
-                  <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Vous avez refusé ce devis. Contactez {personal.name} si vous souhaitez en discuter.</p>
+                  <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{Noun} refusé — {quote.numero}</p>
+                  <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Vous avez refusé cet {isAvenant ? 'avenant' : 'devis'}. Contactez {personal.name} si vous souhaitez en discuter.</p>
                 </>
               )}
               {phase === 'expired' && (
                 <>
-                  <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>Devis expiré — {quote.numero}</p>
-                  <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>La validité de {quote.validiteJours} jours de ce devis est dépassée. Contactez {personal.name} pour une mise à jour.</p>
+                  <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{Noun} expiré — {quote.numero}</p>
+                  <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>La validité de {quote.validiteJours} jours de cet {isAvenant ? 'avenant' : 'devis'} est dépassée. Contactez {personal.name} pour une mise à jour.</p>
                 </>
               )}
               <button onClick={() => setShowFullDocument(true)} className="btn-primary btn-sm">
-                {phase === 'signed' ? 'Voir le contrat signé (PDF)' : 'Voir le devis (PDF)'}
+                {phase === 'signed' ? `Voir le ${isAvenant ? 'avenant' : 'contrat'} signé (PDF)` : `Voir le ${noun} (PDF)`}
               </button>
             </div>
           </FadeIn>
+        )}
+
+        {phase === 'signed' && quote.delivery && (
+          <AcceptanceCard token={token} quote={quote} onSigned={setQuote} />
         )}
 
         {(phase === 'review' || phase === 'sign') && (
@@ -168,8 +181,8 @@ export default function SignatureView({ token }: Props) {
             <FadeIn>
               <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
                 <div>
-                  <p className="section-label mb-1">Devis n° {quote.numero}</p>
-                  <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>Signature du devis</h1>
+                  <p className="section-label mb-1">{Noun} n° {quote.numero}</p>
+                  <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>Signature {isAvenant ? "de l'avenant" : 'du devis'}</h1>
                 </div>
                 <span
                   className="text-xs font-semibold px-2.5 py-1 flex-shrink-0"
@@ -203,8 +216,16 @@ export default function SignatureView({ token }: Props) {
                 <div className="grid sm:grid-cols-2 gap-3 text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
                   <p><strong style={{ color: 'var(--text)' }}>Émis le :</strong> {dateEmission}</p>
                   <p><strong style={{ color: 'var(--text)' }}>Validité :</strong> {quote.validiteJours} jours</p>
-                  <p><strong style={{ color: 'var(--text)' }}>Acompte (30 %) :</strong> {fmt(acompte)}</p>
-                  <p><strong style={{ color: 'var(--text)' }}>Solde à la livraison :</strong> {fmt(solde)}</p>
+                  {hasDeposit ? (
+                    <>
+                      <p><strong style={{ color: 'var(--text)' }}>Acompte ({terms.depositPercent} %) :</strong> {fmt(acompte)}</p>
+                      <p><strong style={{ color: 'var(--text)' }}>Solde à la livraison :</strong> {fmt(solde)}</p>
+                    </>
+                  ) : (
+                    <p><strong style={{ color: 'var(--text)' }}>Paiement :</strong> {fmt(quote.totalTTC)} à la livraison</p>
+                  )}
+                  <p><strong style={{ color: 'var(--text)' }}>Délai :</strong> {terms.deliveryDays} jours ouvrés{quote.extraDelayDays ? ` (+ ${quote.extraDelayDays} pour cet avenant)` : ''}</p>
+                  <p><strong style={{ color: 'var(--text)' }}>Révisions incluses :</strong> {terms.includedRevisions}</p>
                 </div>
 
                 <button onClick={() => setShowFullDocument(true)} className="btn-secondary btn-sm w-full justify-center">
@@ -224,8 +245,11 @@ export default function SignatureView({ token }: Props) {
                       className="w-4 h-4 mt-0.5 cursor-pointer flex-shrink-0"
                       style={{ accentColor: 'var(--accent)' }}
                     />
-                    <span className="text-sm" style={{ color: 'var(--text)' }}>
-                      J&apos;ai pris connaissance du devis et j&apos;accepte les prestations, tarifs et conditions qui y sont indiqués.
+                    <span className="text-sm" style={{ color: 'var(--text)', lineHeight: 1.6 }}>
+                      J&apos;ai pris connaissance du {noun} et des{' '}
+                      <a href={`/${locale}/cgv`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Conditions Générales de Vente</a>,
+                      {' '}j&apos;accepte les prestations, tarifs et conditions qui y sont indiqués, et je déclare avoir la capacité de m&apos;engager
+                      (et, si j&apos;agis pour une société, le pouvoir de l&apos;engager).
                     </span>
                   </label>
 
@@ -234,7 +258,7 @@ export default function SignatureView({ token }: Props) {
                       Continuer vers la signature
                     </button>
                     <button onClick={handleDecline} disabled={declining} className="text-sm font-medium" style={{ color: '#D90000' }}>
-                      {declining ? 'Envoi…' : 'Refuser le devis'}
+                      {declining ? 'Envoi…' : `Refuser l${isAvenant ? "'avenant" : 'e devis'}`}
                     </button>
                   </div>
                 </div>
@@ -279,7 +303,7 @@ export default function SignatureView({ token }: Props) {
 
                     <div className="flex items-center gap-3 flex-wrap">
                       <button onClick={handleSign} disabled={!canSign || submitting} className="btn-primary">
-                        {submitting ? 'Signature en cours…' : 'Signer et accepter le devis'}
+                        {submitting ? 'Signature en cours…' : `Signer et accepter l${isAvenant ? "'avenant" : 'e devis'}`}
                       </button>
                       <button onClick={() => setPhase('review')} disabled={submitting} className="text-sm font-medium" style={{ color: 'var(--text-subtle)' }}>
                         Retour

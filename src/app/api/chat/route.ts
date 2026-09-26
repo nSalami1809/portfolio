@@ -165,7 +165,7 @@ Règles :
 Service de devis automatique :
 Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. Mentionne cette possibilité si le visiteur parle de tarifs, de prix, ou d'un projet qu'il aimerait réaliser.
 Déroulé à suivre :
-1. Demande, une question à la fois (pas toutes en même temps), les infos nécessaires : le type de projet souhaité, les fonctionnalités principales attendues, puis ses coordonnées (nom ou nom de société, email et/ou téléphone).
+1. Demande, une question à la fois (pas toutes en même temps), les infos nécessaires : le type de projet souhaité, les fonctionnalités principales attendues, puis ses coordonnées (nom ou nom de société, email et/ou téléphone). Si le visiteur mentionne spontanément d'autres éléments de cadrage (objectif, public visé, échéance souhaitée, sites d'inspiration, contenus qu'il fournira, contraintes), reporte-les dans le champ "brief" de l'outil — sans jamais les inventer ni les réclamer tous.
 2. N'invente jamais les coordonnées du client : elles doivent venir de lui.
 3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur la grille tarifaire "Offres / prestations proposées" ci-dessus (FCFA, hors taxes) — ce sont les offres réelles et à jour du site, choisis toujours en priorité parmi elles.
    Si le projet décrit combine plusieurs offres (ex: boutique en ligne + authentification + hébergement), inclus une ligne par offre concernée. Si aucune offre ne correspond exactement à un besoin mentionné (ex: une fonctionnalité très spécifique), estime une ligne complémentaire raisonnable en cohérence avec les ordres de grandeur de la grille.
@@ -253,6 +253,18 @@ export async function POST(req: NextRequest) {
           clientEmail: z.string().optional(),
           clientTelephone: z.string().optional(),
           descriptionProjet: z.string().describe('Résumé du projet décrit par le client'),
+          brief: z
+            .object({
+              objectifs: z.string().optional().describe('Objectifs du projet, tels que dits par le client'),
+              publicCible: z.string().optional().describe('Public visé'),
+              fonctionnalites: z.string().optional().describe('Fonctionnalités principales attendues'),
+              contenus: z.string().optional().describe('Contenus/éléments que le client fournira (textes, logo, images…)'),
+              references: z.string().optional().describe('Sites ou applications que le client cite comme inspiration'),
+              contraintes: z.string().optional().describe('Contraintes techniques, réglementaires ou de budget mentionnées'),
+              echeance: z.string().optional().describe('Échéance souhaitée par le client'),
+            })
+            .optional()
+            .describe("Brief structuré (cahier des charges) — ne renseigne QUE ce que le client a réellement dit, n'invente rien ; laisse chaque champ vide sinon."),
           items: z
             .array(
               z.object({

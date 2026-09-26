@@ -2,15 +2,19 @@ import type { Metadata } from 'next'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import { identityLines, resolveBusiness, type ResolvedBusiness } from '@/lib/business'
+import { parseLocation } from '@/lib/quote-document'
 
 export const metadata: Metadata = { robots: { index: false, follow: true } }
 
-function content(locale: 'fr' | 'en', name: string, email: string, location: string) {
+function content(locale: 'fr' | 'en', name: string, email: string, location: string, b: ResolvedBusiness) {
+  const identity = identityLines(b).join(' · ')
+  const where = b.address || location
   if (locale === 'en') {
     return {
       title: 'Legal notice',
       sections: [
-        { h: 'Site owner', b: `This site is published by ${name}, an independent freelance developer based in ${location}. Contact: ${email}.` },
+        { h: 'Site owner', b: `This site is published by ${name}, an independent freelance developer based in ${where}${identity ? ` (${identity})` : ''}. Contact: ${email}.` },
         { h: 'Hosting', b: 'This site is hosted by Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA).' },
         { h: 'Data storage', b: 'Application data (portfolio content, quotes, messages, bookings) is stored with MongoDB Atlas.' },
         { h: 'Intellectual property', b: `All content on this site (text, visual identity, code) is the property of ${name} unless otherwise stated, and may not be reproduced without prior consent.` },
@@ -21,7 +25,7 @@ function content(locale: 'fr' | 'en', name: string, email: string, location: str
   return {
     title: 'Mentions légales',
     sections: [
-      { h: 'Éditeur du site', b: `Ce site est édité par ${name}, développeur freelance indépendant basé à ${location}. Contact : ${email}.` },
+      { h: 'Éditeur du site', b: `Ce site est édité par ${name}, développeur freelance indépendant basé à ${where}${identity ? ` (${identity})` : ''}. Contact : ${email}.` },
       { h: 'Hébergement', b: 'Ce site est hébergé par Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA).' },
       { h: 'Stockage des données', b: 'Les données de l\'application (contenu du portfolio, devis, messages, rendez-vous) sont stockées via MongoDB Atlas.' },
       { h: 'Propriété intellectuelle', b: `L'ensemble du contenu de ce site (textes, identité visuelle, code) est la propriété de ${name}, sauf mention contraire, et ne peut être reproduit sans accord préalable.` },
@@ -36,7 +40,8 @@ export default async function LegalNoticePage({ params }: { params: Promise<{ lo
   const portfolio = await fetchPortfolioSafe('mentions-legales/page')
   const personal = portfolio?.personal ?? defaultPersonalInfo
 
-  const { title, sections } = content(locale === 'en' ? 'en' : 'fr', personal.name, personal.email, personal.location)
+  const { ville, pays } = parseLocation(personal.location)
+  const { title, sections } = content(locale === 'en' ? 'en' : 'fr', personal.name, personal.email, `${ville}, ${pays}`, resolveBusiness(personal))
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20">

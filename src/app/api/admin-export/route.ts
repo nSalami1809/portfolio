@@ -24,9 +24,10 @@ export async function GET(req: NextRequest) {
   }
 
   const db = await getDb()
-  const [portfolio, quotes, contacts, bookings, waitlist] = await Promise.all([
+  const [portfolio, quotes, invoices, contacts, bookings, waitlist] = await Promise.all([
     db.collection('portfolio').findOne({ _id: 'main' as unknown as never }),
     db.collection('quotes').find({}).sort({ createdAt: -1 }).toArray(),
+    db.collection('invoices').find({}).sort({ issuedAt: -1 }).toArray(),
     db.collection('contacts').find({}).sort({ createdAt: -1 }).toArray(),
     db.collection('bookings').find({}).sort({ createdAt: -1 }).toArray(),
     db.collection('waitlist').find({}).sort({ createdAt: -1 }).toArray(),
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
     exportedAt: new Date().toISOString(),
     portfolio,
     quotes,
+    invoices,
     contacts,
     bookings,
     waitlist,

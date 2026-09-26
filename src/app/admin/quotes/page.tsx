@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic'
 import { m } from 'framer-motion'
 import { listQuotes, markQuoteRead, deleteQuote, updateQuoteStatus, requestTestimonial } from '@/actions/quotes'
 import type { AdminQuote, QuoteStatus } from '@/actions/quotes'
+import { listInvoices, type Invoice } from '@/actions/billing'
+import QuoteWorkflowPanel from '@/components/admin/QuoteWorkflowPanel'
 import { useToast } from '@/components/admin/Toast'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
@@ -28,6 +30,12 @@ const EVENT_LABEL: Record<string, string> = {
   signed: 'Devis signé électroniquement',
   declined: 'Devis refusé par le client',
   status_changed: 'Statut modifié manuellement',
+  delivered: 'Projet livré — procès-verbal envoyé',
+  delivery_accepted: 'Procès-verbal de recette signé par le client',
+  avenant_created: 'Avenant créé',
+  invoice_issued: 'Facture émise',
+  invoice_paid: 'Facture payée — reçu émis',
+  invoice_cancelled: 'Facture annulée',
 }
 
 function formatEventDate(iso: string) {
@@ -37,6 +45,7 @@ function formatEventDate(iso: string) {
 export default function AdminQuotes() {
   const toast = useToast()
   const [quotes, setQuotes]     = useState<AdminQuote[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading]   = useState(true)
   const [filter, setFilter]     = useState<Filter>('tous')
   const [selected, setSelected] = useState<AdminQuote | null>(null)
@@ -44,9 +53,15 @@ export default function AdminQuotes() {
   const [requesting, setRequesting] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try { setQuotes(await listQuotes()) } finally { setLoading(false) }
+  // `silent` refreshes in place (after an action in a row's panel) instead of
+  // swapping the whole list for skeletons and collapsing the open panel.
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    try {
+      const [q, inv] = await Promise.all([listQuotes(), listInvoices()])
+      setQuotes(q)
+      setInvoices(inv)
+    } finally { if (!silent) setLoading(false) }
   }, [])
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -113,6 +128,8 @@ export default function AdminQuotes() {
       await deleteQuote(id)
       setQuotes((prev) => prev.filter((q) => q.id !== id))
       if (selected?.id === id) setSelected(null)
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Suppression impossible.', 'error')
     } finally { setDeleting(null) }
   }
 
@@ -177,7 +194,7 @@ export default function AdminQuotes() {
           </button>
         ))}
         <button
-          onClick={load}
+          onClick={() => load()}
           className="ml-auto mb-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors hover:bg-[var(--surface-hover)]"
           style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
           title="Rafraîchir"
@@ -240,7 +257,7 @@ export default function AdminQuotes() {
                     {q.clientNom}
                   </p>
                   <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                    {q.numero}
+                    {q.numero}{q.kind === 'avenant' && q.parentNumero ? ` · avenant à ${q.parentNumero}` : ''}
                   </span>
                 </div>
                 <p className="text-xs truncate" style={{ color: q.read ? 'var(--text-subtle)' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
@@ -343,6 +360,7 @@ export default function AdminQuotes() {
                     ))}
                   </ul>
                 )}
+                <QuoteWorkflowPanel quote={q} invoices={invoices} onChanged={() => load(true)} notify={toast} />
               </div>
             )}
           </div>
@@ -350,7 +368,7 @@ export default function AdminQuotes() {
         </div>
       )}
 
-      {selected && <QuoteView quote={selected} onClose={() => setSelected(null)} />}
+      {selected && <QuoteView quote={selected} onClose={() => setSelected(null)} variant={selected.status === 'accepted' ? 'contrat' : 'devis'} />}
     </>
   )
 }
