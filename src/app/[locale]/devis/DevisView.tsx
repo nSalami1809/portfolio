@@ -8,6 +8,8 @@ import { submitQuote, lookupQuote } from '@/actions/quotes'
 import type { Quote, QuoteBrief } from '@/actions/quotes'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import type { Offer } from '@/types'
+import EurHint from '@/components/EurHint'
+import Disclosure from '@/components/ui/Disclosure'
 
 // QuoteView (qrcode dependency) is only needed once a quote actually exists
 // — lazy-loaded so it never adds weight to visitors filling the form.
@@ -66,6 +68,7 @@ export default function DevisView({ t, offers }: Props) {
 
   const [form, setForm] = useState(EMPTY_FORM)
   const [brief, setBrief] = useState<QuoteBrief>({})
+  const briefFilled = Object.values(brief).filter((v) => typeof v === 'string' && v.trim()).length
   const [selections, setSelections] = useState<Record<string, Selection>>({})
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
@@ -186,7 +189,7 @@ export default function DevisView({ t, offers }: Props) {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
               <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{createdQuote.numero}</p>
-              <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{fmt(createdQuote.totalTTC)} TTC</p>
+              <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{fmt(createdQuote.totalTTC)} TTC<EurHint fcfa={createdQuote.totalTTC} /></p>
               <button onClick={startNewQuote} className="btn-secondary btn-sm">{t.newQuoteButton}</button>
             </div>
           </FadeIn>
@@ -236,9 +239,20 @@ export default function DevisView({ t, offers }: Props) {
                 <textarea id="dv-description" name="descriptionProjet" value={form.descriptionProjet} onChange={handleChange} required rows={4} maxLength={1500} placeholder={t.descriptionPlaceholder} className="input" style={{ resize: 'none' }} />
               </div>
 
-              <details className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <summary className="text-sm font-medium cursor-pointer" style={{ color: 'var(--text)' }}>{t.briefTitle}</summary>
-                <p className="text-xs mt-3 mb-4" style={{ color: 'var(--text-subtle)' }}>{t.briefHint}</p>
+              <Disclosure
+                variant="prominent"
+                title={t.briefTitle}
+                subtitle={t.briefSubtitle}
+                badge={briefFilled > 0 ? `${briefFilled} / ${BRIEF_FIELDS.length}` : t.briefBadge}
+                icon={(
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="4" width="14" height="17" rx="2" />
+                    <path d="M9 4V3h6v1" />
+                    <path d="M9 10h6M9 14h6M9 18h3" />
+                  </svg>
+                )}
+              >
+                <p className="text-xs mb-4" style={{ color: 'var(--text-subtle)' }}>{t.briefHint}</p>
                 <div className="space-y-4">
                   {BRIEF_FIELDS.map(({ key, label, rows }) => (
                     <div key={key}>
@@ -255,7 +269,7 @@ export default function DevisView({ t, offers }: Props) {
                     </div>
                   ))}
                 </div>
-              </details>
+              </Disclosure>
 
               <div>
                 <p className={fieldLabel} style={labelStyle}>{t.offersLabel}</p>
@@ -273,7 +287,7 @@ export default function DevisView({ t, offers }: Props) {
                             <div className="flex items-center justify-between gap-3 mb-2.5">
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{o.title}</p>
-                                <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{fmt(o.priceHTMin)} – {fmt(o.priceHTMax)} HT</p>
+                                <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{fmt(o.priceHTMin)} – {fmt(o.priceHTMax)} HT<EurHint fcfa={o.priceHTMin} fcfaMax={o.priceHTMax} /></p>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <span id={`qty-label-${o.id}`} className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.quantityLabel}</span>
@@ -333,7 +347,7 @@ export default function DevisView({ t, offers }: Props) {
                                   </button>
                                 ))}
                               </div>
-                              <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{fmt(unitPrice)} HT</span>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{fmt(unitPrice)} HT<EurHint fcfa={unitPrice} /></span>
                             </div>
                           </div>
                         )
@@ -346,7 +360,7 @@ export default function DevisView({ t, offers }: Props) {
               {selectedItems.length > 0 && (
                 <div className="flex items-center justify-between p-3" style={{ background: 'var(--accent-glow)' }}>
                   <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t.totalPreviewLabel}</span>
-                  <span className="font-display font-bold" style={{ color: 'var(--accent)' }}>{fmt(estimatedTotal)}</span>
+                  <span className="font-display font-bold" style={{ color: 'var(--accent)' }}>{fmt(estimatedTotal)}<EurHint fcfa={estimatedTotal} className="block text-xs" /></span>
                 </div>
               )}
 

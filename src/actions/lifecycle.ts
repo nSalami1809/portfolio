@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 import { uploadPublicImage } from '@/lib/blob-upload'
 import { loggedMailer } from '@/lib/mail-safe'
 import { getAdminEmail } from '@/lib/admin-config'
+import { notifyAdmin } from '@/lib/push'
 import { requireAdmin } from '@/lib/require-admin'
 import { acceptanceSignedAdminEmail } from '@/lib/email-templates'
 import { deliveryEmail, acceptanceSignedClientEmail, quoteClientCopyEmail } from '@/lib/email-client'
@@ -185,6 +186,7 @@ export async function signAcceptance(token: string, input: SignAcceptanceInput):
   if (result.matchedCount === 0) return { ok: false, error: 'Ce procès-verbal a déjà été signé.' }
 
   const quote = toQuote((await col.findOne({ _id: doc._id }))!)
+  after(() => notifyAdmin({ title: `Recette signée — ${quote.numero}`, body: `${quote.acceptance?.name ?? quote.clientNom} a signé le procès-verbal${quote.acceptance?.reserves ? ' (avec réserves)' : ''}.`, url: '/admin/quotes' }))
   after(async () => {
     try {
       const transporter = loggedMailer({ kind: 'pv', quoteId: doc._id.toString() })
@@ -273,4 +275,22 @@ export async function createAvenant(parentId: string, input: AvenantInput): Prom
     })
   }
   return { ok: true, message: `Avenant ${numero} créé${quote.clientEmail ? ' et envoyé au client pour signature' : " (le client n'a pas d'email : copiez le lien de signature)"}.` }
+}
+
+// The client asked for a change outside the tracking page (WhatsApp, a call…):
+// log it so the count against the included revisions stays true.
+export async function logRevision(quoteId: string, note: string): Promise<LifecycleResult> {
+  await requireAdmin()
+  const text = typeof note === 'string' ? note.trim().slice(0, 1000) : ''
+  if (text.length < 3) return { ok: false, message: 'Décrivez brièvement la modification demandée.' }
+  const col = await quotesCol()
+  const doc = await col.findOne({ _id: new ObjectId(quoteId) })
+  if (!doc) return { ok: false, message: 'Devis introuvable.' }
+  if (doc.status !== 'accepted') return { ok: false, message: 'Le devis doit être accepté.' }
+  const at = new Date()
+  const used = (doc.revisions?.length ?? 0) + 1
+  const included = resolveTerms(doc, defaultPersonalInfo).includedRevisions
+  const event: QuoteRecordEvent = { type: 'revision_requested', at, meta: { source: 'admin', n: String(used), of: String(included) } }
+  await col.updateOne({ _id: doc._id }, { $push: { revisions: { at, note: text, source: 'admin' }, events: event } })
+  return { ok: true, message: used > included ? `Révision ${used}/${included} enregistrée — au-delà du forfait : pensez à proposer un avenant.` : `Révision ${used}/${included} enregistrée.` }
 }

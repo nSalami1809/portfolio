@@ -3,7 +3,7 @@ import { PDFDocument } from 'pdf-lib'
 import { generateQuotePdf } from '@/lib/quote-pdf'
 import { generateInvoicePdf } from '@/lib/invoice-pdf'
 import { computeTotals, snapshotTerms, splitPayment, splitTTC } from '@/lib/business'
-import type { Invoice } from '@/actions/billing'
+import type { Invoice } from '@/lib/invoicing'
 import { DATE, ITEMS, PERSONAL, makeQuote } from './fixtures'
 
 // Nothing listens here: the logo / signature downloads fail fast and the

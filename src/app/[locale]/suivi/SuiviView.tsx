@@ -5,7 +5,10 @@ import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { getProjectTracking, type ProjectTracking } from '@/actions/tracking'
+import { requestRevision } from '@/actions/client-space'
+import { ACCEPT_ATTRIBUTE } from '@/lib/client-files'
 import type { TrackState } from '@/lib/tracking-steps'
+import EurHint from '@/components/EurHint'
 
 const STATE_COLOR: Record<TrackState, string> = {
   done: '#008000',
@@ -43,8 +46,64 @@ export default function SuiviView() {
   const [error, setError] = useState('')
   const [tracking, setTracking] = useState<ProjectTracking | null>(null)
 
+  const [revisionNote, setRevisionNote] = useState('')
+  const [revisionBusy, setRevisionBusy] = useState(false)
+  const [revisionMsg, setRevisionMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [uploadBusy, setUploadBusy] = useState(false)
+  const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
   const dateLocale = locale === 'en' ? 'en-GB' : 'fr-FR'
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })
+
+  const refresh = async (code: string) => {
+    const result = await getProjectTracking(code, locale)
+    if (result.ok) setTracking(result.tracking)
+  }
+
+  const sendRevision = async () => {
+    if (!tracking || revisionBusy) return
+    setRevisionBusy(true)
+    setRevisionMsg(null)
+    try {
+      const code = new URLSearchParams(window.location.search).get('ref') ?? ''
+      const result = await requestRevision(code, revisionNote)
+      if (result.ok) {
+        setRevisionNote('')
+        setRevisionMsg({ ok: true, text: t.revisionsSent })
+        await refresh(code)
+      } else {
+        setRevisionMsg({ ok: false, text: t.revisionsErrors[result.error] ?? t.revisionsErrors.generic })
+      }
+    } catch {
+      setRevisionMsg({ ok: false, text: t.revisionsErrors.generic })
+    } finally {
+      setRevisionBusy(false)
+    }
+  }
+
+  const sendFile = async (file: File | undefined) => {
+    if (!file || !tracking || uploadBusy) return
+    setUploadBusy(true)
+    setUploadMsg(null)
+    try {
+      const code = new URLSearchParams(window.location.search).get('ref') ?? ''
+      const body = new FormData()
+      body.set('code', code)
+      body.set('file', file)
+      const res = await fetch('/api/client-upload', { method: 'POST', body })
+      const json = (await res.json().catch(() => null)) as { ok: boolean; error?: string } | null
+      if (json?.ok) {
+        setUploadMsg({ ok: true, text: t.filesSent })
+        await refresh(code)
+      } else {
+        setUploadMsg({ ok: false, text: t.filesErrors[json?.error ?? 'generic'] ?? t.filesErrors.generic })
+      }
+    } catch {
+      setUploadMsg({ ok: false, text: t.filesErrors.generic })
+    } finally {
+      setUploadBusy(false)
+    }
+  }
 
   const run = async (raw: string) => {
     const value = raw.trim()
@@ -127,7 +186,7 @@ export default function SuiviView() {
               </div>
               <div className="text-right">
                 <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.totalLabel}</p>
-                <p className="font-display font-bold text-xl" style={{ color: 'var(--accent)' }}>{tracking.totalTTC.toLocaleString(dateLocale)} FCFA</p>
+                <p className="font-display font-bold text-xl" style={{ color: 'var(--accent)' }}>{tracking.totalTTC.toLocaleString(dateLocale)} FCFA<EurHint fcfa={tracking.totalTTC} className="block text-xs" /></p>
               </div>
             </div>
 
@@ -168,6 +227,68 @@ export default function SuiviView() {
               <Link href={tracking.links.documentPath} className="btn-secondary btn-sm">{t.docCta}</Link>
             </div>
           </div>
+
+          {(tracking.revisions.open || tracking.revisions.used > 0) && (
+            <div className="card no-lift p-6 mb-6">
+              <p className="section-label mb-2">{t.revisionsTitle}</p>
+              <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>{t.revisionsCount(tracking.revisions.used, tracking.revisions.included)}</p>
+              {tracking.revisions.used >= tracking.revisions.included && tracking.revisions.open && (
+                <p className="text-sm mb-4 px-3 py-2" style={{ background: 'rgba(228,87,66,0.1)', color: 'var(--text)', border: '1px solid rgba(228,87,66,0.3)' }}>{t.revisionsOver}</p>
+              )}
+              {tracking.revisions.requests.length > 0 && (
+                <ul className="mb-4 space-y-2">
+                  {tracking.revisions.requests.map((r, i) => (
+                    <li key={i} className="text-sm" style={{ color: 'var(--text)' }}>
+                      <span className="text-xs mr-2" style={{ color: 'var(--text-subtle)' }}>{formatDate(r.at)}</span>{r.note}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {tracking.revisions.open ? (
+                <>
+                  <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>{t.revisionsIntro}</p>
+                  <textarea
+                    className="input" rows={3} value={revisionNote} maxLength={1000} style={{ resize: 'vertical' }}
+                    onChange={(e) => setRevisionNote(e.target.value)} placeholder={t.revisionsPlaceholder} aria-label={t.revisionsTitle}
+                  />
+                  <div className="flex items-center gap-3 flex-wrap mt-3">
+                    <button className="btn-primary btn-sm" onClick={sendRevision} disabled={revisionBusy || revisionNote.trim().length < 10}>
+                      {revisionBusy ? t.revisionsSending : t.revisionsSend}
+                    </button>
+                    {revisionMsg && <span className="text-sm" role="status" style={{ color: revisionMsg.ok ? '#008000' : '#D90000' }}>{revisionMsg.text}</span>}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t.revisionsClosed}</p>
+              )}
+            </div>
+          )}
+
+          {tracking.files.open && (
+            <div className="card no-lift p-6 mb-6">
+              <p className="section-label mb-2">{t.filesTitle}</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>{t.filesIntro}</p>
+              {tracking.files.items.length === 0 ? (
+                <p className="text-sm mb-4" style={{ color: 'var(--text-subtle)' }}>{t.filesEmpty}</p>
+              ) : (
+                <ul className="mb-4 space-y-1.5">
+                  {tracking.files.items.map((f, i) => (
+                    <li key={i} className="text-sm flex items-center justify-between gap-3" style={{ color: 'var(--text)' }}>
+                      <span className="min-w-0 truncate">{f.name}</span>
+                      <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-subtle)' }}>{formatDate(f.at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className={`btn-secondary btn-sm cursor-pointer ${uploadBusy ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {uploadBusy ? t.filesUploading : t.filesPick}
+                  <input type="file" accept={ACCEPT_ATTRIBUTE} className="sr-only" disabled={uploadBusy} onChange={(e) => { sendFile(e.target.files?.[0]); e.target.value = '' }} />
+                </label>
+                {uploadMsg && <span className="text-sm" role="status" style={{ color: uploadMsg.ok ? '#008000' : '#D90000' }}>{uploadMsg.text}</span>}
+              </div>
+            </div>
+          )}
 
           {tracking.avenants.length > 0 && (
             <div className="card no-lift p-6">

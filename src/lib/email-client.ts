@@ -385,3 +385,160 @@ export function testimonialRequestEmail(data: { clientNom: string; numero: strin
     ),
   }
 }
+
+// ── Signature code ───────────────────────────────────────────────────────────
+
+export function signatureCodeEmail(data: { numero: string; code: string; clientNom?: string; kind?: string; locale?: string }) {
+  const l = mailLocale(data.locale)
+  const noun = pick(l, isAvenant(data.kind) ? 'avenant' : 'devis', isAvenant(data.kind) ? 'amendment' : 'quote')
+  const firstName = data.clientNom ? esc(data.clientNom).split(' ')[0] : ''
+
+  return {
+    subject: pick(l, `[${data.code}] Votre code de signature — ${noun} ${data.numero}`, `[${data.code}] Your signing code — ${noun} ${data.numero}`),
+    html: base(
+      pick(l, 'Code de signature', 'Signing code'),
+      pick(l, `Votre code de signature est ${data.code} — valable 10 minutes`, `Your signing code is ${data.code} — valid for 10 minutes`),
+      `
+      ${badge(pick(l, 'Signature électronique', 'Electronic signature'))}
+      ${heading(pick(l, `Votre code de signature${firstName ? `, ${firstName}` : ''}`, `Your signing code${firstName ? `, ${firstName}` : ''}`))}
+      ${intro(pick(
+        l,
+        `Saisissez ce code sur la page de signature pour confirmer que vous êtes bien à l’origine de la signature du ${noun} ${strong(esc(data.numero))}. Il est valable ${strong('10 minutes')}.`,
+        `Enter this code on the signing page to confirm that you are the one signing ${noun} ${strong(esc(data.numero))}. It is valid for ${strong('10 minutes')}.`,
+      ))}
+
+      ${infoBox(`
+        <p style="margin:0;text-align:center;font-size:32px;font-weight:800;color:#131318;letter-spacing:0.3em;font-family:'Courier New',Courier,monospace">${esc(data.code)}</p>
+      `)}
+
+      <p style="margin:0;font-size:12px;color:#9A9AA6;line-height:1.6">${pick(l, 'Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail : personne ne peut signer sans ce code.', 'If you did not request this, ignore this email: nobody can sign without this code.')}</p>
+    `,
+      l,
+    ),
+  }
+}
+
+// ── Automatic reminders ──────────────────────────────────────────────────────
+
+export function quoteExpiringEmail(data: { numero: string; signToken: string; clientNom: string; kind?: string; locale?: string; expiresAt: string; daysLeft: number }, adminEmail: string) {
+  const l = mailLocale(data.locale)
+  const noun = pick(l, isAvenant(data.kind) ? 'avenant' : 'devis', isAvenant(data.kind) ? 'amendment' : 'quote')
+  const firstName = esc(data.clientNom).split(' ')[0]
+  const left = pick(l, `${data.daysLeft} jour${data.daysLeft > 1 ? 's' : ''}`, `${data.daysLeft} day${data.daysLeft > 1 ? 's' : ''}`)
+
+  return {
+    subject: pick(l, `Votre ${noun} ${data.numero} expire dans ${left}`, `Your ${noun} ${data.numero} expires in ${left}`),
+    html: base(
+      pick(l, 'Rappel', 'Reminder'),
+      pick(l, `Votre ${noun} est valable jusqu’au ${day(data.expiresAt, l)}`, `Your ${noun} is valid until ${day(data.expiresAt, l)}`),
+      `
+      ${badge(`${pick(l, isAvenant(data.kind) ? 'Avenant' : 'Devis', isAvenant(data.kind) ? 'Amendment' : 'Quote')} ${esc(data.numero)}`)}
+      ${heading(pick(l, `Votre ${noun} arrive à échéance`, `Your ${noun} is about to expire`))}
+      ${intro(pick(
+        l,
+        `Bonjour ${firstName}, votre ${noun} ${strong(esc(data.numero))} reste valable jusqu’au ${strong(esc(day(data.expiresAt, l)))}. Passé ce délai, les prix et conditions pourront être révisés. Si le projet vous intéresse toujours, vous pouvez le signer en ligne en quelques minutes ; sinon, n’hésitez pas à me dire ce qui vous retient.`,
+        `Hello ${firstName}, your ${noun} ${strong(esc(data.numero))} remains valid until ${strong(esc(day(data.expiresAt, l)))}. After that, prices and conditions may be revised. If the project still interests you, you can sign it online in a few minutes; otherwise, feel free to tell me what is holding you back.`,
+      ))}
+
+      ${ctaButton(`${SITE_URL}/${l}/devis/signature/${data.signToken}`, pick(l, `Consulter et signer le ${noun}`, `Review and sign the ${noun}`))}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`${data.numero}`)}`, pick(l, 'Poser une question', 'Ask a question'))}
+    `,
+      l,
+    ),
+  }
+}
+
+export function invoiceOverdueEmail(data: InvoiceMailData & { reminderNumber: number; latePenaltyRate?: number }, adminEmail: string) {
+  const l = mailLocale(data.locale)
+  const firstName = esc(data.client.nom).split(' ')[0]
+  const deposit = data.kind === 'acompte'
+  const late = data.latePenaltyRate && data.latePenaltyRate > 0
+    ? pick(
+      l,
+      ` Conformément aux conditions de vente, des pénalités de retard de ${data.latePenaltyRate} % par mois peuvent s’appliquer.`,
+      ` As stated in the terms of sale, late-payment penalties of ${data.latePenaltyRate}% per month may apply.`,
+    )
+    : ''
+
+  return {
+    subject: pick(
+      l,
+      `${data.reminderNumber > 1 ? 'Nouveau rappel' : 'Rappel'} — facture ${data.numero} en attente de règlement`,
+      `${data.reminderNumber > 1 ? 'Further reminder' : 'Reminder'} — invoice ${data.numero} awaiting payment`,
+    ),
+    html: base(
+      pick(l, 'Rappel de paiement', 'Payment reminder'),
+      pick(l, `Facture ${data.numero} — ${money(data.netToPay, l)} en attente`, `Invoice ${data.numero} — ${money(data.netToPay, l)} outstanding`),
+      `
+      ${badge(`${pick(l, 'Facture', 'Invoice')} ${esc(data.numero)}`)}
+      ${heading(pick(l, 'Un petit rappel', 'A quick reminder'))}
+      ${intro(pick(
+        l,
+        `Bonjour ${firstName}, sauf erreur de ma part, la facture ${deposit ? 'd’acompte' : 'de solde'} ${strong(esc(data.numero))} (échéance : ${esc(day(data.dueAt, l))}) n’a pas encore été réglée. Si le paiement est déjà parti, merci d’ignorer ce message et de m’en envoyer la référence.${late}`,
+        `Hello ${firstName}, unless I am mistaken, the ${deposit ? 'deposit' : 'balance'} invoice ${strong(esc(data.numero))} (due ${esc(day(data.dueAt, l))}) has not been paid yet. If the payment is already on its way, please ignore this message and send me the reference.${late}`,
+      ))}
+
+      ${infoBox(`
+        ${smallLabel(pick(l, 'Montant à régler', 'Amount to pay'))}
+        <p style="margin:0 0 14px;font-size:22px;font-weight:800;color:#131318">${money(data.netToPay, l)}</p>
+        ${smallLabel(pick(l, 'Moyens de paiement', 'Payment methods'))}
+        <p style="margin:0;font-size:13.5px;color:#26262E;line-height:1.6;white-space:pre-wrap">${esc(data.terms.paymentMethods)}${data.terms.paymentDetails ? `\n${esc(data.terms.paymentDetails)}` : ''}</p>
+      `)}
+
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Facture ${data.numero}`, `Invoice ${data.numero}`))}`, pick(l, 'Répondre à cet e-mail', 'Reply to this email'))}
+    `,
+      l,
+    ),
+  }
+}
+
+export function recetteReminderEmail(data: { numero: string; deliveryToken: string; clientNom: string; locale?: string; deemedAt: string }, adminEmail: string) {
+  const l = mailLocale(data.locale)
+  const firstName = esc(data.clientNom).split(' ')[0]
+
+  return {
+    subject: pick(l, `Rappel — procès-verbal de recette ${data.numero} à signer`, `Reminder — acceptance report ${data.numero} to sign`),
+    html: base(
+      pick(l, 'Rappel de recette', 'Acceptance reminder'),
+      pick(l, `À défaut de retour avant le ${day(data.deemedAt, l)}, la livraison sera réputée acceptée`, `With no answer before ${day(data.deemedAt, l)}, delivery will be deemed accepted`),
+      `
+      ${badge(`${pick(l, 'Devis', 'Quote')} ${esc(data.numero)}`)}
+      ${heading(pick(l, 'Votre recette est en attente', 'Your acceptance is pending'))}
+      ${intro(pick(
+        l,
+        `Bonjour ${firstName}, le délai de recette de votre projet se termine le ${strong(esc(day(data.deemedAt, l)))}. Merci de signer le procès-verbal ou de me faire part de vos réserves avant cette date ; à défaut, la livraison sera réputée acceptée sans réserve, comme prévu au contrat.`,
+        `Hello ${firstName}, the acceptance period for your project ends on ${strong(esc(day(data.deemedAt, l)))}. Please sign the report or send me your reservations before then; otherwise delivery will be deemed accepted without reservation, as stated in the contract.`,
+      ))}
+
+      ${ctaButton(`${SITE_URL}/${l}/recette/${data.deliveryToken}`, pick(l, 'Consulter et signer le procès-verbal', 'Review and sign the report'))}
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Recette ${data.numero}`, `Acceptance ${data.numero}`))}`, pick(l, 'Signaler un problème', 'Report a problem'))}
+    `,
+      l,
+    ),
+  }
+}
+
+export function recetteDeemedEmail(data: { numero: string; clientNom: string; locale?: string; warrantyDays: number; warrantyEnd: string }, adminEmail: string) {
+  const l = mailLocale(data.locale)
+  const firstName = esc(data.clientNom).split(' ')[0]
+
+  return {
+    subject: pick(l, `Livraison réputée acceptée — ${data.numero}`, `Delivery deemed accepted — ${data.numero}`),
+    html: base(
+      pick(l, 'Recette', 'Acceptance'),
+      pick(l, 'Le délai de recette est écoulé : la livraison est réputée acceptée', 'The acceptance period is over: delivery is deemed accepted'),
+      `
+      ${badge(`${pick(l, 'Devis', 'Quote')} ${esc(data.numero)}`)}
+      ${heading(pick(l, 'Livraison réputée acceptée', 'Delivery deemed accepted'))}
+      ${intro(pick(
+        l,
+        `Bonjour ${firstName}, le délai de recette étant écoulé sans retour de votre part, la livraison est réputée acceptée sans réserve, conformément au contrat.${data.warrantyDays > 0 ? ` La garantie de correction des anomalies court jusqu’au ${strong(esc(day(data.warrantyEnd, l)))}.` : ''} Si un point vous a échappé, écrivez-moi : je regarde ça avec vous.`,
+        `Hello ${firstName}, as the acceptance period has ended without a reply from you, delivery is deemed accepted without reservation, as stated in the contract.${data.warrantyDays > 0 ? ` The bug-fix warranty runs until ${strong(esc(day(data.warrantyEnd, l)))}.` : ''} If something slipped through, write to me and we will look at it together.`,
+      ))}
+
+      ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Livraison ${data.numero}`, `Delivery ${data.numero}`))}`, pick(l, 'Me contacter', 'Contact me'))}
+    `,
+      l,
+    ),
+  }
+}

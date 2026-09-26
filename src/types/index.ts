@@ -33,6 +33,9 @@ export interface BusinessSettings {
   includedRevisions?: number    // revision rounds included per validation phase
   warrantyDays?: number         // free bug-fix period after delivery
   sourceCodeDelivery?: boolean  // source code handed over after full payment
+  autoDepositInvoice?: boolean  // issue the deposit invoice automatically when the client signs
+  requireSignatureOtp?: boolean // client confirms a code emailed to them before signing
+  remindersEnabled?: boolean    // automatic reminders (expiring quote, overdue invoice…)
 }
 
 export interface SocialLinks {

@@ -649,3 +649,38 @@ export function escalationEmail(data: { reason: string; clientNom: string; clien
     `),
   }
 }
+
+// ── Automatic reminders digest (admin) ───────────────────────────────────────
+
+export function remindersDigestEmail(lines: string[]) {
+  return {
+    subject: `Relances automatiques — ${lines.length} action${lines.length > 1 ? 's' : ''}`,
+    html: base('Relances automatiques', `${lines.length} relance(s) envoyée(s) automatiquement`, `
+      ${badge('Relances')}
+      ${heading('Relances automatiques')}
+      ${intro('Voici ce que le rappel quotidien a fait aujourd&apos;hui&nbsp;:')}
+      ${infoBox(`<ul style="margin:0;padding-left:18px;font-size:14px;color:#3A3A44;line-height:1.9">${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`)}
+      ${ctaButton(`${SITE_URL}/admin/quotes`, 'Voir dans le tableau de bord')}
+    `),
+  }
+}
+
+// ── Client space: revision / file (admin) ────────────────────────────────────
+
+export function clientActivityAdminEmail(data: { numero: string; clientNom: string; kind: 'revision' | 'file'; text: string; used?: number; included?: number }) {
+  const revision = data.kind === 'revision'
+  const over = revision && data.used !== undefined && data.included !== undefined && data.used > data.included
+  return {
+    subject: revision
+      ? `${over ? 'Révision HORS forfait' : 'Demande de modification'} — ${data.numero} — ${data.clientNom}`
+      : `Fichier reçu — ${data.numero} — ${data.clientNom}`,
+    html: base(revision ? 'Demande de modification' : 'Fichier reçu', `${data.clientNom} — ${data.numero}`, `
+      ${badge(revision ? 'Révision' : 'Fichier')}
+      ${heading(revision ? 'Demande de modification' : 'Nouveau fichier du client')}
+      ${intro(`<strong style="color:#26262E">${esc(data.clientNom)}</strong> (projet <strong style="color:#26262E">${esc(data.numero)}</strong>) ${revision ? 'demande une modification' : 'vient d&apos;envoyer un fichier'}.`)}
+      ${infoBox(`<p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.8;white-space:pre-wrap">${esc(data.text)}</p>`)}
+      ${revision && data.used !== undefined ? `<p style="margin:0 0 20px;font-size:13px;color:${over ? '#D90000' : '#6B6B78'}">Révisions : ${data.used} / ${data.included} incluses${over ? ' — au-delà du forfait : proposez un avenant.' : '.'}</p>` : ''}
+      ${ctaButton(`${SITE_URL}/admin/quotes?q=${encodeURIComponent(data.numero)}`, 'Ouvrir le dossier')}
+    `),
+  }
+}

@@ -17,6 +17,11 @@ export interface ProjectTracking {
   // Private links, only present when the step they lead to is actually open.
   links: { signPath?: string; pvPath?: string; documentPath: string }
   avenants: { numero: string; code: string; status: 'pending' | 'accepted' | 'declined'; totalTTC: number }[]
+  // Changes asked so far against the revisions included in the contract.
+  // `open`: the project is signed and its recette is not, so a new request is accepted.
+  revisions: { used: number; included: number; open: boolean; requests: { at: string; note: string }[] }
+  // Files the client sent (names only). `open`: the project is signed.
+  files: { open: boolean; items: { name: string; size: number; at: string }[] }
 }
 
 export type TrackingResult = { ok: true; tracking: ProjectTracking } | { ok: false; error: string }
@@ -74,6 +79,16 @@ export async function getProjectTracking(code: string, locale: string): Promise<
         ...(doc.delivery?.token && !quote.acceptance ? { pvPath: `/${lang}/recette/${doc.delivery.token}` } : {}),
       },
       avenants: avenantDocs.map((a) => ({ numero: a.numero, code: a.accessCode, status: a.status ?? 'pending', totalTTC: a.totalTTC })),
+      revisions: {
+        used: doc.revisions?.length ?? 0,
+        included: terms.includedRevisions,
+        open: quote.status === 'accepted' && !!doc.signature && !doc.acceptance,
+        requests: (doc.revisions ?? []).map((r) => ({ at: iso(r.at), note: r.note })),
+      },
+      files: {
+        open: quote.status === 'accepted' && !!doc.signature,
+        items: (doc.files ?? []).map((f) => ({ name: f.name, size: f.size, at: iso(f.at) })),
+      },
     },
   }
 }

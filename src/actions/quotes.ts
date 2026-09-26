@@ -1,26 +1,29 @@
 'use server'
 
-import { ObjectId } from 'mongodb'
+import { ObjectId, type WithId } from 'mongodb'
 import { after } from 'next/server'
 import { headers } from 'next/headers'
+import { createHash, randomInt, timingSafeEqual } from 'crypto'
 import { uploadPublicImage } from '@/lib/blob-upload'
 import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
-import { loggedMailer } from '@/lib/mail-safe'
+import { loggedMailer, sendMailLogged } from '@/lib/mail-safe'
 import { quoteNotificationEmail, quoteSignedAdminEmail, quoteDeclinedAdminEmail } from '@/lib/email-templates'
-import { quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail, quoteSignedClientEmail } from '@/lib/email-client'
+import { quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail, quoteSignedClientEmail, signatureCodeEmail } from '@/lib/email-client'
 import { getAdminEmail } from '@/lib/admin-config'
+import { notifyAdmin } from '@/lib/push'
 import { requireAdmin } from '@/lib/require-admin'
 import { fetchPortfolioSafe } from '@/actions/portfolio'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
-import { computeTotals, snapshotTerms, type QuoteTerms } from '@/lib/business'
+import { computeTotals, resolveTerms, snapshotTerms, wantsAutoDeposit, wantsSignatureOtp, type QuoteTerms } from '@/lib/business'
+import { createInvoice, sendInvoiceMail } from '@/lib/invoicing'
 import { CURRENT_DOC_VERSION } from '@/lib/quote-document'
 import {
   quotesCol, generateAccessCode, generateSignToken, nextQuoteNumber, toQuote, withSignToken, checkRateLimit,
   computeDocumentHash, isExpired, buildQuoteAttachment, cleanBrief, cleanItems,
   EMAIL_RE, MAX_SIGNATURE_DECODED_BYTES, SIGNATURE_DATA_URL_PREFIX,
-  type QuoteRecordEvent, type QuoteRecordSignature,
+  type QuoteRecord, type QuoteRecordEvent, type QuoteRecordSignature,
 } from '@/lib/quotes-core'
 
 const VALIDITE_JOURS = 30
@@ -83,7 +86,7 @@ export interface QuoteSignature {
 
 export type QuoteEventType =
   | 'created' | 'viewed' | 'signed' | 'declined' | 'status_changed'
-  | 'delay_changed' | 'delivered' | 'delivery_accepted' | 'avenant_created' | 'invoice_issued' | 'invoice_paid' | 'invoice_cancelled'
+  | 'delay_changed' | 'delivered' | 'delivery_accepted' | 'avenant_created' | 'invoice_issued' | 'invoice_paid' | 'invoice_cancelled' | 'reminder_sent' | 'delivery_deemed' | 'revision_requested' | 'file_uploaded'
 
 export interface QuoteEvent {
   type: QuoteEventType
@@ -141,6 +144,8 @@ export interface AdminQuote extends Quote {
   read: boolean
   createdAt: string
   testimonialRequestedAt?: string
+  revisions: { at: string; note: string; source: 'client' | 'admin' }[]
+  files: { name: string; url: string; size: number; at: string }[]
 }
 
 export async function submitQuote(payload: QuotePayload): Promise<Quote> {
@@ -200,6 +205,7 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   // Notify the admin (+ send the client their own copy if we already have an
   // email) in the background — a slow/unreachable SMTP server must never
   // delay the devis appearing in the chat.
+  after(() => notifyAdmin({ title: `Nouveau devis ${quote.numero}`, body: `${quote.clientNom} — ${quote.totalTTC.toLocaleString('fr-FR')} FCFA TTC`, url: '/admin/quotes' }))
   after(async () => {
     try {
       const transporter = loggedMailer({ kind: 'devis', quoteId: insertedId.toString() })
@@ -348,6 +354,9 @@ export interface SignQuoteInput {
   // trail next to the IP, so a company can't later say the signer had no
   // authority without that statement being on record.
   acceptedTerms: boolean
+  // The 6-digit code emailed by requestSignatureCode(); required unless the
+  // quote's terms switch the confirmation off.
+  otp?: string
 }
 
 export type SignActionResult =
@@ -376,6 +385,92 @@ export async function getQuoteByToken(token: string): Promise<Quote | null> {
   }
 
   return toQuote(doc)
+}
+
+// ── Signature code (email confirmation) ─────────────────────────────────────
+
+const OTP_TTL_MS = 10 * 60 * 1000
+const OTP_RESEND_MIN_MS = 30 * 1000
+const OTP_MAX_SENDS_PER_HOUR = 5
+const OTP_MAX_ATTEMPTS = 5
+const SIGN_CODE_RATE_LIMIT_PER_HOUR = 15
+
+const hashCode = (code: string, token: string) => createHash('sha256').update(`${code}:${token}`).digest('hex')
+
+function maskEmail(email: string): string {
+  const [name, domain] = email.split('@')
+  return `${name.slice(0, 1)}${'*'.repeat(Math.max(2, Math.min(6, name.length - 1)))}@${domain}`
+}
+
+// Emails a one-time code the client must type to sign. Proves that whoever
+// signs controls the mailbox the quote was issued to — the audit trail records
+// it next to the IP. The code goes to the email already on the quote; it is
+// only taken from the client when the quote has none yet.
+export async function requestSignatureCode(token: string, email?: string): Promise<{ ok: true; sentTo: string } | { ok: false; error: string }> {
+  if (typeof token !== 'string' || token.length < 20) return { ok: false, error: 'Lien invalide.' }
+  if (!(await checkRateLimit('sign-code', SIGN_CODE_RATE_LIMIT_PER_HOUR))) return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
+
+  const col = await quotesCol()
+  const doc = await col.findOne({ signToken: token })
+  if (!doc) return { ok: false, error: 'Devis introuvable.' }
+  if (doc.signature) return { ok: false, error: 'Ce devis a déjà été signé.' }
+  if (doc.status === 'declined') return { ok: false, error: 'Ce devis a été refusé.' }
+  if (isExpired(doc)) return { ok: false, error: 'Ce devis a expiré.' }
+  if (!wantsSignatureOtp(resolveTerms(doc, defaultPersonalInfo))) return { ok: false, error: "Aucun code n'est requis pour ce devis." }
+
+  const target = (doc.clientEmail || email || '').trim()
+  if (!EMAIL_RE.test(target) || target.length > 254) return { ok: false, error: 'Adresse email invalide.' }
+
+  const now = Date.now()
+  const previous = doc.signOtp
+  if (previous && now - previous.sentAt.getTime() < OTP_RESEND_MIN_MS) {
+    return { ok: false, error: 'Patientez quelques secondes avant de demander un nouveau code.' }
+  }
+  const inWindow = !!previous && now - previous.windowStart.getTime() < 3600_000
+  if (previous && inWindow && previous.sendCount >= OTP_MAX_SENDS_PER_HOUR) {
+    return { ok: false, error: 'Trop de codes demandés. Réessayez dans une heure.' }
+  }
+
+  const code = String(randomInt(100000, 1000000))
+  await col.updateOne({ _id: doc._id, signature: { $exists: false } }, {
+    $set: {
+      signOtp: {
+        hash: hashCode(code, token), email: target, expiresAt: new Date(now + OTP_TTL_MS), attempts: 0,
+        sentAt: new Date(now), windowStart: previous && inWindow ? previous.windowStart : new Date(now), sendCount: previous && inWindow ? previous.sendCount + 1 : 1,
+      },
+    },
+  })
+
+  const mail = signatureCodeEmail({ numero: doc.numero, code, clientNom: doc.clientNom, kind: doc.kind ?? 'devis', locale: doc.locale })
+  const sent = await sendMailLogged(
+    { from: `"${doc.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`, to: target, subject: mail.subject, html: mail.html },
+    { kind: 'devis', quoteId: doc._id.toString() },
+    { record: false },
+  )
+  if (!sent) return { ok: false, error: "Impossible d'envoyer le code. Vérifiez l'adresse email et réessayez." }
+  return { ok: true, sentTo: maskEmail(target) }
+}
+
+// Checks the code the client typed. Every try is counted atomically (5 max
+// per code), and a code only lives 10 minutes.
+async function verifySignatureCode(
+  col: Awaited<ReturnType<typeof quotesCol>>,
+  doc: WithId<QuoteRecord>,
+  token: string,
+  code: string | undefined,
+): Promise<{ ok: true; email: string } | { ok: false; error: string }> {
+  const otp = doc.signOtp
+  if (!code || !/^\d{6}$/.test(code.trim())) return { ok: false, error: 'Saisissez le code à 6 chiffres reçu par email.' }
+  if (!otp) return { ok: false, error: "Demandez d'abord un code par email." }
+  if (Date.now() > otp.expiresAt.getTime()) return { ok: false, error: 'Ce code a expiré. Demandez-en un nouveau.' }
+
+  const counted = await col.updateOne({ _id: doc._id, 'signOtp.attempts': { $lt: OTP_MAX_ATTEMPTS } }, { $inc: { 'signOtp.attempts': 1 } })
+  if (counted.matchedCount === 0) return { ok: false, error: 'Trop d’essais. Demandez un nouveau code.' }
+
+  const expected = Buffer.from(otp.hash, 'hex')
+  const given = Buffer.from(hashCode(code.trim(), token), 'hex')
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return { ok: false, error: 'Code incorrect.' }
+  return { ok: true, email: otp.email }
 }
 
 // Finalizes a client's electronic signature. Once this succeeds, the quote
@@ -417,7 +512,16 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
   if (doc.status === 'declined') return { ok: false, error: 'Ce devis a été refusé.' }
   if (isExpired(doc)) return { ok: false, error: 'Ce devis a expiré.' }
 
-  const clientEmail = input.clientEmail?.trim() || doc.clientEmail
+  const terms = resolveTerms(doc, defaultPersonalInfo)
+  let clientEmail = input.clientEmail?.trim() || doc.clientEmail
+  let otpVerified = false
+  if (wantsSignatureOtp(terms)) {
+    const check = await verifySignatureCode(col, doc, token, input.otp)
+    if (!check.ok) return { ok: false, error: check.error }
+    // The address that received the code is the signer's address.
+    clientEmail = check.email
+    otpVerified = true
+  }
   if (!clientEmail) return { ok: false, error: 'Adresse email requise.' }
 
   let imageUrl: string
@@ -437,7 +541,7 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
   const signedEvent: QuoteRecordEvent = {
     type: 'signed',
     at: signedAt,
-    meta: { ip, authority: 'confirmed', ...(userAgent ? { userAgent } : {}) },
+    meta: { ip, authority: 'confirmed', ...(otpVerified ? { otp: 'verified' } : {}), ...(userAgent ? { userAgent } : {}) },
   }
 
   // Atomic compare-and-set: the filter re-checks `signature` still doesn't
@@ -446,13 +550,14 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
   // loser simply gets matchedCount 0 below.
   const result = await col.updateOne(
     { _id: doc._id, signature: { $exists: false }, status: 'pending' },
-    { $set: { status: 'accepted', signature, clientEmail }, $push: { events: signedEvent } },
+    { $set: { status: 'accepted', signature, clientEmail }, $unset: { signOtp: '' }, $push: { events: signedEvent } },
   )
   if (result.matchedCount === 0) return { ok: false, error: 'Ce devis a déjà été signé ou refusé.' }
 
   const updatedDoc = await col.findOne({ _id: doc._id })
   const quote = toQuote(updatedDoc!)
 
+  after(() => notifyAdmin({ title: `${quote.numero} signé ✍️`, body: `${clientName} a signé ${quote.kind === 'avenant' ? "l'avenant" : 'le devis'}.`, url: '/admin/quotes' }))
   after(async () => {
     try {
       const transporter = loggedMailer({ kind: 'contrat', quoteId: doc._id.toString() })
@@ -466,6 +571,18 @@ export async function signQuote(token: string, input: SignQuoteInput): Promise<S
       ])
     } catch (e) {
       console.error('[signQuote] email error:', e)
+    }
+
+    // Deposit invoice straight away, when the provider asked for it: the
+    // project starts once it is paid, so there is no reason to wait for a
+    // manual step. Same rules and same email as the manual button.
+    if (wantsAutoDeposit(terms)) {
+      try {
+        const issued = await createInvoice(doc._id.toString(), 'acompte')
+        if (issued.ok && issued.invoice) await sendInvoiceMail(issued.invoice, 'facture')
+      } catch (e) {
+        console.error('[signQuote] auto deposit invoice error:', e)
+      }
     }
   })
 
@@ -501,6 +618,7 @@ export async function declineQuote(token: string): Promise<SignActionResult> {
     try {
       const transporter = loggedMailer({ kind: 'admin', quoteId: doc._id.toString() })
       const adminMail = quoteDeclinedAdminEmail(quote)
+      await notifyAdmin({ title: `${quote.numero} refusé`, body: `${quote.clientNom} a refusé le devis.`, url: '/admin/quotes' })
       await transporter.sendMail({ from: `"Portfolio NS · Devis" <${process.env.GMAIL_USER}>`, to: await getAdminEmail(), subject: adminMail.subject, html: adminMail.html })
     } catch (e) {
       console.error('[declineQuote] email error:', e)
@@ -530,6 +648,8 @@ export async function listQuotes(): Promise<AdminQuote[]> {
       read: doc.read ?? false,
       createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : String(doc.createdAt),
       testimonialRequestedAt: doc.testimonialRequestedAt instanceof Date ? doc.testimonialRequestedAt.toISOString() : undefined,
+      revisions: (doc.revisions ?? []).map((r) => ({ at: r.at.toISOString(), note: r.note, source: r.source })),
+      files: (doc.files ?? []).map((f) => ({ name: f.name, url: f.url, size: f.size, at: f.at.toISOString() })),
     }
   }))
 }

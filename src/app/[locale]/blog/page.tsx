@@ -13,7 +13,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
-  return pageMeta({ locale, path: '/blog', title: t.blog.title, description: t.blog.subtitle })
+  const meta = pageMeta({ locale, path: '/blog', title: t.blog.title, description: t.blog.subtitle })
+  // Lets feed readers and browsers discover the RSS feed from the blog page.
+  return { ...meta, alternates: { ...meta.alternates, types: { 'application/rss+xml': `/${locale}/blog/rss.xml` } } }
 }
 
 export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {

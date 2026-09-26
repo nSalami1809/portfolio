@@ -5,6 +5,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { testimonialNotificationEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { notifyAdmin } from '@/lib/push'
 import { requireAdmin } from '@/lib/require-admin'
 import { getClientIp } from '@/lib/client-ip'
 
@@ -82,6 +83,7 @@ export async function submitTestimonial(payload: TestimonialSubmissionPayload): 
   await db.collection('testimonial_ratelimits').insertOne({ ip, createdAt: new Date() })
   await db.collection('testimonial_submissions').insertOne({ name, role, company, text, rating: payload.rating, ip, createdAt: new Date() })
 
+  await notifyAdmin({ title: 'Nouveau témoignage', body: `${name} (${payload.rating}/5) : ${text.slice(0, 120)}`, url: '/admin/testimonials' })
   try {
     const transporter = getTransporter()
     const email = testimonialNotificationEmail({ name, role, company, text, rating: payload.rating })

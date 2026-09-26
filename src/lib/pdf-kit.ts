@@ -4,7 +4,8 @@
 // look identical across documents: masthead, running header on continuation
 // pages, wrapped text/bullets, item table, totals, and "Page X / Y".
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFImage, type PDFPage } from 'pdf-lib'
-import type { DocBlock } from '@/lib/quote-document'
+import type { DocBlock, DocLang } from '@/lib/doc-common'
+import { docLabels } from '@/lib/doc-labels'
 
 export const PAGE_WIDTH = 595.28 // A4 in points
 const PAGE_HEIGHT = 841.89
@@ -113,12 +114,15 @@ interface KitOptions {
   runningTitle: string
   // A sample document: stamped on every page so it can never pass for a real one.
   watermark?: string
+  lang?: DocLang
 }
 
 export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
   const doc = await PDFDocument.create()
   doc.setTitle(opts.title)
   doc.setProducer(opts.producer)
+
+  const L = docLabels(opts.lang ?? 'fr')
 
   const fonts = {
     regular: await doc.embedFont(StandardFonts.Helvetica),
@@ -250,8 +254,8 @@ export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
       const colTotal = MARGIN + CONTENT_WIDTH - 60
       kit.ensureSpace(20)
       const head = (text: string, x: number) => state.page.drawText(safeText(text), { x, y: state.y - 8, size: 7.5, font: fonts.bold, color: SUBTLE })
-      head('DÉSIGNATION', colDesignation)
-      head('QTÉ', colQty)
+      head(L.table.designation, colDesignation)
+      head(L.table.qty, colQty)
       head(priceLabel, colUnit)
       head(totalLabel, colTotal)
       state.y -= 12
@@ -318,12 +322,12 @@ export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
             x: PAGE_WIDTH / 2 - half, y: PAGE_HEIGHT / 2 - half, size, font: fonts.bold,
             color: rgb(0.8, 0.1, 0.1), opacity: 0.13, rotate: degrees(45),
           })
-          const banner = safeText(`${opts.watermark} - document fictif, sans valeur`)
+          const banner = safeText(L.watermark(opts.watermark))
           p.drawText(banner, { x: MARGIN, y: PAGE_HEIGHT - 26, size: 7.5, font: fonts.bold, color: rgb(0.8, 0.1, 0.1) })
         }
       }
       allPages.forEach((p, i) => {
-        const label = `Page ${i + 1} / ${total}`
+        const label = L.page(i + 1, total)
         const w = fonts.regular.widthOfTextAtSize(label, 7.5)
         p.drawText(label, { x: (PAGE_WIDTH - w) / 2, y: MARGIN - 20, size: 7.5, font: fonts.regular, color: SUBTLE })
       })

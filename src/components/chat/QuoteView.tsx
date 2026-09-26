@@ -6,13 +6,13 @@ import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { usePortfolio } from '@/providers/portfolio-core'
 import {
   buildDevisBlocks, buildContractBlocks, buildAvenantBlocks, briefEntries, devisAcceptanceLabel, documentKind,
-  parseLocation, CONTRACT_SIGNATURE_LABEL, DOCUMENT_TITLE, type DocBlock,
+  documentTitle, docLang, fmt as fmtMoney, parseLocation, type DocBlock,
 } from '@/lib/quote-document'
+import { roleFor, vatExemptionFor } from '@/lib/doc-common'
+import { docLabels } from '@/lib/doc-labels'
 import { identityLines, resolveTerms, vatLabel } from '@/lib/business'
 import { saveBase64Pdf } from '@/lib/browser-download'
 import { downloadQuotePdf, type Quote } from '@/actions/quotes'
-
-const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 
 interface Props {
   quote: Quote
@@ -42,6 +42,9 @@ function DocBlockView({ block }: { block: DocBlock }) {
 
 export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) {
   const kind = documentKind(quote, variant)
+  const lang = docLang(quote)
+  const L = docLabels(lang)
+  const fmt = (n: number) => fmtMoney(n, lang)
   const isContract = kind === 'contrat' || kind === 'avenant'
   const isAvenant = quote.kind === 'avenant'
   const { data } = usePortfolio()
@@ -74,7 +77,7 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
     return () => { document.body.style.overflow = previous }
   }, [])
 
-  const dateEmission = new Date(quote.dateEmission).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
+  const dateEmission = new Date(quote.dateEmission).toLocaleDateString(lang === 'en' ? 'en-GB' : 'fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
 
   const blocks = isAvenant
     ? buildAvenantBlocks(quote, personal)
@@ -100,7 +103,7 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
       saveBase64Pdf(result.base64, result.filename)
     } catch (e) {
       console.error('[QuoteView] PDF download error:', e)
-      setDownloadError('Une erreur est survenue. Réessayez plus tard.')
+      setDownloadError(lang === 'en' ? 'Something went wrong. Please try again later.' : 'Une erreur est survenue. Réessayez plus tard.')
     } finally {
       setDownloading(false)
     }
@@ -141,11 +144,11 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         <div className="quote-no-print flex items-center justify-between flex-wrap gap-3 mb-6">
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={lang === 'en' ? 'Close' : 'Fermer'}
             className="text-sm font-medium"
             style={{ color: '#666', fontFamily: 'var(--font-inter), sans-serif' }}
           >
-            ← Fermer
+            ← {lang === 'en' ? 'Close' : 'Fermer'}
           </button>
           <div className="flex items-center gap-2 flex-wrap">
             <button
@@ -153,7 +156,7 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
               className="text-sm font-semibold"
               style={{ background: '#ffffff', color: '#111111', border: '1px solid #111111', borderRadius: 0, padding: '0.5rem 1.1rem', cursor: 'pointer', fontFamily: 'var(--font-inter), sans-serif' }}
             >
-              Imprimer
+              {lang === 'en' ? 'Print' : 'Imprimer'}
             </button>
             <button
               onClick={handleDownloadPdf}
@@ -161,7 +164,7 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
               className="text-sm font-semibold"
               style={{ background: '#111111', color: '#fff', borderRadius: 0, padding: '0.5rem 1.1rem', cursor: downloading ? 'default' : 'pointer', opacity: downloading ? 0.7 : 1, fontFamily: 'var(--font-inter), sans-serif' }}
             >
-              {downloading ? 'Génération…' : 'Télécharger le PDF'}
+              {downloading ? (lang === 'en' ? 'Generating…' : 'Génération…') : (lang === 'en' ? 'Download the PDF' : 'Télécharger le PDF')}
             </button>
           </div>
         </div>
@@ -178,15 +181,15 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
             <img src="/logo-black.png" alt="" width={60} height={60} style={{ width: 60, height: 60 }} />
             <div>
               <p style={{ fontWeight: 700, fontSize: '1.15rem', fontFamily: 'var(--font-space-grotesk), sans-serif' }}>{terms.provider.name}</p>
-              <p style={{ fontSize: '0.8rem', color: '#555' }}>{terms.provider.role}</p>
+              <p style={{ fontSize: '0.8rem', color: '#555' }}>{roleFor(terms.provider.role, lang)}</p>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ background: '#111111', color: '#fff', padding: '0.35rem 0.9rem', borderRadius: 0, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-              N° {quote.numero}
+              {L.no} {quote.numero}
             </div>
             <p style={{ fontSize: '0.7rem', color: '#888', marginTop: 4 }}>
-              Code de suivi : <strong style={{ color: '#333', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
+              {L.trackingCode} : <strong style={{ color: '#333', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
             </p>
           </div>
         </div>
@@ -195,26 +198,26 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
 
         {/* Title + dates */}
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
-          <h1 style={{ fontSize: '2.4rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, fontFamily: 'var(--font-space-grotesk), sans-serif' }}>{DOCUMENT_TITLE[kind]}</h1>
+          <h1 style={{ fontSize: '2.4rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, fontFamily: 'var(--font-space-grotesk), sans-serif' }}>{documentTitle(kind, lang)}</h1>
           <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#333' }}>
-            <p style={{ margin: 0 }}>Date d&apos;émission : <em>{dateEmission}</em></p>
-            <p style={{ margin: 0 }}>Validité de l&apos;offre : <strong>{quote.validiteJours} jours</strong></p>
+            <p style={{ margin: 0 }}>{L.issueDate} : <em>{dateEmission}</em></p>
+            <p style={{ margin: 0 }}>{L.offerValidity} : <strong>{L.days(quote.validiteJours)}</strong></p>
           </div>
         </div>
 
         {/* 1. Prestataire / 2. Client */}
         <div className="grid sm:grid-cols-2 gap-6 mb-8">
           <div>
-            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 6 }}>1. PRESTATAIRE</p>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 6 }}>1. {L.provider}</p>
             <p style={{ fontWeight: 700, margin: 0 }}>{terms.provider.name}</p>
-            <p style={{ margin: 0, fontSize: '0.85rem' }}>{terms.provider.role || 'Développeur freelance'}</p>
+            <p style={{ margin: 0, fontSize: '0.85rem' }}>{roleFor(terms.provider.role, lang) || L.defaultRole}</p>
             {identity.length > 0 && <p style={{ margin: 0, fontSize: '0.85rem' }}>{identity.join('  ·  ')}</p>}
             <p style={{ margin: 0, fontSize: '0.85rem' }}>{terms.address || `${ville}, ${pays}`}</p>
             <p style={{ margin: 0, fontSize: '0.85rem' }}>{terms.provider.email}</p>
             {terms.provider.whatsapp && <p style={{ margin: 0, fontSize: '0.85rem' }}>{terms.provider.whatsapp}</p>}
           </div>
           <div>
-            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 6 }}>2. CLIENT</p>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 6 }}>2. {L.client}</p>
             <p style={{ fontWeight: 700, margin: 0 }}>{quote.clientNom}</p>
             {quote.clientSociete && <p style={{ margin: 0, fontSize: '0.85rem' }}>{quote.clientSociete}</p>}
             {quote.clientAdresse && <p style={{ margin: 0, fontSize: '0.85rem' }}>{quote.clientAdresse}</p>}
@@ -224,9 +227,9 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         </div>
 
         {/* 3. Projet */}
-        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 6 }}>3. PROJET</p>
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 6 }}>3. {L.project}</p>
         {isAvenant && quote.parentNumero && (
-          <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 6 }}>Avenant au contrat lié au devis n° {quote.parentNumero}.</p>
+          <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 6 }}>{L.avenantOf(quote.parentNumero)}</p>
         )}
         <p style={{ fontSize: '0.85rem', color: '#333', marginBottom: 8, lineHeight: 1.6 }}>{quote.descriptionProjet}</p>
         {brief.map(({ label, value }) => (
@@ -237,15 +240,15 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         ))}
 
         {/* 4. Détail des prestations */}
-        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', margin: '1.5rem 0 0.75rem' }}>4. DÉTAIL DES PRESTATIONS</p>
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', margin: '1.5rem 0 0.75rem' }}>4. {L.items}</p>
         <div className="quote-scroll" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', minWidth: 440, borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #111' }}>
-              <th style={{ textAlign: 'left', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>DÉSIGNATION</th>
-              <th style={{ textAlign: 'center', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>QTÉ</th>
-              <th style={{ textAlign: 'right', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>{terms.vatEnabled ? 'PRIX UNIT. HT' : 'PRIX UNIT.'}</th>
-              <th style={{ textAlign: 'right', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>{terms.vatEnabled ? 'TOTAL HT' : 'TOTAL'}</th>
+              <th style={{ textAlign: 'left', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>{L.table.designation}</th>
+              <th style={{ textAlign: 'center', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>{L.table.qty}</th>
+              <th style={{ textAlign: 'right', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>{terms.vatEnabled ? L.table.unitHT : L.table.unit}</th>
+              <th style={{ textAlign: 'right', padding: '0.5rem 0', fontSize: '0.7rem', letterSpacing: '0.06em', color: '#555' }}>{terms.vatEnabled ? L.table.totalHT : L.table.total}</th>
             </tr>
           </thead>
           <tbody>
@@ -268,24 +271,24 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
               {terms.vatEnabled && (
                 <>
                   <tr>
-                    <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5' }}>Total HT</td>
+                    <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5' }}>{L.totals.ht}</td>
                     <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5', textAlign: 'right', fontWeight: 700 }}>{fmt(quote.totalHT)}</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5' }}>{vatLabel(terms)}</td>
+                    <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5' }}>{vatLabel(terms, lang)}</td>
                     <td style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5', textAlign: 'right', fontWeight: 700 }}>{fmt(quote.tva)}</td>
                   </tr>
                 </>
               )}
               <tr>
-                <td style={{ padding: '0.6rem 0.8rem', background: '#111', color: '#fff', fontWeight: 700 }}>{terms.vatEnabled ? 'Total TTC' : 'Total'}</td>
+                <td style={{ padding: '0.6rem 0.8rem', background: '#111', color: '#fff', fontWeight: 700 }}>{terms.vatEnabled ? L.totals.ttc : L.totals.total}</td>
                 <td style={{ padding: '0.6rem 0.8rem', background: '#111', color: '#fff', textAlign: 'right', fontWeight: 700 }}>{fmt(quote.totalTTC)}</td>
               </tr>
             </tbody>
           </table>
         </div>
         {!terms.vatEnabled && (
-          <p style={{ fontSize: '0.78rem', color: '#555', marginTop: '-1.25rem', marginBottom: '1.5rem', textAlign: 'right' }}>{terms.vatExemptionMention}</p>
+          <p style={{ fontSize: '0.78rem', color: '#555', marginTop: '-1.25rem', marginBottom: '1.5rem', textAlign: 'right' }}>{vatExemptionFor(terms.vatExemptionMention, lang)}</p>
         )}
 
         {/* Numbered sections / articles */}
@@ -296,36 +299,36 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         {quote.signature ? (
           <div style={{ marginBottom: '2rem' }}>
             <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>
-              SIGNATURE ÉLECTRONIQUE
+              {L.signature.title}
             </p>
             <div style={{ border: '1px solid #ddd', padding: '1.25rem' }}>
               <p style={{ display: 'inline-block', background: '#0A7A2E', color: '#fff', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.06em', padding: '0.3rem 0.7rem', marginBottom: 14 }}>
-                STATUT : SIGNÉ
+                {L.signature.signed}
               </p>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 mb-3">
-                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>Signé par :</strong> {quote.signature.name}</p>
-                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>E-mail :</strong> {quote.signature.email}</p>
+                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>{L.signature.by} :</strong> {quote.signature.name}</p>
+                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>{L.signature.email} :</strong> {quote.signature.email}</p>
                 <p style={{ fontSize: '0.82rem', color: '#333' }}>
-                  <strong>Date et heure :</strong> {new Date(quote.signature.signedAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}
+                  <strong>{L.signature.when} :</strong> {new Date(quote.signature.signedAt).toLocaleString(lang === 'en' ? 'en-GB' : 'fr-FR', { dateStyle: 'long', timeStyle: 'short' })}
                 </p>
-                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>Document signé :</strong> {quote.numero}</p>
+                <p style={{ fontSize: '0.82rem', color: '#333' }}><strong>{L.signature.doc} :</strong> {quote.numero}</p>
               </div>
               <p style={{ fontSize: '0.68rem', color: '#999', marginBottom: 18, wordBreak: 'break-all' }}>
-                <strong>Référence de signature (SHA-256) :</strong> {quote.signature.documentHash}
+                <strong>{L.signature.hash} :</strong> {quote.signature.documentHash}
               </p>
               <div className="flex items-end justify-between flex-wrap gap-6">
                 <div>
-                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>Signature du client</p>
+                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>{L.signature.client}</p>
                   {/* eslint-disable-next-line @next/next/no-img-element -- external blob URL, arbitrary aspect ratio */}
-                  <img src={quote.signature.imageUrl} alt={`Signature de ${quote.signature.name}`} style={{ height: 70, display: 'block' }} />
+                  <img src={quote.signature.imageUrl} alt={`${L.signature.client} — ${quote.signature.name}`} style={{ height: 70, display: 'block' }} />
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>Signature du prestataire</p>
+                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>{L.signature.provider}</p>
                   {providerSignatureUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- external blob URL, arbitrary aspect ratio
-                    <img src={providerSignatureUrl} alt={`Signature de ${terms.provider.name}`} style={{ height: 70, display: 'block', marginLeft: 'auto' }} />
+                    <img src={providerSignatureUrl} alt={`${L.signature.provider} — ${terms.provider.name}`} style={{ height: 70, display: 'block', marginLeft: 'auto' }} />
                   ) : (
-                    <p style={{ fontSize: '0.78rem', color: '#aaa', fontStyle: 'italic' }}>Signature du prestataire non configurée</p>
+                    <p style={{ fontSize: '0.78rem', color: '#aaa', fontStyle: 'italic' }}>{L.signature.providerMissing}</p>
                   )}
                 </div>
               </div>
@@ -334,18 +337,18 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         ) : (
           <>
             <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: '#888', marginBottom: 8 }}>
-              {isContract ? CONTRACT_SIGNATURE_LABEL : devisAcceptanceLabel(blocks.length)}
+              {isContract ? L.signature.contractParties : devisAcceptanceLabel(blocks.length, lang)}
             </p>
             <p style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-              {isContract ? 'Commande confirmée — Date et signature du client :' : 'Bon pour accord — Date et signature du client :'}
+              {isContract ? L.signature.contractLine : L.signature.devisLine}
             </p>
             {/* The offer itself is signed by the provider when it is issued
                 (see the "Signature électronique et preuve" clause). */}
             {providerSignatureUrl && (
               <div style={{ marginBottom: '1.5rem' }}>
-                <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>Signature du prestataire (offre)</p>
+                <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: 6 }}>{L.signature.providerOffer}</p>
                 {/* eslint-disable-next-line @next/next/no-img-element -- external blob URL, arbitrary aspect ratio */}
-                <img src={providerSignatureUrl} alt={`Signature de ${terms.provider.name}`} style={{ height: 60, display: 'block' }} />
+                <img src={providerSignatureUrl} alt={`${L.signature.provider} — ${terms.provider.name}`} style={{ height: 60, display: 'block' }} />
               </div>
             )}
           </>
@@ -357,13 +360,13 @@ export default function QuoteView({ quote, onClose, variant = 'devis' }: Props) 
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div style={{ textAlign: 'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- data: URL generated client-side */}
-            {qrDataUrl && <img src={qrDataUrl} alt="QR code vers le portfolio" width={90} height={90} />}
-            <p style={{ fontSize: '0.7rem', color: '#888', marginTop: 4 }}>Scannez pour découvrir mon portfolio</p>
+            {qrDataUrl && <img src={qrDataUrl} alt={lang === 'en' ? 'QR code to the portfolio' : 'QR code vers le portfolio'} width={90} height={90} />}
+            <p style={{ fontSize: '0.7rem', color: '#888', marginTop: 4 }}>{lang === 'en' ? 'Scan to discover my portfolio' : 'Scannez pour découvrir mon portfolio'}</p>
           </div>
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontWeight: 700, margin: 0 }}>{terms.provider.name}</p>
             <p style={{ fontSize: '0.75rem', color: '#888', margin: 0 }}>
-              {quote.signature ? 'Document généré électroniquement — signé par les deux parties' : 'Document généré électroniquement — offre ferme du Prestataire'}
+              {quote.signature ? L.footer.signedBoth.replace(' - ', ' — ') : L.footer.offer.replace(' - ', ' — ')}
             </p>
             {identity.length > 0 && <p style={{ fontSize: '0.7rem', color: '#555', margin: '2px 0 0' }}>{identity.join('  ·  ')}</p>}
           </div>

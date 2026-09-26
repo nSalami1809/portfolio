@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, m } from 'framer-motion'
+import PushToggle from '@/components/admin/PushToggle'
 
 const POLL_MS = 20_000
 
@@ -164,6 +165,7 @@ export default function NotificationBell() {
                   Rien de nouveau pour le moment.
                 </p>
               )}
+              <PushToggle />
             </m.div>
           </>
         )}

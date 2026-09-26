@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai'
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from 'ai'
 import { m, AnimatePresence } from 'framer-motion'
 import type { Quote } from '@/actions/quotes'
 import type { Booking } from '@/actions/bookings'
@@ -281,6 +281,45 @@ function MessageTime({ locale }: { locale: string }) {
   return <>{label}</>
 }
 
+// The conversation survives a page reload for a day (browser storage only);
+// the same anonymous id lets the server keep one transcript per conversation.
+const STORAGE_KEY = 'ns-chat-v1'
+const STORAGE_TTL_MS = 24 * 60 * 60 * 1000
+const STORAGE_MAX_CHARS = 300_000
+
+interface StoredChat { id: string; savedAt: number; messages: UIMessage[] }
+
+function readStoredChat(): StoredChat | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as StoredChat
+    if (typeof parsed.id !== 'string' || !Array.isArray(parsed.messages) || Date.now() - parsed.savedAt > STORAGE_TTL_MS) {
+      window.localStorage.removeItem(STORAGE_KEY)
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function writeStoredChat(chat: StoredChat | null) {
+  try {
+    if (!chat || chat.messages.length === 0) { window.localStorage.removeItem(STORAGE_KEY); return }
+    const raw = JSON.stringify(chat)
+    if (raw.length <= STORAGE_MAX_CHARS) window.localStorage.setItem(STORAGE_KEY, raw)
+  } catch {
+    // Storage unavailable or full: the chat simply won't survive a reload.
+  }
+}
+
+// Read by the transport at send time (a module variable rather than a ref: the
+// transport is built during render).
+let currentConversationId = ''
+
+const newConversationId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`)
+
 export default function ChatWidget({ autoOpen = false, initialMessage = null }: ChatWidgetProps) {
   const pathname = usePathname()
   const { data: { personal } } = usePortfolio()
@@ -293,10 +332,26 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const restored = useRef(false)
+
   const { messages, sendMessage, setMessages, status, addToolOutput } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat', body: { locale } }),
+    transport: new DefaultChatTransport({ api: '/api/chat', body: () => ({ locale, conversationId: currentConversationId }) }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   })
+
+  // Resume the conversation of the last 24 h, if any (runs once, after mount).
+  useEffect(() => {
+    const stored = readStoredChat()
+    currentConversationId = stored?.id ?? newConversationId()
+    if (stored && stored.messages.length > 0) setMessages(stored.messages)
+    restored.current = true
+  }, [setMessages])
+
+  // Save it whenever an exchange has completed.
+  useEffect(() => {
+    if (!restored.current || status !== 'ready') return
+    writeStoredChat({ id: currentConversationId, savedAt: Date.now(), messages })
+  }, [messages, status])
 
   const busy = status === 'submitted' || status === 'streaming'
   const [justOpened, setJustOpened] = useState(autoOpen)
@@ -351,6 +406,8 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
   const handleClear = () => {
     setMessages([])
+    writeStoredChat(null)
+    currentConversationId = newConversationId()
   }
 
   const headerMood: BotMood = busy ? 'thinking' : justOpened ? 'happy' : 'idle'
@@ -512,6 +569,10 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                       {t.chat.greeting} <strong style={{ color: 'var(--text)' }}>{t.chat.greetingBold}</strong> {t.chat.greetingEnd}
                     </div>
                   </div>
+                  <p className="text-[11px] leading-snug px-1" style={{ color: 'var(--text-subtle)' }}>
+                    {t.chat.privacyNote}{' '}
+                    <a href={`/${locale}/confidentialite`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.chat.privacyLink}</a>
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {suggestions.map(({ label, text }) => (
                       <m.button

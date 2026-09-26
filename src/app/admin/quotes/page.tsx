@@ -5,7 +5,8 @@ import dynamic from 'next/dynamic'
 import { m } from 'framer-motion'
 import { listQuotes, markQuoteRead, deleteQuote, updateQuoteStatus, requestTestimonial } from '@/actions/quotes'
 import type { AdminQuote, QuoteStatus } from '@/actions/quotes'
-import { listInvoices, type Invoice } from '@/actions/billing'
+import { listInvoices } from '@/actions/billing'
+import type { Invoice } from '@/lib/invoicing'
 import QuoteWorkflowPanel from '@/components/admin/QuoteWorkflowPanel'
 import { useToast } from '@/components/admin/Toast'
 
@@ -39,6 +40,10 @@ const EVENT_LABEL: Record<string, string> = {
   invoice_issued: 'Facture émise',
   invoice_paid: 'Facture payée — reçu émis',
   invoice_cancelled: 'Facture annulée',
+  reminder_sent: 'Relance automatique envoyée',
+  delivery_deemed: 'Recette réputée acceptée (aucun retour du client)',
+  revision_requested: 'Demande de modification',
+  file_uploaded: 'Fichier envoyé par le client',
 }
 
 function formatEventDate(iso: string) {

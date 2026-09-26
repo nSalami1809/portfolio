@@ -30,11 +30,14 @@ const navItems: SidebarLinkData[] = [
   { href: '/admin/vision', label: 'Vision', icon: <PathIcon d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /> },
   { href: '/admin/blog', label: 'Blog', icon: <PathIcon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /> },
   { href: '/admin/contacts', label: 'Messages', icon: <PathIcon d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6" /> },
+  { href: '/admin/business', label: 'Activité', icon: <PathIcon d="M3 3v18h18 M7 15l4-4 3 3 5-6" /> },
+  { href: '/admin/chats', label: 'Conversations chat', icon: <PathIcon d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /> },
   { href: '/admin/quotes', label: 'Devis', icon: <PathIcon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /> },
   { href: '/admin/invoices', label: 'Factures', icon: <PathIcon d="M9 14l2 2 4-4 M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6" /> },
   { href: '/admin/emails', label: 'Emails en échec', icon: <PathIcon d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6 M12 9v4 M12 16h.01" /> },
   { href: '/admin/calendar', label: 'Calendrier', icon: <PathIcon d="M8 2v4M16 2v4M3.5 9h17M4 4h16a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z" /> },
   { href: '/admin/prospects', label: 'Prospects', icon: <PathIcon d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75" /> },
+  { href: '/admin/backups', label: 'Sauvegardes', icon: <PathIcon d="M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3-3.582 3-8 3-8-1.343-8-3z M4 7v5c0 1.657 3.582 3 8 3s8-1.343 8-3V7 M4 12v5c0 1.657 3.582 3 8 3s8-1.343 8-3v-5" /> },
   { href: '/admin/settings', label: 'Paramètres du site', icon: <PathIcon d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" /> },
 ]
 

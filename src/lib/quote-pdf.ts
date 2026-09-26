@@ -9,9 +9,11 @@ import type { PersonalInfo } from '@/types'
 import { identityLines, resolveTerms, vatLabel, type QuoteTerms } from '@/lib/business'
 import {
   buildDevisBlocks, buildContractBlocks, buildAvenantBlocks, buildAcceptanceBlocks, briefEntries, computeQuoteDates,
-  devisAcceptanceLabel, documentKind, fmt, formatLongDate, parseLocation, CONTRACT_SIGNATURE_LABEL, DOCUMENT_TITLE,
-  type DocBlock,
+  devisAcceptanceLabel, documentKind, documentTitle, fmt, formatLongDate, parseLocation, docLang,
+  type DocBlock, type DocLang,
 } from '@/lib/quote-document'
+import { roleFor, vatExemptionFor } from '@/lib/doc-common'
+import { docLabels } from '@/lib/doc-labels'
 import {
   createPdfKit, fetchImageBytes, safeText, BORDER, INK, MARGIN, MUTED, PAGE_WIDTH, SUBTLE, WHITE, CONTENT_WIDTH,
   type PdfKit,
@@ -30,10 +32,10 @@ const GREEN = rgb(0.04, 0.48, 0.18)
 
 // Provider block shared by every document: name, legal identity, address,
 // contact — only the identity fields actually filled in are printed.
-export function drawProviderBlock(kit: PdfKit, t: QuoteTerms, label = '1. PRESTATAIRE') {
+export function drawProviderBlock(kit: PdfKit, t: QuoteTerms, label = '1. PRESTATAIRE', lang: DocLang = 'fr') {
   kit.drawLabel(label)
   kit.drawParagraph(t.provider.name, { size: 9.5, font: kit.fonts.bold, color: INK })
-  kit.drawParagraph(t.provider.role || 'Développeur freelance')
+  kit.drawParagraph(roleFor(t.provider.role, lang) || docLabels(lang).defaultRole)
   const identity = identityLines(t)
   if (identity.length) kit.drawParagraph(identity.join('  ·  '))
   const { ville, pays } = parseLocation(t.provider.location)
@@ -58,6 +60,7 @@ export function drawClientBlock(
 }
 
 interface SignatureBoxOptions {
+  lang: DocLang
   title: string
   status: string
   statusColor: ReturnType<typeof rgb>
@@ -72,6 +75,7 @@ interface SignatureBoxOptions {
 
 function drawSignatureBox(kit: PdfKit, o: SignatureBoxOptions) {
   const { state, fonts } = kit
+  const L = docLabels(o.lang).signature
   kit.drawLabel(o.title)
   const boxHeight = 156
   kit.ensureSpace(boxHeight)
@@ -84,48 +88,50 @@ function drawSignatureBox(kit: PdfKit, o: SignatureBoxOptions) {
   state.page.drawText(safeText(o.status), { x: MARGIN + 20, y: iy - 8, size: 8, font: fonts.bold, color: WHITE })
 
   iy -= 28
-  state.page.drawText(safeText(`Signé par : ${o.signerName}`), { x: MARGIN + 12, y: iy, size: 9, font: fonts.regular, color: INK })
-  state.page.drawText(safeText(`E-mail : ${o.signerEmail}`), { x: MARGIN + 300, y: iy, size: 9, font: fonts.regular, color: INK })
+  state.page.drawText(safeText(`${L.by} : ${o.signerName}`), { x: MARGIN + 12, y: iy, size: 9, font: fonts.regular, color: INK })
+  state.page.drawText(safeText(`${L.email} : ${o.signerEmail}`), { x: MARGIN + 300, y: iy, size: 9, font: fonts.regular, color: INK })
 
   iy -= 16
-  const signedAtStr = new Date(o.signedAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
-  state.page.drawText(safeText(`Date et heure : ${signedAtStr}`), { x: MARGIN + 12, y: iy, size: 9, font: fonts.regular, color: INK })
-  state.page.drawText(safeText(`Document signé : ${o.documentRef}`), { x: MARGIN + 300, y: iy, size: 9, font: fonts.regular, color: INK })
+  const signedAtStr = new Date(o.signedAt).toLocaleString(o.lang === 'en' ? 'en-GB' : 'fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Africa/Libreville' })
+  state.page.drawText(safeText(`${L.when} : ${signedAtStr}`), { x: MARGIN + 12, y: iy, size: 9, font: fonts.regular, color: INK })
+  state.page.drawText(safeText(`${L.doc} : ${o.documentRef}`), { x: MARGIN + 300, y: iy, size: 9, font: fonts.regular, color: INK })
 
   iy -= 16
-  state.page.drawText(safeText(`Référence (SHA-256) : ${o.hash.slice(0, 32)}...`), { x: MARGIN + 12, y: iy, size: 7, font: fonts.regular, color: SUBTLE })
+  state.page.drawText(safeText(`${L.hash} : ${o.hash.slice(0, 32)}...`), { x: MARGIN + 12, y: iy, size: 7, font: fonts.regular, color: SUBTLE })
 
   // Signature images sit in their own row, well below the metadata above —
   // fixed offsets from boxTop rather than from boxHeight, so this can
   // never silently overlap the text rows if boxHeight is ever tuned.
   const sigLabelY = boxTop - 108
   const sigImageY = sigLabelY - 44
-  state.page.drawText(safeText('Signature du client'), { x: MARGIN + 12, y: sigLabelY, size: 7.5, font: fonts.regular, color: SUBTLE })
+  state.page.drawText(safeText(L.client), { x: MARGIN + 12, y: sigLabelY, size: 7.5, font: fonts.regular, color: SUBTLE })
   if (o.clientImg) {
     const dims = o.clientImg.scale(1)
     const h = 36
     state.page.drawImage(o.clientImg, { x: MARGIN + 12, y: sigImageY, width: Math.min(160, (dims.width / dims.height) * h), height: h })
   }
-  state.page.drawText(safeText('Signature du prestataire'), { x: PAGE_WIDTH - MARGIN - 172, y: sigLabelY, size: 7.5, font: fonts.regular, color: SUBTLE })
+  state.page.drawText(safeText(L.provider), { x: PAGE_WIDTH - MARGIN - 172, y: sigLabelY, size: 7.5, font: fonts.regular, color: SUBTLE })
   if (o.providerImg) {
     const dims = o.providerImg.scale(1)
     const h = 36
     const w = Math.min(160, (dims.width / dims.height) * h)
     state.page.drawImage(o.providerImg, { x: PAGE_WIDTH - MARGIN - w - 12, y: sigImageY, width: w, height: h })
   } else {
-    state.page.drawText(safeText('Signature du prestataire non configurée'), { x: PAGE_WIDTH - MARGIN - 172, y: sigImageY + 18, size: 7.5, font: fonts.italic, color: SUBTLE })
+    state.page.drawText(safeText(L.providerMissing), { x: PAGE_WIDTH - MARGIN - 172, y: sigImageY + 18, size: 7.5, font: fonts.italic, color: SUBTLE })
   }
   state.y = boxTop - boxHeight - 16
 }
 
 export async function generateQuotePdf({ quote, personal, variant, siteUrl, watermark }: GenerateOptions): Promise<Buffer> {
   const isPv = variant === 'pv'
+  const lang = docLang(quote)
+  const L = docLabels(lang)
   const t = resolveTerms(quote, personal)
   const { dateEmission } = computeQuoteDates(quote)
   const kind = documentKind(quote, variant === 'contrat' ? 'contrat' : 'devis')
   const isContract = kind === 'contrat' || kind === 'avenant'
-  const docTitle = isPv ? 'PROCÈS-VERBAL DE RECETTE' : DOCUMENT_TITLE[kind]
-  const fileTitle = isPv ? `PV de recette ${quote.numero}` : `${kind.startsWith('avenant') ? 'Avenant' : isContract ? 'Contrat' : 'Devis'} ${quote.numero}`
+  const docTitle = isPv ? L.titles.pv : documentTitle(kind, lang)
+  const fileTitle = isPv ? `${L.files.pv} ${quote.numero}` : `${kind.startsWith('avenant') ? L.files.avenant : isContract ? L.files.contrat : L.files.devis} ${quote.numero}`
 
   const kit = await createPdfKit({
     title: fileTitle,
@@ -133,6 +139,7 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl, wate
     runningName: t.provider.name,
     runningTitle: fileTitle,
     watermark,
+    lang,
   })
   const { state, fonts } = kit
 
@@ -150,30 +157,30 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl, wate
   const providerSigImg = await kit.embedImage(providerSigBytes)
   const qrImg = await kit.embedImage(qrBytes)
 
-  kit.drawMasthead({ name: t.provider.name, role: t.provider.role, badge: `N° ${quote.numero}`, sub: `Code de suivi : ${quote.accessCode}` })
+  kit.drawMasthead({ name: t.provider.name, role: roleFor(t.provider.role, lang), badge: `${L.no} ${quote.numero}`, sub: `${L.trackingCode} : ${quote.accessCode}` })
 
   // ── Title + dates ──
   if (isPv) {
     kit.drawTitleRow(docTitle, [
-      `Date de livraison : ${quote.delivery ? formatLongDate(quote.delivery.deliveredAt) : '-'}`,
-      `Référence : ${quote.kind === 'avenant' ? `avenant ${quote.numero}` : `devis ${quote.numero}`}`,
+      `${L.deliveryDate} : ${quote.delivery ? formatLongDate(quote.delivery.deliveredAt, lang) : '-'}`,
+      `${L.reference} : ${quote.kind === 'avenant' ? L.refAvenant(quote.numero) : L.refDevis(quote.numero)}`,
     ], 18)
   } else {
-    kit.drawTitleRow(docTitle, [`Date d'émission : ${dateEmission}`, `Validité de l'offre : ${quote.validiteJours} jours`])
+    kit.drawTitleRow(docTitle, [`${L.issueDate} : ${dateEmission}`, `${L.offerValidity} : ${L.days(quote.validiteJours)}`])
   }
 
   // The PV's own sections are numbered from 1, so its parties are unnumbered.
-  drawProviderBlock(kit, t, isPv ? 'PRESTATAIRE' : '1. PRESTATAIRE')
-  drawClientBlock(kit, quote, isPv ? 'CLIENT' : '2. CLIENT')
+  drawProviderBlock(kit, t, isPv ? L.provider : `1. ${L.provider}`, lang)
+  drawClientBlock(kit, quote, isPv ? L.client : `2. ${L.client}`)
 
   let blocks: DocBlock[]
   if (isPv) {
     blocks = buildAcceptanceBlocks(quote, personal)
   } else {
     // ── Project (+ brief) ──
-    kit.drawLabel('3. PROJET')
+    kit.drawLabel(`3. ${L.project}`)
     if (quote.kind === 'avenant' && quote.parentNumero) {
-      kit.drawParagraph(`Avenant au contrat lié au devis n° ${quote.parentNumero}.`, { font: fonts.bold, color: INK })
+      kit.drawParagraph(L.avenantOf(quote.parentNumero), { font: fonts.bold, color: INK })
     }
     kit.drawParagraph(quote.descriptionProjet)
     for (const { label, value } of briefEntries(quote)) {
@@ -184,22 +191,22 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl, wate
     kit.state.y -= 4
 
     // ── Items table + totals ──
-    kit.drawLabel('4. DÉTAIL DES PRESTATIONS')
+    kit.drawLabel(`4. ${L.items}`)
     kit.drawTable(
       quote.items.map((it) => ({
         designation: it.designation,
         quantite: it.quantite,
-        unit: fmt(it.prixUnitaireHT),
-        total: fmt(it.quantite * it.prixUnitaireHT),
+        unit: fmt(it.prixUnitaireHT, lang),
+        total: fmt(it.quantite * it.prixUnitaireHT, lang),
       })),
-      { priceLabel: t.vatEnabled ? 'PRIX HT' : 'PRIX', totalLabel: t.vatEnabled ? 'TOTAL HT' : 'TOTAL' },
+      { priceLabel: t.vatEnabled ? L.table.priceHT : L.table.price, totalLabel: t.vatEnabled ? L.table.totalHT : L.table.total },
     )
     kit.drawTotals(
       t.vatEnabled
-        ? [['Total HT', fmt(quote.totalHT), false], [vatLabel(t), fmt(quote.tva), false], ['Total TTC', fmt(quote.totalTTC), true]]
-        : [['Total', fmt(quote.totalTTC), true]],
+        ? [[L.totals.ht, fmt(quote.totalHT, lang), false], [vatLabel(t, lang), fmt(quote.tva, lang), false], [L.totals.ttc, fmt(quote.totalTTC, lang), true]]
+        : [[L.totals.total, fmt(quote.totalTTC, lang), true]],
     )
-    if (!t.vatEnabled) kit.drawParagraph(t.vatExemptionMention, { size: 8.5 })
+    if (!t.vatEnabled) kit.drawParagraph(vatExemptionFor(t.vatExemptionMention, lang), { size: 8.5 })
 
     kit.drawLine()
     blocks = kind === 'avenant' || kind === 'avenant-proposition'
@@ -215,27 +222,29 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl, wate
   if (isPv) {
     if (quote.acceptance) {
       drawSignatureBox(kit, {
-        title: 'SIGNATURE ÉLECTRONIQUE',
-        status: quote.acceptance.reserves ? 'RECETTE AVEC RÉSERVES' : 'RECETTE SANS RÉSERVE',
+        lang,
+        title: L.signature.title,
+        status: quote.acceptance.reserves ? L.pv.withReserves : L.pv.withoutReserves,
         statusColor: quote.acceptance.reserves ? rgb(0.7, 0.4, 0) : GREEN,
         signerName: quote.acceptance.name,
         signerEmail: quote.acceptance.email,
         signedAt: quote.acceptance.signedAt,
-        documentRef: `PV ${quote.numero}`,
+        documentRef: L.signature.pvDoc(quote.numero),
         hash: quote.acceptance.documentHash,
         clientImg: clientSigImg,
         providerImg: providerSigImg,
       })
     } else {
-      kit.drawLabel('SIGNATURE DU CLIENT')
-      kit.drawParagraph('Recette prononcée - Date et signature du client :', { font: fonts.bold, color: INK })
+      kit.drawLabel(L.signature.pvHeading)
+      kit.drawParagraph(L.signature.pvLine, { font: fonts.bold, color: INK })
       kit.state.y -= 24
-      kit.drawSignature(providerSigImg, 'Signature du prestataire')
+      kit.drawSignature(providerSigImg, L.signature.provider)
     }
   } else if (quote.signature) {
     drawSignatureBox(kit, {
-      title: 'SIGNATURE ÉLECTRONIQUE',
-      status: 'STATUT : SIGNÉ',
+      lang,
+      title: L.signature.title,
+      status: L.signature.signed,
       statusColor: GREEN,
       signerName: quote.signature.name,
       signerEmail: quote.signature.email,
@@ -246,23 +255,23 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl, wate
       providerImg: providerSigImg,
     })
   } else {
-    kit.drawLabel(isContract ? CONTRACT_SIGNATURE_LABEL : devisAcceptanceLabel(blocks.length))
+    kit.drawLabel(isContract ? L.signature.contractParties : devisAcceptanceLabel(blocks.length, lang))
     kit.drawParagraph(
-      isContract ? 'Commande confirmée — Date et signature du client :' : 'Bon pour accord — Date et signature du client :',
+      isContract ? L.signature.contractLine : L.signature.devisLine,
       { font: fonts.bold, color: INK },
     )
     kit.state.y -= 24
     // The offer itself is signed by the provider when it is issued (see the
     // "Signature électronique et preuve" clause) — show that signature.
-    kit.drawSignature(providerSigImg, 'Signature du prestataire (offre)')
+    kit.drawSignature(providerSigImg, L.signature.providerOffer)
   }
 
   const signedByBoth = isPv ? !!quote.acceptance : !!quote.signature
   const footerNote = signedByBoth
-    ? 'Document généré électroniquement - signé par les deux parties'
+    ? L.footer.signedBoth
     : isPv
-      ? 'Document généré électroniquement - en attente de signature du Client'
-      : 'Document généré électroniquement - offre ferme du Prestataire'
+      ? L.footer.pending
+      : L.footer.offer
 
   // The PV is a short single-purpose page whose header already carries the
   // provider's identity: its only footer is the one-line note in the bottom

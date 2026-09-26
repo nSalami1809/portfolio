@@ -44,8 +44,38 @@ export interface QuoteRecordDelivery {
   token: string
 }
 
+// A change the client asked for (from their tracking page) or the provider
+// logged on their behalf (asked by WhatsApp, on a call…). The count is compared
+// with the revisions included in the contract.
+export interface QuoteRecordRevision {
+  at: Date
+  note: string
+  source: 'client' | 'admin'
+}
+
+// A file the client sent from their tracking page (logo, texts, images…).
+export interface QuoteRecordFile {
+  name: string
+  url: string
+  size: number
+  contentType: string
+  at: Date
+}
+
 export interface QuoteRecordAcceptance extends QuoteRecordSignature {
   reserves?: string
+}
+
+// One-time code the client must enter to sign (see requestSignatureCode).
+// Only a salted hash of the code is stored, never the code itself.
+export interface QuoteRecordSignOtp {
+  hash: string
+  email: string
+  expiresAt: Date
+  attempts: number
+  sentAt: Date
+  windowStart: Date
+  sendCount: number
 }
 
 export interface QuoteRecord extends QuotePayload {
@@ -70,6 +100,11 @@ export interface QuoteRecord extends QuotePayload {
   terms?: QuoteTerms
   delivery?: QuoteRecordDelivery
   acceptance?: QuoteRecordAcceptance
+  signOtp?: QuoteRecordSignOtp
+  revisions?: QuoteRecordRevision[]
+  files?: QuoteRecordFile[]
+  // Automatic reminders already sent (lib/reminders.ts): each at most once.
+  remindersSent?: Partial<Record<'expiring' | 'recette' | 'deemed' | 'warranty', Date>>
 }
 
 const MAX_BRIEF_FIELD_LENGTH = 1000

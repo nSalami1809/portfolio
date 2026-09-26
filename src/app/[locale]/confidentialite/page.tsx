@@ -40,6 +40,14 @@ function content(locale: 'fr' | 'en', email: string) {
           b: `You can request access to, correction of, or deletion of any data you've submitted at any time by writing to ${email}.`,
         },
         {
+          h: 'Chat assistant',
+          b: 'If you use the chat assistant, the text of your messages and of its answers is stored for 90 days, linked only to a random identifier kept in your browser (no name or email unless you type them in the conversation), then deleted automatically. It lets the site owner see what visitors ask and follow up on a request. Do not type sensitive information in the chat. The conversation is also kept in your browser for 24 hours so it survives a page reload; the “Clear conversation” button removes it.',
+        },
+        {
+          h: 'Electronic signature',
+          b: 'To sign a quote or an acceptance report, a one-time code is emailed to the address on the quote, and your IP address and browser identifier are recorded with the signature. This audit trail is what gives the signature its evidentiary value, and is kept with the signed document.',
+        },
+        {
           h: 'Retention',
           b: 'Contact messages, quotes, and bookings are kept as long as needed for follow-up, and can be deleted on request at any time.',
         },
@@ -72,6 +80,14 @@ function content(locale: 'fr' | 'en', email: string) {
       {
         h: 'Vos droits',
         b: `Vous pouvez demander l'accès, la correction ou la suppression de toute donnée que vous avez transmise, à tout moment, en écrivant à ${email}.`,
+      },
+      {
+        h: 'Assistant de chat',
+        b: `Si vous utilisez l'assistant de chat, le texte de vos messages et de ses réponses est conservé 90 jours, rattaché uniquement à un identifiant aléatoire stocké dans votre navigateur (ni nom ni email, sauf si vous les écrivez dans la conversation), puis supprimé automatiquement. Il permet à l'éditeur du site de voir ce que les visiteurs demandent et de donner suite à une demande. N'écrivez pas d'informations sensibles dans le chat. La conversation est aussi conservée 24 heures dans votre navigateur pour survivre à un rechargement de page ; le bouton « Effacer la conversation » la supprime.`,
+      },
+      {
+        h: 'Signature électronique',
+        b: `Pour signer un devis ou un procès-verbal de recette, un code à usage unique est envoyé par email à l'adresse indiquée sur le devis, et votre adresse IP ainsi que l'identifiant de votre navigateur sont enregistrés avec la signature. Cette piste d'audit fonde la valeur probante de la signature et est conservée avec le document signé.`,
       },
       {
         h: 'Durée de conservation',

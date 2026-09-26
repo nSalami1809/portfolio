@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { listInvoices, downloadInvoicePdf, type Invoice } from '@/actions/billing'
+import { listInvoices, downloadInvoicePdf } from '@/actions/billing'
+import type { Invoice } from '@/lib/invoicing'
+import { isInvoiceOverdue } from '@/lib/business-stats'
 import { useToast } from '@/components/admin/Toast'
 import { saveBase64Pdf } from '@/lib/browser-download'
 
@@ -10,15 +12,6 @@ type Filter = 'all' | 'due' | 'overdue' | 'paid' | 'cancelled'
 
 const fmt = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-const DAY = 86_400_000
-
-// A deposit is due on receipt: it only counts as late once the normal payment
-// delay has gone by. A balance is late as soon as its due date has passed.
-function isOverdue(inv: Invoice, now: number): boolean {
-  if (inv.status !== 'issued') return false
-  const grace = inv.kind === 'acompte' ? inv.terms.paymentDueDays * DAY : 0
-  return now > new Date(inv.dueAt).getTime() + grace
-}
 
 const STATUS: Record<Invoice['status'], { label: string; color: string }> = {
   issued: { label: 'À payer', color: '#E45742' },
@@ -58,8 +51,8 @@ export default function AdminInvoices() {
       billed: live.reduce((s, i) => s + i.netToPay, 0),
       collected: live.filter((i) => i.status === 'paid').reduce((s, i) => s + i.netToPay, 0),
       toCollect: live.filter((i) => i.status === 'issued').reduce((s, i) => s + i.netToPay, 0),
-      overdue: live.filter((i) => isOverdue(i, now)).reduce((s, i) => s + i.netToPay, 0),
-      overdueCount: live.filter((i) => isOverdue(i, now)).length,
+      overdue: live.filter((i) => isInvoiceOverdue(i, now)).reduce((s, i) => s + i.netToPay, 0),
+      overdueCount: live.filter((i) => isInvoiceOverdue(i, now)).length,
     }
   }, [invoices, now])
 
@@ -67,7 +60,7 @@ export default function AdminInvoices() {
     const q = search.trim().toLowerCase()
     return invoices.filter((i) => {
       if (filter === 'due' && i.status !== 'issued') return false
-      if (filter === 'overdue' && !isOverdue(i, now)) return false
+      if (filter === 'overdue' && !isInvoiceOverdue(i, now)) return false
       if (filter === 'paid' && i.status !== 'paid') return false
       if (filter === 'cancelled' && i.status !== 'cancelled') return false
       if (!q) return true
@@ -177,7 +170,7 @@ export default function AdminInvoices() {
       ) : (
         <div className="space-y-2">
           {filtered.map((inv) => {
-            const late = isOverdue(inv, now)
+            const late = isInvoiceOverdue(inv, now)
             const status = late ? { label: 'En retard', color: '#D90000' } : STATUS[inv.status]
             return (
               <div key={inv.id} className="card no-lift p-4">

@@ -6,6 +6,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { contactNotificationEmail, contactAutoReplyEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { notifyAdmin } from '@/lib/push'
 import { requireAdmin } from '@/lib/require-admin'
 import { getClientIp } from '@/lib/client-ip'
 
@@ -109,6 +110,7 @@ export async function submitContact(payload: ContactPayload): Promise<ContactRes
   await db.collection('contacts').insertOne({ ...payload, ip, createdAt: new Date(), read: false })
 
   // Notification to admin + auto-reply to visitor (non-blocking)
+  await notifyAdmin({ title: 'Nouveau message', body: `${payload.name} : ${payload.message.slice(0, 120)}`, url: '/admin/contacts' })
   try {
     const transporter = getTransporter()
     const notification = contactNotificationEmail(payload)

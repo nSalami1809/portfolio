@@ -8,6 +8,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { bookingNotificationEmail, bookingClientCopyEmail, bookingReminderEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { notifyAdmin } from '@/lib/push'
 import { buildICS } from '@/lib/ics'
 import { fetchPortfolio } from '@/actions/portfolio'
 import { notifyWaitlist } from '@/actions/waitlist'
@@ -356,6 +357,7 @@ export async function bookMeeting(payload: BookingPayload): Promise<Booking> {
   const booking = toBooking({ ...record, _id: insertedId })
   invalidateBookingSlots()
 
+  after(() => notifyAdmin({ title: 'Nouveau rendez-vous', body: `${booking.clientNom} — ${new Date(booking.start).toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville' })}`, url: '/admin/calendar' }))
   after(async () => {
     try {
       const transporter = getTransporter()

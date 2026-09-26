@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { downloadQuotePdf, type AdminQuote, type QuoteItem } from '@/actions/quotes'
-import { issueInvoice, markInvoicePaid, cancelInvoice, resendInvoiceEmail, downloadInvoicePdf, type Invoice } from '@/actions/billing'
-import { markDelivered, createAvenant, updateQuoteDelay } from '@/actions/lifecycle'
+import { issueInvoice, markInvoicePaid, cancelInvoice, resendInvoiceEmail, downloadInvoicePdf } from '@/actions/billing'
+import type { Invoice } from '@/lib/invoicing'
+import { markDelivered, createAvenant, updateQuoteDelay, logRevision } from '@/actions/lifecycle'
 import { saveBase64Pdf } from '@/lib/browser-download'
 import { formatLongDate, RECETTE_DAYS, addBusinessDays } from '@/lib/quote-document'
 import { DEFAULT_BUSINESS } from '@/lib/business'
@@ -39,11 +40,14 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
   const [payDate, setPayDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [delayDays, setDelayDays] = useState(String(quote.terms?.deliveryDays ?? DEFAULT_BUSINESS.deliveryDays))
   const [showAvenant, setShowAvenant] = useState(false)
+  const [revisionNote, setRevisionNote] = useState('')
   const [avDescription, setAvDescription] = useState('')
   const [avDelay, setAvDelay] = useState('')
   const [avItems, setAvItems] = useState<QuoteItem[]>([{ ...EMPTY_ITEM }])
 
   const accepted = quote.status === 'accepted'
+  const includedRevisions = quote.terms?.includedRevisions ?? DEFAULT_BUSINESS.includedRevisions
+  const overRevisions = quote.revisions.length > includedRevisions
   const mine = invoices.filter((i) => i.quoteNumero === quote.numero)
   const active = mine.filter((i) => i.status !== 'cancelled')
   const hasDeposit = quote.terms ? quote.terms.depositPercent > 0 && quote.terms.depositPercent < 100 : true
@@ -263,6 +267,60 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
               )}
             </div>
           </div>
+
+          {/* Revisions asked by the client */}
+          <div>
+            <p className={sectionTitle} style={sectionTitleStyle}>
+              Modifications demandées — <span style={{ color: overRevisions ? '#D90000' : 'var(--text)' }}>{quote.revisions.length} / {includedRevisions} incluses</span>
+            </p>
+            {quote.revisions.length > 0 && (
+              <ul className="mb-2 space-y-1.5">
+                {quote.revisions.map((r, i) => (
+                  <li key={i} className="text-xs" style={{ color: 'var(--text)', lineHeight: 1.6 }}>
+                    <span style={{ color: i >= includedRevisions ? '#D90000' : 'var(--text-subtle)' }}>
+                      #{i + 1} · {new Date(r.at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} · {r.source === 'client' ? 'client' : 'saisie par vous'}{i >= includedRevisions ? ' · hors forfait' : ''}
+                    </span>
+                    <br />{r.note}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex gap-2 flex-wrap items-center">
+              <input className="input" style={{ flex: '1 1 14rem' }} value={revisionNote} onChange={(e) => setRevisionNote(e.target.value)} placeholder="Modification demandée hors du site (WhatsApp, appel…)" maxLength={1000} aria-label="Consigner une modification" />
+              <button className={btn} disabled={busy === 'revision' || revisionNote.trim().length < 3} onClick={async () => { if (await run('revision', () => logRevision(quote.id, revisionNote))) setRevisionNote('') }}>Consigner</button>
+            </div>
+            {overRevisions && quote.kind !== 'avenant' && (
+              <p className="text-xs mt-2" style={{ color: '#D90000', lineHeight: 1.6 }}>
+                Le forfait de révisions est dépassé.{' '}
+                <button
+                  type="button"
+                  className="underline font-semibold"
+                  onClick={() => {
+                    setAvDescription(`Modifications au-delà des ${includedRevisions} révision${includedRevisions > 1 ? 's' : ''} incluses :\n${quote.revisions.slice(includedRevisions).map((r) => `- ${r.note}`).join('\n')}`.slice(0, 2000))
+                    setShowAvenant(true)
+                  }}
+                >
+                  Proposer un avenant
+                </button>{' '}
+                avec ces demandes préremplies.
+              </p>
+            )}
+          </div>
+
+          {/* Files sent by the client */}
+          {quote.files.length > 0 && (
+            <div>
+              <p className={sectionTitle} style={sectionTitleStyle}>Fichiers du client ({quote.files.length})</p>
+              <ul className="space-y-1">
+                {quote.files.map((f, i) => (
+                  <li key={i} className="text-xs flex items-center justify-between gap-3">
+                    {f.url.startsWith('http') ? <a href={f.url} target="_blank" rel="noopener noreferrer" className="underline min-w-0 truncate" style={{ color: 'var(--accent)' }}>{f.name}</a> : <span className="min-w-0 truncate">{f.name}</span>}
+                    <span className="flex-shrink-0" style={{ color: 'var(--text-subtle)' }}>{Math.max(1, Math.round(f.size / 1024))} Ko · {new Date(f.at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Avenant */}
           {quote.kind !== 'avenant' && (

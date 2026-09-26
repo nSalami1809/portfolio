@@ -5,6 +5,7 @@ import { getDb } from '@/lib/mongodb'
 import { getTransporter } from '@/lib/mailer'
 import { escalationEmail } from '@/lib/email-templates'
 import { getAdminEmail } from '@/lib/admin-config'
+import { notifyAdmin } from '@/lib/push'
 import { getClientIp } from '@/lib/client-ip'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
@@ -55,6 +56,7 @@ export async function requestHumanHelp(payload: {
     createdAt: new Date(),
   })
 
+  after(() => notifyAdmin({ title: 'Un visiteur demande de l\'aide', body: `${clientNom} — ${reason.slice(0, 120)}`, url: '/admin/contacts' }))
   after(async () => {
     try {
       const transporter = getTransporter()

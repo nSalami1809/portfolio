@@ -241,6 +241,22 @@ export default function AdminPersonal() {
             Je remets le code source après paiement intégral
           </label>
         </div>
+
+        <p className="text-xs font-semibold mt-6 mb-3" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>Automatisation</p>
+        <div className="space-y-3">
+          <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: 'var(--text)' }}>
+            <input type="checkbox" className="mt-1" checked={effective.requireSignatureOtp} onChange={(e) => handleBusiness({ requireSignatureOtp: e.target.checked })} style={{ accentColor: 'var(--accent)' }} />
+            <span>Le client confirme sa signature avec un code reçu par email<br /><span className="text-xs" style={{ color: 'var(--text-subtle)' }}>Renforce la preuve que la personne qui signe contrôle bien l&apos;adresse email du devis.</span></span>
+          </label>
+          <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: 'var(--text)' }}>
+            <input type="checkbox" className="mt-1" checked={effective.autoDepositInvoice} onChange={(e) => handleBusiness({ autoDepositInvoice: e.target.checked })} style={{ accentColor: 'var(--accent)' }} />
+            <span>Émettre automatiquement la facture d&apos;acompte dès que le client signe<br /><span className="text-xs" style={{ color: 'var(--text-subtle)' }}>Sinon, vous l&apos;émettez vous-même depuis le panneau du devis.</span></span>
+          </label>
+          <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: 'var(--text)' }}>
+            <input type="checkbox" className="mt-1" checked={effective.remindersEnabled} onChange={(e) => handleBusiness({ remindersEnabled: e.target.checked })} style={{ accentColor: 'var(--accent)' }} />
+            <span>Relances automatiques (devis qui expire, facture impayée, recette réputée acceptée, fin de garantie)</span>
+          </label>
+        </div>
       </section>
 
       {/* Signature électronique */}

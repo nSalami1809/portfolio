@@ -9,6 +9,7 @@ import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { openChatWithMessage } from '@/lib/chat-bridge'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import type { Offer } from '@/types'
+import EurHint from '@/components/EurHint'
 
 export type TranslatedOffers = Record<string, { title: string; description: string; features: string }>
 type Translated = TranslatedOffers
@@ -82,7 +83,7 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
             )}
             <h2 className="font-display font-bold text-2xl sm:text-3xl mb-3" style={{ color: '#fff' }}>{title}</h2>
             <p className="text-sm sm:text-base leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.72)' }}>{description}</p>
-            <p className="font-display font-bold text-xl mb-6" style={{ color: '#fff' }}>{o.priceLabel}</p>
+            <p className="font-display font-bold text-xl mb-6" style={{ color: '#fff' }}>{o.priceLabel}<EurHint label={o.priceLabel} className="block text-sm mt-1" /></p>
             <button onClick={() => onRequest(title)} className="btn-primary text-sm">{ctaLabel}</button>
           </div>
           {o.image ? (
@@ -176,7 +177,7 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
         </ul>
       )}
 
-      <p className="font-display font-bold text-lg mb-4" style={{ color: 'var(--accent)' }}>{offer.priceLabel}</p>
+      <p className="font-display font-bold text-lg mb-4" style={{ color: 'var(--accent)' }}>{offer.priceLabel}<EurHint label={offer.priceLabel} className="block text-xs mt-1" /></p>
 
       <button onClick={() => onRequest(title)} className="btn-primary w-full justify-center text-sm">
         {ctaLabel}

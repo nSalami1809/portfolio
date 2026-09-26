@@ -47,9 +47,19 @@ export default function BlogPageView({ posts, locale, t }: Props) {
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
             {t.title}
           </h1>
-          <p className="text-lg mb-16" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
+          <p className="text-lg mb-4" style={{ color: 'var(--text-muted)', maxWidth: 500 }}>
             {t.subtitle}
           </p>
+          <a
+            href={`/${locale}/blog/rss.xml`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold mb-16"
+            style={{ color: 'var(--accent)' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 11a9 9 0 019 9" /><path d="M4 4a16 16 0 0116 16" /><circle cx="5" cy="19" r="1" />
+            </svg>
+            RSS
+          </a>
         </FadeIn>
 
         {posts.length === 0 ? (

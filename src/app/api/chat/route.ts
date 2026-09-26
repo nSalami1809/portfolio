@@ -9,6 +9,7 @@ import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, ca
 import { joinWaitlist } from '@/actions/waitlist'
 import type { PortfolioData } from '@/types'
 import { resolveBusiness } from '@/lib/business'
+import { isConversationId, saveChatConversation } from '@/lib/chat-log'
 
 const MAX_ATTEMPTS = 20
 const WINDOW_S = 10 * 60 // 10 minutes
@@ -236,7 +237,7 @@ export async function POST(req: NextRequest) {
   // limiter, and neither does the (cached) portfolio read.
   const [body, portfolio, attempts] = await Promise.all([
     req.json().then(
-      (v) => v as { messages?: UIMessage[]; locale?: string },
+      (v) => v as { messages?: UIMessage[]; locale?: string; conversationId?: string },
       () => null,
     ),
     fetchPortfolioSafe('api/chat'),
@@ -262,7 +263,7 @@ export async function POST(req: NextRequest) {
   if (!portfolio) {
     return new Response('Service temporairement indisponible.', { status: 503 })
   }
-  const { messages, locale } = body
+  const { messages, locale, conversationId } = body
 
   const result = streamText({
     model: google('gemini-3.5-flash-lite'),
@@ -397,5 +398,9 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  return result.toUIMessageStreamResponse()
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    // Keep the exchange for the admin (text only, 90 days — see lib/chat-log.ts).
+    onFinish: ({ messages: all }) => (isConversationId(conversationId) ? saveChatConversation(conversationId, locale ?? 'fr', all) : undefined),
+  })
 }

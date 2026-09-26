@@ -30,6 +30,9 @@ export const DEFAULT_BUSINESS: ResolvedBusiness = {
   includedRevisions: 2,
   warrantyDays: 30,
   sourceCodeDelivery: true,
+  autoDepositInvoice: false,
+  requireSignatureOtp: true,
+  remindersEnabled: true,
 }
 
 // French decimal comma (1,5 not 1.5) for rates printed in the documents.
@@ -60,6 +63,9 @@ export function resolveBusiness(personal?: Pick<PersonalInfo, 'business'> | null
     includedRevisions: Math.round(clamp(b.includedRevisions, 0, 50, d.includedRevisions)),
     warrantyDays: Math.round(clamp(b.warrantyDays, 0, 730, d.warrantyDays)),
     sourceCodeDelivery: typeof b.sourceCodeDelivery === 'boolean' ? b.sourceCodeDelivery : d.sourceCodeDelivery,
+    autoDepositInvoice: typeof b.autoDepositInvoice === 'boolean' ? b.autoDepositInvoice : d.autoDepositInvoice,
+    requireSignatureOtp: typeof b.requireSignatureOtp === 'boolean' ? b.requireSignatureOtp : d.requireSignatureOtp,
+    remindersEnabled: typeof b.remindersEnabled === 'boolean' ? b.remindersEnabled : d.remindersEnabled,
   }
 }
 
@@ -113,7 +119,8 @@ export function splitPayment(totalTTC: number, depositPercent: number) {
   return { acompte, solde: totalTTC - acompte }
 }
 
-export function vatLabel(terms: Pick<ResolvedBusiness, 'vatEnabled' | 'vatRate'>): string {
+export function vatLabel(terms: Pick<ResolvedBusiness, 'vatEnabled' | 'vatRate'>, lang: 'fr' | 'en' = 'fr'): string {
+  if (lang === 'en') return terms.vatEnabled ? `VAT (${terms.vatRate}%)` : 'VAT'
   return terms.vatEnabled ? `TVA (${frNumber(terms.vatRate)} %)` : 'TVA'
 }
 
@@ -141,3 +148,9 @@ export type WorkTerms = Pick<
   ResolvedBusiness,
   'depositPercent' | 'depositRefundable' | 'deliveryDays' | 'includedRevisions' | 'warrantyDays' | 'paymentMethods' | 'paymentDueDays' | 'sourceCodeDelivery'
 >
+
+// A quote created before these settings existed has no value for them in its
+// frozen terms: the safe reading is "OTP on, everything else off/default".
+export const wantsSignatureOtp = (t: Partial<Pick<ResolvedBusiness, 'requireSignatureOtp'>>) => t.requireSignatureOtp !== false
+export const wantsAutoDeposit = (t: Partial<Pick<ResolvedBusiness, 'autoDepositInvoice'>>) => t.autoDepositInvoice === true
+export const wantsReminders = (t: Partial<Pick<ResolvedBusiness, 'remindersEnabled'>>) => t.remindersEnabled !== false

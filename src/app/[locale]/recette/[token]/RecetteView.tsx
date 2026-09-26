@@ -6,6 +6,7 @@ import { usePortfolio } from '@/providers/portfolio-core'
 import { getAcceptanceByToken } from '@/actions/lifecycle'
 import type { Quote } from '@/actions/quotes'
 import AcceptanceCard from './AcceptanceCard'
+import { useLocale } from '@/lib/i18n/useLocale'
 
 // The page behind the link of the "procès-verbal de recette" email: the
 // delivery report and nothing else. (The devis / contract has its own page,
@@ -13,6 +14,8 @@ import AcceptanceCard from './AcceptanceCard'
 export default function RecetteView({ token }: { token: string }) {
   const { data } = usePortfolio()
   const { personal } = data
+  const en = useLocale() === 'en'
+  const T = (fr: string, english: string) => (en ? english : fr)
   const [quote, setQuote] = useState<Quote | null>(null)
   const [state, setState] = useState<'loading' | 'not-found' | 'ready'>('loading')
 
@@ -41,8 +44,8 @@ export default function RecetteView({ token }: { token: string }) {
     return (
       <div className="min-h-dvh flex items-center justify-center px-4">
         <div className="card p-8 text-center" style={{ maxWidth: 420 }}>
-          <p className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>Lien invalide</p>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Ce lien est introuvable ou incorrect. Vérifiez qu&apos;il a été copié en entier.</p>
+          <p className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>{T('Lien invalide', 'Invalid link')}</p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{T("Ce lien est introuvable ou incorrect. Vérifiez qu'il a été copié en entier.", 'This link is missing or incorrect. Check that it was copied in full.')}</p>
         </div>
       </div>
     )
@@ -60,7 +63,7 @@ export default function RecetteView({ token }: { token: string }) {
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{personal.role}</p>
             </div>
           </div>
-          <p className="section-label mb-1">{quote.kind === 'avenant' ? 'Avenant' : 'Devis'} n° {quote.numero}</p>
+          <p className="section-label mb-1">{quote.kind === 'avenant' ? T('Avenant', 'Amendment') : T('Devis', 'Quote')} {T('n°', 'no.')} {quote.numero}</p>
         </FadeIn>
 
         <AcceptanceCard token={token} quote={quote} onSigned={setQuote} />

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
+import Disclosure from '@/components/ui/Disclosure'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import type { Locale } from '@/lib/i18n/locale'
 import type { WorkTerms } from '@/lib/business'
@@ -76,14 +77,19 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
       <section aria-labelledby="work-faq-title">
         <FadeIn>
           <p className="section-label mb-3">{t.faqLabel}</p>
-          <h2 id="work-faq-title" className="section-title mb-10" style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)' }}>{t.faqTitle}</h2>
+          <h2 id="work-faq-title" className="section-title mb-4" style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)' }}>{t.faqTitle}</h2>
+          <p className="text-sm mb-8 flex items-center gap-2" style={{ color: 'var(--text-subtle)' }}>
+            <span className="disclosure-badge">{faq.length}</span>
+            {t.faqHint}
+          </p>
         </FadeIn>
         <div className="max-w-3xl space-y-3">
-          {faq.map((item) => (
-            <details key={item.q} className="card no-lift p-5 group">
-              <summary className="cursor-pointer font-display font-semibold text-base" style={{ color: 'var(--text)' }}>{item.q}</summary>
-              <p className="text-sm leading-relaxed mt-3" style={{ color: 'var(--text-muted)' }}>{item.a}</p>
-            </details>
+          {faq.map((item, i) => (
+            <FadeIn key={item.q} delay={Math.min(i * 0.05, 0.25)}>
+              <Disclosure title={item.q} index={i + 1}>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{item.a}</p>
+              </Disclosure>
+            </FadeIn>
           ))}
         </div>
       </section>

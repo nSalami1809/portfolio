@@ -10,55 +10,17 @@ import type { Quote } from '@/actions/quotes'
 import type { PersonalInfo } from '@/types'
 import { frNumber, resolveTerms, splitPayment, type QuoteTerms, type ResolvedBusiness } from '@/lib/business'
 
-export interface DocBlock {
-  title: string
-  paragraphs?: string[]
-  bullets?: string[]
-}
+import {
+  addBusinessDays, computeQuoteDates, docLang, FORMAL_NOTICE_DAYS, fmt, formatLongDate, numbered, parseLocation, RECETTE_DAYS,
+  type DocBlock, type DocLang,
+} from '@/lib/doc-common'
+import { docLabels } from '@/lib/doc-labels'
+import { EN_BUILDERS_V1, devisAcceptanceLabelEn } from '@/lib/quote-document-en'
 
-// toLocaleString('fr-FR') groups thousands with a narrow no-break space
-// (U+202F). It renders fine on screen, but pdf-lib's WinAnsi-encoded
-// standard fonts (used to print this same amount into the emailed PDF)
-// cannot draw that exact character — normalize to a plain space so the
-// string is safe in both contexts.
-export const fmt = (n: number) => `${n.toLocaleString('fr-FR').replace(/[  ]/g, ' ')} FCFA`
-
-const DATE_FORMAT: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' }
-export const formatLongDate = (d: Date | string) => new Date(d).toLocaleDateString('fr-FR', DATE_FORMAT)
-
-export function computeQuoteDates(quote: Quote) {
-  const dateEmissionDate = new Date(quote.dateEmission)
-  const dateEmission = formatLongDate(dateEmissionDate)
-  const expiryDate = new Date(dateEmissionDate)
-  expiryDate.setDate(expiryDate.getDate() + quote.validiteJours)
-  const expiryStr = formatLongDate(expiryDate)
-  return { dateEmissionDate, dateEmission, expiryDate, expiryStr }
-}
-
-// Working days (Mon–Fri) — public holidays are deliberately not modelled: the
-// documents say "jours ouvrés" and this only produces an indicative date.
-export function addBusinessDays(from: Date | string, days: number): Date {
-  const d = new Date(from)
-  let left = days
-  while (left > 0) {
-    d.setDate(d.getDate() + 1)
-    const dow = d.getDay()
-    if (dow !== 0 && dow !== 6) left--
-  }
-  return d
-}
-
-// "Libreville, Gabon — Disponible en remote" is what the location field
-// typically holds: the marketing suffix must never leak into a contract's
-// "Fait à …" line or its governing-law clause.
-export function parseLocation(location: string): { ville: string; pays: string } {
-  const place = (location || '').split(/\s[—–-]\s/)[0].trim() || 'Libreville, Gabon'
-  const parts = place.split(',').map((s) => s.trim()).filter(Boolean)
-  return { ville: parts[0] || 'Libreville', pays: parts.length > 1 ? parts[parts.length - 1] : 'Gabon' }
-}
-
-export const RECETTE_DAYS = 7
-const FORMAL_NOTICE_DAYS = 15
+// Shared helpers live in doc-common.ts (used by both languages); re-exported so
+// every existing import of this module keeps working.
+export { addBusinessDays, computeQuoteDates, docLang, fmt, formatLongDate, parseLocation, RECETTE_DAYS }
+export type { DocBlock, DocLang }
 
 export type DocumentVariant = 'devis' | 'contrat'
 export type DocumentKind = 'devis' | 'contrat' | 'avenant-proposition' | 'avenant'
@@ -75,6 +37,11 @@ export const DOCUMENT_TITLE: Record<DocumentKind, string> = {
   avenant: 'AVENANT',
 }
 
+export function documentTitle(kind: DocumentKind, lang: DocLang): string {
+  const L = docLabels(lang).titles
+  return kind === 'devis' ? L.devis : kind === 'contrat' ? L.contrat : L.avenant
+}
+
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`
 
 const BRIEF_LABELS = {
@@ -87,13 +54,24 @@ const BRIEF_LABELS = {
   echeance: 'Échéance souhaitée',
 } as const
 
+const BRIEF_LABELS_EN: Record<keyof typeof BRIEF_LABELS, string> = {
+  objectifs: 'Project goals',
+  publicCible: 'Target audience',
+  fonctionnalites: 'Expected features',
+  contenus: 'Content provided by the Client',
+  references: 'References and inspirations',
+  contraintes: 'Technical or regulatory constraints',
+  echeance: 'Desired deadline',
+}
+
 // The filled-in brief fields, in display order.
-export function briefEntries(quote: Pick<Quote, 'brief'>): { label: string; value: string }[] {
+export function briefEntries(quote: Pick<Quote, 'brief' | 'locale'>): { label: string; value: string }[] {
   const brief = quote.brief
   if (!brief) return []
+  const labels = docLang(quote) === 'en' ? BRIEF_LABELS_EN : BRIEF_LABELS
   return (Object.keys(BRIEF_LABELS) as (keyof typeof BRIEF_LABELS)[])
     .filter((k) => brief[k]?.trim())
-    .map((k) => ({ label: BRIEF_LABELS[k], value: brief[k]!.trim() }))
+    .map((k) => ({ label: labels[k], value: brief[k]!.trim() }))
 }
 
 // ── Building blocks shared by the devis and the contract ────────────────────
@@ -184,13 +162,6 @@ export function intellectualPropertyParagraphs(t: ResolvedBusiness): string[] {
 const SIGNATURE_PROOF_PARAGRAPH =
   "Le Prestataire émet le présent document comme offre ferme et le signe électroniquement, par l'apposition de sa signature enregistrée, au moment de son émission. Le Client l'accepte en le signant électroniquement depuis le lien sécurisé qui lui est adressé. Les Parties reconnaissent à la signature électronique, à l'horodatage, à l'adresse IP, à l'empreinte numérique (SHA-256) et au journal d'événements qui y sont associés la valeur probante d'un écrit signé, et conviennent de ne pas en contester la recevabilité au seul motif de sa forme électronique. Le signataire déclare avoir la capacité de contracter et, lorsqu'il agit pour le compte d'une société, avoir le pouvoir de l'engager."
 
-function numbered(blocks: DocBlock[], start: number, style: 'section' | 'article'): DocBlock[] {
-  return blocks.map((b, i) => ({
-    ...b,
-    title: style === 'article' ? `ARTICLE ${start + i} — ${b.title}` : `${start + i}. ${b.title}`,
-  }))
-}
-
 // ── Devis ────────────────────────────────────────────────────────────────────
 // Sections 1–4 (prestataire, client, projet, détail) are rendered directly by
 // each consumer; this covers 5 onward. The acceptance block that follows is
@@ -257,8 +228,8 @@ function devisBlocksV1(quote: Quote, personal: PersonalInfo, siteUrl: string): D
   return numbered(devisBlockDefs(quote, t, siteUrl), DEVIS_FIRST_BLOCK_NUMBER, 'section')
 }
 
-export function devisAcceptanceLabel(blockCount: number): string {
-  return `${DEVIS_FIRST_BLOCK_NUMBER + blockCount}. ACCEPTATION DU DEVIS`
+export function devisAcceptanceLabel(blockCount: number, lang: DocLang = 'fr'): string {
+  return lang === 'en' ? devisAcceptanceLabelEn(blockCount) : `${DEVIS_FIRST_BLOCK_NUMBER + blockCount}. ACCEPTATION DU DEVIS`
 }
 
 // ── Contrat ──────────────────────────────────────────────────────────────────
@@ -514,8 +485,12 @@ const BUILDERS: Record<number, DocBuilders> = {
   1: { devis: devisBlocksV1, contrat: contractBlocksV1, avenant: avenantBlocksV1, pv: acceptanceBlocksV1 },
 }
 
-function buildersFor(quote: Pick<Quote, 'docVersion'>): DocBuilders {
-  return BUILDERS[quote.docVersion ?? 1] ?? BUILDERS[CURRENT_DOC_VERSION]
+// English wording, per version — same rule: a new version copies both sets.
+const BUILDERS_EN: Record<number, DocBuilders> = { 1: EN_BUILDERS_V1 }
+
+function buildersFor(quote: Pick<Quote, 'docVersion' | 'locale'>): DocBuilders {
+  const set = docLang(quote) === 'en' ? BUILDERS_EN : BUILDERS
+  return set[quote.docVersion ?? 1] ?? set[CURRENT_DOC_VERSION]
 }
 
 export const buildDevisBlocks = (quote: Quote, personal: PersonalInfo, siteUrl: string) => buildersFor(quote).devis(quote, personal, siteUrl)

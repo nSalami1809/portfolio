@@ -4,7 +4,7 @@
 // Every page carries an "EXEMPLE" watermark and banner — a sample must never
 // be mistakable for an issued document.
 import type { Quote } from '@/actions/quotes'
-import type { Invoice } from '@/actions/billing'
+import type { Invoice } from '@/lib/invoicing'
 import type { PersonalInfo, Offer } from '@/types'
 import { computeTotals, snapshotTerms, splitPayment, splitTTC } from '@/lib/business'
 import { generateQuotePdf } from '@/lib/quote-pdf'
