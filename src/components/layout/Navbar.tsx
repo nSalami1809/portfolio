@@ -84,6 +84,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
       // project, and the terms of sale.
       children: [
         { href: `/${locale}/offres`, label: t.workOffers },
+        { href: `/${locale}/methode`, label: t.workMethod },
         { href: `/${locale}/contact`, label: t.contact },
         { href: `/${locale}/devis`, label: t.workQuote },
         { href: `/${locale}/calendrier`, label: t.workCall },
@@ -150,10 +151,12 @@ export default function Navbar({ locale, t }: NavbarProps) {
         }}
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       >
-        <nav aria-label={t.ariaMain} className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        {/* Three columns (logo | links | controls) with equal outer columns, so
+            the link pill sits in the true centre of the page whatever its width. */}
+        <nav aria-label={t.ariaMain} className="max-w-7xl mx-auto px-4 sm:px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
           {/* Logo — single black asset, inverted to white in dark mode via
               CSS so switching themes never triggers a second image fetch. */}
-          <Link href={`/${locale}`} aria-label={t.home} className="flex items-center">
+          <Link href={`/${locale}`} aria-label={t.home} className="flex items-center col-start-1 justify-self-start">
             <Image
               src="/logo-black.png"
               alt="Nawaf Nemrod SALAMI"
@@ -173,7 +176,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
               pill) keep this to a single style recalculation per hover, no
               extra JS. */}
           <div
-            className="hidden xl:flex items-center rounded-xl p-1"
+            className="hidden xl:flex items-center rounded-xl p-1 col-start-2"
             style={{
               border: '1px solid var(--border)',
               background: 'var(--glass-bg)',
@@ -255,7 +258,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
           </div>
 
           {/* Right controls (mobile/tablet only — desktop has these inside the pill above) */}
-          <div className="flex items-center gap-2 xl:hidden">
+          <div className="flex items-center gap-2 xl:hidden col-start-3 justify-self-end">
             <ThemeToggle ariaLabel={t.themeToggle} />
 
             {/* Language switcher */}

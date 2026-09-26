@@ -270,7 +270,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             ))}
           </ol>
           <div className="text-center">
-            <Link href={`/${locale}/offres`} className="btn-secondary">
+            <Link href={`/${locale}/methode`} className="btn-secondary">
               {t.work.homeCta}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>

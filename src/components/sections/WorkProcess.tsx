@@ -10,18 +10,19 @@ interface Props {
   // never promise a delay, a deposit or a warranty the documents do not state.
   terms: WorkTerms
   locale: Locale
+  className?: string
 }
 
 // The "Travailler avec moi" story told after the price list: how a project
 // runs (steps), what is committed (numbers), the usual questions (FAQ), and
 // where to start. Server-rendered, no client JS beyond the fade-in wrappers.
-export default function WorkProcess({ t, terms, locale }: Props) {
+export default function WorkProcess({ t, terms, locale, className = 'space-y-28' }: Props) {
   const steps = t.steps(terms)
   const commitments = t.commitments(terms)
   const faq = t.faq(terms)
 
   return (
-    <div className="mt-28 space-y-28">
+    <div className={className}>
       {/* ── Comment ça marche ── */}
       <section aria-labelledby="work-process-title">
         <FadeIn>

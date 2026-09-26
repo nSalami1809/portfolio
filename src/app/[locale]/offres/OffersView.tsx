@@ -192,11 +192,9 @@ interface OffersViewProps {
   // in an effect — so the first paint showed the wrong cards, then swapped.
   offers: Offer[]
   translated: TranslatedOffers
-  // Server-rendered sections shown under the price list (see WorkProcess).
-  children?: React.ReactNode
 }
 
-export default function OffersView({ offers, translated, children }: OffersViewProps) {
+export default function OffersView({ offers, translated }: OffersViewProps) {
   const locale = useLocale()
   const t = useDictionary()
 
@@ -254,7 +252,21 @@ export default function OffersView({ offers, translated, children }: OffersViewP
         </>
       )}
 
-      {children}
+      {/* The full story (steps, commitments, FAQ, sample documents) lives on its own page. */}
+      <FadeIn>
+        <div className="mt-20 p-6 sm:p-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div style={{ maxWidth: 560 }}>
+            <h2 className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>{t.offers.methodTitle}</h2>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{t.offers.methodText}</p>
+          </div>
+          <Link href={`/${locale}/methode`} className="btn-secondary flex-shrink-0">
+            {t.offers.methodCta}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </Link>
+        </div>
+      </FadeIn>
     </div>
   )
 }
