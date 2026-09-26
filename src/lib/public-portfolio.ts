@@ -6,7 +6,7 @@
 // components only ever read the profile (chat widget, quote/contract views)
 // — and DevisView, which now receives its offers as a prop from its own page.
 // Everything the server components render is already in their own markup.
-import type { PortfolioData } from '@/types'
+import type { PersonalInfo, PortfolioData } from '@/types'
 
 // No defaultData import on purpose: this is also the client context's default,
 // and pulling the sample data in would ship it to every visitor.
@@ -37,4 +37,13 @@ export function slimPublicPortfolio(data: PortfolioData): PortfolioData {
       ...(business ? { business: { ...business, paymentDetails: '' } } : {}),
     },
   }
+}
+
+// The profile as a client component may receive it: without the business
+// settings (legal identity, payment coordinates, internal terms). Anything
+// passed as a prop to a client component is written into the page's HTML, so
+// server components hand over this — never the raw profile.
+export function publicPersonal(personal: PersonalInfo): PersonalInfo {
+  const { business: _business, ...rest } = personal
+  return rest
 }

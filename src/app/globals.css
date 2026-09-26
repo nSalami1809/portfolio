@@ -568,3 +568,17 @@ select.input {
   background: var(--surface-hover);
 }
 
+
+/* Five-star rating as ONE element (see components/ui/StarRating.tsx): a star-row
+   mask filled up to --r (0-5) in the accent colour, the rest faint. */
+.stars {
+  --star-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24'%3E%3Cg fill='black' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpolygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' transform='translate(0 0)'/%3E%3Cpolygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' transform='translate(24 0)'/%3E%3Cpolygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' transform='translate(48 0)'/%3E%3Cpolygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' transform='translate(72 0)'/%3E%3Cpolygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' transform='translate(96 0)'/%3E%3C/g%3E%3C/svg%3E");
+  display: inline-block;
+  flex-shrink: 0;
+  width: calc(var(--s, 13px) * 5);
+  height: var(--s, 13px);
+  background: linear-gradient(90deg, var(--accent) calc(var(--r, 5) * 20%), transparent 0);
+  background: linear-gradient(90deg, var(--accent) calc(var(--r, 5) * 20%), color-mix(in srgb, var(--accent) 22%, transparent) 0);
+  -webkit-mask: var(--star-mask) center / 100% 100% no-repeat;
+  mask: var(--star-mask) center / 100% 100% no-repeat;
+}

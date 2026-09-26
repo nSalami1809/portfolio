@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
 import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd'
+import { publicPersonal } from '@/lib/public-portfolio'
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))
@@ -60,7 +61,7 @@ export default async function LocaleLayout({
         <main id="main-content" className="pt-20">{children}</main>
       </PageTransition>
       <Footer
-        personal={personal}
+        personal={publicPersonal(personal)}
         socials={socials}
         locale={locale}
         t={{ nav: t.nav, footer: t.footer }}

@@ -5,6 +5,7 @@ import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { defaultPersonalInfo, defaultExperiences, defaultEducations, defaultSkills } from '@/data/defaultData'
 import ResumeView from './ResumeView'
+import { publicPersonal } from '@/lib/public-portfolio'
 import { pageMeta } from '@/lib/seo'
 
 // Regenerate at most once every 30s — same trade-off as the homepage and
@@ -47,7 +48,7 @@ export default async function ResumePage({ params }: { params: Promise<{ locale:
 
   return (
     <ResumeView
-      personal={personal}
+      personal={publicPersonal(personal)}
       experiences={translatedExperiences}
       educations={translatedEducations}
       skills={skills}

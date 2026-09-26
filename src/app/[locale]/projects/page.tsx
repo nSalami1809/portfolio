@@ -29,10 +29,15 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
     locale,
     projects.map((p) => ({ key: `project:${p.slug}`, fields: { title: p.title, description: p.description } })),
   )
+  // Only what a grid card shows — long descriptions and case studies stay on the project's own page.
   const translatedProjects = projects.map((p, i) => ({
-    ...p,
+    slug: p.slug,
     title: fields[i].title,
     description: fields[i].description,
+    category: p.category,
+    tags: p.tags,
+    status: p.status,
+    image: p.image,
   }))
 
   return <ProjectsView projects={translatedProjects} locale={locale} t={t.projects} statusLabel={t.status} />

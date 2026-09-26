@@ -23,6 +23,9 @@ const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
+  // Secondary (small labels) font: not preloaded, so its three files never
+  // compete with the body and heading fonts for the first paint.
+  preload: false,
 })
 
 const spaceGrotesk = Space_Grotesk({

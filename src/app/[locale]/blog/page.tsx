@@ -29,7 +29,17 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
     locale,
     posts.map((p) => ({ key: `blog:${p.slug}`, fields: { title: p.title, excerpt: p.excerpt } })),
   )
-  const translatedPosts = posts.map((p, i) => ({ ...p, title: fields[i].title, excerpt: fields[i].excerpt }))
+  // Only what a list card shows: the article bodies stay on their own pages
+  // (spreading the whole post used to serialize every article into this one).
+  const translatedPosts = posts.map((p, i) => ({
+    slug: p.slug,
+    title: fields[i].title,
+    excerpt: fields[i].excerpt,
+    date: p.date,
+    category: p.category,
+    readTime: p.readTime,
+    coverImage: p.coverImage,
+  }))
 
   return <BlogPageView posts={translatedPosts} locale={locale} t={t.blog} />
 }

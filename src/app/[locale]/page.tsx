@@ -13,6 +13,7 @@ import { isLocale, DEFAULT_LOCALE, type Locale } from '@/lib/i18n/locale'
 import type { Testimonial } from '@/types'
 import type { Metadata } from 'next'
 import { pageMeta, HOME_COPY } from '@/lib/seo'
+import { publicPersonal } from '@/lib/public-portfolio'
 import {
   defaultPersonalInfo,
   defaultSocials,
@@ -103,7 +104,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const [bioFields] = await translateFieldsBatch(locale, [
     { key: 'personal:bio', fields: { bio: personal.bio } },
   ])
-  const translatedPersonal = { ...personal, bio: bioFields.bio }
+  const translatedPersonal = { ...publicPersonal(personal), bio: bioFields.bio }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
   const sameAs = [socials.linkedin, socials.github, socials.facebook, socials.instagram].filter(Boolean)

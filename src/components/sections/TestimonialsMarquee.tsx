@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -65,6 +65,16 @@ const MIN_TRACK_WIDTH = 3200 // wide enough that even a single testimonial fills
 const SPEED_PX_PER_S = 70
 const TOUCH_RESUME_MS = 2500 // after a finger lifts, wait this long (swipe momentum) before drifting again
 
+// false while rendering on the server and during hydration, true afterwards.
+// The looping track needs each card twice (and repeated to fill wide screens),
+// but that is pure animation machinery: the server-rendered HTML — and the
+// hydration payload — carries each testimonial ONCE, and the extra copies are
+// added the moment the page is interactive.
+const noSubscribe = () => () => {}
+function useHydrated() {
+  return useSyncExternalStore(noSubscribe, () => true, () => false)
+}
+
 type RowProps = { items: Testimonial[]; direction: 'left' | 'right'; locale: Locale; verifiedLabel: string }
 
 function buildTrack(items: Testimonial[]) {
@@ -82,15 +92,16 @@ function buildTrack(items: Testimonial[]) {
 // Mouse / trackpad: a pure CSS transform loop, paused on hover.
 function MarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
   const { base, track } = buildTrack(items)
+  const hydrated = useHydrated()
   const durationS = Math.max(10, Math.round((base.length * CARD_UNIT) / SPEED_PX_PER_S))
 
   return (
     <div className="marquee-viewport">
       <div
         className="marquee-track flex gap-4"
-        style={{ animation: `marquee-${direction} ${durationS}s linear infinite` }}
+        style={hydrated ? { animation: `marquee-${direction} ${durationS}s linear infinite` } : undefined}
       >
-        {track.map((tm, i) => (
+        {(hydrated ? track : items).map((tm, i) => (
           <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth locale={locale} verifiedLabel={verifiedLabel} />
         ))}
       </div>
@@ -107,11 +118,13 @@ function MarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
 // automatic drift and for a swipe that reaches either end.
 function TouchMarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
   const { base, track } = buildTrack(items)
+  const hydrated = useHydrated()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const held = useRef(false)
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    if (!hydrated) return
     const el = scrollerRef.current
     const trackEl = el?.firstElementChild
     if (!el || !trackEl) return
@@ -153,7 +166,7 @@ function TouchMarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) 
       cancelAnimationFrame(raf)
       if (resumeTimer.current) clearTimeout(resumeTimer.current)
     }
-  }, [base.length, direction])
+  }, [hydrated, base.length, direction])
 
   const hold = () => {
     if (resumeTimer.current) clearTimeout(resumeTimer.current)
@@ -167,7 +180,7 @@ function TouchMarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) 
   return (
     <div ref={scrollerRef} className="marquee-scroller" onTouchStart={hold} onTouchEnd={release} onTouchCancel={release}>
       <div className="marquee-track flex gap-4">
-        {track.map((tm, i) => (
+        {(hydrated ? track : items).map((tm, i) => (
           <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth locale={locale} verifiedLabel={verifiedLabel} />
         ))}
       </div>

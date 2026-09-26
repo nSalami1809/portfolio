@@ -9,8 +9,11 @@ import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
+// A list card only needs these fields (see blog/page.tsx).
+export type BlogCardPost = Pick<BlogPost, 'slug' | 'title' | 'excerpt' | 'date' | 'category' | 'readTime' | 'coverImage'>
+
 interface Props {
-  posts: BlogPost[]
+  posts: BlogCardPost[]
   locale: Locale
   t: Dictionary['blog']
 }

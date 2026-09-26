@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import type { Project } from '@/types'
+
+// A grid card only needs these fields (see projects/page.tsx).
+export type ProjectCardData = Pick<Project, 'slug' | 'title' | 'description' | 'category' | 'tags' | 'status' | 'image'>
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
@@ -16,7 +19,7 @@ const statusColor: Record<string, string> = {
 }
 
 interface Props {
-  projects: Project[]
+  projects: ProjectCardData[]
   locale: Locale
   t: Dictionary['projects']
   statusLabel: Dictionary['status']
