@@ -90,7 +90,7 @@ export interface PdfKit {
   // Cursor: the current page and the y coordinate of the next free line.
   state: { page: PDFPage; y: number }
   logo: PDFImage | null
-  embedPng(bytes: Uint8Array | null): Promise<PDFImage | null>
+  embedImage(bytes: Uint8Array | null): Promise<PDFImage | null>
   ensureSpace(height: number): void
   drawLine(): void
   drawLabel(text: string): void
@@ -100,6 +100,7 @@ export interface PdfKit {
   drawMasthead(o: { name: string; role: string; badge: string; sub?: string }): void
   drawTitleRow(title: string, lines: string[], size?: number): void
   drawTable(rows: TableRow[], o: { priceLabel: string; totalLabel: string }): void
+  drawSignature(img: PDFImage | null, label: string): void
   drawTotals(rows: [label: string, value: string, emphasis: boolean][]): void
   finish(): Promise<Buffer>
 }
@@ -135,9 +136,22 @@ export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
   const kit: PdfKit = {
     doc, fonts, state, logo: null,
 
-    async embedPng(bytes) {
+    // pdf-lib only reads PNG and JPEG. The upload pipeline stores signatures
+    // and logos as WebP, which used to be dropped silently (blank signature
+    // box) — anything else is converted to PNG first.
+    async embedImage(bytes) {
       if (!bytes) return null
-      return doc.embedPng(bytes).catch(() => null)
+      try {
+        const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47
+        const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8
+        if (isPng) return await doc.embedPng(bytes)
+        if (isJpeg) return await doc.embedJpg(bytes)
+        const { default: sharp } = await import('sharp')
+        return await doc.embedPng(await sharp(bytes).png().toBuffer())
+      } catch (e) {
+        console.error('[pdf-kit] image could not be embedded:', e)
+        return null
+      }
     },
 
     ensureSpace(height) {
@@ -260,6 +274,17 @@ export async function createPdfKit(opts: KitOptions): Promise<PdfKit> {
         state.page.drawLine({ start: { x: MARGIN, y: state.y + 3 }, end: { x: PAGE_WIDTH - MARGIN, y: state.y + 3 }, thickness: 0.5, color: BORDER })
       })
       state.y -= 8
+    },
+
+    // A captioned signature image, left-aligned in the flow (no-op without one).
+    drawSignature(img, label) {
+      if (!img) return
+      kit.ensureSpace(64)
+      state.page.drawText(safeText(label), { x: MARGIN, y: state.y - 8, size: 7.5, font: fonts.regular, color: SUBTLE })
+      const dims = img.scale(1)
+      const h = 36
+      state.page.drawImage(img, { x: MARGIN, y: state.y - 14 - h, width: Math.min(160, (dims.width / dims.height) * h), height: h })
+      state.y -= 14 + h + 10
     },
 
     drawTotals(rows) {

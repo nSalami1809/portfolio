@@ -38,6 +38,10 @@ export interface QuoteRecordDelivery {
   deliveredAt: Date
   note?: string
   liveUrl?: string
+  // Private link token of the procès-verbal page (/recette/[token]) — separate
+  // from the quote's signToken so each document has its own link. Deliberately
+  // not part of the public Quote projection (see toQuote).
+  token: string
 }
 
 export interface QuoteRecordAcceptance extends QuoteRecordSignature {
@@ -135,7 +139,9 @@ export function toQuote(doc: WithId<QuoteRecord>): Quote {
     kind: doc.kind ?? 'devis',
     status: doc.status ?? 'pending',
     signature: signature ? { ...signature, signedAt: iso(signature.signedAt) } : undefined,
-    delivery: delivery ? { ...delivery, deliveredAt: iso(delivery.deliveredAt) } : undefined,
+    // The delivery token is left out on purpose: lookupQuote() serves a quote
+    // by its guessable numero, and the token grants the right to sign the PV.
+    delivery: delivery ? { deliveredAt: iso(delivery.deliveredAt), note: delivery.note, liveUrl: delivery.liveUrl } : undefined,
     acceptance: acceptance ? { ...acceptance, signedAt: iso(acceptance.signedAt) } : undefined,
     events: (events ?? []).map((e) => ({ ...e, at: iso(e.at) })),
   }

@@ -84,7 +84,6 @@ export function providerIdentity(personal: PersonalInfo): ProviderIdentity {
     location: personal.location,
     email: personal.email,
     ...(personal.whatsapp ? { whatsapp: personal.whatsapp } : {}),
-    ...(personal.signatureUrl ? { signatureUrl: personal.signatureUrl } : {}),
   }
 }
 

@@ -131,6 +131,8 @@ export interface Quote extends QuotePayload {
 
 export interface AdminQuote extends Quote {
   id: string
+  // Token of the PV signing page, once the project has been delivered.
+  deliveryToken?: string
   read: boolean
   createdAt: string
   testimonialRequestedAt?: string
@@ -514,13 +516,22 @@ export async function listQuotes(): Promise<AdminQuote[]> {
   await requireAdmin()
   const col = await quotesCol()
   const docs = await col.find({}).sort({ createdAt: -1 }).limit(200).toArray()
-  return Promise.all(docs.map(async (doc) => ({
-    ...toQuote(await withSignToken(col, doc)),
-    id: doc._id.toString(),
-    read: doc.read ?? false,
-    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : String(doc.createdAt),
-    testimonialRequestedAt: doc.testimonialRequestedAt instanceof Date ? doc.testimonialRequestedAt.toISOString() : undefined,
-  })))
+  return Promise.all(docs.map(async (rawDoc) => {
+    const doc = await withSignToken(col, rawDoc)
+    // A delivery recorded before PV links had their own token gets one now.
+    if (doc.delivery && !doc.delivery.token) {
+      doc.delivery.token = generateSignToken()
+      await col.updateOne({ _id: doc._id }, { $set: { 'delivery.token': doc.delivery.token } })
+    }
+    return {
+      ...toQuote(doc),
+      id: doc._id.toString(),
+      deliveryToken: doc.delivery?.token,
+      read: doc.read ?? false,
+      createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : String(doc.createdAt),
+      testimonialRequestedAt: doc.testimonialRequestedAt instanceof Date ? doc.testimonialRequestedAt.toISOString() : undefined,
+    }
+  }))
 }
 
 export async function markQuoteRead(id: string): Promise<void> {
@@ -529,13 +540,15 @@ export async function markQuoteRead(id: string): Promise<void> {
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { read: true } })
 }
 
-export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<void> {
+export type AdminActionResult = { ok: true } | { ok: false; message: string }
+
+export async function updateQuoteStatus(id: string, status: QuoteStatus): Promise<AdminActionResult> {
   await requireAdmin()
   const col = await quotesCol()
   const doc = await col.findOne({ _id: new ObjectId(id) })
   // A quote the client has electronically signed is legally locked — the
   // admin can no longer flip its status by hand (see signQuote()'s docblock).
-  if (doc?.signature) throw new Error('Ce devis a été signé électroniquement et ne peut plus être modifié.')
+  if (doc?.signature) return { ok: false, message: 'Ce devis a été signé électroniquement et ne peut plus être modifié.' }
 
   const event: QuoteRecordEvent = { type: 'status_changed', at: new Date(), meta: { to: status } }
   await col.updateOne({ _id: new ObjectId(id) }, { $set: { status }, $push: { events: event } })
@@ -562,6 +575,7 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus): Promis
       }
     })
   }
+  return { ok: true }
 }
 
 // Manually triggered by the admin (after actually delivering the project —
@@ -593,7 +607,7 @@ export async function requestTestimonial(id: string): Promise<{ ok: boolean; mes
   return { ok: true, message: 'Demande envoyée.' }
 }
 
-export async function deleteQuote(id: string): Promise<void> {
+export async function deleteQuote(id: string): Promise<AdminActionResult> {
   await requireAdmin()
   const col = await quotesCol()
   const doc = await col.findOne({ _id: new ObjectId(id) })
@@ -602,8 +616,9 @@ export async function deleteQuote(id: string): Promise<void> {
   if (doc) {
     const db = await getDb()
     if (await db.collection('invoices').countDocuments({ quoteNumero: doc.numero })) {
-      throw new Error('Ce devis a des factures émises et ne peut pas être supprimé.')
+      return { ok: false, message: 'Ce devis a des factures émises et ne peut pas être supprimé.' }
     }
   }
   await col.deleteOne({ _id: new ObjectId(id) })
+  return { ok: true }
 }

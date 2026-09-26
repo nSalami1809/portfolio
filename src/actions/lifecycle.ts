@@ -85,7 +85,7 @@ export async function markDelivered(quoteId: string, input: { note?: string; liv
   const note = input.note?.trim().slice(0, MAX_NOTE_LENGTH) || undefined
 
   const deliveredAt = new Date()
-  const delivery = { deliveredAt, ...(note ? { note } : {}), ...(liveUrl ? { liveUrl } : {}) }
+  const delivery = { deliveredAt, token: generateSignToken(), ...(note ? { note } : {}), ...(liveUrl ? { liveUrl } : {}) }
   const event: QuoteRecordEvent = { type: 'delivered', at: deliveredAt }
   const result = await col.updateOne(
     { _id: doc._id, delivery: { $exists: false } },
@@ -94,13 +94,13 @@ export async function markDelivered(quoteId: string, input: { note?: string; liv
   if (result.matchedCount === 0) return { ok: false, message: 'Ce projet est déjà marqué comme livré.' }
 
   const quote = toQuote({ ...doc, delivery })
-  if (quote.clientEmail && quote.signToken) {
+  if (quote.clientEmail) {
     after(async () => {
       try {
         const transporter = getTransporter()
         const adminEmail = await getAdminEmail()
         const attachments = await buildQuoteAttachment(quote, 'pv')
-        const mail = deliveryEmail({ ...quote, signToken: quote.signToken! }, adminEmail)
+        const mail = deliveryEmail({ ...quote, deliveryToken: delivery.token }, adminEmail)
         await transporter.sendMail({
           from: `"${quote.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`,
           to: quote.clientEmail,
@@ -123,9 +123,19 @@ export interface SignAcceptanceInput {
   reserves?: string
 }
 
-// Public: the client signs the procès-verbal from the same private
-// /devis/signature/[token] link they signed the devis with. Once written the
-// acceptance is immutable (compare-and-set below, never cleared anywhere).
+// Public: fetch the quote behind a PV link (/recette/[token]). The token is
+// the delivery's own, generated when the project is marked delivered — never
+// the devis signing token, so each document has its own link.
+export async function getAcceptanceByToken(token: string): Promise<import('@/actions/quotes').Quote | null> {
+  if (typeof token !== 'string' || token.length < 20) return null
+  const col = await quotesCol()
+  const doc = await col.findOne({ 'delivery.token': token })
+  return doc ? toQuote(doc) : null
+}
+
+// Public: the client signs the procès-verbal from its own private link
+// (/recette/[token]). Once written the acceptance is immutable
+// (compare-and-set below, never cleared anywhere).
 export async function signAcceptance(token: string, input: SignAcceptanceInput): Promise<SignActionResult> {
   if (typeof token !== 'string' || token.length < 20) return { ok: false, error: 'Lien invalide.' }
   const clientName = input.clientName?.trim()
@@ -139,8 +149,8 @@ export async function signAcceptance(token: string, input: SignAcceptanceInput):
   if (!(await checkRateLimit('sign-quote', SIGN_RATE_LIMIT_PER_HOUR))) return { ok: false, error: 'Trop de tentatives. Réessayez plus tard.' }
 
   const col = await quotesCol()
-  const doc = await col.findOne({ signToken: token })
-  if (!doc) return { ok: false, error: 'Devis introuvable.' }
+  const doc = await col.findOne({ 'delivery.token': token })
+  if (!doc) return { ok: false, error: 'Lien invalide.' }
   if ((doc.status ?? 'pending') !== 'accepted') return { ok: false, error: "Ce devis n'a pas été accepté." }
   if (!doc.delivery) return { ok: false, error: "Ce projet n'a pas encore été livré." }
   if (doc.acceptance) return { ok: false, error: 'Ce procès-verbal a déjà été signé.' }
@@ -183,7 +193,7 @@ export async function signAcceptance(token: string, input: SignAcceptanceInput):
       const transporter = getTransporter()
       const adminEmail = await getAdminEmail()
       const attachments = await buildQuoteAttachment(quote, 'pv')
-      const clientMail = acceptanceSignedClientEmail(quote, adminEmail)
+      const clientMail = acceptanceSignedClientEmail({ ...quote, deliveryToken: token }, adminEmail)
       const adminMail = acceptanceSignedAdminEmail(quote)
       await Promise.all([
         transporter.sendMail({ from: `"${quote.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`, to: email, subject: clientMail.subject, html: clientMail.html, attachments }),

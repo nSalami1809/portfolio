@@ -97,6 +97,12 @@ function toInvoice(doc: WithId<InvoiceRecord>): Invoice {
   }
 }
 
+// The provider's current signature (stamped on every invoice and receipt).
+async function providerSignatureUrl(): Promise<string | undefined> {
+  const portfolio = await fetchPortfolioSafe('billing-signature')
+  return (portfolio?.personal ?? defaultPersonalInfo).signatureUrl || undefined
+}
+
 async function invoicesCol() {
   const db = await getDb()
   return db.collection<InvoiceRecord>('invoices')
@@ -116,7 +122,7 @@ async function sendInvoiceMail(invoice: Invoice, document: 'facture' | 'recu') {
   try {
     const transporter = getTransporter()
     const adminEmail = await getAdminEmail()
-    const content = await generateInvoicePdf({ invoice, document, siteUrl: SITE_URL })
+    const content = await generateInvoicePdf({ invoice, document, siteUrl: SITE_URL, signatureUrl: await providerSignatureUrl() })
     const mail = document === 'facture' ? invoiceEmail(invoice, adminEmail) : receiptEmail(invoice, adminEmail)
     const number = document === 'facture' ? invoice.numero : invoice.payment?.receiptNumero
     await transporter.sendMail({
@@ -192,8 +198,10 @@ export async function issueInvoice(quoteId: string, kind: InvoiceKind): Promise<
   const netToPay = totalTTC - deductions.reduce((s, d) => s + d.amountTTC, 0)
 
   const issuedAt = new Date()
+  // A deposit is due as soon as it is issued (the project starts once it is
+  // paid); only the balance gets the usual payment delay.
   const dueAt = new Date(issuedAt)
-  dueAt.setDate(dueAt.getDate() + terms.paymentDueDays)
+  if (kind === 'solde') dueAt.setDate(dueAt.getDate() + terms.paymentDueDays)
   const numero = await nextSequence('FAC')
 
   const record: InvoiceRecord = {
@@ -286,7 +294,7 @@ export async function downloadInvoicePdf(
   if (document === 'recu' && doc.status !== 'paid') return { ok: false, error: "Cette facture n'a pas encore été payée." }
   const invoice = toInvoice(doc)
   try {
-    const content = await generateInvoicePdf({ invoice, document, siteUrl: SITE_URL })
+    const content = await generateInvoicePdf({ invoice, document, siteUrl: SITE_URL, signatureUrl: await providerSignatureUrl() })
     const number = document === 'facture' ? invoice.numero : invoice.payment!.receiptNumero
     return { ok: true, filename: `${document === 'facture' ? 'Facture' : 'Recu'}-${number}.pdf`, base64: content.toString('base64') }
   } catch (e) {

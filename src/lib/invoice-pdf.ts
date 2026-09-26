@@ -13,6 +13,8 @@ interface GenerateOptions {
   invoice: Invoice
   document: 'facture' | 'recu'
   siteUrl: string
+  // The provider's current signature image, stamped on every invoice and receipt.
+  signatureUrl?: string
 }
 
 const GREEN = rgb(0.04, 0.48, 0.18)
@@ -20,7 +22,7 @@ const RED = rgb(0.75, 0.1, 0.1)
 
 const TITLE = { acompte: "FACTURE D'ACOMPTE", solde: 'FACTURE DE SOLDE' } as const
 
-export async function generateInvoicePdf({ invoice, document, siteUrl }: GenerateOptions): Promise<Buffer> {
+export async function generateInvoicePdf({ invoice, document, siteUrl, signatureUrl }: GenerateOptions): Promise<Buffer> {
   const t = invoice.terms
   const isReceipt = document === 'recu'
   const number = isReceipt ? invoice.payment?.receiptNumero ?? invoice.numero : invoice.numero
@@ -30,14 +32,15 @@ export async function generateInvoicePdf({ invoice, document, siteUrl }: Generat
 
   const kit = await createPdfKit({ title: fileTitle, producer: `Portfolio ${t.provider.name}`, runningName: t.provider.name, runningTitle: fileTitle })
   const { state, fonts } = kit
-  kit.logo = await kit.embedPng(await fetchImageBytes(`${siteUrl}/logo-black.png`))
+  kit.logo = await kit.embedImage(await fetchImageBytes(`${siteUrl}/logo-black.png`))
+  const signatureImg = await kit.embedImage(signatureUrl ? await fetchImageBytes(signatureUrl) : null)
 
   kit.drawMasthead({ name: t.provider.name, role: t.provider.role, badge: `N° ${number}`, sub: `Réf. ${docWord} ${invoice.quoteNumero}` })
   kit.drawTitleRow(
     title,
     isReceipt
       ? [`Date du paiement : ${invoice.payment ? formatLongDate(invoice.payment.paidAt) : '-'}`, `Facture n° ${invoice.numero}`]
-      : [`Date d'émission : ${formatLongDate(invoice.issuedAt)}`, `Échéance : ${formatLongDate(invoice.dueAt)}`],
+      : [`Date d'émission : ${formatLongDate(invoice.issuedAt)}`, `Échéance : ${invoice.kind === 'acompte' ? 'à réception' : formatLongDate(invoice.dueAt)}`],
     20,
   )
 
@@ -84,7 +87,9 @@ export async function generateInvoicePdf({ invoice, document, siteUrl }: Generat
     kit.drawBlock({
       title: 'MODALITÉS DE RÈGLEMENT',
       paragraphs: [
-        `Cette facture est payable au plus tard le ${formatLongDate(invoice.dueAt)}.`,
+        invoice.kind === 'acompte'
+          ? "Cette facture d'acompte est payable dès réception : le développement débute après son paiement."
+          : `Cette facture est payable au plus tard le ${formatLongDate(invoice.dueAt)}.`,
         `Moyens de paiement acceptés : ${t.paymentMethods}.`,
         ...(t.paymentDetails ? [`Coordonnées de paiement : ${t.paymentDetails}`] : []),
         `En cas de retard de paiement, des pénalités de ${frNumber(t.latePenaltyRate)} % par mois de retard (tout mois commencé étant dû) sont applicables de plein droit, sans mise en demeure préalable.`,
@@ -103,6 +108,7 @@ export async function generateInvoicePdf({ invoice, document, siteUrl }: Generat
     }
   }
 
+  kit.drawSignature(signatureImg, 'Signature du prestataire')
   kit.drawLine()
   kit.ensureSpace(40)
   state.page.drawText(safeText(t.provider.name), { x: MARGIN, y: state.y - 12, size: 9.5, font: fonts.bold, color: INK })

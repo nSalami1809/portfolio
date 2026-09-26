@@ -590,7 +590,7 @@ export function quoteAcceptedEmail(data: {
 
 export function deliveryEmail(data: {
   numero: string
-  signToken: string
+  deliveryToken: string
   clientNom: string
   kind?: string
   delivery?: { deliveredAt: string; note?: string; liveUrl?: string }
@@ -611,7 +611,7 @@ export function deliveryEmail(data: {
         ${note ? `<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Remarques</p><p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.7;white-space:pre-wrap">${note}</p>` : ''}
       `) : ''}
 
-      ${ctaButton(`${SITE_URL}/fr/devis/signature/${data.signToken}`, 'Signer le procès-verbal de recette')}
+      ${ctaButton(`${SITE_URL}/fr/recette/${data.deliveryToken}`, 'Consulter et signer le procès-verbal de recette')}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`Livraison ${data.numero}`)}`, 'Signaler un problème')}
     `),
   }
@@ -621,6 +621,7 @@ export function deliveryEmail(data: {
 
 export function acceptanceSignedClientEmail(data: {
   numero: string
+  deliveryToken: string
   accessCode: string
   clientNom: string
   kind?: string
@@ -638,6 +639,7 @@ export function acceptanceSignedClientEmail(data: {
         ? 'Votre proc&egrave;s-verbal de recette a &eacute;t&eacute; enregistr&eacute; <strong style="color:#26262E">avec r&eacute;serves</strong>. Elles seront trait&eacute;es dans le cadre de la garantie. Le proc&egrave;s-verbal sign&eacute; est joint &agrave; cet e-mail.'
         : 'Votre proc&egrave;s-verbal de recette a &eacute;t&eacute; enregistr&eacute; <strong style="color:#26262E">sans r&eacute;serve</strong>. Le proc&egrave;s-verbal sign&eacute; est joint &agrave; cet e-mail. La facture de solde vous sera adress&eacute;e s&rsquo;il y a lieu.')}
 
+      ${ctaButton(`${SITE_URL}/fr/recette/${data.deliveryToken}`, 'Voir le procès-verbal signé')}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`À propos de la recette ${data.numero}`)}`, 'Une question ?')}
     `),
   }
@@ -691,7 +693,7 @@ export function invoiceEmail(data: InvoiceMailData, adminEmail: string) {
 
   return {
     subject: `Facture ${data.kind === 'acompte' ? "d'acompte" : 'de solde'} ${data.numero} — ${fmtFcfa(data.netToPay)}`,
-    html: base('Votre facture', `Facture ${data.numero} — ${fmtFcfa(data.netToPay)} à régler avant le ${shortDate(data.dueAt)}`, `
+    html: base('Votre facture', `Facture ${data.numero} — ${fmtFcfa(data.netToPay)} ${data.kind === 'acompte' ? 'à régler dès réception' : `à régler avant le ${shortDate(data.dueAt)}`}`, `
       ${badge(`Facture ${esc(data.numero)}`)}
       ${heading(`Votre facture ${label}`)}
       ${intro(`Bonjour ${safeNom.split(' ')[0]}, vous trouverez ci-joint la facture ${label} relative au devis <strong style="color:#26262E">${esc(data.quoteNumero)}</strong>.`)}
@@ -700,7 +702,7 @@ export function invoiceEmail(data: InvoiceMailData, adminEmail: string) {
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Montant &agrave; r&eacute;gler</p>
         <p style="margin:0 0 14px;font-size:22px;font-weight:800;color:#131318">${fmtFcfa(data.netToPay)}</p>
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">&Eacute;ch&eacute;ance</p>
-        <p style="margin:0 0 14px;font-size:14px;color:#26262E">${esc(shortDate(data.dueAt))}</p>
+        <p style="margin:0 0 14px;font-size:14px;color:#26262E">${data.kind === 'acompte' ? 'D&egrave;s r&eacute;ception (le d&eacute;veloppement d&eacute;bute apr&egrave;s le paiement)' : esc(shortDate(data.dueAt))}</p>
         <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#B0B0BB;letter-spacing:0.09em;text-transform:uppercase">Moyens de paiement</p>
         <p style="margin:0;font-size:13.5px;color:#26262E;line-height:1.6;white-space:pre-wrap">${esc(data.terms.paymentMethods)}${data.terms.paymentDetails ? `\n${esc(data.terms.paymentDetails)}` : ''}</p>
       `)}

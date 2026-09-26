@@ -44,7 +44,7 @@ function sectionsFr(name: string, b: ResolvedBusiness): Section[] {
         hasDeposit
           ? `Un acompte de ${b.depositPercent} % est dû à la signature, le solde à la livraison finale. ${b.depositRefundable ? 'L’acompte est remboursable sous déduction de la valeur des prestations déjà réalisées.' : 'L’acompte est non remboursable en cas d’annulation à l’initiative du Client.'}`
           : 'Le prix est payable intégralement à la livraison finale.',
-        `Une facture est émise pour chaque échéance, payable sous ${b.paymentDueDays} jour${b.paymentDueDays > 1 ? 's' : ''}. Moyens de paiement acceptés : ${b.paymentMethods}.`,
+        `Une facture est émise pour chaque échéance. ${hasDeposit ? `La facture d’acompte est payable dès sa réception (le développement débute après son paiement) ; la facture de solde est payable` : 'La facture est payable'} sous ${b.paymentDueDays} jour${b.paymentDueDays > 1 ? 's' : ''} à compter de son émission. Moyens de paiement acceptés : ${b.paymentMethods}.`,
         `Tout retard de paiement entraîne de plein droit, sans mise en demeure préalable, des pénalités de retard de ${frNumber(b.latePenaltyRate)} % par mois de retard (tout mois commencé étant dû), et autorise le Prestataire à suspendre la prestation.`,
       ],
     },
@@ -104,7 +104,7 @@ function sectionsEn(name: string, b: ResolvedBusiness): Section[] {
         hasDeposit
           ? `A ${b.depositPercent}% deposit is due at signature and the balance on final delivery. ${b.depositRefundable ? 'The deposit is refundable minus the value of work already carried out.' : 'The deposit is non-refundable if the Client cancels.'}`
           : 'The price is payable in full on final delivery.',
-        `An invoice is issued for each instalment, payable within ${b.paymentDueDays} day${b.paymentDueDays === 1 ? '' : 's'}. Accepted payment methods: ${b.paymentMethods}.`,
+        `An invoice is issued for each instalment. ${hasDeposit ? 'The deposit invoice is payable on receipt (work starts once it is paid); the balance invoice is payable' : 'The invoice is payable'} within ${b.paymentDueDays} day${b.paymentDueDays === 1 ? '' : 's'} of issue. Accepted payment methods: ${b.paymentMethods}.`,
         `Late payment automatically incurs late-payment interest of ${b.latePenaltyRate}% per month of delay (any started month is due), without prior notice, and entitles the Provider to suspend the work.`,
       ],
     },

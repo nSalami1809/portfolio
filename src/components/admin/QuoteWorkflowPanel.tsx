@@ -157,7 +157,24 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
                     {quote.acceptance.reserves ? ` — AVEC RÉSERVES : « ${quote.acceptance.reserves} »` : ' — sans réserve.'}
                   </p>
                 ) : (
-                  <p>En attente de signature du PV — recette réputée acceptée le {formatLongDate(addBusinessDays(quote.delivery.deliveredAt, RECETTE_DAYS))} à défaut de retour.</p>
+                  <>
+                    <p>En attente de signature du PV — recette réputée acceptée le {formatLongDate(addBusinessDays(quote.delivery.deliveredAt, RECETTE_DAYS))} à défaut de retour.</p>
+                    {quote.deliveryToken && (
+                      <button
+                        className={btn}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(`${window.location.origin}/fr/recette/${quote.deliveryToken}`)
+                            notify('Lien du procès-verbal copié')
+                          } catch {
+                            notify('Impossible de copier le lien', 'error')
+                          }
+                        }}
+                      >
+                        Copier le lien du PV
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -172,7 +189,7 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
                   <li key={inv.id} className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                     <div className="flex items-center justify-between gap-3 flex-wrap">
                       <p className="text-xs" style={{ color: 'var(--text)' }}>
-                        <strong>{inv.numero}</strong> · {inv.kind === 'acompte' ? 'Acompte' : 'Solde'} · {fmt(inv.netToPay)} · échéance {formatLongDate(inv.dueAt)}
+                        <strong>{inv.numero}</strong> · {inv.kind === 'acompte' ? 'Acompte' : 'Solde'} · {fmt(inv.netToPay)} · {inv.kind === 'acompte' ? 'payable dès réception' : `échéance ${formatLongDate(inv.dueAt)}`}
                       </p>
                       <span className="text-xs font-semibold" style={{ color: INVOICE_STATUS[inv.status].color }}>{INVOICE_STATUS[inv.status].label}</span>
                     </div>

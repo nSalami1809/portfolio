@@ -9,7 +9,6 @@ import { getQuoteByToken, signQuote, declineQuote } from '@/actions/quotes'
 import type { Quote } from '@/actions/quotes'
 import { useLocale } from '@/lib/i18n/useLocale'
 import { resolveTerms, splitPayment } from '@/lib/business'
-import AcceptanceCard from './AcceptanceCard'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
@@ -172,9 +171,6 @@ export default function SignatureView({ token }: Props) {
           </FadeIn>
         )}
 
-        {phase === 'signed' && quote.delivery && (
-          <AcceptanceCard token={token} quote={quote} onSigned={setQuote} />
-        )}
 
         {(phase === 'review' || phase === 'sign') && (
           <>

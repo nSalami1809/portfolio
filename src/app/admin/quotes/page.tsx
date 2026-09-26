@@ -88,13 +88,17 @@ export default function AdminQuotes() {
   const handleStatusChange = async (id: string, status: QuoteStatus) => {
     const previous = quotes.find((x) => x.id === id)?.status
     setQuotes((prev) => prev.map((x) => x.id === id ? { ...x, status } : x))
-    try {
-      await updateQuoteStatus(id, status)
-    } catch (e) {
-      // Signed quotes are locked server-side — revert the optimistic update
-      // rather than leave the UI showing a status that was never saved.
+    // Signed quotes are locked server-side — revert the optimistic update
+    // rather than leave the UI showing a status that was never saved.
+    const revert = (message: string) => {
       setQuotes((prev) => prev.map((x) => x.id === id && previous ? { ...x, status: previous } : x))
-      toast(e instanceof Error ? e.message : 'Impossible de modifier ce devis.', 'error')
+      toast(message, 'error')
+    }
+    try {
+      const result = await updateQuoteStatus(id, status)
+      if (!result.ok) revert(result.message)
+    } catch {
+      revert('Impossible de modifier ce devis.')
     }
   }
 
@@ -126,11 +130,15 @@ export default function AdminQuotes() {
     if (!confirm('Supprimer ce devis ?')) return
     setDeleting(id)
     try {
-      await deleteQuote(id)
+      const result = await deleteQuote(id)
+      if (!result.ok) {
+        toast(result.message, 'error')
+        return
+      }
       setQuotes((prev) => prev.filter((q) => q.id !== id))
       if (selected?.id === id) setSelected(null)
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Suppression impossible.', 'error')
+    } catch {
+      toast('Suppression impossible.', 'error')
     } finally { setDeleting(null) }
   }
 

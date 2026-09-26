@@ -134,17 +134,19 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
   })
   const { state, fonts } = kit
 
-  const providerSigUrl = t.provider.signatureUrl || personal.signatureUrl
+  // The current signature wins over the one frozen with the quote: the file
+  // behind an old URL may have been replaced or deleted since.
+  const providerSigUrl = personal.signatureUrl || t.provider.signatureUrl
   const [logoBytes, clientSigBytes, providerSigBytes, qrBytes] = await Promise.all([
     fetchImageBytes(`${siteUrl}/logo-black.png`),
     (isPv ? quote.acceptance?.imageUrl : quote.signature?.imageUrl) ? fetchImageBytes((isPv ? quote.acceptance?.imageUrl : quote.signature?.imageUrl)!) : Promise.resolve(null),
     providerSigUrl ? fetchImageBytes(providerSigUrl) : Promise.resolve(null),
     QRCode.toBuffer(siteUrl, { margin: 1, width: 200, color: { dark: '#111111', light: '#ffffff' } }).then((b) => new Uint8Array(b)).catch(() => null),
   ])
-  kit.logo = await kit.embedPng(logoBytes)
-  const clientSigImg = await kit.embedPng(clientSigBytes)
-  const providerSigImg = await kit.embedPng(providerSigBytes)
-  const qrImg = await kit.embedPng(qrBytes)
+  kit.logo = await kit.embedImage(logoBytes)
+  const clientSigImg = await kit.embedImage(clientSigBytes)
+  const providerSigImg = await kit.embedImage(providerSigBytes)
+  const qrImg = await kit.embedImage(qrBytes)
 
   kit.drawMasthead({ name: t.provider.name, role: t.provider.role, badge: `N° ${quote.numero}`, sub: `Code de suivi : ${quote.accessCode}` })
 
@@ -226,6 +228,7 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
       kit.drawLabel('SIGNATURE DU CLIENT')
       kit.drawParagraph('Recette prononcée - Date et signature du client :', { font: fonts.bold, color: INK })
       kit.state.y -= 24
+      kit.drawSignature(providerSigImg, 'Signature du prestataire')
     }
   } else if (quote.signature) {
     drawSignatureBox(kit, {
@@ -249,34 +252,34 @@ export async function generateQuotePdf({ quote, personal, variant, siteUrl }: Ge
     kit.state.y -= 24
     // The offer itself is signed by the provider when it is issued (see the
     // "Signature électronique et preuve" clause) — show that signature.
-    if (providerSigImg) {
-      kit.ensureSpace(64)
-      state.page.drawText(safeText('Signature du prestataire (offre)'), { x: MARGIN, y: state.y - 8, size: 7.5, font: fonts.regular, color: SUBTLE })
-      const dims = providerSigImg.scale(1)
-      const h = 36
-      state.page.drawImage(providerSigImg, { x: MARGIN, y: state.y - 14 - h, width: Math.min(160, (dims.width / dims.height) * h), height: h })
-      state.y -= 14 + h + 10
-    }
+    kit.drawSignature(providerSigImg, 'Signature du prestataire (offre)')
   }
 
-  kit.drawLine()
-
-  // ── Footer: QR + provider name ──
-  // The PV is a short single-purpose page: no QR code, so the footer never
-  // pushes it onto a second page by itself.
-  kit.ensureSpace(isPv ? 44 : 60)
-  if (qrImg && !isPv) state.page.drawImage(qrImg, { x: MARGIN, y: state.y - 50, width: 50, height: 50 })
-  state.page.drawText(safeText(t.provider.name), { x: isPv ? MARGIN : PAGE_WIDTH - MARGIN - 250, y: state.y - 14, size: 9.5, font: fonts.bold, color: INK })
   const signedByBoth = isPv ? !!quote.acceptance : !!quote.signature
   const footerNote = signedByBoth
     ? 'Document généré électroniquement - signé par les deux parties'
     : isPv
       ? 'Document généré électroniquement - en attente de signature du Client'
       : 'Document généré électroniquement - offre ferme du Prestataire'
-  state.page.drawText(safeText(footerNote), { x: isPv ? MARGIN : PAGE_WIDTH - MARGIN - 250, y: state.y - 26, size: 7.5, font: fonts.regular, color: SUBTLE })
+
+  // The PV is a short single-purpose page whose header already carries the
+  // provider's identity: its only footer is the one-line note in the bottom
+  // margin, so it can never push the document onto a second page by itself.
+  if (isPv) {
+    state.page.drawText(safeText(footerNote), { x: MARGIN, y: MARGIN - 4, size: 7.5, font: fonts.regular, color: SUBTLE })
+    return kit.finish()
+  }
+
+  kit.drawLine()
+
+  // ── Footer: QR + provider name ──
+  kit.ensureSpace(60)
+  if (qrImg) state.page.drawImage(qrImg, { x: MARGIN, y: state.y - 50, width: 50, height: 50 })
+  state.page.drawText(safeText(t.provider.name), { x: PAGE_WIDTH - MARGIN - 250, y: state.y - 14, size: 9.5, font: fonts.bold, color: INK })
+  state.page.drawText(safeText(footerNote), { x: PAGE_WIDTH - MARGIN - 250, y: state.y - 26, size: 7.5, font: fonts.regular, color: SUBTLE })
   const identity = identityLines(t)
   if (identity.length) {
-    state.page.drawText(safeText(identity.join('  ·  ')), { x: isPv ? MARGIN : PAGE_WIDTH - MARGIN - 250, y: state.y - 38, size: 7, font: fonts.regular, color: MUTED })
+    state.page.drawText(safeText(identity.join('  ·  ')), { x: PAGE_WIDTH - MARGIN - 250, y: state.y - 38, size: 7, font: fonts.regular, color: MUTED })
   }
 
   return kit.finish()

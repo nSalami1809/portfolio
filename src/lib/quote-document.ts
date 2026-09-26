@@ -116,7 +116,9 @@ export function paymentBlock(quote: Pick<Quote, 'totalTTC'>, t: ResolvedBusiness
     hasDeposit
       ? "Le développement débute après réception de l'acompte."
       : 'Le Prestataire peut subordonner le démarrage du développement à la réception du paiement convenu.',
-    `Une facture est émise pour chaque échéance et payable sous ${plural(t.paymentDueDays, 'jour', 'jours')} à compter de sa date d'émission ; un reçu est remis à réception de chaque paiement.`,
+    hasDeposit
+      ? `Une facture est émise pour chaque échéance. La facture d'acompte est payable dès sa réception, le développement débutant après son paiement ; la facture de solde est payable sous ${plural(t.paymentDueDays, 'jour', 'jours')} à compter de son émission. Un reçu est remis à réception de chaque paiement.`
+      : `La facture est payable sous ${plural(t.paymentDueDays, 'jour', 'jours')} à compter de son émission ; un reçu est remis à réception du paiement.`,
     `Moyens de paiement acceptés : ${t.paymentMethods}.`,
     `Tout retard de paiement entraîne de plein droit, sans mise en demeure préalable, des pénalités de retard au taux de ${frNumber(t.latePenaltyRate)} % par mois de retard (tout mois commencé étant dû), et autorise le Prestataire à suspendre l'exécution de la prestation jusqu'au règlement complet des sommes exigibles.`,
   ]
