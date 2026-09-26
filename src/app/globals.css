@@ -439,9 +439,28 @@ h1, h2, h3, h4, h5, h6 {
 .marquee-track {
   width: max-content;
   will-change: transform;
+  /* Trailing space equal to the flex gap (gap-4) so the two copies of the set
+     are exactly half the track each — the -50% loop then has no 8px seam jump. */
+  padding-right: 1rem;
 }
 
-.marquee-track:hover { animation-play-state: paused; }
+/* Touch variant: a real scroll container (native swipe + momentum) with the
+   scrollbar hidden and the same edge fade as the desktop viewport. */
+.marquee-scroller {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+.marquee-scroller::-webkit-scrollbar { display: none; }
+.marquee-scroller .marquee-track { will-change: auto; }
+
+/* Only where a real hover exists: on touch, a tap leaves :hover "stuck" on
+   the element and the row would freeze until tapping elsewhere. */
+@media (hover: hover) {
+  .marquee-track:hover { animation-play-state: paused; }
+}
 
 /* Affordances revealed on hover (the "Voir le projet →" rows, image-edit
    overlays) never appear on a touch screen — they'd just leave unexplained
