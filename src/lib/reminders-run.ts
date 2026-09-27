@@ -132,14 +132,14 @@ async function sendQuoteReminder(
 
   switch (action.type) {
     case 'quote_expiring': {
-      mail = quoteExpiringEmail({ numero: doc.numero, signToken: doc.signToken, clientNom: doc.clientNom, kind: doc.kind, locale: doc.locale, expiresAt: action.expiresAt.toISOString(), daysLeft: action.daysLeft }, adminEmail)
+      mail = quoteExpiringEmail({ accessCode: doc.accessCode, numero: doc.numero, signToken: doc.signToken, clientNom: doc.clientNom, kind: doc.kind, locale: doc.locale, expiresAt: action.expiresAt.toISOString(), daysLeft: action.daysLeft }, adminEmail)
       line = `Devis ${doc.numero} : rappel d'expiration envoyé à ${doc.clientNom} (${action.daysLeft} j restants)`
       break
     }
     case 'recette_reminder': {
       if (!doc.delivery) return (await release(), null)
       kind = 'pv'
-      mail = recetteReminderEmail({ numero: doc.numero, deliveryToken: doc.delivery.token, clientNom: doc.clientNom, locale: doc.locale, deemedAt: action.deemedAt.toISOString() }, adminEmail)
+      mail = recetteReminderEmail({ accessCode: doc.accessCode, numero: doc.numero, deliveryToken: doc.delivery.token, clientNom: doc.clientNom, locale: doc.locale, deemedAt: action.deemedAt.toISOString() }, adminEmail)
       line = `Recette ${doc.numero} : rappel envoyé à ${doc.clientNom} avant acceptation tacite`
       break
     }
@@ -148,13 +148,13 @@ async function sendQuoteReminder(
       kind = 'pv'
       if (to) {
         const warrantyEnd = new Date(doc.delivery.deliveredAt.getTime() + warrantyDays * DAY)
-        mail = recetteDeemedEmail({ numero: doc.numero, clientNom: doc.clientNom, locale: doc.locale, warrantyDays, warrantyEnd: warrantyEnd.toISOString() }, adminEmail)
+        mail = recetteDeemedEmail({ accessCode: doc.accessCode, numero: doc.numero, clientNom: doc.clientNom, locale: doc.locale, warrantyDays, warrantyEnd: warrantyEnd.toISOString() }, adminEmail)
       }
       line = `Recette ${doc.numero} : réputée acceptée (aucun retour de ${doc.clientNom} sous ${RECETTE_DAYS} jours ouvrés)`
       break
     }
     case 'warranty_end': {
-      mail = testimonialRequestEmail({ clientNom: doc.clientNom, numero: doc.numero, locale: doc.locale }, adminEmail)
+      mail = testimonialRequestEmail({ accessCode: doc.accessCode, clientNom: doc.clientNom, numero: doc.numero, locale: doc.locale }, adminEmail)
       line = `Devis ${doc.numero} : garantie terminée, demande d'avis envoyée à ${doc.clientNom}`
       break
     }

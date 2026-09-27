@@ -711,7 +711,7 @@ export async function requestTestimonial(id: string): Promise<{ ok: boolean; mes
   try {
     const transporter = getTransporter()
     const adminEmail = await getAdminEmail()
-    const email = testimonialRequestEmail({ clientNom: doc.clientNom, numero: doc.numero, locale: doc.locale }, adminEmail)
+    const email = testimonialRequestEmail({ accessCode: doc.accessCode, clientNom: doc.clientNom, numero: doc.numero, locale: doc.locale }, adminEmail)
     await transporter.sendMail({
       from: `"${doc.terms?.provider.name ?? defaultPersonalInfo.name}" <${process.env.GMAIL_USER}>`,
       to: doc.clientEmail,

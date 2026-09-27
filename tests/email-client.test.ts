@@ -72,3 +72,25 @@ describe('client emails follow the client language', () => {
     expect(invoiceEmail({ ...invoice, kind: 'solde', locale: 'fr' }, ADMIN).html).not.toContain('Dès réception')
   })
 })
+
+describe('tracking code in every client email', () => {
+  it('prints the code in each one', async () => {
+    const { quoteExpiringEmail, invoiceOverdueEmail, recetteReminderEmail, recetteDeemedEmail } = await import('@/lib/email-client')
+    const inv = { numero: 'FAC-2026-001', quoteNumero: 'DEV-2026-001', kind: 'acompte' as const, dueAt: '2026-03-01T00:00:00.000Z', netToPay: 1000, client: { nom: 'Jean' }, terms: { paymentMethods: 'Virement', paymentDetails: '' }, accessCode: 'ABC234' }
+    const mails = [
+      quoteClientCopyEmail({ ...quote, clientNom: 'Jean' } as never, ADMIN),
+      quoteSignedClientEmail(quote as never, ADMIN),
+      quoteAcceptedEmail(quote as never, ADMIN),
+      deliveryEmail(quote as never, ADMIN),
+      acceptanceSignedClientEmail(quote as never, ADMIN),
+      invoiceEmail(inv, ADMIN),
+      receiptEmail({ ...inv, payment: { paidAt: '2026-03-02T00:00:00.000Z', method: 'x', receiptNumero: 'REC-1' } }, ADMIN),
+      testimonialRequestEmail({ accessCode: 'ABC234', clientNom: 'Jean', numero: 'DEV-2026-001' }, ADMIN),
+      quoteExpiringEmail({ accessCode: 'ABC234', numero: 'DEV-2026-001', signToken: 't'.repeat(43), clientNom: 'Jean', expiresAt: '2026-03-10T00:00:00.000Z', daysLeft: 2 }, ADMIN),
+      invoiceOverdueEmail({ ...inv, reminderNumber: 1 }, ADMIN),
+      recetteReminderEmail({ accessCode: 'ABC234', numero: 'DEV-2026-001', deliveryToken: 'd'.repeat(43), clientNom: 'Jean', deemedAt: '2026-03-10T00:00:00.000Z' }, ADMIN),
+      recetteDeemedEmail({ accessCode: 'ABC234', numero: 'DEV-2026-001', clientNom: 'Jean', warrantyDays: 30, warrantyEnd: '2026-04-10T00:00:00.000Z' }, ADMIN),
+    ]
+    mails.forEach((m, i) => expect(m.html, `mail #${i}`).toContain('ABC234'))
+  })
+})

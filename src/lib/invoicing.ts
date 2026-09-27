@@ -40,6 +40,8 @@ export interface InvoiceClient {
 
 export interface Invoice {
   id: string
+  // Tracking code of the quote, printed in every email about it.
+  accessCode?: string
   numero: string
   quoteNumero: string
   quoteKind: QuoteKind
@@ -229,6 +231,7 @@ export async function createInvoice(quoteId: string, kind: InvoiceKind): Promise
     },
     terms,
     locale: quote.locale,
+    accessCode: qdoc.accessCode,
   }
   const { insertedId } = await col.insertOne(record)
   const invoice = toInvoice({ ...record, _id: insertedId })

@@ -192,6 +192,7 @@ export function quoteAcceptedEmail(data: {
 // ── Delivery → procès-verbal de recette ──────────────────────────────────────
 
 export function deliveryEmail(data: {
+  accessCode?: string
   numero: string
   deliveryToken: string
   clientNom: string
@@ -223,6 +224,8 @@ export function deliveryEmail(data: {
         ${liveUrl ? `${smallLabel(pick(l, 'Accès', 'Access'))}<p style="margin:0 0 ${note ? '14px' : '0'};font-size:14px"><a href="${liveUrl}" style="color:#131318;font-weight:600">${liveUrl}</a></p>` : ''}
         ${note ? `${smallLabel(pick(l, 'Remarques', 'Notes'))}<p style="margin:0;font-size:14px;color:#3A3A44;line-height:1.7;white-space:pre-wrap">${note}</p>` : ''}
       `) : ''}
+
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
 
       ${ctaButton(`${SITE_URL}/${l}/recette/${data.deliveryToken}`, pick(l, 'Consulter et signer le procès-verbal de recette', 'Review and sign the acceptance report'))}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Livraison ${data.numero}`, `Delivery ${data.numero}`))}`, pick(l, 'Signaler un problème', 'Report a problem'))}
@@ -266,6 +269,8 @@ export function acceptanceSignedClientEmail(data: {
           : pick(l, `Votre procès-verbal de recette a été enregistré ${strong('sans réserve')}. Le procès-verbal signé est joint à cet e-mail. La facture de solde vous sera adressée s’il y a lieu.`, `Your acceptance report has been recorded ${strong('without reservations')}. The signed report is attached to this email. The balance invoice will follow if applicable.`),
       )}
 
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
+
       ${ctaButton(`${SITE_URL}/${l}/recette/${data.deliveryToken}`, pick(l, 'Voir le procès-verbal signé', 'View the signed report'))}
       ${secondaryLink(`${SITE_URL}/${l}/suivi?ref=${encodeURIComponent(data.accessCode)}`, pick(l, 'Suivre l’avancement du projet', 'Track the progress of the project'))}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `À propos de la recette ${data.numero}`, `About the acceptance ${data.numero}`))}`, pick(l, 'Une question ?', 'A question?'))}
@@ -278,6 +283,7 @@ export function acceptanceSignedClientEmail(data: {
 // ── Invoice + receipt ────────────────────────────────────────────────────────
 
 export interface InvoiceMailData {
+  accessCode?: string
   numero: string
   quoteNumero: string
   kind: 'acompte' | 'solde'
@@ -325,6 +331,8 @@ export function invoiceEmail(data: InvoiceMailData, adminEmail: string) {
         <p style="margin:0;font-size:13.5px;color:#26262E;line-height:1.6;white-space:pre-wrap">${esc(data.terms.paymentMethods)}${data.terms.paymentDetails ? `\n${esc(data.terms.paymentDetails)}` : ''}</p>
       `)}
 
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
+
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Facture ${data.numero}`, `Invoice ${data.numero}`))}`, pick(l, 'Une question sur cette facture ?', 'A question about this invoice?'))}
     `,
       l,
@@ -351,6 +359,8 @@ export function receiptEmail(data: InvoiceMailData, adminEmail: string) {
         `We have received your payment of ${strong(money(data.netToPay, l))}${data.payment ? ` on ${esc(day(data.payment.paidAt, l))} (${esc(data.payment.method)})` : ''}, for invoice ${strong(esc(data.numero))}. The receipt is attached to this email.`,
       ))}
 
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
+
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Reçu ${receipt}`, `Receipt ${receipt}`))}`, pick(l, 'Une question ?', 'A question?'))}
     `,
       l,
@@ -360,7 +370,7 @@ export function receiptEmail(data: InvoiceMailData, adminEmail: string) {
 
 // ── Testimonial request ──────────────────────────────────────────────────────
 
-export function testimonialRequestEmail(data: { clientNom: string; numero: string; locale?: string }, adminEmail: string) {
+export function testimonialRequestEmail(data: { accessCode?: string; clientNom: string; numero: string; locale?: string }, adminEmail: string) {
   const l = mailLocale(data.locale)
   const firstName = esc(data.clientNom).split(' ')[0]
 
@@ -377,6 +387,8 @@ export function testimonialRequestEmail(data: { clientNom: string; numero: strin
         'J’espère que notre collaboration s’est bien passée ! Si vous avez deux minutes, un retour honnête m’aiderait énormément à faire connaître mon travail auprès d’autres clients.',
         'I hope our collaboration went well! If you have two minutes, an honest review would help me a great deal in making my work known to other clients.',
       ))}
+
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
 
       ${ctaButton(`${SITE_URL}/${l}/temoignage`, pick(l, 'Laisser un avis', 'Leave a review'))}
       ${secondaryLink(`mailto:${adminEmail}`, pick(l, 'Répondre directement', 'Reply directly'))}
@@ -420,7 +432,7 @@ export function signatureCodeEmail(data: { numero: string; code: string; clientN
 
 // ── Automatic reminders ──────────────────────────────────────────────────────
 
-export function quoteExpiringEmail(data: { numero: string; signToken: string; clientNom: string; kind?: string; locale?: string; expiresAt: string; daysLeft: number }, adminEmail: string) {
+export function quoteExpiringEmail(data: { accessCode?: string; numero: string; signToken: string; clientNom: string; kind?: string; locale?: string; expiresAt: string; daysLeft: number }, adminEmail: string) {
   const l = mailLocale(data.locale)
   const noun = pick(l, isAvenant(data.kind) ? 'avenant' : 'devis', isAvenant(data.kind) ? 'amendment' : 'quote')
   const firstName = esc(data.clientNom).split(' ')[0]
@@ -439,6 +451,8 @@ export function quoteExpiringEmail(data: { numero: string; signToken: string; cl
         `Bonjour ${firstName}, votre ${noun} ${strong(esc(data.numero))} reste valable jusqu’au ${strong(esc(day(data.expiresAt, l)))}. Passé ce délai, les prix et conditions pourront être révisés. Si le projet vous intéresse toujours, vous pouvez le signer en ligne en quelques minutes ; sinon, n’hésitez pas à me dire ce qui vous retient.`,
         `Hello ${firstName}, your ${noun} ${strong(esc(data.numero))} remains valid until ${strong(esc(day(data.expiresAt, l)))}. After that, prices and conditions may be revised. If the project still interests you, you can sign it online in a few minutes; otherwise, feel free to tell me what is holding you back.`,
       ))}
+
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
 
       ${ctaButton(`${SITE_URL}/${l}/devis/signature/${data.signToken}`, pick(l, `Consulter et signer le ${noun}`, `Review and sign the ${noun}`))}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(`${data.numero}`)}`, pick(l, 'Poser une question', 'Ask a question'))}
@@ -485,6 +499,8 @@ export function invoiceOverdueEmail(data: InvoiceMailData & { reminderNumber: nu
         <p style="margin:0;font-size:13.5px;color:#26262E;line-height:1.6;white-space:pre-wrap">${esc(data.terms.paymentMethods)}${data.terms.paymentDetails ? `\n${esc(data.terms.paymentDetails)}` : ''}</p>
       `)}
 
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
+
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Facture ${data.numero}`, `Invoice ${data.numero}`))}`, pick(l, 'Répondre à cet e-mail', 'Reply to this email'))}
     `,
       l,
@@ -492,7 +508,7 @@ export function invoiceOverdueEmail(data: InvoiceMailData & { reminderNumber: nu
   }
 }
 
-export function recetteReminderEmail(data: { numero: string; deliveryToken: string; clientNom: string; locale?: string; deemedAt: string }, adminEmail: string) {
+export function recetteReminderEmail(data: { accessCode?: string; numero: string; deliveryToken: string; clientNom: string; locale?: string; deemedAt: string }, adminEmail: string) {
   const l = mailLocale(data.locale)
   const firstName = esc(data.clientNom).split(' ')[0]
 
@@ -510,6 +526,8 @@ export function recetteReminderEmail(data: { numero: string; deliveryToken: stri
         `Hello ${firstName}, the acceptance period for your project ends on ${strong(esc(day(data.deemedAt, l)))}. Please sign the report or send me your reservations before then; otherwise delivery will be deemed accepted without reservation, as stated in the contract.`,
       ))}
 
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
+
       ${ctaButton(`${SITE_URL}/${l}/recette/${data.deliveryToken}`, pick(l, 'Consulter et signer le procès-verbal', 'Review and sign the report'))}
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Recette ${data.numero}`, `Acceptance ${data.numero}`))}`, pick(l, 'Signaler un problème', 'Report a problem'))}
     `,
@@ -518,7 +536,7 @@ export function recetteReminderEmail(data: { numero: string; deliveryToken: stri
   }
 }
 
-export function recetteDeemedEmail(data: { numero: string; clientNom: string; locale?: string; warrantyDays: number; warrantyEnd: string }, adminEmail: string) {
+export function recetteDeemedEmail(data: { accessCode?: string; numero: string; clientNom: string; locale?: string; warrantyDays: number; warrantyEnd: string }, adminEmail: string) {
   const l = mailLocale(data.locale)
   const firstName = esc(data.clientNom).split(' ')[0]
 
@@ -535,6 +553,8 @@ export function recetteDeemedEmail(data: { numero: string; clientNom: string; lo
         `Bonjour ${firstName}, le délai de recette étant écoulé sans retour de votre part, la livraison est réputée acceptée sans réserve, conformément au contrat.${data.warrantyDays > 0 ? ` La garantie de correction des anomalies court jusqu’au ${strong(esc(day(data.warrantyEnd, l)))}.` : ''} Si un point vous a échappé, écrivez-moi : je regarde ça avec vous.`,
         `Hello ${firstName}, as the acceptance period has ended without a reply from you, delivery is deemed accepted without reservation, as stated in the contract.${data.warrantyDays > 0 ? ` The bug-fix warranty runs until ${strong(esc(day(data.warrantyEnd, l)))}.` : ''} If something slipped through, write to me and we will look at it together.`,
       ))}
+
+      ${data.accessCode ? codeBox(l, data.accessCode) : ''}
 
       ${secondaryLink(`mailto:${adminEmail}?subject=${encodeURIComponent(pick(l, `Livraison ${data.numero}`, `Delivery ${data.numero}`))}`, pick(l, 'Me contacter', 'Contact me'))}
     `,
