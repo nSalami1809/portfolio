@@ -6,6 +6,7 @@ import type { Project } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import FadeIn from '@/components/animations/FadeIn'
+import ShareButton from '@/components/ui/ShareButton'
 
 const statusColor: Record<string, string> = {
   completed: '#008000',
@@ -34,20 +35,30 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
         {/* Main */}
         <div>
           <FadeIn delay={0.05}>
-            <div className="flex flex-wrap items-center gap-3 mb-5">
-              <span className="tag">{project.category}</span>
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2"
-                  style={{ background: statusColor[project.status] ?? '#6B7280' }}
-                />
-                <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-                  {statusLabel[project.status]}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="tag">{project.category}</span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2"
+                    style={{ background: statusColor[project.status] ?? '#6B7280' }}
+                  />
+                  <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+                    {statusLabel[project.status]}
+                  </span>
+                </div>
+                <span className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                  {project.year}
                 </span>
               </div>
-              <span className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                {project.year}
-              </span>
+              <ShareButton
+                title={project.title}
+                text={project.description}
+                url={`/${locale}/projects/${project.slug}`}
+                label={t.share}
+                copiedLabel={t.shareCopied}
+                copyLinkLabel={t.shareCopyLink}
+              />
             </div>
           </FadeIn>
 

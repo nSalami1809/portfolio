@@ -6,6 +6,7 @@ import FadeIn from '@/components/animations/FadeIn'
 import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import ShareButton from '@/components/ui/ShareButton'
 
 const IMAGE_RE = /^!\[(.*?)\]\((.+?)\)$/
 const VIDEO_RE = /^\[video\]\((.+?)\)$/
@@ -87,11 +88,21 @@ export default function BlogPostView({ post, locale, t }: { post: BlogPost; loca
       </FadeIn>
 
       <FadeIn delay={0.05}>
-        <div className="flex flex-wrap items-center gap-3 mb-5">
-          <span className="tag">{post.category}</span>
-          <span className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-            {post.readTime} {t.readTime}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="tag">{post.category}</span>
+            <span className="text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+              {post.readTime} {t.readTime}
+            </span>
+          </div>
+          <ShareButton
+            title={post.title}
+            text={post.excerpt}
+            url={`/${locale}/blog/${post.slug}`}
+            label={t.share}
+            copiedLabel={t.shareCopied}
+            copyLinkLabel={t.shareCopyLink}
+          />
         </div>
       </FadeIn>
 

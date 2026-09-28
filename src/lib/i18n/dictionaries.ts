@@ -124,6 +124,9 @@ const fr = {
   projects: {
     label: 'Portfolio',
     title: 'Mes Projets',
+    share: 'Partager',
+    shareCopied: 'Lien copié',
+    shareCopyLink: 'Copier le lien',
     subtitle: 'Réalisations web, DevOps et interfaces — du prototype à la production.',
     filterAria: 'Filtrer par catégorie',
     all: 'Tous',
@@ -151,6 +154,9 @@ const fr = {
   blog: {
     label: 'Articles',
     title: 'Blog',
+    share: 'Partager',
+    shareCopied: 'Lien copié',
+    shareCopyLink: 'Copier le lien',
     subtitle: "Retours d'expérience, réflexions techniques et pensées sur le développement moderne.",
     all: 'Tous',
     filterAria: 'Filtrer par catégorie',
@@ -634,6 +640,9 @@ const en: typeof fr = {
   projects: {
     label: 'Portfolio',
     title: 'My Projects',
+    share: 'Share',
+    shareCopied: 'Link copied',
+    shareCopyLink: 'Copy link',
     subtitle: 'Web, DevOps and interface work — from prototype to production.',
     filterAria: 'Filter by category',
     all: 'All',
@@ -661,6 +670,9 @@ const en: typeof fr = {
   blog: {
     label: 'Articles',
     title: 'Blog',
+    share: 'Share',
+    shareCopied: 'Link copied',
+    shareCopyLink: 'Copy link',
     subtitle: 'Lessons learned, technical thoughts and reflections on modern development.',
     all: 'All',
     filterAria: 'Filter by category',
