@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import ParticleWaveClient from '@/components/scene/ParticleWaveClient'
+import ShareButton from '@/components/ui/ShareButton'
 import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -142,11 +143,16 @@ export default function BlogPageView({ posts, locale, t }: Props) {
           <div>
             {filtered.map((post, i) => (
               <FadeIn key={post.slug} delay={i * 0.07}>
-                <Link
-                  href={`/${locale}/blog/${post.slug}`}
-                  className="group flex flex-col sm:flex-row gap-6 py-8 transition-colors duration-200"
+                <div
+                  className="group relative flex flex-col sm:flex-row gap-6 py-8 transition-colors duration-200"
                   style={{ borderTop: '1px solid var(--border)' }}
                 >
+                  {/* Stretched link: the whole row navigates, so the share
+                      button below (raised on top with a positive z-index)
+                      can sit inside the row without nesting an <a> in an <a>. */}
+                  <Link href={`/${locale}/blog/${post.slug}`} className="absolute inset-0" aria-label={post.title}>
+                    <span className="sr-only">{post.title}</span>
+                  </Link>
                   <div className="sm:w-32 shrink-0 flex sm:flex-col items-start sm:items-end gap-3">
                     {post.coverImage && (
                       <div
@@ -176,22 +182,36 @@ export default function BlogPageView({ posts, locale, t }: Props) {
                     <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
                       {post.excerpt}
                     </p>
-                    <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                      <span>
-                        {new Date(post.date).toLocaleDateString(dateLocale, {
-                          year: 'numeric', month: 'long', day: 'numeric',
-                        })}
-                      </span>
-                      <span>·</span>
-                      <span>{post.readTime} {t.readTime}</span>
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                        <span>
+                          {new Date(post.date).toLocaleDateString(dateLocale, {
+                            year: 'numeric', month: 'long', day: 'numeric',
+                          })}
+                        </span>
+                        <span>·</span>
+                        <span>{post.readTime} {t.readTime}</span>
+                      </div>
+                      <div className="relative z-10">
+                        <ShareButton
+                          title={post.title}
+                          text={post.excerpt}
+                          url={`/${locale}/blog/${post.slug}`}
+                          label={t.share}
+                          copiedLabel={t.shareCopied}
+                          copyLinkLabel={t.shareCopyLink}
+                          iconOnly
+                          stopPropagation
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="self-center reveal-on-hover opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1">
+                  <div className="self-center reveal-on-hover opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--accent)' }}>
                       <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                   </div>
-                </Link>
+                </div>
               </FadeIn>
             ))}
             <div style={{ borderTop: '1px solid var(--border)' }} />

@@ -9,7 +9,9 @@ import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { openChatWithMessage } from '@/lib/chat-bridge'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import type { Offer } from '@/types'
+import type { Locale } from '@/lib/i18n/locale'
 import EurHint from '@/components/EurHint'
+import ShareButton from '@/components/ui/ShareButton'
 
 export type TranslatedOffers = Record<string, { title: string; description: string; features: string }>
 type Translated = TranslatedOffers
@@ -140,12 +142,14 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
   )
 }
 
-function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
+function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t }: {
   offer: Offer
   tr?: { title: string; description: string; features: string }
   ctaLabel: string
   onRequest: (title: string) => void
   highlighted?: boolean
+  locale: Locale
+  t: OffersDict
 }) {
   const title = tr?.title || offer.title
   const description = tr?.description || offer.description
@@ -161,7 +165,19 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted }: {
           <Image src={offer.image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" style={{ objectFit: 'cover' }} />
         </div>
       )}
-      <h3 className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>{title}</h3>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="font-display font-semibold text-xl" style={{ color: 'var(--text)' }}>{title}</h3>
+        <ShareButton
+          title={title}
+          text={description}
+          url={`/${locale}/offres`}
+          label={t.share}
+          copiedLabel={t.shareCopied}
+          copyLinkLabel={t.shareCopyLink}
+          iconOnly
+          className="flex-shrink-0 -mt-1 -mr-1"
+        />
+      </div>
       <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: 'var(--text-muted)' }}>{description}</p>
 
       {features.length > 0 && (
@@ -236,7 +252,7 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {special.map((o, i) => (
                   <FadeIn key={o.id} delay={Math.min(i * 0.07, 0.28)}>
-                    <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} highlighted />
+                    <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} highlighted locale={locale} t={t.offers} />
                   </FadeIn>
                 ))}
               </div>
@@ -246,7 +262,7 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {regular.map((o, i) => (
               <FadeIn key={o.id} delay={Math.min(i * 0.07, 0.28)}>
-                <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} />
+                <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} locale={locale} t={t.offers} />
               </FadeIn>
             ))}
           </div>

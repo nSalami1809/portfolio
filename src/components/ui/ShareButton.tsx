@@ -12,6 +12,11 @@ interface Props {
   copiedLabel: string
   copyLinkLabel: string
   className?: string
+  // Icon only, no visible text — for tight spaces (a card, a list row).
+  iconOnly?: boolean
+  // The button sits inside a wrapping <Link>: a click must not trigger the
+  // link's navigation (both the trigger and the dropdown are covered).
+  stopPropagation?: boolean
 }
 
 const WHATSAPP = (url: string, text: string) => `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`
@@ -22,7 +27,7 @@ const EMAIL = (url: string, title: string, text: string) => `mailto:?subject=${e
 // A minimal "icon + label" share action — matches a plain header link rather
 // than a boxed button. On a phone it opens the OS share sheet; elsewhere it
 // drops a small menu (copy link, WhatsApp, X, LinkedIn, email).
-export default function ShareButton({ title, text, url, label, copiedLabel, copyLinkLabel, className = '' }: Props) {
+export default function ShareButton({ title, text, url, label, copiedLabel, copyLinkLabel, className = '', iconOnly = false, stopPropagation = false }: Props) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -37,7 +42,8 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [open])
 
-  const handleClick = async () => {
+  const handleClick = async (e: React.MouseEvent) => {
+    if (stopPropagation) e.preventDefault()
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ title, text: shareText, url: absoluteUrl })
@@ -49,7 +55,8 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
     setOpen((v) => !v)
   }
 
-  const copyLink = async () => {
+  const copyLink = async (e: React.MouseEvent) => {
+    if (stopPropagation) e.preventDefault()
     try {
       await navigator.clipboard.writeText(absoluteUrl)
       setCopied(true)
@@ -64,7 +71,13 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
       <button
         type="button"
         onClick={handleClick}
-        className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 hover:text-[var(--accent)]"
+        aria-label={iconOnly ? label : undefined}
+        title={iconOnly ? label : undefined}
+        className={
+          iconOnly
+            ? 'flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200 hover:text-[var(--accent)] hover:bg-[var(--surface-hover)] cursor-pointer'
+            : 'inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 hover:text-[var(--accent)] cursor-pointer'
+        }
         style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
         aria-haspopup={open ? 'menu' : undefined}
         aria-expanded={open || undefined}
@@ -76,7 +89,7 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
           <line x1="8.6" y1="10.6" x2="15.4" y2="6.4" />
           <line x1="8.6" y1="13.4" x2="15.4" y2="17.6" />
         </svg>
-        {label}
+        {!iconOnly && label}
       </button>
 
       <AnimatePresence>
@@ -94,7 +107,7 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
               type="button"
               role="menuitem"
               onClick={copyLink}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors hover:bg-[var(--surface-hover)]"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors hover:bg-[var(--surface-hover)] cursor-pointer"
               style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

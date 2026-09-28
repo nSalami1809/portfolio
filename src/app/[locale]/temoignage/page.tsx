@@ -1,5 +1,6 @@
 import FadeIn from '@/components/animations/FadeIn'
 import TestimonialForm from '@/components/sections/TestimonialForm'
+import ShareButton from '@/components/ui/ShareButton'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
@@ -23,9 +24,18 @@ export default async function TestimonialPage({ params }: { params: Promise<{ lo
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>
             {t.testimonialPage.title}
           </h1>
-          <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-lg mb-5" style={{ color: 'var(--text-muted)' }}>
             {t.testimonialPage.subtitle}
           </p>
+          <ShareButton
+            title={t.testimonialPage.title}
+            text={t.testimonialPage.subtitle}
+            url={`/${locale}/temoignage`}
+            label={t.testimonialPage.share}
+            copiedLabel={t.testimonialPage.shareCopied}
+            copyLinkLabel={t.testimonialPage.shareCopyLink}
+            className="justify-center"
+          />
         </FadeIn>
 
         <FadeIn delay={0.15}>
