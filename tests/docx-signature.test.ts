@@ -174,8 +174,40 @@ describe('docx-signature', () => {
     // Exactly the 7 tabs that preceded the name are replayed right after the
     // break, before the drawing — same tab stop, same column.
     expect(xml).toMatch(/<w:br\/>(?:<w:tab\/>){7}<w:drawing/)
-    // The proof paragraph replays them too, so it doesn't slide to the margin.
-    expect(xml).toMatch(/<w:color w:val="808080"\/><\/w:rPr>(?:<w:tab\/>){7}<w:t[^>]*>Signé électroniquement/)
+    // The proof paragraph gets a real left indent (7 tabs × the 720-twip
+    // fallback default, since this fixture has no settings.xml) instead of
+    // leading tabs — an indent holds on every wrapped line, tabs don't.
+    expect(xml).toMatch(/<w:ind w:left="5040"\/>[\s\S]{0,160}Signé électroniquement/)
+  })
+
+  it('gives the proof paragraph a real indent (not tabs) so a long line wraps without spilling to the margin', async () => {
+    // Reproduces the exact failure: the proof sentence is long enough that,
+    // once indented past a wide column, it wraps onto a second line. Tabs
+    // only place the first line; only a paragraph indent holds for both.
+    const nameRow =
+      '<w:p><w:r><w:t xml:space="preserve">Yannick EBIBIE</w:t></w:r>' +
+      '<w:r><w:tab/></w:r><w:r><w:tab/></w:r><w:r><w:tab/></w:r>' +
+      '<w:r><w:tab/></w:r><w:r><w:tab/></w:r><w:r><w:tab/></w:r><w:r><w:tab/></w:r>' +
+      '<w:r><w:t xml:space="preserve">Nemrod Nawaf SALAMI</w:t></w:r></w:p>'
+    const docx = await buildDocxWithRawParagraphs([nameRow])
+    const triggers = buildSignatureTriggers('Nawaf Nemrod SALAMI')
+    const matches = await previewDocxSignatures(docx, triggers)
+
+    const signed = await signDocxDocument(
+      docx,
+      [matches[0].id],
+      { pngBytes: PNG_1X1, width: 1, height: 1 },
+      'Signé électroniquement par Nawaf Nemrod SALAMI — 28 septembre 2026 à 18:07 — Preuve (SHA-256) : 4ef75ad6d4087fda…',
+      triggers,
+    )
+    const zip = await JSZip.loadAsync(signed)
+    const xml = await zip.file('word/document.xml')!.async('string')
+
+    // No leading tab characters on the proof run — the indent alone
+    // carries it, which survives a wrap; tabs wouldn't.
+    const proofParaXml = /<w:p><w:pPr>[\s\S]*?Preuve[\s\S]*?<\/w:p>/.exec(xml)?.[0] ?? ''
+    expect(proofParaXml).toContain('<w:ind w:left="5040"/>')
+    expect(proofParaXml).not.toMatch(/<w:rPr>[\s\S]*?<\/w:rPr><w:tab\/>/)
   })
 
   it('stays inside the right table cell in a real two-column table layout', async () => {

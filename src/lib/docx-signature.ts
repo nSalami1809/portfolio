@@ -153,20 +153,27 @@ function buildDrawingRunXml(relId: string, cx: number, cy: number, docPrId: numb
   )
 }
 
-function buildProofParagraphXml(proofText: string, alignment: string | null, tabsBefore: number): string {
+function buildProofParagraphXml(proofText: string, alignment: string | null, leftIndentTwips: number): string {
   const jc = alignment ? `<w:jc w:val="${alignment}"/>` : ''
-  // A fresh paragraph starts back at the left margin regardless of where the
-  // matched line sat, so the same leading tabs are needed again here to keep
-  // the proof note under the same column instead of sliding to the margin.
-  const tabs = '<w:tab/>'.repeat(tabsBefore)
+  // A leading <w:tab/> only positions the FIRST line — the proof text is
+  // long enough (SHA-256 hash included) that it can wrap, and a wrapped
+  // line ignores tabs entirely, falling back to x=0 and spilling into
+  // whatever sits at the page's left margin (the other party's column). A
+  // real paragraph indent, by contrast, applies to every wrapped line.
+  const ind = leftIndentTwips > 0 ? `<w:ind w:left="${leftIndentTwips}"/>` : ''
   return (
-    `<w:p><w:pPr><w:spacing w:before="120"/>${jc}</w:pPr>` +
-    `<w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr>${tabs}` +
+    `<w:p><w:pPr><w:spacing w:before="120"/>${ind}${jc}</w:pPr>` +
+    '<w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr>' +
     `<w:t xml:space="preserve">${escapeXmlText(proofText)}</w:t></w:r></w:p>`
   )
 }
 
-function stampXml(xml: string, selectedIds: string[], triggers: string[], opts: { relId: string; cx: number; cy: number; proofText: string }): string {
+function stampXml(
+  xml: string,
+  selectedIds: string[],
+  triggers: string[],
+  opts: { relId: string; cx: number; cy: number; proofText: string; defaultTabStopTwips: number },
+): string {
   const matches = findSignaturePlaceholders(xml, triggers)
   const selectedSet = new Set(selectedIds)
   const selected = matches.filter((m) => selectedSet.has(m.id))
@@ -180,7 +187,8 @@ function stampXml(xml: string, selectedIds: string[], triggers: string[], opts: 
     insertions.push({ offset: m.runEndOffset, text: buildDrawingRunXml(opts.relId, opts.cx, opts.cy, docPrId++, m.tabsBefore) })
     if (!proofInsertedAt.has(m.paragraphEndOffset)) {
       proofInsertedAt.add(m.paragraphEndOffset)
-      insertions.push({ offset: m.paragraphEndOffset, text: buildProofParagraphXml(opts.proofText, m.alignment, m.tabsBefore) })
+      const leftIndentTwips = m.tabsBefore * opts.defaultTabStopTwips
+      insertions.push({ offset: m.paragraphEndOffset, text: buildProofParagraphXml(opts.proofText, m.alignment, leftIndentTwips) })
     }
   }
 
@@ -226,6 +234,13 @@ export async function signDocxDocument(
   if (!docFile) throw new Error('Document Word invalide.')
   const xml = await docFile.async('string')
 
+  // Word's spec default is 720 twips, but documents very often override it
+  // (e.g. 708, the French Normal.dotm default) — reading the real value is
+  // the difference between the replayed indent landing exactly on the same
+  // tab stop or drifting off by a few millimeters per tab.
+  const settingsXml = await zip.file('word/settings.xml')?.async('string')
+  const defaultTabStopTwips = Number(/<w:defaultTabStop\b[^>]*w:val="(\d+)"/.exec(settingsXml ?? '')?.[1] ?? 720)
+
   const ratio = signatureImage.height / signatureImage.width
   const cx = Math.round(MAX_WIDTH_EMU)
   const cy = Math.round(MAX_WIDTH_EMU * ratio)
@@ -251,7 +266,7 @@ export async function signDocxDocument(
     ctXml = ctXml.replace('</Types>', '<Default Extension="png" ContentType="image/png"/></Types>')
   }
 
-  const stampedXml = stampXml(xml, selectedIds, triggers, { relId, cx, cy, proofText })
+  const stampedXml = stampXml(xml, selectedIds, triggers, { relId, cx, cy, proofText, defaultTabStopTwips })
 
   zip.file('word/document.xml', stampedXml)
   zip.file(relsPath, updatedRelsXml)
