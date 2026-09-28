@@ -87,3 +87,16 @@ export async function getViewsStats(range: StatsRange, offset: number): Promise<
     buckets,
   }
 }
+
+// ── Per-article views (admin blog list) ─────────────────────────────────────
+// One count per slug, fr + en added together — the article is the same piece
+// of content regardless of which language a visitor read it in.
+export async function getBlogPostViews(): Promise<Record<string, number>> {
+  const db = await getDb()
+  const rows = await db.collection('page_views').aggregate<{ _id: string; count: number }>([
+    { $match: { path: { $regex: '^/(fr|en)/blog/[^/]+$' } } },
+    { $project: { slug: { $arrayElemAt: [{ $split: ['$path', '/'] }, 3] } } },
+    { $group: { _id: '$slug', count: { $sum: 1 } } },
+  ]).toArray()
+  return Object.fromEntries(rows.map((r) => [r._id, r.count]))
+}

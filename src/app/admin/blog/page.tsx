@@ -6,6 +6,7 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { compressImage, uploadFile } from '@/lib/upload'
+import { getBlogViewCounts } from '@/actions/blog-stats'
 import type { BlogPost } from '@/types'
 
 const CATEGORIES = ['DevOps', 'Frontend', 'Backend', 'Architecture', 'Carrière', 'Autre']
@@ -65,6 +66,15 @@ export default function AdminBlog() {
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  const [views, setViews] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    getBlogViewCounts()
+      .then((v) => { if (!cancelled) setViews(v) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   // Adopt the shared context's posts until this page makes its own edit
   const localOwned = useRef(false)
@@ -607,8 +617,14 @@ export default function AdminBlog() {
                     <p className="font-medium text-sm truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
                       {p.title}
                     </p>
-                    <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                      {new Date(p.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })} · {p.readTime}
+                    <p className="text-xs mt-0.5 truncate flex items-center gap-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                      <span>{new Date(p.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })} · {p.readTime}</span>
+                      <span className="inline-flex items-center gap-1 flex-shrink-0" title="Vues (fr + en)">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" /><circle cx="12" cy="12" r="3" />
+                        </svg>
+                        {(views[p.slug] ?? 0).toLocaleString('fr-FR')}
+                      </span>
                     </p>
                   </div>
 
