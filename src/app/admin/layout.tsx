@@ -33,6 +33,7 @@ const navItems: SidebarLinkData[] = [
   { href: '/admin/business', label: 'Activité', icon: <PathIcon d="M3 3v18h18 M7 15l4-4 3 3 5-6" /> },
   { href: '/admin/chats', label: 'Conversations chat', icon: <PathIcon d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /> },
   { href: '/admin/quotes', label: 'Devis', icon: <PathIcon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /> },
+  { href: '/admin/documents/signature', label: 'Signature de documents', icon: <PathIcon d="M12 20h9 M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" /> },
   { href: '/admin/invoices', label: 'Factures', icon: <PathIcon d="M9 14l2 2 4-4 M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6" /> },
   { href: '/admin/emails', label: 'Emails en échec', icon: <PathIcon d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6 M12 9v4 M12 16h.01" /> },
   { href: '/admin/calendar', label: 'Calendrier', icon: <PathIcon d="M8 2v4M16 2v4M3.5 9h17M4 4h16a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z" /> },
