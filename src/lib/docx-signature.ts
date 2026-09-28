@@ -29,6 +29,7 @@ interface InternalMatch extends SignaturePlaceholder {
   runEndOffset: number
   paragraphEndOffset: number
   alignment: string | null
+  tabsBefore: number
 }
 
 const EMU_PER_CM = 360000
@@ -109,25 +110,36 @@ function findSignaturePlaceholders(xml: string, triggers: string[]): InternalMat
       if (!runText.trim()) continue
       const normalizedRunText = normalize(runText)
       if (!normalizedTriggers.some((t) => normalizedRunText.includes(t))) continue
+      // Real signature blocks are very often laid out as two columns using
+      // tab stops within a single paragraph (e.g. "Pour ESI" <tabs> "Pour le
+      // Prestataire"), not a table. A plain line break resets to the
+      // paragraph's left margin, losing that column entirely — replaying the
+      // same number of leading tabs on the new line lands back on the same
+      // tab stop, so the signature ends up under the name instead of in the
+      // margin.
+      const tabsBefore = (paraXml.slice(0, runMatch.index).match(/<w:tab\b[^>]*\/>/g) ?? []).length
       matches.push({
         id: String(idx++),
         snippet: buildSnippet(paraText, runText),
         runEndOffset: paraStart + runMatch.index + runMatch[0].length,
         paragraphEndOffset,
         alignment,
+        tabsBefore,
       })
     }
   }
   return matches
 }
 
-function buildDrawingRunXml(relId: string, cx: number, cy: number, docPrId: number): string {
+function buildDrawingRunXml(relId: string, cx: number, cy: number, docPrId: number, tabsBefore: number): string {
+  const tabs = '<w:tab/>'.repeat(tabsBefore)
   return (
     // The line break puts the image on its own line, right below whatever
     // matched (a name, a label…) instead of trailing it on the same line —
     // that's what makes it read as a signature under a printed name rather
-    // than an odd inline afterthought.
-    '<w:r><w:rPr/><w:br/><w:drawing xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">' +
+    // than an odd inline afterthought. The replayed tabs then walk the new
+    // line back out to the same tab stop the match was at.
+    `<w:r><w:rPr/><w:br/>${tabs}<w:drawing xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
     `<wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>` +
     '<wp:effectExtent l="0" t="0" r="0" b="0"/>' +
     `<wp:docPr id="${docPrId}" name="Signature"/>` +
@@ -141,11 +153,15 @@ function buildDrawingRunXml(relId: string, cx: number, cy: number, docPrId: numb
   )
 }
 
-function buildProofParagraphXml(proofText: string, alignment: string | null): string {
+function buildProofParagraphXml(proofText: string, alignment: string | null, tabsBefore: number): string {
   const jc = alignment ? `<w:jc w:val="${alignment}"/>` : ''
+  // A fresh paragraph starts back at the left margin regardless of where the
+  // matched line sat, so the same leading tabs are needed again here to keep
+  // the proof note under the same column instead of sliding to the margin.
+  const tabs = '<w:tab/>'.repeat(tabsBefore)
   return (
     `<w:p><w:pPr><w:spacing w:before="120"/>${jc}</w:pPr>` +
-    '<w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr>' +
+    `<w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr>${tabs}` +
     `<w:t xml:space="preserve">${escapeXmlText(proofText)}</w:t></w:r></w:p>`
   )
 }
@@ -161,10 +177,10 @@ function stampXml(xml: string, selectedIds: string[], triggers: string[], opts: 
   let docPrId = 900001
 
   for (const m of selected) {
-    insertions.push({ offset: m.runEndOffset, text: buildDrawingRunXml(opts.relId, opts.cx, opts.cy, docPrId++) })
+    insertions.push({ offset: m.runEndOffset, text: buildDrawingRunXml(opts.relId, opts.cx, opts.cy, docPrId++, m.tabsBefore) })
     if (!proofInsertedAt.has(m.paragraphEndOffset)) {
       proofInsertedAt.add(m.paragraphEndOffset)
-      insertions.push({ offset: m.paragraphEndOffset, text: buildProofParagraphXml(opts.proofText, m.alignment) })
+      insertions.push({ offset: m.paragraphEndOffset, text: buildProofParagraphXml(opts.proofText, m.alignment, m.tabsBefore) })
     }
   }
 

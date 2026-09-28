@@ -146,6 +146,84 @@ describe('docx-signature', () => {
     expect(proofParaMatch).not.toBeNull()
   })
 
+  it('replays leading tabs so the image lands under the name in a tab-column signature block, not in the margin', async () => {
+    // Mirrors a real contract layout: two "columns" faked with tab stops in
+    // a single paragraph ("Pour ESI" <7 tabs> "Pour le Prestataire"), same
+    // for the name row. A plain <w:br/> would reset to the left margin and
+    // strand the image far from the name it's supposed to sit under.
+    const nameRow =
+      '<w:p><w:r><w:t xml:space="preserve">Yannick EBIBIE</w:t></w:r>' +
+      '<w:r><w:tab/></w:r><w:r><w:tab/></w:r><w:r><w:tab/></w:r>' +
+      '<w:r><w:tab/></w:r><w:r><w:tab/></w:r><w:r><w:tab/></w:r><w:r><w:tab/></w:r>' +
+      '<w:r><w:t xml:space="preserve">Nemrod Nawaf SALAMI</w:t></w:r></w:p>'
+    const docx = await buildDocxWithRawParagraphs([nameRow])
+    const triggers = buildSignatureTriggers('Nawaf Nemrod SALAMI')
+    const matches = await previewDocxSignatures(docx, triggers)
+    expect(matches).toHaveLength(1)
+
+    const signed = await signDocxDocument(
+      docx,
+      [matches[0].id],
+      { pngBytes: PNG_1X1, width: 1, height: 1 },
+      'Signé électroniquement par Nawaf Nemrod SALAMI',
+      triggers,
+    )
+    const zip = await JSZip.loadAsync(signed)
+    const xml = await zip.file('word/document.xml')!.async('string')
+
+    // Exactly the 7 tabs that preceded the name are replayed right after the
+    // break, before the drawing — same tab stop, same column.
+    expect(xml).toMatch(/<w:br\/>(?:<w:tab\/>){7}<w:drawing/)
+    // The proof paragraph replays them too, so it doesn't slide to the margin.
+    expect(xml).toMatch(/<w:color w:val="808080"\/><\/w:rPr>(?:<w:tab\/>){7}<w:t[^>]*>Signé électroniquement/)
+  })
+
+  it('stays inside the right table cell in a real two-column table layout', async () => {
+    // The other common way real contracts build a two-column signature
+    // block: an actual Word table, not tabs. No tabs precede the name here,
+    // so the drawing/proof should land on their own line right in this
+    // cell — and, crucially, before Yannick's own cell in the next row
+    // ("Président"), not spilling past the table into it.
+    const table =
+      '<w:tbl><w:tr>' +
+      '<w:tc><w:p><w:r><w:t>Pour ESI</w:t></w:r></w:p></w:tc>' +
+      '<w:tc><w:p><w:r><w:t>Pour le Prestataire</w:t></w:r></w:p></w:tc>' +
+      '</w:tr><w:tr>' +
+      '<w:tc><w:p><w:r><w:t>Yannick EBIBIE</w:t></w:r></w:p></w:tc>' +
+      '<w:tc><w:p><w:r><w:t xml:space="preserve">Nemrod Nawaf SALAMI</w:t></w:r></w:p></w:tc>' +
+      '</w:tr><w:tr>' +
+      '<w:tc><w:p><w:r><w:t>Président</w:t></w:r></w:p></w:tc>' +
+      '<w:tc><w:p/></w:tc>' +
+      '</w:tr></w:tbl>'
+    const docx = await buildDocxWithRawParagraphs([table])
+    const triggers = buildSignatureTriggers('Nawaf Nemrod SALAMI')
+    const matches = await previewDocxSignatures(docx, triggers)
+    expect(matches).toHaveLength(1)
+
+    const signed = await signDocxDocument(
+      docx,
+      [matches[0].id],
+      { pngBytes: PNG_1X1, width: 1, height: 1 },
+      'Signé électroniquement par Nawaf Nemrod SALAMI',
+      triggers,
+    )
+    const zip = await JSZip.loadAsync(signed)
+    const xml = await zip.file('word/document.xml')!.async('string')
+
+    const nameIdx = xml.indexOf('Nemrod Nawaf SALAMI')
+    const drawingIdx = xml.indexOf('<w:drawing')
+    const proofIdx = xml.indexOf('Signé électroniquement')
+    const presidentIdx = xml.indexOf('Président')
+    // No tabs needed inside a table cell — the cell boundary alone gives
+    // the right horizontal position.
+    expect(xml).toMatch(/Nemrod Nawaf SALAMI<\/w:t><\/w:r><w:r><w:rPr\/><w:br\/><w:drawing/)
+    // Everything landed in document order inside the same cell, before the
+    // next row's "Président" — not pushed out into some other cell.
+    expect(nameIdx).toBeLessThan(drawingIdx)
+    expect(drawingIdx).toBeLessThan(proofIdx)
+    expect(proofIdx).toBeLessThan(presidentIdx)
+  })
+
   it('is a no-op when no ids are selected', async () => {
     const docx = await buildMinimalDocx(['Signature : ____'])
     const signed = await signDocxDocument(docx, [], { pngBytes: PNG_1X1, width: 1, height: 1 }, 'preuve')
