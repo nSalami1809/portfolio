@@ -1,15 +1,23 @@
 // Stamps the portfolio owner's signature image (+ a proof block) into an
-// arbitrary uploaded .docx wherever the word "signature" appears. Works by
+// arbitrary uploaded .docx wherever a "signature spot" is found. Works by
 // splicing raw OOXML strings rather than going through a generic XML DOM,
 // so every byte of the original document that isn't touched survives
 // untouched (formatting, styles, unrelated namespaces…).
 //
+// A "signature spot" is a run whose text contains, case/accent-insensitively,
+// the word "signature" OR one of the caller-supplied triggers (typically the
+// admin's own name and surname) — real contracts often mark the place to
+// sign with the signatory's printed name under a "Pour le Prestataire" label
+// rather than the literal word "signature", so matching on the word alone
+// misses those. Precision is handled downstream by the admin picking which
+// matches to actually stamp, so recall is favored here.
+//
 // Scope (v1, deliberately): only `word/document.xml` (not headers/footers),
-// and only matches where the whole word "signature" sits inside a single
-// `<w:t>` run — the common case for a document that wasn't spell-checked
-// into fragments. Nothing is inserted mid-word: the matched run is left
-// untouched and a signature image run is appended right after it, with a
-// small proof paragraph appended after the enclosing paragraph.
+// and only matches where the whole trigger sits inside a single `<w:t>` run
+// — the common case for a document that wasn't spell-checked into fragments.
+// Nothing is inserted mid-word: the matched run is left untouched and a
+// signature image run is appended right after it, with a small proof
+// paragraph appended after the enclosing paragraph.
 import JSZip from 'jszip'
 
 export interface SignaturePlaceholder {
@@ -42,6 +50,22 @@ function stripTags(xml: string): string {
   return decodeXmlEntities(xml.replace(/<[^>]+>/g, ''))
 }
 
+function normalize(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
+
+/** Default trigger is always "signature"; callers add the admin's own name/surname. */
+export function buildSignatureTriggers(fullName?: string): string[] {
+  const triggers = new Set<string>(['signature'])
+  const trimmed = fullName?.trim()
+  if (trimmed) {
+    triggers.add(trimmed)
+    const surname = trimmed.split(/\s+/).pop()
+    if (surname && surname.length >= 3) triggers.add(surname)
+  }
+  return [...triggers]
+}
+
 function extractRunText(runXml: string): string {
   const re = /<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g
   let combined = ''
@@ -62,7 +86,8 @@ function buildSnippet(paragraphText: string, runText: string): string {
 
 // Runs and paragraphs never nest in OOXML, so a non-greedy scan for the
 // closing tag is safe — no need for a real XML parser.
-function findSignaturePlaceholders(xml: string): InternalMatch[] {
+function findSignaturePlaceholders(xml: string, triggers: string[]): InternalMatch[] {
+  const normalizedTriggers = triggers.map(normalize)
   const matches: InternalMatch[] = []
   const paraRe = /<w:p\b[^>]*>[\s\S]*?<\/w:p>/g
   let paraMatch: RegExpExecArray | null
@@ -77,7 +102,9 @@ function findSignaturePlaceholders(xml: string): InternalMatch[] {
     let runMatch: RegExpExecArray | null
     while ((runMatch = runRe.exec(paraXml))) {
       const runText = extractRunText(runMatch[0])
-      if (!/signature/i.test(runText)) continue
+      if (!runText.trim()) continue
+      const normalizedRunText = normalize(runText)
+      if (!normalizedTriggers.some((t) => normalizedRunText.includes(t))) continue
       matches.push({
         id: String(idx++),
         snippet: buildSnippet(paraText, runText),
@@ -113,8 +140,8 @@ function buildProofParagraphXml(proofText: string): string {
   )
 }
 
-function stampXml(xml: string, selectedIds: string[], opts: { relId: string; cx: number; cy: number; proofText: string }): string {
-  const matches = findSignaturePlaceholders(xml)
+function stampXml(xml: string, selectedIds: string[], triggers: string[], opts: { relId: string; cx: number; cy: number; proofText: string }): string {
+  const matches = findSignaturePlaceholders(xml, triggers)
   const selectedSet = new Set(selectedIds)
   const selected = matches.filter((m) => selectedSet.has(m.id))
   if (!selected.length) return xml
@@ -144,13 +171,16 @@ function nextRelationshipId(relsXml: string): string {
   return `rId${ids.length ? Math.max(...ids) + 1 : 1}`
 }
 
-/** Parses `word/document.xml` out of the .docx and returns every "signature" match, in document order. */
-export async function previewDocxSignatures(fileBytes: Uint8Array | Buffer): Promise<SignaturePlaceholder[]> {
+/** Parses `word/document.xml` out of the .docx and returns every signature-spot match, in document order. */
+export async function previewDocxSignatures(
+  fileBytes: Uint8Array | Buffer,
+  triggers: string[] = ['signature'],
+): Promise<SignaturePlaceholder[]> {
   const zip = await JSZip.loadAsync(fileBytes)
   const docFile = zip.file('word/document.xml')
   if (!docFile) throw new Error("Document Word invalide (contenu illisible) — vérifiez qu'il s'agit bien d'un .docx.")
   const xml = await docFile.async('string')
-  return findSignaturePlaceholders(xml).map(({ id, snippet }) => ({ id, snippet }))
+  return findSignaturePlaceholders(xml, triggers).map(({ id, snippet }) => ({ id, snippet }))
 }
 
 /**
@@ -163,6 +193,7 @@ export async function signDocxDocument(
   selectedIds: string[],
   signatureImage: { pngBytes: Uint8Array | Buffer; width: number; height: number },
   proofText: string,
+  triggers: string[] = ['signature'],
 ): Promise<Uint8Array> {
   const zip = await JSZip.loadAsync(fileBytes)
   const docFile = zip.file('word/document.xml')
@@ -194,7 +225,7 @@ export async function signDocxDocument(
     ctXml = ctXml.replace('</Types>', '<Default Extension="png" ContentType="image/png"/></Types>')
   }
 
-  const stampedXml = stampXml(xml, selectedIds, { relId, cx, cy, proofText })
+  const stampedXml = stampXml(xml, selectedIds, triggers, { relId, cx, cy, proofText })
 
   zip.file('word/document.xml', stampedXml)
   zip.file(relsPath, updatedRelsXml)

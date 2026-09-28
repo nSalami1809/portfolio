@@ -108,8 +108,9 @@ export default function AdminDocumentSignature() {
       <div>
         <h1 className="page-title">Signature de documents</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-subtle)' }}>
-          Importez un document Word (.docx) — partout où le mot « signature » apparaît, votre signature enregistrée sera
-          insérée juste après, accompagnée d&apos;un bloc de preuve électronique (nom, date, empreinte de vérification).
+          Importez un document Word (.docx) — partout où le mot « signature » apparaît, ou bien votre nom (ex: sous
+          « Pour le Prestataire »), votre signature enregistrée sera insérée juste après, accompagnée d&apos;un bloc de
+          preuve électronique (nom, date, empreinte de vérification).
         </p>
       </div>
 

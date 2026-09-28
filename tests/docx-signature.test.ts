@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import JSZip from 'jszip'
-import { previewDocxSignatures, signDocxDocument } from '@/lib/docx-signature'
+import { previewDocxSignatures, signDocxDocument, buildSignatureTriggers } from '@/lib/docx-signature'
 
 // A minimal but valid .docx: just enough of the OOXML package for the
 // signature stamper to find and modify (document.xml, its rels, content
@@ -56,6 +56,25 @@ describe('docx-signature', () => {
 
   it('throws a readable error for a non-docx file', async () => {
     await expect(previewDocxSignatures(Buffer.from('not a zip'))).rejects.toThrow()
+  })
+
+  it('also matches the admin\'s own name/surname — real contracts often print the name instead of the word "signature"', async () => {
+    const docx = await buildMinimalDocx([
+      'Pour ESI', 'Yannick EBIBIE', 'Président',
+      'Pour le Prestataire', 'Nemrod Nawaf SALAMI',
+    ])
+    const triggers = buildSignatureTriggers('Nawaf Nemrod SALAMI')
+    const matches = await previewDocxSignatures(docx, triggers)
+    expect(matches).toHaveLength(1)
+    expect(matches[0].snippet).toContain('SALAMI')
+    // The other party's name must not be flagged.
+    expect(matches.some((m) => m.snippet.includes('EBIBIE'))).toBe(false)
+  })
+
+  it('does not match on name alone when no name is configured', async () => {
+    const docx = await buildMinimalDocx(['Nemrod Nawaf SALAMI'])
+    const matches = await previewDocxSignatures(docx, buildSignatureTriggers(undefined))
+    expect(matches).toHaveLength(0)
   })
 
   it('stamps only the selected matches and leaves the rest of the document untouched', async () => {
