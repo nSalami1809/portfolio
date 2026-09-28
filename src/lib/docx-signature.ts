@@ -28,6 +28,7 @@ export interface SignaturePlaceholder {
 interface InternalMatch extends SignaturePlaceholder {
   runEndOffset: number
   paragraphEndOffset: number
+  alignment: string | null
 }
 
 const EMU_PER_CM = 360000
@@ -51,7 +52,7 @@ function stripTags(xml: string): string {
 }
 
 function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 }
 
 /** Default trigger is always "signature"; callers add the admin's own name/surname. */
@@ -97,6 +98,9 @@ function findSignaturePlaceholders(xml: string, triggers: string[]): InternalMat
     const paraXml = paraMatch[0]
     const paragraphEndOffset = paraStart + paraXml.length
     const paraText = stripTags(paraXml)
+    // Carried over to the proof paragraph so it lines up the same way as the
+    // column it's replying to (these signature blocks are usually centered).
+    const alignment = /<w:jc\b[^>]*w:val="([^"]+)"/.exec(paraXml)?.[1] ?? null
 
     const runRe = /<w:r\b[^>]*>[\s\S]*?<\/w:r>/g
     let runMatch: RegExpExecArray | null
@@ -110,6 +114,7 @@ function findSignaturePlaceholders(xml: string, triggers: string[]): InternalMat
         snippet: buildSnippet(paraText, runText),
         runEndOffset: paraStart + runMatch.index + runMatch[0].length,
         paragraphEndOffset,
+        alignment,
       })
     }
   }
@@ -118,7 +123,11 @@ function findSignaturePlaceholders(xml: string, triggers: string[]): InternalMat
 
 function buildDrawingRunXml(relId: string, cx: number, cy: number, docPrId: number): string {
   return (
-    '<w:r><w:rPr/><w:drawing xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">' +
+    // The line break puts the image on its own line, right below whatever
+    // matched (a name, a label…) instead of trailing it on the same line —
+    // that's what makes it read as a signature under a printed name rather
+    // than an odd inline afterthought.
+    '<w:r><w:rPr/><w:br/><w:drawing xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">' +
     `<wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>` +
     '<wp:effectExtent l="0" t="0" r="0" b="0"/>' +
     `<wp:docPr id="${docPrId}" name="Signature"/>` +
@@ -132,9 +141,10 @@ function buildDrawingRunXml(relId: string, cx: number, cy: number, docPrId: numb
   )
 }
 
-function buildProofParagraphXml(proofText: string): string {
+function buildProofParagraphXml(proofText: string, alignment: string | null): string {
+  const jc = alignment ? `<w:jc w:val="${alignment}"/>` : ''
   return (
-    '<w:p><w:pPr><w:spacing w:before="120"/></w:pPr>' +
+    `<w:p><w:pPr><w:spacing w:before="120"/>${jc}</w:pPr>` +
     '<w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr>' +
     `<w:t xml:space="preserve">${escapeXmlText(proofText)}</w:t></w:r></w:p>`
   )
@@ -154,7 +164,7 @@ function stampXml(xml: string, selectedIds: string[], triggers: string[], opts: 
     insertions.push({ offset: m.runEndOffset, text: buildDrawingRunXml(opts.relId, opts.cx, opts.cy, docPrId++) })
     if (!proofInsertedAt.has(m.paragraphEndOffset)) {
       proofInsertedAt.add(m.paragraphEndOffset)
-      insertions.push({ offset: m.paragraphEndOffset, text: buildProofParagraphXml(opts.proofText) })
+      insertions.push({ offset: m.paragraphEndOffset, text: buildProofParagraphXml(opts.proofText, m.alignment) })
     }
   }
 

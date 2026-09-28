@@ -7,9 +7,13 @@ import { previewDocxSignatures, signDocxDocument, buildSignatureTriggers } from 
 // types) — real Word output has far more, but the stamper only ever touches
 // these parts and must not choke on a minimal one.
 function buildMinimalDocx(paragraphs: string[]): Promise<Uint8Array> {
-  const body = paragraphs
-    .map((text) => `<w:p><w:r><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`)
-    .join('')
+  return buildDocxWithRawParagraphs(
+    paragraphs.map((text) => `<w:p><w:r><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`),
+  )
+}
+
+function buildDocxWithRawParagraphs(rawParagraphs: string[]): Promise<Uint8Array> {
+  const body = rawParagraphs.join('')
   const documentXml =
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
@@ -112,6 +116,34 @@ describe('docx-signature', () => {
     expect(mediaFiles).toHaveLength(1)
     const ctXml = await zip.file('[Content_Types].xml')!.async('string')
     expect(ctXml).toMatch(/Extension="png"/)
+  })
+
+  it('puts the image on a new line below the match, and mirrors the paragraph\'s centering on the proof line', async () => {
+    const centeredNameParagraph =
+      '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t xml:space="preserve">Nemrod Nawaf SALAMI</w:t></w:r></w:p>'
+    const docx = await buildDocxWithRawParagraphs([centeredNameParagraph])
+    const triggers = buildSignatureTriggers('Nawaf Nemrod SALAMI')
+    const matches = await previewDocxSignatures(docx, triggers)
+    expect(matches).toHaveLength(1)
+
+    const signed = await signDocxDocument(
+      docx,
+      [matches[0].id],
+      { pngBytes: PNG_1X1, width: 1, height: 1 },
+      'Signé électroniquement par Nawaf Nemrod SALAMI',
+      triggers,
+    )
+    const zip = await JSZip.loadAsync(signed)
+    const xml = await zip.file('word/document.xml')!.async('string')
+
+    // The break comes before the drawing, inside the run appended right
+    // after the name — so the signature renders on its own line under it.
+    expect(xml).toMatch(/<w:br\/><w:drawing/)
+    // The name's own paragraph keeps its centering untouched…
+    expect(xml).toMatch(/<w:jc w:val="center"\/>[\s\S]*Nemrod Nawaf SALAMI/)
+    // …and the proof paragraph inherits the same centering, not left-aligned.
+    const proofParaMatch = /<w:p><w:pPr><w:spacing w:before="120"\/><w:jc w:val="center"\/><\/w:pPr>[\s\S]*?Signé électroniquement/.exec(xml)
+    expect(proofParaMatch).not.toBeNull()
   })
 
   it('is a no-op when no ids are selected', async () => {
