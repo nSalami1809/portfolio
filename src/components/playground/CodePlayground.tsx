@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Editor, { type OnMount, type OnValidate } from '@monaco-editor/react'
+import Editor, { loader, type OnMount, type OnValidate } from '@monaco-editor/react'
 import { useTheme } from '@/hooks/useTheme'
 import { runInSandbox, type PlaygroundLogEntry } from '@/lib/playground/runInSandbox'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -34,6 +34,10 @@ const VS_COLORS = {
 } as const
 
 const monoFont = 'Consolas, "Courier New", ui-monospace, SFMono-Regular, Menlo, monospace'
+
+// Served from our own origin (see scripts/copy-monaco-assets.mjs) instead of
+// the @monaco-editor/react default of fetching from a CDN at runtime.
+loader.config({ paths: { vs: '/monaco-editor/vs' } })
 
 export default function CodePlayground({ t }: Props) {
   const { theme } = useTheme()

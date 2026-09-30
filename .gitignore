@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# Monaco Editor assets (regenerated on install by scripts/copy-monaco-assets.mjs)
+/public/monaco-editor/
+
 # production
 /build
 

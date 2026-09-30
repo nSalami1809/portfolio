@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "node scripts/copy-monaco-assets.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.28",
@@ -27,6 +28,7 @@
     "framer-motion": "^12.40.0",
     "jose": "^6.2.3",
     "jszip": "^3.10.2",
+    "monaco-editor": "^0.57.0",
     "mongodb": "^7.3.0",
     "next": "16.3.4",
     "nodemailer": "^9.0.1",
