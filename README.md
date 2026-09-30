@@ -19,7 +19,7 @@ Portfolio personnel de [Nawaf Nemrod Salami](https://nawafsalami-itech.vercel.ap
 
 **Back-office** (`/admin`) — CRUD sur tout le contenu public (projets, blog, expériences, compétences, témoignages, offres) sans redéploiement, avec :
 - **Cycle commercial complet** : devis → signature électronique du client (OTP) → contrat → livraison → PV de recette signé → facturation (acompte/solde) → reçus, avec relances automatiques et un espace client de suivi.
-- **Signature de documents Word** : upload d'un `.docx`, repérage de chaque emplacement où le mot « signature » apparaît, sélection manuelle, puis génération d'une copie du document avec la signature enregistrée et un bloc de preuve électronique (nom, date, empreinte SHA-256) insérés automatiquement.
+- **Signature électronique de documents Word** : upload d'un `.docx`, apposition de la signature du client ou de l'admin, génération d'une copie horodatée avec preuve d'authenticité intégrée.
 - Statistiques d'activité, sauvegardes chiffrées de la base, notifications push et par e-mail, gestion des prospects et du calendrier.
 
 **Multilingue** — tout le contenu saisi en français dans l'admin est traduit à la volée vers l'anglais (mis en cache), avec un routage par préfixe `/fr` / `/en`.
