@@ -3,9 +3,10 @@
 import dynamic from 'next/dynamic'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
-// CodeMirror + the VS Code theme + JS language support are only needed on
-// this one page — keep them out of every other route's bundle, same pattern
-// as ChatWidgetLoader for the chat widget.
+// Monaco Editor is only needed on this one page — keep it out of every other
+// route's bundle, same pattern as ChatWidgetLoader for the chat widget. It
+// loads its own engine from a CDN at runtime (see @monaco-editor/react), so
+// this dynamic import itself stays small.
 const CodePlayground = dynamic(() => import('./CodePlayground'), {
   ssr: false,
   loading: () => (

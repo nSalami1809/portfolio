@@ -1,10 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import CodeMirror from '@uiw/react-codemirror'
-import { javascript } from '@codemirror/lang-javascript'
-import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode'
-import { EditorView } from '@codemirror/view'
+import Editor, { type OnMount, type OnValidate } from '@monaco-editor/react'
 import { useTheme } from '@/hooks/useTheme'
 import { runInSandbox, type PlaygroundLogEntry } from '@/lib/playground/runInSandbox'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -13,17 +10,30 @@ interface Props {
   t: Dictionary['playground']
 }
 
-const jsLang = javascript()
-// Editor chrome only (gutters, cursor, selection) — syntax colors come from
-// the vscode theme below. Font matches the system monospace stack already
-// used for inline code elsewhere on the site, so no extra webfont is loaded.
-const editorTheme = EditorView.theme({
-  // 16px minimum: CodeMirror's content is a focusable editable region, and
-  // anything smaller makes iOS Safari zoom the page on every tap into it.
-  '&': { fontSize: '16px' },
-  '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', padding: '12px 0' },
-  '.cm-gutters': { border: 'none' },
-})
+// Real VS Code chrome colors (Dark+/Light+ default themes) — deliberately
+// hardcoded instead of the site's --accent/--surface tokens, same reasoning
+// as .liquid-glass in globals.css: this widget is meant to read as an actual
+// VS Code window, not a themed site component.
+const VS_COLORS = {
+  dark: {
+    tabBarBg: '#252526',
+    activeTabBg: '#1e1e1e',
+    activeTabBorder: '#1e1e1e',
+    activeTabText: '#ffffff',
+    statusBg: '#007acc',
+    statusText: '#ffffff',
+  },
+  light: {
+    tabBarBg: '#f3f3f3',
+    activeTabBg: '#ffffff',
+    activeTabBorder: '#e7e7e7',
+    activeTabText: '#333333',
+    statusBg: '#007acc',
+    statusText: '#ffffff',
+  },
+} as const
+
+const monoFont = 'Consolas, "Courier New", ui-monospace, SFMono-Regular, Menlo, monospace'
 
 export default function CodePlayground({ t }: Props) {
   const { theme } = useTheme()
@@ -31,6 +41,8 @@ export default function CodePlayground({ t }: Props) {
   const [output, setOutput] = useState<PlaygroundLogEntry[]>([])
   const [running, setRunning] = useState(false)
   const [status, setStatus] = useState<'idle' | 'done' | 'error' | 'timeout'>('idle')
+  const [cursor, setCursor] = useState({ line: 1, column: 1 })
+  const [problems, setProblems] = useState({ errors: 0, warnings: 0 })
   const cancelRef = useRef<(() => void) | null>(null)
 
   const run = useCallback(() => {
@@ -54,6 +66,11 @@ export default function CodePlayground({ t }: Props) {
     })
   }, [code, t.timeoutMessage])
 
+  // Keeps Ctrl+Enter bound to the latest `run` without re-registering the
+  // Monaco command (and losing the closure) on every keystroke.
+  const runRef = useRef(run)
+  runRef.current = run
+
   useEffect(() => () => cancelRef.current?.(), [])
 
   const reset = () => {
@@ -64,38 +81,80 @@ export default function CodePlayground({ t }: Props) {
     setOutput([])
   }
 
+  const handleMount: OnMount = (editor, monaco) => {
+    editor.onDidChangeCursorPosition((e) => {
+      setCursor({ line: e.position.lineNumber, column: e.position.column })
+    })
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current())
+  }
+
+  const handleValidate: OnValidate = (markers) => {
+    setProblems({
+      errors: markers.filter((m) => m.severity === 8).length,
+      warnings: markers.filter((m) => m.severity === 4).length,
+    })
+  }
+
+  const c = VS_COLORS[theme]
+
   return (
     <div className="card overflow-hidden">
-      {/* Title bar — VS Code style traffic lights + filename */}
-      <div
-        className="flex items-center gap-2 px-4 py-3"
-        style={{ borderBottom: '1px solid var(--glass-border)' }}
-      >
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#D90000' }} aria-hidden="true" />
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#F59E0B' }} aria-hidden="true" />
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#008000' }} aria-hidden="true" />
-        <span
-          className="ml-2 text-xs"
-          style={{ color: 'var(--text-subtle)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}
+      {/* Tab bar */}
+      <div className="flex items-end" style={{ background: c.tabBarBg }}>
+        <div
+          className="flex items-center gap-2 px-3.5 py-2 text-sm"
+          style={{
+            background: c.activeTabBg,
+            color: c.activeTabText,
+            borderTop: `2px solid ${c.activeTabBorder}`,
+            fontFamily: monoFont,
+          }}
         >
-          {t.filename}
-        </span>
+          <span aria-hidden="true" style={{ color: '#F0DB4F', fontWeight: 700, fontSize: '0.7rem' }}>JS</span>
+          <span>{t.filename}</span>
+          <span aria-hidden="true" style={{ opacity: 0.6, marginLeft: 4, fontSize: '0.8rem' }}>×</span>
+        </div>
       </div>
 
-      <CodeMirror
+      <Editor
+        height="360px"
+        language="javascript"
+        theme={theme === 'dark' ? 'vs-dark' : 'light'}
         value={code}
-        onChange={setCode}
-        theme={theme === 'dark' ? vscodeDark : vscodeLight}
-        extensions={[jsLang, editorTheme]}
-        basicSetup={{ foldGutter: false }}
-        onKeyDown={(e) => {
-          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            e.preventDefault()
-            run()
-          }
+        onChange={(value) => setCode(value ?? '')}
+        onMount={handleMount}
+        onValidate={handleValidate}
+        loading={<div className="loader" style={{ margin: '160px auto' }} aria-hidden="true" />}
+        options={{
+          fontSize: 14,
+          fontFamily: monoFont,
+          minimap: { enabled: true },
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          tabSize: 2,
+          padding: { top: 12 },
+          renderLineHighlight: 'all',
+          ariaLabel: t.filename,
         }}
-        aria-label={t.filename}
       />
+
+      {/* Status bar */}
+      <div
+        className="flex items-center justify-between px-3 text-xs"
+        style={{ background: c.statusBg, color: c.statusText, height: 22, fontFamily: 'var(--font-poppins), sans-serif' }}
+      >
+        <div className="flex items-center gap-3">
+          <span>{problems.errors > 0 ? `⊗ ${problems.errors}` : '✓ 0'}</span>
+          {problems.warnings > 0 && <span>⚠ {problems.warnings}</span>}
+        </div>
+        <div className="flex items-center gap-3">
+          <span>Ln {cursor.line}, Col {cursor.column}</span>
+          <span className="hidden sm:inline">Spaces: 2</span>
+          <span className="hidden sm:inline">UTF-8</span>
+          <span className="hidden sm:inline">LF</span>
+          <span>{'{ } JavaScript'}</span>
+        </div>
+      </div>
 
       {/* Toolbar */}
       <div
