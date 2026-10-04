@@ -7,7 +7,7 @@ import DevisView from './DevisView'
 import { pageMeta } from '@/lib/seo'
 
 // Same cadence as the other public pages; invalidated on admin publish.
-export const revalidate = 30
+export const revalidate = 180
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params

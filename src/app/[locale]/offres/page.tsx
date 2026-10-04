@@ -8,8 +8,8 @@ import { getDictionary } from '@/lib/i18n/dictionaries'
 import OffersView, { type TranslatedOffers } from './OffersView'
 import { pageMeta } from '@/lib/seo'
 
-// Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
-export const revalidate = 30
+// Regenerate at most once every 180s; invalidated instantly on admin publish via revalidatePath
+export const revalidate = 180
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params

@@ -9,8 +9,8 @@ import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
 
-// Regenerate at most once every 30s; invalidated instantly on admin publish
-export const revalidate = 30
+// Regenerate at most once every 180s; invalidated instantly on admin publish
+export const revalidate = 180
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params

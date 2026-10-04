@@ -127,6 +127,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     // debounced publish so a backgrounded tab can never stomp fields it
     // never touched — flushImmediate's raw publish would reintroduce that
     // exact bug, just triggered by visibilitychange instead of the timer.
+    // (Audited for the Vercel ISR-writes reduction pass: syncAndPublish()
+    // no-ops when dirtyKeys is empty, so backgrounding a tab with nothing
+    // unsaved costs nothing — this only ever moves an already-pending save
+    // earlier, it never creates an extra one. Left as-is on purpose.)
     const onVisibility = () => { if (document.hidden) { syncAndPublish() } else { refreshIfIdle() } }
     const onFocus = () => refreshIfIdle()
     document.addEventListener('visibilitychange', onVisibility)
@@ -147,7 +151,12 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
   const schedulePublish = useCallback(() => {
     if (publishTimer.current) clearTimeout(publishTimer.current)
-    publishTimer.current = setTimeout(() => { syncAndPublish() }, 2000)
+    // 10s (was 2s): fewer publishPortfolio() calls — and therefore fewer
+    // updateTag('portfolio') cache invalidations — while the admin is
+    // actively editing. visibilitychange/beforeunload still flush any
+    // pending edit immediately if the tab is hidden/closed before this
+    // fires, so no edit waits longer than that to be saved.
+    publishTimer.current = setTimeout(() => { syncAndPublish() }, 10_000)
   }, [syncAndPublish])
 
   const persist = useCallback(<K extends Key>(key: K, value: PortfolioData[K]) => {

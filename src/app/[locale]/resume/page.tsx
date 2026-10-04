@@ -8,12 +8,12 @@ import ResumeView from './ResumeView'
 import { publicPersonal } from '@/lib/public-portfolio'
 import { pageMeta } from '@/lib/seo'
 
-// Regenerate at most once every 30s — same trade-off as the homepage and
-// /offres: an admin publish can take up to 30s to show here instead of the
+// Regenerate at most once every 180s — same trade-off as the homepage and
+// /offres: an admin publish can take up to 180s to show here instead of the
 // old instant client-side refetch, but the page no longer renders default
 // placeholder content first and swaps it for the real data after mount
 // (the actual cause of this page's layout shift).
-export const revalidate = 30
+export const revalidate = 180
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params

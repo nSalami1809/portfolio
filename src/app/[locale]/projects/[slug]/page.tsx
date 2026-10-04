@@ -10,9 +10,9 @@ import NotFoundMessage from '@/components/NotFoundMessage'
 import { LOCALES } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
 
-// Regenerate at most once every 30s, matching every sibling route;
+// Regenerate at most once every 180s, matching every sibling route;
 // invalidated instantly on admin publish via updateTag('portfolio').
-export const revalidate = 30
+export const revalidate = 180
 
 // Without this, both locales of every project rendered on demand — and the EN
 // render blocks inside TTFB on a Gemini translation of the whole case study

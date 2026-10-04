@@ -7,7 +7,7 @@ import { defaultProjects } from '@/data/defaultData'
 import ProjectsView from './ProjectsView'
 import { pageMeta } from '@/lib/seo'
 
-export const revalidate = 30
+export const revalidate = 180
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: rawLocale } = await params

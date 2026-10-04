@@ -21,8 +21,8 @@ import {
   defaultTestimonials,
 } from '@/data/defaultData'
 
-// Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
-export const revalidate = 30
+// Regenerate at most once every 180s; invalidated instantly on admin publish via revalidatePath
+export const revalidate = 180
 
 // Reserves the marquee's exact height so the Suspense fallback below swapping
 // for real content can never shift the page (the whole point of giving a
