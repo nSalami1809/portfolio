@@ -95,7 +95,7 @@ export default function DocumentUpload({ value, onChange, maxSizeMb = MAX_DEFAUL
           className="relative w-24 h-32 rounded-lg overflow-hidden mb-3"
           style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
         >
-          <Image src={value.thumbnailUrl} alt="" fill sizes="96px" className="object-cover" />
+          <Image src={value.thumbnailUrl} alt="" fill sizes="96px" unoptimized className="object-cover" />
         </div>
       )}
 

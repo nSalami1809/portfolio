@@ -138,6 +138,11 @@ export default function DocumentsView({ documents, locale, t }: Props) {
                       alt={doc.title}
                       fill
                       loading="lazy"
+                      // Already a small, pre-sized webp generated at upload
+                      // time — skip Next's on-demand resize/re-encode (a
+                      // cold first-hit per breakpoint) and serve it straight
+                      // from Blob's own CDN, which is already fast and cached.
+                      unoptimized
                       sizes="(min-width: 640px) 50vw, 100vw"
                       className="object-cover object-top"
                     />

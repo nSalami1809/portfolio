@@ -380,7 +380,7 @@ export default function AdminDocuments() {
 
                   {/* Icon / thumbnail */}
                   {d.thumbnailUrl ? (
-                    <Image src={d.thumbnailUrl} alt="" aria-hidden="true" width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
+                    <Image src={d.thumbnailUrl} alt="" aria-hidden="true" width={40} height={40} unoptimized className="w-10 h-10 rounded-lg object-cover" />
                   ) : (
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-glow)' }} aria-hidden="true">
                       <span style={{ color: 'var(--accent)' }}><DocumentIcon /></span>
