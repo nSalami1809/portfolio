@@ -33,7 +33,7 @@ function moodForText(text: string): BotMood {
   return 'idle'
 }
 
-type ChatCategory = 'profile' | 'projects' | 'services' | 'quote' | 'contact' | 'content' | 'general'
+type ChatCategory = 'profile' | 'projects' | 'services' | 'quote' | 'technical' | 'contact' | 'content' | 'general'
 
 // Classifies the VISITOR'S own outgoing message (mirrors moodForText above,
 // which classifies the bot's replies) to pick a contextual "processing"
@@ -44,14 +44,24 @@ type ChatCategory = 'profile' | 'projects' | 'services' | 'quote' | 'contact' | 
 // the two. Falls back to 'general' whenever nothing matches confidently —
 // this function only ever picks the *initial* status text; once a real tool
 // call or streamed text becomes visible, that takes over (see ChatWidget).
+//
+// Eight buckets, not sixteen: the system prompt (api/chat/route.ts) answers
+// most of the finer-grained topics a visitor might ask about (tech stack,
+// AI/automation, databases, feasibility, timelines…) from the very same
+// context blocks (projects, skills, offers, work framework) — there is no
+// separate tool or data source behind them, so detecting them as distinct
+// categories would just be guessing at a distinction the backend itself
+// doesn't make. Each bucket's message copy is written broadly enough to
+// cover every topic grouped into it instead.
 function categorizeMessage(text: string): ChatCategory {
   const t = text.toLowerCase()
-  if (/devis|quote|chiffrage|obtenir un devis|get a quote|combien .*(co[uû]te|facture)|price estimate/.test(t)) return 'quote'
+  if (/devis|quote|chiffrage|obtenir un devis|get a quote|combien .*(co[uû]te|facture)|price estimate|j'ai (un|une) (projet|id[ée]e)|i have a project|j'aimerais r[ée]aliser|i'd like to build/.test(t)) return 'quote'
   if (/contact|rendez-vous|rdv|appel|appeler|call|joindre|rencontrer|disponibilit[ée]|meeting|schedule|book a/.test(t)) return 'contact'
   if (/projet|portfolio.*(r[ée]alis|travaux)|project|r[ée]alisation/.test(t)) return 'projects'
   if (/comp[ée]tence|technologie|stack|parcours|exp[ée]rience|formation|cv\b|skill|background|resume\b/.test(t)) return 'profile'
   if (/document|guide|rapport|ebook|article|blog|ressource|resource/.test(t)) return 'content'
-  if (/service|offre|tarif|prix|budget|co[uû]te|cost|pricing|offer/.test(t)) return 'services'
+  if (/service|offre|tarif|prix|budget|co[uû]te|cost|pricing|offer|intelligence artificielle|\bia\b|automatisation|automation|d[ée]lai|deadline/.test(t)) return 'services'
+  if (/architecture|base de donn[ée]es|database|possible de|faisabilit[ée]|feasib|techniquement|technically|comment [çc]a marche|how does it work/.test(t)) return 'technical'
   return 'general'
 }
 
@@ -59,15 +69,21 @@ function categorizeMessage(text: string): ChatCategory {
 // switch (not a keyed lookup into Dictionary['chat']) because that object
 // also holds non-string entries (suggestions, cvSuggestion), which a plain
 // `Record<ChatCategory, keyof Dictionary['chat']>` can't exclude.
-function categoryMessage(category: ChatCategory, t: Dictionary['chat']): string {
+//
+// `altB` alternates which of a category's two phrasings shows (true on
+// every other send) — enough variety that the same wording doesn't repeat
+// on back-to-back messages, without re-picking mid-stream (it's read once,
+// at send time, same as the category itself).
+function categoryMessage(category: ChatCategory, t: Dictionary['chat'], altB: boolean): string {
   switch (category) {
-    case 'profile': return t.thinkingProfile
-    case 'projects': return t.thinkingProjects
-    case 'services': return t.thinkingServices
-    case 'quote': return t.thinkingQuote
+    case 'profile': return altB ? t.thinkingProfileB : t.thinkingProfileA
+    case 'projects': return altB ? t.thinkingProjectsB : t.thinkingProjectsA
+    case 'services': return altB ? t.thinkingServicesB : t.thinkingServicesA
+    case 'quote': return altB ? t.thinkingQuoteB : t.thinkingQuoteA
+    case 'technical': return altB ? t.thinkingTechnicalB : t.thinkingTechnicalA
     case 'contact': return t.thinkingContact
     case 'content': return t.thinkingContent
-    default: return t.thinking
+    default: return altB ? t.thinkingGeneralB : t.thinkingGeneralA
   }
 }
 
@@ -383,8 +399,16 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   // (every send path below checks `busy` first), so a single piece of state
   // can never leak a stale category onto a later, different request.
   const [pendingCategory, setPendingCategory] = useState<ChatCategory>('general')
+  // Alternates which of a category's two phrasings categoryMessage renders
+  // (see its comment) — the counter only needs to be written from the event
+  // handler below, never read during render, so it stays a ref; the boolean
+  // derived from it is what actually drives rendering.
+  const [altVariant, setAltVariant] = useState(false)
+  const sendCount = useRef(0)
   const dispatch = useCallback((text: string) => {
     setPendingCategory(categorizeMessage(text))
+    sendCount.current += 1
+    setAltVariant(sendCount.current % 2 === 0)
     sendMessage({ text })
   }, [sendMessage])
 
@@ -994,7 +1018,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                     transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   >
                     <BotAvatar mood="thinking" />
-                    <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>{categoryMessage(pendingCategory, t.chat)}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>{categoryMessage(pendingCategory, t.chat, altVariant)}</span>
                     <div className="flex items-center gap-1">
                       {[0, 1, 2].map((i) => (
                         <m.span
