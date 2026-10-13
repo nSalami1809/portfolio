@@ -6,6 +6,8 @@ import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import DocumentUpload from '@/components/admin/DocumentUpload'
+import { renderPdfThumbnail } from '@/lib/pdf-thumbnail'
+import { uploadFile } from '@/lib/upload'
 import type { PortfolioDocument } from '@/types'
 
 const CATEGORIES = ['CV', 'Étude de cas', 'Guide', 'Rapport', 'Travail académique', 'Autre']
@@ -79,6 +81,37 @@ export default function AdminDocuments() {
     setDocuments(updated)
     updateDocuments(updated)
   }
+
+  // Backfill: PDFs added before thumbnail generation existed have no
+  // thumbnailUrl. Rather than making the admin re-upload each one, generate
+  // it in the background the first time this page sees them — same renderer
+  // DocumentUpload uses for a fresh upload, just fed the already-stored file
+  // instead of a freshly picked one. Self-limiting: once persisted, the doc
+  // no longer matches the "missing thumbnail" filter on a later visit.
+  const backfillStarted = useRef(false)
+  useEffect(() => {
+    const pending = documents.filter((d) => d.fileType === 'pdf' && d.fileUrl && !d.thumbnailUrl)
+    if (backfillStarted.current || !pending.length) return
+    backfillStarted.current = true
+    void (async () => {
+      let current = documents
+      for (const doc of pending) {
+        try {
+          const res = await fetch(doc.fileUrl)
+          if (!res.ok) continue
+          const blob = await res.blob()
+          const thumb = await renderPdfThumbnail(blob)
+          if (!thumb) continue
+          const thumbnailUrl = await uploadFile(thumb, 'thumbnail.png')
+          current = current.map((d) => (d.slug === doc.slug ? { ...d, thumbnailUrl } : d))
+          persist(current)
+        } catch {
+          // Best-effort — this one keeps the generic icon fallback.
+        }
+      }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documents])
 
   const startNew = () => { setEditingId('__new__'); setForm({ ...EMPTY }) }
   const startEdit = (d: PortfolioDocument) => { setEditingId(d.slug); const { slug: _, ...rest } = d; setForm(rest) }

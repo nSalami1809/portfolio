@@ -26,7 +26,7 @@ function ensureIndex() {
 }
 
 function buildSystemPrompt(data: PortfolioData, locale: string): string {
-  const { personal, socials, projects, experiences, educations, skills, testimonials, vision, blog, offers } = data
+  const { personal, socials, projects, experiences, educations, skills, testimonials, vision, blog, offers, documents } = data
 
   const skillsText = skills
     .map((s) => `- ${s.category} : ${s.items.join(', ')}`)
@@ -75,6 +75,12 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
         .slice(0, 400)
       return `- ${p.title} [${p.category}, ${new Date(p.date).toLocaleDateString('fr-FR')}] : ${p.excerpt}${snippet ? ` — Extrait : ${snippet}${snippet.length >= 400 ? '…' : ''}` : ''}${p.externalUrl ? ` — Lien : ${p.externalUrl}` : ''}`
     })
+    .join('\n')
+
+  // Each document's own page (preview + download), not the raw file URL —
+  // keeps the bot pointing visitors at the same place the site itself does.
+  const documentsText = documents
+    .map((d) => `- ${d.title} [${d.category}, ${d.fileType.toUpperCase()}] : ${d.description} — Page : /${locale}/documents/${d.slug}`)
     .join('\n')
 
   const socialsText = Object.entries(socials)
@@ -131,7 +137,7 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     ? `WhatsApp : ${personal.whatsapp} (lien direct à utiliser EXACTEMENT tel quel, message pré-rempli inclus : ${whatsappLink})`
     : 'Non disponible.'
 
-  return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, témoignages, réseaux sociaux), pas seulement une partie.
+  return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, documents téléchargeables, témoignages, réseaux sociaux), pas seulement une partie.
 
 Bio : ${personal.bio}
 Localisation : ${personal.location}
@@ -166,6 +172,7 @@ Pages utiles du site pour orienter le visiteur (liens Markdown relatifs, à util
 - Devis instantané en ligne : /${locale}/devis
 - Prendre rendez-vous : /${locale}/calendrier
 - Suivre l'avancement d'un projet (le client saisit son code de suivi) : /${locale}/suivi — avec le code en main tu peux donner /${locale}/suivi?ref=CODE
+- Documents à consulter et télécharger (CV, études de cas, guides, rapports…) : /${locale}/documents
 - Conditions générales de vente : /${locale}/cgv
 - Contact : /${locale}/contact
 
@@ -174,6 +181,9 @@ ${testimonialsText || 'Aucun témoignage renseigné.'}
 
 Articles de blog publiés :
 ${blogText || 'Aucun article publié pour le moment.'}
+
+Documents disponibles au téléchargement (CV, études de cas, guides, rapports, travaux académiques…) :
+${documentsText || 'Aucun document publié pour le moment.'}
 
 Vision / philosophie :
 ${visionText}
@@ -188,6 +198,7 @@ Règles :
 - Quand tu mentionnes un projet qui a un lien "Démo" et/ou "GitHub" listé ci-dessus, propose-le(s) sous forme de lien(s) Markdown cliquable(s) (ex : [Voir la démo](URL), [Voir le code](URL)) — utilise l'URL exacte fournie, n'en invente jamais, et ne propose que les liens réellement listés pour ce projet précis. Si un visiteur demande plus de détails sur un projet, appuie-toi sur son "Étude de cas" (contexte/solution/résultats) si elle est renseignée.
 - Si un article de blog a un "Lien" (externalUrl) listé ci-dessus, tu peux le proposer en lien Markdown cliquable si le visiteur veut lire l'article complet.
 - Si un visiteur demande le CV, le résumé, ou à "télécharger" les informations de ${personal.name} : si un lien est renseigné ci-dessus, propose-le EXACTEMENT tel quel (jamais un autre lien inventé) avec un lien Markdown cliquable, par exemple [Télécharger le CV](/api/cv) — ce lien déclenche automatiquement un téléchargement du PDF. Si aucun CV n'est disponible, dis-le simplement et propose de consulter la page Expérience du site ou de passer par la page Contact.
+- Si un visiteur demande un document, une ressource, un guide, une étude de cas ou un rapport autre que le CV principal, cherche-le dans la liste "Documents disponibles" ci-dessus et, s'il y figure, propose un lien Markdown cliquable vers SA PAGE (ex : [Nom du document](/${locale}/documents/slug-exact)) — cette page permet de le consulter en ligne et de le télécharger. N'invente jamais de document absent de cette liste ; si rien ne correspond, dis-le et oriente vers /${locale}/documents pour parcourir tout ce qui est disponible.
 - Si le visiteur préfère discuter par WhatsApp plutôt que par ce chat (ou le demande explicitement) et qu'un numéro WhatsApp est renseigné ci-dessus, propose le lien direct sous forme de lien Markdown cliquable, par exemple [Discuter sur WhatsApp](https://wa.me/...). Utilise EXACTEMENT le lien fourni ci-dessus (avec son message pré-rempli), sans le modifier ni le raccourcir, et ne le propose pas s'il est marqué "Non disponible".
 
 Service de devis automatique :

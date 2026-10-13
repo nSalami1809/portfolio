@@ -2,13 +2,16 @@
 
 import { pdfjs } from './pdfjs-worker'
 
-// Renders a PDF's first page to a PNG blob entirely client-side, right after
-// the admin picks the file in DocumentUpload — once at upload time, not on
-// every visitor's page load. The result is then uploaded through the
-// existing /api/upload image pipeline, same as any other cover image.
-export async function renderPdfThumbnail(file: File, maxWidth = 600): Promise<Blob | null> {
+// Renders a PDF's first page to a PNG blob entirely client-side — either
+// right after the admin picks a new file in DocumentUpload, or (source then
+// being an already-uploaded file re-fetched from its Blob URL) as a one-off
+// backfill for documents added before thumbnails existed. Runs once at
+// upload/backfill time, not on every visitor's page load. The result is
+// then uploaded through the existing /api/upload image pipeline, same as
+// any other cover image.
+export async function renderPdfThumbnail(source: Blob, maxWidth = 600): Promise<Blob | null> {
   try {
-    const data = await file.arrayBuffer()
+    const data = await source.arrayBuffer()
     const pdf = await pdfjs.getDocument({ data }).promise
     const page = await pdf.getPage(1)
     const base = page.getViewport({ scale: 1 })

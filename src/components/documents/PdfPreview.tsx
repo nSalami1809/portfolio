@@ -20,12 +20,25 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+    // react-pdf fully re-renders the PDF page's canvas on every `width`
+    // change — without debouncing/thresholding, the stream of ResizeObserver
+    // ticks during layout settling (fonts, the FadeIn wrapper, sidebar
+    // reflow) or an actual window resize triggers a re-render per tick,
+    // which reads as stutter rather than a smooth preview.
+    let timer: ReturnType<typeof setTimeout> | null = null
     const ro = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width
-      if (width) setContainerWidth(Math.min(width, 900))
+      if (!width) return
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        setContainerWidth((prev) => {
+          const next = Math.min(width, 900)
+          return prev !== undefined && Math.abs(prev - next) < 8 ? prev : next
+        })
+      }, 150)
     })
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => { ro.disconnect(); if (timer) clearTimeout(timer) }
   }, [])
 
   return (

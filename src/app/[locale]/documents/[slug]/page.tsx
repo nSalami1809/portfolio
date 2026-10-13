@@ -61,6 +61,14 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
     description: document.description,
   })
 
+  // Starts the DNS/TLS handshake to the Blob storage origin as soon as this
+  // page's HTML arrives, instead of only once the client-side preview
+  // component mounts and fires its first fetch — shaves that round trip off
+  // the time-to-first-render of the in-page preview.
+  const blobOrigin = (() => {
+    try { return new URL(document.fileUrl).origin } catch { return null }
+  })()
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -76,6 +84,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
 
   return (
     <>
+      {blobOrigin && <link rel="preconnect" href={blobOrigin} crossOrigin="anonymous" />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <DocumentDetailView
         document={{ ...document, ...translated }}
