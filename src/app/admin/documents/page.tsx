@@ -76,6 +76,11 @@ export default function AdminDocuments() {
     if (!localOwned.current) setDocuments(data.documents)
   }, [data.documents])
 
+  // Always the latest `documents`, readable from inside the backfill's async
+  // callback below without closing over a stale snapshot (see its comment).
+  const documentsRef = useRef(documents)
+  useEffect(() => { documentsRef.current = documents }, [documents])
+
   const persist = (updated: PortfolioDocument[]) => {
     localOwned.current = true
     setDocuments(updated)
@@ -94,7 +99,6 @@ export default function AdminDocuments() {
     if (backfillStarted.current || !pending.length) return
     backfillStarted.current = true
     void (async () => {
-      let current = documents
       for (const doc of pending) {
         try {
           const res = await fetch(doc.fileUrl)
@@ -103,8 +107,14 @@ export default function AdminDocuments() {
           const thumb = await renderPdfThumbnail(blob)
           if (!thumb) continue
           const thumbnailUrl = await uploadFile(thumb, 'thumbnail.png')
-          current = current.map((d) => (d.slug === doc.slug ? { ...d, thumbnailUrl } : d))
-          persist(current)
+          // Read the latest state right before writing, not a snapshot taken
+          // when this backfill started a few seconds (one fetch + one PDF
+          // render + one upload) ago — an edit the admin made to this same
+          // document in the meantime must never be clobbered by reverting
+          // to that stale snapshot, only the thumbnail field is patched in.
+          const latest = documentsRef.current
+          if (!latest.some((d) => d.slug === doc.slug)) continue // deleted meanwhile
+          persist(latest.map((d) => (d.slug === doc.slug ? { ...d, thumbnailUrl } : d)))
         } catch {
           // Best-effort — this one keeps the generic icon fallback.
         }
