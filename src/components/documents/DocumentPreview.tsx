@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import PreviewErrorBoundary from './PreviewErrorBoundary'
 
 // Dynamically imported (ssr: false) so react-pdf/pdfjs-dist and docx-preview
 // — both non-trivial in size — are only ever downloaded on a document's own
@@ -62,11 +63,13 @@ export default function DocumentPreview({ fileUrl, fileType, title, t }: Props) 
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-      {fileType === 'pdf' ? (
-        <PdfPreview fileUrl={fileUrl} onError={() => setFailed(true)} />
-      ) : (
-        <DocxPreview fileUrl={fileUrl} onError={() => setFailed(true)} />
-      )}
+      <PreviewErrorBoundary onError={() => setFailed(true)}>
+        {fileType === 'pdf' ? (
+          <PdfPreview fileUrl={fileUrl} onError={() => setFailed(true)} />
+        ) : (
+          <DocxPreview fileUrl={fileUrl} onError={() => setFailed(true)} />
+        )}
+      </PreviewErrorBoundary>
     </div>
   )
 }
