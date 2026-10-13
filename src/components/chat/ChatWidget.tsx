@@ -33,6 +33,44 @@ function moodForText(text: string): BotMood {
   return 'idle'
 }
 
+type ChatCategory = 'profile' | 'projects' | 'services' | 'quote' | 'contact' | 'content' | 'general'
+
+// Classifies the VISITOR'S own outgoing message (mirrors moodForText above,
+// which classifies the bot's replies) to pick a contextual "processing"
+// message the instant the message is sent — before any server response, so
+// it adds no latency and needs no extra model call. Order matters: more
+// specific patterns (quote, contact) are checked before the broader
+// services/pricing one, since "combien ça coûte" alone is ambiguous between
+// the two. Falls back to 'general' whenever nothing matches confidently —
+// this function only ever picks the *initial* status text; once a real tool
+// call or streamed text becomes visible, that takes over (see ChatWidget).
+function categorizeMessage(text: string): ChatCategory {
+  const t = text.toLowerCase()
+  if (/devis|quote|chiffrage|obtenir un devis|get a quote|combien .*(co[uû]te|facture)|price estimate/.test(t)) return 'quote'
+  if (/contact|rendez-vous|rdv|appel|appeler|call|joindre|rencontrer|disponibilit[ée]|meeting|schedule|book a/.test(t)) return 'contact'
+  if (/projet|portfolio.*(r[ée]alis|travaux)|project|r[ée]alisation/.test(t)) return 'projects'
+  if (/comp[ée]tence|technologie|stack|parcours|exp[ée]rience|formation|cv\b|skill|background|resume\b/.test(t)) return 'profile'
+  if (/document|guide|rapport|ebook|article|blog|ressource|resource/.test(t)) return 'content'
+  if (/service|offre|tarif|prix|budget|co[uû]te|cost|pricing|offer/.test(t)) return 'services'
+  return 'general'
+}
+
+// 'general' reuses the existing `thinking` key as its fallback text. A
+// switch (not a keyed lookup into Dictionary['chat']) because that object
+// also holds non-string entries (suggestions, cvSuggestion), which a plain
+// `Record<ChatCategory, keyof Dictionary['chat']>` can't exclude.
+function categoryMessage(category: ChatCategory, t: Dictionary['chat']): string {
+  switch (category) {
+    case 'profile': return t.thinkingProfile
+    case 'projects': return t.thinkingProjects
+    case 'services': return t.thinkingServices
+    case 'quote': return t.thinkingQuote
+    case 'contact': return t.thinkingContact
+    case 'content': return t.thinkingContent
+    default: return t.thinking
+  }
+}
+
 function BotIcon({ mood = 'idle', ...props }: React.SVGProps<SVGSVGElement> & { mood?: BotMood }) {
   const eyeOrigin = { transformBox: 'fill-box' as const, transformOrigin: 'center' as const }
   const bigEyes = mood === 'happy' || mood === 'excited'
@@ -334,10 +372,21 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
   const restored = useRef(false)
 
-  const { messages, sendMessage, setMessages, status, addToolOutput } = useChat({
+  const { messages, sendMessage, setMessages, status, addToolOutput, error, regenerate } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat', body: () => ({ locale, conversationId: currentConversationId }) }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   })
+
+  // Classified the instant a message is sent (see categorizeMessage) so the
+  // "processing" bubble can be contextual from the very first frame, with no
+  // extra latency. Only one exchange is ever in flight at a time in this UI
+  // (every send path below checks `busy` first), so a single piece of state
+  // can never leak a stale category onto a later, different request.
+  const [pendingCategory, setPendingCategory] = useState<ChatCategory>('general')
+  const dispatch = useCallback((text: string) => {
+    setPendingCategory(categorizeMessage(text))
+    sendMessage({ text })
+  }, [sendMessage])
 
   // Resume the conversation of the last 24 h, if any (runs once, after mount).
   useEffect(() => {
@@ -354,6 +403,11 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   }, [messages, status])
 
   const busy = status === 'submitted' || status === 'streaming'
+  // True once the in-progress assistant message has any part to show —
+  // streamed text or a tool call's own bubble — at which point that *is*
+  // the status indicator and the generic category bubble should step aside.
+  const lastMessage = messages[messages.length - 1]
+  const lastMessageHasVisibleParts = lastMessage?.role === 'assistant' && lastMessage.parts.length > 0
   const [justOpened, setJustOpened] = useState(autoOpen)
 
   useEffect(() => {
@@ -383,8 +437,8 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
     replayedInitial.current = true
     setOpen(true)
     setJustOpened(true)
-    sendMessage({ text: initialMessage })
-  }, [initialMessage, sendMessage])
+    dispatch(initialMessage)
+  }, [initialMessage, dispatch])
 
   // Lets other pages (e.g. the Offers page's "Request a quote" buttons) open
   // the widget and start the conversation without lifting chat state up.
@@ -392,9 +446,9 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
     return onOpenChatRequest((text) => {
       setOpen(true)
       setJustOpened(true)
-      sendMessage({ text })
+      dispatch(text)
     })
-  }, [sendMessage])
+  }, [dispatch])
 
   const toggleOpen = () => {
     setOpen((v) => {
@@ -416,13 +470,13 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
     e.preventDefault()
     const text = input.trim()
     if (!text || busy) return
-    sendMessage({ text })
+    dispatch(text)
     setInput('')
   }
 
   const quickSend = (text: string) => {
     if (busy) return
-    sendMessage({ text })
+    dispatch(text)
   }
 
   if (pathname?.startsWith('/admin')) return null
@@ -924,17 +978,23 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   </div>
                 )
               })}
-              {busy && (
+              {/* Only shown while nothing more specific is visible yet — the
+                  instant a tool call or streamed text appears in the last
+                  message's own parts (rendered above), that already is the
+                  status indicator, and stacking this under it would just be
+                  a second, redundant "thinking" bubble. */}
+              {busy && !lastMessageHasVisibleParts && (
                 <div className="flex" style={{ justifyContent: 'flex-start' }}>
                   <m.div
                     className="rounded-xl px-3 py-2.5 flex items-center gap-2"
                     style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
+                    role="status"
                     aria-label={t.chat.thinkingAria}
                     animate={{ y: [0, -2, 0] }}
                     transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   >
                     <BotAvatar mood="thinking" />
-                    <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>{t.chat.thinking}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>{categoryMessage(pendingCategory, t.chat)}</span>
                     <div className="flex items-center gap-1">
                       {[0, 1, 2].map((i) => (
                         <m.span
@@ -947,6 +1007,28 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                       ))}
                     </div>
                   </m.div>
+                </div>
+              )}
+              {error && (
+                <div className="flex" style={{ justifyContent: 'flex-start' }}>
+                  <div className="flex items-end gap-2">
+                    <BotAvatar mood="confused" />
+                    <div
+                      role="status"
+                      className="rounded-xl px-3.5 py-2.5 text-sm flex items-center gap-3 flex-wrap"
+                      style={{ maxWidth: '85%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    >
+                      <span>{t.chat.errorMessage}</span>
+                      <button
+                        type="button"
+                        onClick={() => regenerate()}
+                        className="btn-secondary btn-sm shrink-0"
+                        style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                      >
+                        {t.chat.retry}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
