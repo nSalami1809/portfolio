@@ -38,6 +38,7 @@ export default async function DocumentsPage({ params }: { params: Promise<{ loca
     fileType: d.fileType,
     fileSize: d.fileSize,
     date: d.date,
+    thumbnailUrl: d.thumbnailUrl,
   }))
 
   return <DocumentsView documents={translatedDocuments} locale={locale} t={t.documents} />

@@ -1,14 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
+import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-
-// Self-hosted (public/pdfjs/, copied at install time by
-// scripts/copy-pdfjs-worker.mjs) rather than fetched from a CDN — same
-// reasoning as Monaco's assets.
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs'
+import '@/lib/pdfjs-worker'
 
 interface Props {
   fileUrl: string

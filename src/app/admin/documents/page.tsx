@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
@@ -207,7 +208,7 @@ export default function AdminDocuments() {
             <div className="mb-5">
               <F label="Fichier" req />
               <DocumentUpload
-                value={{ fileUrl: form.fileUrl, fileName: form.fileName, fileType: form.fileType, fileSize: form.fileSize }}
+                value={{ fileUrl: form.fileUrl, fileName: form.fileName, fileType: form.fileType, fileSize: form.fileSize, thumbnailUrl: form.thumbnailUrl }}
                 onChange={(v) => setForm((p) => ({ ...p, ...v }))}
               />
             </div>
@@ -344,10 +345,14 @@ export default function AdminDocuments() {
                     </button>
                   </div>
 
-                  {/* Icon */}
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-glow)' }} aria-hidden="true">
-                    <span style={{ color: 'var(--accent)' }}><DocumentIcon /></span>
-                  </div>
+                  {/* Icon / thumbnail */}
+                  {d.thumbnailUrl ? (
+                    <Image src={d.thumbnailUrl} alt="" aria-hidden="true" width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-glow)' }} aria-hidden="true">
+                      <span style={{ color: 'var(--accent)' }}><DocumentIcon /></span>
+                    </div>
+                  )}
 
                   {/* Content */}
                   <div className="min-w-0">

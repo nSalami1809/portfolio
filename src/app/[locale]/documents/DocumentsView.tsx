@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { m, AnimatePresence } from 'framer-motion'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { File02Icon } from '@hugeicons/core-free-icons'
@@ -11,7 +12,7 @@ import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 // A grid card only needs these fields (see documents/page.tsx).
-export type DocumentCardData = Pick<PortfolioDocument, 'slug' | 'title' | 'description' | 'category' | 'fileType' | 'fileSize'>
+export type DocumentCardData = Pick<PortfolioDocument, 'slug' | 'title' | 'description' | 'category' | 'fileType' | 'fileSize' | 'thumbnailUrl'>
 
 interface Props {
   documents: DocumentCardData[]
@@ -126,16 +127,32 @@ export default function DocumentsView({ documents, locale, t }: Props) {
                   </span>
                 </div>
 
-                {/* Icon */}
-                <div
-                  className="w-full aspect-video rounded-xl mb-5 flex items-center justify-center overflow-hidden"
-                  style={{ background: 'var(--surface-hover)' }}
-                  aria-hidden="true"
-                >
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--accent-glow)' }}>
-                    <HugeiconsIcon icon={File02Icon} size={20} strokeWidth={1.5} color="var(--accent)" />
+                {/* Thumbnail / icon */}
+                {doc.thumbnailUrl ? (
+                  <div
+                    className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden"
+                    style={{ background: 'var(--surface-hover)' }}
+                  >
+                    <Image
+                      src={doc.thumbnailUrl}
+                      alt={doc.title}
+                      fill
+                      loading="lazy"
+                      sizes="(min-width: 640px) 50vw, 100vw"
+                      className="object-cover object-top"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div
+                    className="w-full aspect-video rounded-xl mb-5 flex items-center justify-center overflow-hidden"
+                    style={{ background: 'var(--surface-hover)' }}
+                    aria-hidden="true"
+                  >
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--accent-glow)' }}>
+                      <HugeiconsIcon icon={File02Icon} size={20} strokeWidth={1.5} color="var(--accent)" />
+                    </div>
+                  </div>
+                )}
 
                 <h2
                   className="font-display font-semibold text-xl mb-3 transition-colors duration-200 group-hover:text-[var(--accent)]"

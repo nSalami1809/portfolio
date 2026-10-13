@@ -81,7 +81,7 @@ export default function AdminBackups() {
                 </p>
               </div>
               <div className="flex items-center gap-4 text-xs font-semibold">
-                <a href={b.url} download style={{ color: 'var(--accent)' }}>Télécharger (chiffrée)</a>
+                <a href={`/api/backups/${b.id}/download`} style={{ color: 'var(--accent)' }}>Télécharger (chiffrée)</a>
                 <button type="button" onClick={() => remove(b)} style={{ color: '#D90000' }}>Supprimer</button>
               </div>
             </div>

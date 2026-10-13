@@ -70,8 +70,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
 
           <FadeIn delay={0.18}>
             <a
-              href={document.fileUrl}
-              download={document.fileName}
+              href={`/api/documents/${document.slug}/download`}
               className="btn-primary text-base px-8 py-4 mb-10"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -91,8 +90,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
         <FadeIn delay={0.3} direction="left" className="space-y-4">
           <div className="card p-5 space-y-3">
             <a
-              href={document.fileUrl}
-              download={document.fileName}
+              href={`/api/documents/${document.slug}/download`}
               className="btn-primary w-full justify-center text-sm py-3"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

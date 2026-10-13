@@ -173,6 +173,8 @@ export interface PortfolioDocument {
   fileType: 'pdf' | 'docx' | 'doc'
   fileSize: number
   date: string
+  // First-page render, generated client-side at upload time — PDF only for now.
+  thumbnailUrl?: string
 }
 
 // ── Portfolio ────────────────────────────────────────────────────────────────

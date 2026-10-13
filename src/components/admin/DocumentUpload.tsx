@@ -1,13 +1,16 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { uploadDocumentFile, deleteUploadedFile, type UploadedDocument } from '@/lib/upload'
+import Image from 'next/image'
+import { uploadFile, uploadDocumentFile, deleteUploadedFile, type UploadedDocument } from '@/lib/upload'
+import { renderPdfThumbnail } from '@/lib/pdf-thumbnail'
 
 interface Value {
   fileUrl: string
   fileName: string
   fileType: 'pdf' | 'docx' | 'doc'
   fileSize: number
+  thumbnailUrl?: string
 }
 
 interface Props {
@@ -53,11 +56,24 @@ export default function DocumentUpload({ value, onChange, maxSizeMb = MAX_DEFAUL
     setLoading(true)
     try {
       const uploaded: UploadedDocument = await uploadDocumentFile(file)
+
+      // Best-effort — a PDF's first page becomes the list card's thumbnail.
+      // Generation or upload failing here must never block the document
+      // itself from being saved; it just falls back to the generic icon.
+      let thumbnailUrl: string | undefined
+      if (isPdf) {
+        const thumb = await renderPdfThumbnail(file).catch(() => null)
+        if (thumb) thumbnailUrl = await uploadFile(thumb, 'thumbnail.png').catch(() => undefined)
+      }
+
       const previousUrl = value.fileUrl
-      onChange({ fileUrl: uploaded.url, fileName: uploaded.name, fileType: uploaded.fileType, fileSize: uploaded.size })
-      // Only now that the new file is confirmed uploaded is it safe to drop
-      // the old blob — same ordering as everywhere else this pattern is used.
+      const previousThumbnailUrl = value.thumbnailUrl
+      onChange({ fileUrl: uploaded.url, fileName: uploaded.name, fileType: uploaded.fileType, fileSize: uploaded.size, thumbnailUrl })
+      // Only now that the new file (and thumbnail) are confirmed uploaded is
+      // it safe to drop the old blobs — same ordering as everywhere else
+      // this pattern is used.
       if (previousUrl) deleteUploadedFile(previousUrl)
+      if (previousThumbnailUrl) deleteUploadedFile(previousThumbnailUrl)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors de l'upload du document.")
     } finally {
@@ -67,12 +83,22 @@ export default function DocumentUpload({ value, onChange, maxSizeMb = MAX_DEFAUL
 
   const handleRemove = () => {
     if (value.fileUrl) deleteUploadedFile(value.fileUrl)
-    onChange({ fileUrl: '', fileName: '', fileType: 'pdf', fileSize: 0 })
+    if (value.thumbnailUrl) deleteUploadedFile(value.thumbnailUrl)
+    onChange({ fileUrl: '', fileName: '', fileType: 'pdf', fileSize: 0, thumbnailUrl: undefined })
     setError(null)
   }
 
   return (
     <div>
+      {value.thumbnailUrl && !loading && (
+        <div
+          className="relative w-24 h-32 rounded-lg overflow-hidden mb-3"
+          style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)' }}
+        >
+          <Image src={value.thumbnailUrl} alt="" fill sizes="96px" className="object-cover" />
+        </div>
+      )}
+
       <div className="flex items-center gap-3 flex-wrap">
         <button
           type="button"
