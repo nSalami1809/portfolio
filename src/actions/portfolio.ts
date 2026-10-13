@@ -18,6 +18,7 @@ import {
   defaultBlogPosts,
   defaultOffers,
   defaultAvailability,
+  defaultDocuments,
 } from '@/data/defaultData'
 
 const DOC_ID = 'main'
@@ -39,6 +40,7 @@ const DEFAULTS: PortfolioData = {
   blog: defaultBlogPosts,
   offers: defaultOffers,
   availability: defaultAvailability,
+  documents: defaultDocuments,
 }
 
 export async function publishPortfolio(data: PortfolioData): Promise<void> {

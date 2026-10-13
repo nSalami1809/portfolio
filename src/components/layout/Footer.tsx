@@ -5,6 +5,8 @@ import { useState } from 'react'
 import type { PersonalInfo, SocialLinks } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { File02Icon } from '@hugeicons/core-free-icons'
 
 function NavItem({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const [hovered, setHovered] = useState(false)
@@ -137,6 +139,11 @@ export default function Footer({ personal, socials, locale, t, role }: FooterPro
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
         </svg>
       ),
+    },
+    {
+      href: `/${locale}/documents`,
+      label: t.nav.documents,
+      icon: <HugeiconsIcon icon={File02Icon} size={13} strokeWidth={2} />,
     },
     {
       href: `/${locale}/contact`,

@@ -8,6 +8,8 @@ import { m, AnimatePresence } from 'framer-motion'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import ThemeToggle from './ThemeToggle'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { File02Icon } from '@hugeicons/core-free-icons'
 
 interface NavbarProps {
   locale: Locale
@@ -107,6 +109,11 @@ export default function Navbar({ locale, t }: NavbarProps) {
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
         </svg>
       ),
+    },
+    {
+      href: `/${locale}/documents`,
+      label: t.documents,
+      icon: <HugeiconsIcon icon={File02Icon} size={14} strokeWidth={2} />,
     },
     {
       href: `/${locale}/playground`,

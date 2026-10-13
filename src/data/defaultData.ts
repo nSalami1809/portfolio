@@ -1,4 +1,4 @@
-import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost, Offer, Availability } from '@/types'
+import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost, Offer, Availability, PortfolioDocument } from '@/types'
 
 export const defaultPersonalInfo: PersonalInfo = {
   name: 'Nawaf Nemrod Salami',
@@ -153,6 +153,8 @@ export const defaultVision: VisionData = {
 }
 
 export const defaultBlogPosts: BlogPost[] = []
+
+export const defaultDocuments: PortfolioDocument[] = []
 
 // Seeded from the pricing grid the chatbot used to have hardcoded — now the
 // single source of truth for both the public "Mes Offres" page and the

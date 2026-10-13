@@ -20,6 +20,9 @@
 # Monaco Editor assets (regenerated on install by scripts/copy-monaco-assets.mjs)
 /public/monaco-editor/
 
+# pdf.js worker (regenerated on install by scripts/copy-pdfjs-worker.mjs)
+/public/pdfjs/
+
 # production
 /build
 

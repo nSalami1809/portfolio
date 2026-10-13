@@ -4,7 +4,7 @@
 // Kept apart from PortfolioContext.tsx (the admin editor: sample data, publish,
 // polling…) so public pages never download any of that.
 import { createContext, useContext, useMemo } from 'react'
-import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer, Availability } from '@/types'
+import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer, Availability, PortfolioDocument } from '@/types'
 import { emptyPublicPortfolio } from '@/lib/public-portfolio'
 
 export interface PortfolioContextValue {
@@ -21,6 +21,7 @@ export interface PortfolioContextValue {
   updateBlogPosts: (blog: BlogPost[]) => void
   updateOffers: (offers: Offer[]) => void
   updateAvailability: (availability: Availability) => void
+  updateDocuments: (documents: PortfolioDocument[]) => void
   resetAll: () => void
 }
 
@@ -40,6 +41,7 @@ const readOnly = (data: PortfolioData): PortfolioContextValue => ({
   updateBlogPosts: noop,
   updateOffers: noop,
   updateAvailability: noop,
+  updateDocuments: noop,
   resetAll: noop,
 })
 

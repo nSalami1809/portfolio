@@ -23,6 +23,7 @@ export const emptyPublicPortfolio: PortfolioData = {
   blog: [],
   offers: [],
   availability: { weeklyHours: [], slotMinutes: 30, bufferMinutes: 0, bookingWindowDays: 30, blackoutDates: [] },
+  documents: [],
 }
 
 export function slimPublicPortfolio(data: PortfolioData): PortfolioData {

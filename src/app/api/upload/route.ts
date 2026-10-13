@@ -16,7 +16,37 @@ function sanitizeFilename(name: string): string {
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const MAX_VIDEO_BYTES = 30 * 1024 * 1024
-const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024
+const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024
+
+// Word (.doc/.docx) added alongside PDF for the Documents feature — the
+// Content-Type header alone is attacker-controlled, so sniffMagicBytes()
+// below double-checks against the file's actual signature.
+const DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
+
+// .docx is a zip (PK\x03\x04); legacy .doc is an OLE compound file
+// (D0 CF 11 E0). Checking the real bytes instead of trusting file.type
+// stops a renamed/mislabeled file from slipping past validation.
+async function sniffMagicBytes(file: File): Promise<boolean> {
+  const head = Buffer.from(await file.slice(0, 8).arrayBuffer())
+  if (file.type === 'application/pdf') return head.subarray(0, 4).toString('latin1') === '%PDF'
+  if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    return head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04
+  }
+  if (file.type === 'application/msword') {
+    return head[0] === 0xd0 && head[1] === 0xcf && head[2] === 0x11 && head[3] === 0xe0
+  }
+  return false
+}
+
+const DOCUMENT_EXTENSION: Record<string, 'pdf' | 'docx' | 'doc'> = {
+  'application/pdf': 'pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/msword': 'doc',
+}
 
 // Every uploaded photo (avatar, project shot, blog cover, inline blog
 // image…) gets capped and re-encoded here, once, at upload time — so
@@ -71,7 +101,7 @@ export async function POST(req: NextRequest) {
 
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
-  const isDocument = file.type === 'application/pdf'
+  const isDocument = DOCUMENT_MIME_TYPES.has(file.type)
   if (!isImage && !isVideo && !isDocument) {
     return NextResponse.json({ error: 'Type de fichier non supporté' }, { status: 400 })
   }
@@ -79,6 +109,10 @@ export async function POST(req: NextRequest) {
   const maxBytes = isVideo ? MAX_VIDEO_BYTES : isDocument ? MAX_DOCUMENT_BYTES : MAX_IMAGE_BYTES
   if (file.size > maxBytes) {
     return NextResponse.json({ error: `Fichier trop lourd (max ${Math.round(maxBytes / 1024 / 1024)} Mo)` }, { status: 400 })
+  }
+
+  if (isDocument && !(await sniffMagicBytes(file))) {
+    return NextResponse.json({ error: 'Le contenu du fichier ne correspond pas au type déclaré' }, { status: 400 })
   }
 
   const compressed = isImage ? await compressImage(file) : null
@@ -90,7 +124,12 @@ export async function POST(req: NextRequest) {
     addRandomSuffix: true,
   })
 
-  return NextResponse.json({ url: blob.url })
+  return NextResponse.json({
+    url: blob.url,
+    size: compressed?.body.length ?? file.size,
+    name: filename,
+    ...(isDocument ? { fileType: DOCUMENT_EXTENSION[file.type] } : {}),
+  })
 }
 
 export async function DELETE(req: NextRequest) {

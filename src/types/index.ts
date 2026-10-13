@@ -162,6 +162,19 @@ export interface VisionData {
   valeurs: { title: string; text: string }[]
 }
 
+// Named PortfolioDocument (not Document) to avoid shadowing the DOM global.
+export interface PortfolioDocument {
+  slug: string
+  title: string
+  description: string
+  category: string
+  fileUrl: string
+  fileName: string
+  fileType: 'pdf' | 'docx' | 'doc'
+  fileSize: number
+  date: string
+}
+
 // ── Portfolio ────────────────────────────────────────────────────────────────
 
 export interface PortfolioData {
@@ -177,4 +190,5 @@ export interface PortfolioData {
   blog: BlogPost[]
   offers: Offer[]
   availability: Availability
+  documents: PortfolioDocument[]
 }

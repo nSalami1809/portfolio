@@ -36,6 +36,26 @@ export async function uploadFile(file: File | Blob, filename: string): Promise<s
   return url as string
 }
 
+export interface UploadedDocument {
+  url: string
+  size: number
+  name: string
+  fileType: 'pdf' | 'docx' | 'doc'
+}
+
+// Same /api/upload endpoint as uploadFile(), but returns the metadata the
+// Documents feature needs (size/name/fileType) instead of just the URL.
+export async function uploadDocumentFile(file: File): Promise<UploadedDocument> {
+  const form = new FormData()
+  form.append('file', file, file.name)
+  const res = await fetch('/api/upload', { method: 'POST', body: form })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error ?? "Échec de l'upload")
+  }
+  return res.json() as Promise<UploadedDocument>
+}
+
 export function deleteUploadedFile(url: string) {
   if (!url.includes('.public.blob.vercel-storage.com')) return
   fetch(`/api/upload?url=${encodeURIComponent(url)}`, { method: 'DELETE' }).catch(() => {})

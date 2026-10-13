@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer, Availability } from '@/types'
+import type { PortfolioData, PersonalInfo, SocialLinks, Project, Experience, Education, Skill, Testimonial, SiteSettings, VisionData, BlogPost, Offer, Availability, PortfolioDocument } from '@/types'
 import {
   defaultPersonalInfo,
   defaultSocials,
@@ -15,6 +15,7 @@ import {
   defaultBlogPosts,
   defaultOffers,
   defaultAvailability,
+  defaultDocuments,
 } from '@/data/defaultData'
 import { publishPortfolio, fetchPortfolio, fetchPortfolioFresh } from '@/actions/portfolio'
 import { PortfolioContext, type PortfolioContextValue } from './portfolio-core'
@@ -38,6 +39,7 @@ const defaultPortfolioData: PortfolioData = {
   blog: defaultBlogPosts,
   offers: defaultOffers,
   availability: defaultAvailability,
+  documents: defaultDocuments,
 }
 
 type Key = keyof PortfolioData
@@ -202,6 +204,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const updateBlogPosts    = useCallback((blog: BlogPost[])             => persist('blog', blog), [persist])
   const updateOffers       = useCallback((offers: Offer[])              => persist('offers', offers), [persist])
   const updateAvailability = useCallback((availability: Availability)   => persist('availability', availability), [persist])
+  const updateDocuments    = useCallback((documents: PortfolioDocument[]) => persist('documents', documents), [persist])
 
   const resetAll = useCallback(() => {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
@@ -215,10 +218,12 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     data,
     updatePersonal, updateSocials, updateProjects, updateExperiences,
     updateEducations, updateSkills, updateTestimonials, updateSettings,
-    updateVision, updateBlogPosts, updateOffers, updateAvailability, resetAll,
+    updateVision, updateBlogPosts, updateOffers, updateAvailability,
+    updateDocuments, resetAll,
   }), [data, updatePersonal, updateSocials, updateProjects, updateExperiences,
       updateEducations, updateSkills, updateTestimonials, updateSettings,
-      updateVision, updateBlogPosts, updateOffers, updateAvailability, resetAll])
+      updateVision, updateBlogPosts, updateOffers, updateAvailability,
+      updateDocuments, resetAll])
 
   return (
     <PortfolioContext.Provider value={value}>

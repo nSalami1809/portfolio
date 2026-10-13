@@ -41,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entry('/devis', 'monthly', 0.6),
     ...entry('/resume', 'monthly', 0.7),
     ...entry('/blog', 'weekly', 0.7),
+    ...entry('/documents', 'weekly', 0.6),
     ...entry('/playground', 'monthly', 0.4),
     ...entry('/vision', 'monthly', 0.6),
     ...entry('/contact', 'yearly', 0.5),
@@ -51,6 +52,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const p of (portfolio?.blog ?? []).filter((post) => post.published)) {
     const date = new Date(p.date)
     entries.push(...entry(`/blog/${p.slug}`, 'monthly', 0.5, Number.isNaN(date.getTime()) ? undefined : date))
+  }
+  for (const d of portfolio?.documents ?? []) {
+    const date = new Date(d.date)
+    entries.push(...entry(`/documents/${d.slug}`, 'monthly', 0.5, Number.isNaN(date.getTime()) ? undefined : date))
   }
 
   return entries
