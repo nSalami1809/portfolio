@@ -156,11 +156,23 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     dirtyKeys.current.add(key)
     setData((prev) => {
       const next = { ...prev, [key]: value }
+      // Written synchronously (not left to the `latestData.current = data`
+      // effect below, which only runs after React commits) so a flushNow()
+      // called right after persist() — same tick — reads this edit, not
+      // whatever was current before it.
+      latestData.current = next
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch { /* quota / SSR */ }
       return next
     })
     schedulePublish()
   }, [schedulePublish])
+
+  // Collapses the 2s debounce into an immediate publish — see the
+  // PortfolioContextValue comment on flushNow for when a caller wants this.
+  const flushNow = useCallback(async () => {
+    if (publishTimer.current) { clearTimeout(publishTimer.current); publishTimer.current = null }
+    await syncAndPublish()
+  }, [syncAndPublish])
 
   useEffect(() => {
     // 1 — localStorage first paint only (avoids a flash of default content
@@ -219,11 +231,11 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     updatePersonal, updateSocials, updateProjects, updateExperiences,
     updateEducations, updateSkills, updateTestimonials, updateSettings,
     updateVision, updateBlogPosts, updateOffers, updateAvailability,
-    updateDocuments, resetAll,
+    updateDocuments, flushNow, resetAll,
   }), [data, updatePersonal, updateSocials, updateProjects, updateExperiences,
       updateEducations, updateSkills, updateTestimonials, updateSettings,
       updateVision, updateBlogPosts, updateOffers, updateAvailability,
-      updateDocuments, resetAll])
+      updateDocuments, flushNow, resetAll])
 
   return (
     <PortfolioContext.Provider value={value}>

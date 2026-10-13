@@ -51,14 +51,34 @@ function PreviewFallback({ title, t }: { title: string; t: Dictionary['documents
   )
 }
 
-// Picks the right client-side renderer for the file's format and falls back
-// to a plain "preview unavailable" card (never a blank/broken page) on any
-// render failure or for formats with no reliable in-browser renderer (.doc).
+// Last-resort PDF fallback: the browser's own built-in PDF viewer, instead
+// of our custom react-pdf renderer. Unlike react-pdf (a Web Worker + canvas
+// pipeline that some mobile browsers/in-app webviews choke on), virtually
+// every modern browser already renders a direct PDF URL natively — so this
+// covers exactly the devices where the custom renderer just failed.
+function NativePdfPreview({ fileUrl, title }: { fileUrl: string; title: string }) {
+  return (
+    <iframe
+      src={fileUrl}
+      title={title}
+      className="w-full"
+      style={{ height: '80vh', border: 'none', display: 'block' }}
+    />
+  )
+}
+
+// Picks the right client-side renderer for the file's format. On any render
+// failure: PDF falls back to the browser's native viewer (NativePdfPreview);
+// DOCX and the legacy .doc format (no reliable in-browser renderer for
+// either) fall back to a plain "preview unavailable" card — never a blank
+// or broken page.
 export default function DocumentPreview({ fileUrl, fileType, title, t }: Props) {
   const [failed, setFailed] = useState(fileType === 'doc')
 
   if (failed) {
-    return <PreviewFallback title={title} t={t} />
+    return fileType === 'pdf'
+      ? <NativePdfPreview fileUrl={fileUrl} title={title} />
+      : <PreviewFallback title={title} t={t} />
   }
 
   return (

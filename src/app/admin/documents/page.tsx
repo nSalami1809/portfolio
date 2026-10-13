@@ -61,7 +61,7 @@ function formatSize(bytes: number): string {
 }
 
 export default function AdminDocuments() {
-  const { data, updateDocuments } = usePortfolio()
+  const { data, updateDocuments, flushNow } = usePortfolio()
   const toast = useToast()
   const [documents, setDocuments] = useState<PortfolioDocument[]>(data.documents)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -145,6 +145,12 @@ export default function AdminDocuments() {
       toast('Document mis à jour')
     }
     setEditingId(null)
+    // Add/edit/delete here are discrete, deliberate actions (one button
+    // click), not a text field's every keystroke — the usual 2s debounce
+    // exists to batch the latter, so it buys nothing here and only delays
+    // this document actually reaching Mongo (and the public site) behind a
+    // wait with nothing to show for it.
+    void flushNow()
   }
 
   const remove = (slug: string, title: string) => {
@@ -152,6 +158,7 @@ export default function AdminDocuments() {
     persist(documents.filter((x) => x.slug !== slug))
     setSelected((s) => { const n = new Set(s); n.delete(slug); return n })
     toast('Document supprimé', 'error')
+    void flushNow()
   }
 
   const bulkDelete = () => {
@@ -160,6 +167,7 @@ export default function AdminDocuments() {
     persist(documents.filter((x) => !selected.has(x.slug)))
     setSelected(new Set())
     toast(`${count} document(s) supprimé(s)`, 'error')
+    void flushNow()
   }
 
   const toggleSelect = (slug: string) =>

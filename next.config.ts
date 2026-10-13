@@ -61,8 +61,11 @@ const nextConfig: NextConfig = {
           // three.js / CodeMirror instantiate Web Workers from blob: URLs
           "worker-src blob: 'self'",
           "child-src blob: 'self'",
-          // Nothing is embedded in an iframe anywhere in the app
-          "frame-src 'none'",
+          // The Documents preview falls back to the browser's native PDF
+          // viewer (an <iframe src={blobUrl}>) when the custom react-pdf
+          // renderer fails — mobile browsers/in-app webviews mainly. Nothing
+          // else in the app embeds an iframe.
+          "frame-src https://*.public.blob.vercel-storage.com",
           "frame-ancestors 'none'",
           "object-src 'none'",
           "base-uri 'self'",

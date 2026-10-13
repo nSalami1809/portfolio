@@ -22,10 +22,18 @@ export interface PortfolioContextValue {
   updateOffers: (offers: Offer[]) => void
   updateAvailability: (availability: Availability) => void
   updateDocuments: (documents: PortfolioDocument[]) => void
+  // Collapses the usual debounce (meant to batch rapid-fire edits into one
+  // write) into an immediate publish — for actions that are already
+  // discrete and deliberate (add/delete a list item) rather than a text
+  // field's every keystroke, where that 2s+ wait before the write even
+  // starts is pure lag with nothing left to batch. Optional: existing
+  // callers that never call it keep today's debounced behavior exactly.
+  flushNow: () => Promise<void>
   resetAll: () => void
 }
 
 const noop = () => {}
+const noopAsync = async () => {}
 
 const readOnly = (data: PortfolioData): PortfolioContextValue => ({
   data,
@@ -42,6 +50,7 @@ const readOnly = (data: PortfolioData): PortfolioContextValue => ({
   updateOffers: noop,
   updateAvailability: noop,
   updateDocuments: noop,
+  flushNow: noopAsync,
   resetAll: noop,
 })
 
