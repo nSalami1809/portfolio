@@ -226,16 +226,18 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     publishPortfolio(defaultPortfolioData).catch(() => {})
   }, [])
 
+  const refreshNow = useCallback(async () => { await refreshIfIdle() }, [refreshIfIdle])
+
   const value = useMemo<PortfolioContextValue>(() => ({
     data,
     updatePersonal, updateSocials, updateProjects, updateExperiences,
     updateEducations, updateSkills, updateTestimonials, updateSettings,
     updateVision, updateBlogPosts, updateOffers, updateAvailability,
-    updateDocuments, flushNow, resetAll,
+    updateDocuments, flushNow, refreshNow, resetAll,
   }), [data, updatePersonal, updateSocials, updateProjects, updateExperiences,
       updateEducations, updateSkills, updateTestimonials, updateSettings,
       updateVision, updateBlogPosts, updateOffers, updateAvailability,
-      updateDocuments, flushNow, resetAll])
+      updateDocuments, flushNow, refreshNow, resetAll])
 
   return (
     <PortfolioContext.Provider value={value}>

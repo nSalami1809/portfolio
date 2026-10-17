@@ -69,7 +69,7 @@ export interface DraftDTO {
   id: string
   kind: DraftKind
   title: string
-  status: 'draft' | 'discarded'
+  status: 'draft' | 'discarded' | 'applied'
   version: number
   createdAt: string
   updatedAt: string
@@ -81,6 +81,8 @@ export interface DraftDTO {
   /** The payload before the latest revision, for the before/after view. */
   previousPayload: DraftPayload | null
   versions: { n: number; at: string; note: string }[]
+  /** Set once the administrator has applied the draft to the site. */
+  applied: { at: string; published: boolean; summary: string } | null
 }
 
 export const MAX_VERSIONS = 10

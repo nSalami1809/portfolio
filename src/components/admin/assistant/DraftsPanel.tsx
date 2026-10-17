@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import ChatMarkdown from '@/components/chat/ChatMarkdown'
 import { useToast } from '@/components/admin/Toast'
+import { usePortfolio } from '@/providers/PortfolioContext'
 import { discardAssistantDraft, regenerateDraftEnglish } from '@/actions/assistant'
+import { applyAssistantDraft, undoAssistantDraft } from '@/actions/assistant-apply'
 import type { BlogPayload, DraftDTO, PatchPayload } from '@/lib/assistant/drafts'
 
 const when = (iso: string) => new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -138,6 +140,97 @@ function PatchView({ payload }: { payload: PatchPayload }) {
   )
 }
 
+// The only place where a draft touches the site: an explicit click, a confirmation,
+// a server-side check that nothing changed meanwhile, and a one-click undo.
+function ApplyBox({ draft, onChanged }: { draft: DraftDTO; onChanged: (d: DraftDTO) => void }) {
+  const toast = useToast()
+  const { flushNow, refreshNow } = usePortfolio()
+  const [busy, setBusy] = useState(false)
+  const [publish, setPublish] = useState(false)
+  const [includeEnglish, setIncludeEnglish] = useState(true)
+  const [acknowledgeClaims, setAcknowledgeClaims] = useState(false)
+  const isBlog = draft.kind === 'blog_post'
+  const blog = draft.payload as BlogPayload
+  const hasEnglish = isBlog && Boolean(blog.en)
+  const claims = draft.unverifiedClaims.length
+
+  const done = async (r: Awaited<ReturnType<typeof applyAssistantDraft>>, fallback: string) => {
+    if (!r.ok) { toast(r.error, 'error'); return }
+    if (r.draft) onChanged(r.draft)
+    toast(r.summary || fallback)
+    for (const w of r.warnings) toast(w, 'error')
+    await refreshNow()
+  }
+
+  const apply = async () => {
+    const what = isBlog
+      ? publish
+        ? `PUBLIER l'article « ${draft.title} » sur ton site maintenant ?`
+        : `Ajouter l'article « ${draft.title} » à ton blog, masqué (tu le publieras toi-même depuis l'éditeur du blog) ?`
+      : `Remplacer le texte actuel du site par cette proposition (${draft.title}) ?`
+    if (!confirm(`${what}\n\nUne annulation en un clic restera possible tant que cette partie du site n'est pas modifiée.`)) return
+    setBusy(true)
+    try {
+      await flushNow() // send any pending editor changes first, so they are in the version checked below
+      await done(await applyAssistantDraft(draft.id, { publish: isBlog && publish, includeEnglish: hasEnglish && includeEnglish, acknowledgeClaims }), 'Appliqué ✓')
+    } catch {
+      toast("Impossible d'appliquer le brouillon (erreur serveur).", 'error')
+    } finally { setBusy(false) }
+  }
+
+  const undo = async () => {
+    if (!confirm("Annuler l'application de ce brouillon et remettre le site comme avant ?")) return
+    setBusy(true)
+    try {
+      await flushNow()
+      await done(await undoAssistantDraft(draft.id), 'Annulé ✓')
+    } catch {
+      toast("Impossible d'annuler (erreur serveur).", 'error')
+    } finally { setBusy(false) }
+  }
+
+  if (draft.status === 'applied' && draft.applied) {
+    return (
+      <Box title="Appliqué au site">
+        <p style={{ color: 'var(--text)' }}>{draft.applied.summary}</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-subtle)' }}>{when(draft.applied.at)}{draft.applied.published ? ' · publié' : ''}</p>
+        <button type="button" className="btn-secondary btn-sm mt-2" disabled={busy} onClick={undo}>{busy ? 'Annulation…' : "Annuler l'application"}</button>
+      </Box>
+    )
+  }
+
+  return (
+    <Box title="Appliquer au site">
+      <div className="space-y-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+        {isBlog && (
+          <>
+            <label className="flex items-start gap-2">
+              <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="mt-0.5" />
+              <span>Publier tout de suite <span style={{ color: 'var(--text-subtle)' }}>(sinon : ajouté au blog masqué)</span></span>
+            </label>
+            {hasEnglish && (
+              <label className="flex items-start gap-2">
+                <input type="checkbox" checked={includeEnglish} onChange={(e) => setIncludeEnglish(e.target.checked)} className="mt-0.5" />
+                <span>Enregistrer la version anglaise relue <span style={{ color: 'var(--text-subtle)' }}>(sinon : traduction automatique du site)</span></span>
+              </label>
+            )}
+            {publish && claims > 0 && (
+              <label className="flex items-start gap-2" style={{ color: '#D97706' }}>
+                <input type="checkbox" checked={acknowledgeClaims} onChange={(e) => setAcknowledgeClaims(e.target.checked)} className="mt-0.5" />
+                <span>J&apos;ai vérifié les {claims} affirmation{claims > 1 ? 's' : ''} à vérifier ci-dessus</span>
+              </label>
+            )}
+          </>
+        )}
+        <button type="button" className="btn-primary btn-sm" disabled={busy || (publish && claims > 0 && !acknowledgeClaims)} onClick={apply}>
+          {busy ? 'Application…' : isBlog ? (publish ? "Publier l'article" : 'Ajouter au blog (masqué)') : 'Appliquer cette modification'}
+        </button>
+        <p style={{ color: 'var(--text-subtle)' }}>Vérifié côté serveur : rien n&apos;est écrit si le site a changé entre-temps.</p>
+      </div>
+    </Box>
+  )
+}
+
 interface Props {
   drafts: DraftDTO[]
   selectedId: string | null
@@ -174,10 +267,11 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
                 {selected.kind === 'blog_post' ? 'Article' : 'Réécriture'} · version {selected.version} · {when(selected.updatedAt)}
               </p>
             </div>
+            <ApplyBox key={selected.id + selected.version + selected.status} draft={selected} onChanged={onChanged} />
             {selected.kind === 'blog_post'
               ? <BlogView draft={selected} payload={selected.payload as BlogPayload} onChanged={onChanged} />
               : <PatchView payload={selected.payload as PatchPayload} />}
-            <button type="button" className="btn-danger btn-sm" onClick={() => discard(selected)}>Écarter ce brouillon</button>
+            {selected.status === 'draft' && <button type="button" className="btn-danger btn-sm" onClick={() => discard(selected)}>Écarter ce brouillon</button>}
           </div>
         ) : drafts.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
@@ -190,7 +284,7 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
                 <button type="button" onClick={() => onSelect(d.id)} className="w-full text-left rounded-xl p-3 transition-colors hover:bg-[var(--surface-hover)]" style={{ border: '1px solid var(--border)' }}>
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{d.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)' }}>
-                    {d.kind === 'blog_post' ? 'Article' : 'Réécriture'} · v{d.version} · {when(d.updatedAt)}
+                    {d.status === 'applied' ? 'Appliqué · ' : ''}{d.kind === 'blog_post' ? 'Article' : 'Réécriture'} · v{d.version} · {when(d.updatedAt)}
                     {d.unverifiedClaims.length > 0 ? ` · ${d.unverifiedClaims.length} à vérifier` : ''}
                   </p>
                 </button>

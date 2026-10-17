@@ -46,7 +46,7 @@ export default function AdminAssistantPage() {
       <div className="mb-6">
         <h1 className="font-display font-bold text-2xl leading-tight mb-1" style={{ color: 'var(--text)' }}>Assistant IA</h1>
         <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          Analyse ton portfolio, repère ce qui manque et prépare des brouillons (articles FR/EN, réécritures). Tu relis, tu décides, tu publies toi-même.
+          Analyse ton portfolio, repère ce qui manque et prépare des brouillons (articles FR/EN, réécritures). Tu relis et tu décides : rien n&apos;est appliqué au site sans ton clic.
         </p>
       </div>
 

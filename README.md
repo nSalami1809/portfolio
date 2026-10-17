@@ -50,11 +50,12 @@ Variables d'environnement principales (détails et instructions de génération 
 
 ## Assistant IA du back-office
 
-`/admin/assistant` : analyse du portfolio, audit de qualité, statistiques et brouillons d'articles FR/EN.
+`/admin/assistant` : analyse du portfolio, audit de qualité, statistiques, lecture des documents publiés, analyse des conversations du chatbot et brouillons d'articles FR/EN.
 
-- **Lecture seule** : l'assistant ne modifie, ne publie et n'envoie rien. Ses seules écritures vont dans les collections `assistant_*` (brouillons, historique, compteurs). Garanti par `tests/assistant-tools.test.ts` et par une règle ESLint sur `src/lib/assistant`.
+- **Le modèle ne peut rien écrire.** Ses outils lisent le portfolio ou écrivent dans ses propres collections `assistant_*` (brouillons, historique, compteurs). C'est garanti par `tests/assistant-tools.test.ts` et par une règle ESLint sur `src/lib/assistant`.
+- **Seul le bouton « Appliquer » écrit sur le site**, après confirmation de l'administrateur : une seule clé du portfolio est modifiée, uniquement si le site n'a pas changé entre-temps (contrôle de version côté serveur) ; un article est ajouté masqué (publication en option, avec accusé de réception des affirmations à vérifier) ; l'anglais relu est enregistré dans le cache de traduction ; l'opération est annulable en un clic tant que la zone n'a pas été retouchée (`src/lib/draft-apply.ts`, `src/actions/assistant-apply.ts`).
 - **Palier gratuit uniquement** : `src/lib/assistant/config.ts` liste les modèles gratuits ; tout autre modèle est refusé. Aucun basculement automatique. Quota atteint : l'assistant se met en pause et l'indique (renouvellement à minuit, heure du Pacifique).
-- **Brouillons** : à relire puis à reprendre soi-même dans l'éditeur du blog / du portfolio.
+- **Contenus de tiers** (documents, conversations de visiteurs) : lus dans un appel séparé sans aucun outil ; coordonnées retirées avant envoi à Google.
 - Les plafonds de l'application sont prudents et propres à l'application, pas les quotas officiels de Google (visibles dans AI Studio).
 
 ## Tests

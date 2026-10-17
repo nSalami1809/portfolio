@@ -57,6 +57,17 @@ async function fetchPortfolioFromDb(): Promise<PortfolioData | null> {
   return { ...DEFAULTS, ...data } as PortfolioData
 }
 
+// The document together with a marker of the version it was read at (its
+// updatedAt). Used to change one part of the portfolio only if nobody else changed
+// the document in between — see lib/portfolio-write.ts.
+export async function readPortfolioWithVersion(): Promise<{ data: PortfolioData; version: string } | null> {
+  const db = await getDb()
+  const doc = await db.collection('portfolio').findOne({ _id: DOC_ID as unknown as never })
+  if (!doc) return null
+  const { _id: _docId, updatedAt, ...data } = doc
+  return { data: { ...DEFAULTS, ...data } as PortfolioData, version: updatedAt instanceof Date ? updatedAt.toISOString() : 'none' }
+}
+
 // Cached + tagged — the version every public-facing reader should use
 // (pages, API routes, the chatbot, sitemap, bookings' availability rules).
 // react's `cache()` dedupes calls within a single request on top of

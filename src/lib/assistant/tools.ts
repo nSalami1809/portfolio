@@ -412,6 +412,7 @@ export function buildAssistantTools(deps: AssistantDeps) {
         const draft = await deps.drafts.get(input.draftId)
         if (!draft) return fail('Brouillon introuvable. Utilise listMyDrafts.')
         if (draft.status === 'discarded') return fail('Ce brouillon a été écarté.')
+        if (draft.status === 'applied') return fail("Ce brouillon a déjà été appliqué au site : il ne peut plus être révisé. Prépare-en un nouveau.")
         const wantsEnglish = draft.kind === 'blog_post' && !input.keepEnglish
         if (!deps.meter.canSpend(wantsEnglish ? 2 : 1)) throw new BudgetExceededError()
         const env = genEnv()
@@ -446,9 +447,10 @@ export function buildAssistantTools(deps: AssistantDeps) {
   }
 }
 
-function reviseFailure(reason: 'not_found' | 'conflict' | 'discarded'): string {
+function reviseFailure(reason: 'not_found' | 'conflict' | 'discarded' | 'applied'): string {
   if (reason === 'conflict') return "Le brouillon a changé entre-temps (autre révision en cours). Recharge-le avec listMyDrafts puis réessaie."
   if (reason === 'discarded') return 'Ce brouillon a été écarté.'
+  if (reason === 'applied') return 'Ce brouillon a déjà été appliqué au site.'
   return 'Brouillon introuvable.'
 }
 

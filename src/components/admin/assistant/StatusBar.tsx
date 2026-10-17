@@ -38,9 +38,9 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
   return (
     <div className="space-y-3 mb-5">
       <div className="card no-lift px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2" style={{ borderColor: 'var(--accent)' }}>
-        <span className="text-xs font-bold tracking-wider uppercase" style={{ color: 'var(--accent)' }}>Lecture seule</span>
+        <span className="text-xs font-bold tracking-wider uppercase" style={{ color: 'var(--accent)' }}>Sous ton contrôle</span>
         <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          L&apos;assistant ne peut rien modifier ni publier sur le site : il analyse, conseille et prépare des brouillons que tu reprends toi-même.
+          L&apos;assistant ne modifie jamais le site de lui-même : il analyse, conseille et prépare des brouillons. Seul le bouton « Appliquer », que tu valides, écrit sur le site (annulable).
         </span>
       </div>
 

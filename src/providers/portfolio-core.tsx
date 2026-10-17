@@ -29,6 +29,11 @@ export interface PortfolioContextValue {
   // starts is pure lag with nothing left to batch. Optional: existing
   // callers that never call it keep today's debounced behavior exactly.
   flushNow: () => Promise<void>
+  // Re-reads the portfolio from the server right now, for when it was changed
+  // behind this editor's back (e.g. a draft applied from the assistant page).
+  // Does nothing while there are local edits not yet published, so it can never
+  // throw away work in progress. Optional for the same reason as flushNow.
+  refreshNow: () => Promise<void>
   resetAll: () => void
 }
 
@@ -51,6 +56,7 @@ const readOnly = (data: PortfolioData): PortfolioContextValue => ({
   updateAvailability: noop,
   updateDocuments: noop,
   flushNow: noopAsync,
+  refreshNow: noopAsync,
   resetAll: noop,
 })
 

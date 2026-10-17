@@ -36,7 +36,7 @@ export function fakeDraftStore() {
     create: vi.fn(async (input: Parameters<AssistantDeps['drafts']['create']>[0]) => {
       const id = `d${++n}`
       const now = new Date().toISOString()
-      const d: DraftDTO = { id, kind: input.kind, title: input.title, status: 'draft', version: 1, createdAt: now, updatedAt: now, conversationId: input.conversationId ?? null, unverifiedClaims: input.unverifiedClaims ?? [], baseHash: input.baseHash ?? null, payload: input.payload, previousPayload: null, versions: [{ n: 1, at: now, note: 'Création' }] }
+      const d: DraftDTO = { id, kind: input.kind, title: input.title, status: 'draft', version: 1, createdAt: now, updatedAt: now, conversationId: input.conversationId ?? null, unverifiedClaims: input.unverifiedClaims ?? [], baseHash: input.baseHash ?? null, payload: input.payload, previousPayload: null, versions: [{ n: 1, at: now, note: 'Création' }], applied: null }
       store.set(id, d)
       return d
     }),

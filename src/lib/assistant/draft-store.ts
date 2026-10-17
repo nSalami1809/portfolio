@@ -8,7 +8,7 @@ interface VersionRecord { n: number; at: Date; note: string; payload: DraftPaylo
 interface DraftRecord {
   kind: DraftKind
   title: string
-  status: 'draft' | 'discarded'
+  status: 'draft' | 'discarded' | 'applied'
   version: number
   createdAt: Date
   updatedAt: Date
@@ -17,6 +17,7 @@ interface DraftRecord {
   baseHash: string | null
   payload: DraftPayload
   versions: VersionRecord[]
+  applied?: { at: Date; published: boolean; summary: string }
 }
 
 const COLLECTION = 'assistant_drafts'
@@ -45,6 +46,7 @@ function toDTO(doc: WithId<DraftRecord>): DraftDTO {
     payload: doc.payload,
     previousPayload: previous,
     versions: doc.versions.map((v) => ({ n: v.n, at: v.at.toISOString(), note: v.note })),
+    applied: doc.applied ? { at: doc.applied.at.toISOString(), published: doc.applied.published, summary: doc.applied.summary } : null,
   }
 }
 
@@ -80,7 +82,7 @@ export async function createDraft(input: NewDraft): Promise<DraftDTO> {
 export async function listDrafts(opts: { includeDiscarded?: boolean; limit?: number } = {}): Promise<DraftDTO[]> {
   const c = await col()
   const docs = await c
-    .find(opts.includeDiscarded ? {} : { status: 'draft' })
+    .find(opts.includeDiscarded ? {} : { status: { $ne: 'discarded' } })
     .sort({ updatedAt: -1 })
     .limit(Math.min(opts.limit ?? 30, 100))
     .toArray()
@@ -94,7 +96,7 @@ export async function getDraft(id: string): Promise<DraftDTO | null> {
   return doc ? toDTO(doc) : null
 }
 
-export type ReviseResult = { ok: true; draft: DraftDTO } | { ok: false; reason: 'not_found' | 'conflict' | 'discarded' }
+export type ReviseResult = { ok: true; draft: DraftDTO } | { ok: false; reason: 'not_found' | 'conflict' | 'discarded' | 'applied' }
 
 /**
  * Stores a new version of a draft. `expectedVersion` makes it safe against two
@@ -126,7 +128,8 @@ export async function reviseDraft(
   if (updated) return { ok: true, draft: toDTO(updated) }
   const existing = await c.findOne({ _id: new ObjectId(id) })
   if (!existing) return { ok: false, reason: 'not_found' }
-  return { ok: false, reason: existing.status === 'discarded' ? 'discarded' : 'conflict' }
+  if (existing.status === 'discarded') return { ok: false, reason: 'discarded' }
+  return { ok: false, reason: existing.status === 'applied' ? 'applied' : 'conflict' }
 }
 
 export async function discardDraft(id: string): Promise<boolean> {
@@ -134,4 +137,19 @@ export async function discardDraft(id: string): Promise<boolean> {
   const c = await col()
   const r = await c.updateOne({ _id: new ObjectId(id), status: 'draft' }, { $set: { status: 'discarded', updatedAt: new Date() } })
   return r.matchedCount === 1
+}
+
+// Bookkeeping for the administrator's "Appliquer" button.
+// These only flip the status of the assistant's OWN draft record.
+export async function markDraftApplied(id: string, info: { at: Date; published: boolean; summary: string }): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false
+  const c = await col()
+  const r = await c.updateOne({ _id: new ObjectId(id), status: 'draft' }, { $set: { status: 'applied', applied: info, updatedAt: info.at } })
+  return r.matchedCount === 1
+}
+
+export async function markDraftUnapplied(id: string): Promise<void> {
+  if (!ObjectId.isValid(id)) return
+  const c = await col()
+  await c.updateOne({ _id: new ObjectId(id), status: 'applied' }, { $set: { status: 'draft', updatedAt: new Date() }, $unset: { applied: '' } })
 }
