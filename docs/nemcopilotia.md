@@ -8,7 +8,7 @@ Palier gratuit Gemini uniquement. Le modèle ne modifie, n'envoie ni ne publie r
 | Sujet | Décision |
 | --- | --- |
 | Nom | NemCopilotIA partout (admin, chat visiteur, prompts, page de confidentialité). |
-| Prix sur les cartes de prestations | « À partir de 100 000 FCFA », toujours accompagné de « Prix indicatif : le devis fait foi ». Le tarif réel de l'offre est affiché à côté quand il existe (« Sur devis » n'est pas répété). Constante : `INDICATIVE_FROM_FCFA`. |
+| Prix sur les cartes de prestations | Prix de base de CHAQUE offre, calculé à partir de ses propres données : son minimum chiffré (`priceHTMin`, affiché « HT ») s'il existe, sinon le premier montant de son libellé de prix (« 350 000 – 600 000 FCFA » donne 350 000), sinon « Sur devis ». Toute offre ajoutée ou modifiée dans le back-office est reprise sans changer le code. Toujours accompagné de « Prix indicatif : le devis fait foi », avec la fourchette complète de l'offre à côté. Fonction : `basePrice`. |
 | Style | Carré, noir et blanc, ombre dure au survol. Les couleurs viennent des variables du site (clair / sombre). Un test interdit tout arrondi dans l'interface de l'assistant. |
 | Relances | Gabarit rédigé par le code, 3 tons (courtois, direct, dernier rappel), FR ou EN selon le devis. Zéro requête Gemini, aucune donnée client envoyée à Google. |
 | Tri des chats | Règles à la lecture, sans IA, donc sans quota ni donnée envoyée. |

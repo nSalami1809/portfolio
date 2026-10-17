@@ -1,17 +1,43 @@
 import { describe, it, expect } from 'vitest'
 import {
-  INDICATIVE_FROM_FCFA, PRICE_DISCLAIMER, bookingHref, contactHref, fromPriceLabel, lastVisitorText, normalizeAccessCode, quoteProgress,
+  PRICE_DISCLAIMER, basePrice, bookingHref, contactHref, fromPriceLabel, lastVisitorText, normalizeAccessCode, quoteProgress,
   quoteRequestMessage, serviceCards, teaserAllowed, trackingHref, trackingMessage,
 } from '@/lib/chat-services'
 import type { Offer } from '@/types'
 
 const offer = (over: Partial<Offer> = {}): Offer => ({ id: 'o1', title: 'Site vitrine', description: 'Un site clair pour présenter votre activité.', priceLabel: '350 000 – 600 000 FCFA', features: ['Design sur mesure', 'SEO de base', 'Formulaire', 'Hébergement'], ...over })
 
-describe('indicative price', () => {
-  it('is 100 000 FCFA as decided, in both languages', () => {
-    expect(INDICATIVE_FROM_FCFA).toBe(100000)
-    expect(fromPriceLabel('fr')).toBe('À partir de 100 000 FCFA')
-    expect(fromPriceLabel('en')).toBe('From 100,000 FCFA')
+describe('starting price of each offer', () => {
+  it('uses the numeric minimum of the offer when it has one, marked excluding tax', () => {
+    expect(basePrice({ priceHTMin: 350000, priceLabel: 'Sur devis' })).toEqual({ amount: 350000, ht: true })
+    expect(fromPriceLabel('fr', { amount: 350000, ht: true })).toBe('À partir de 350 000 FCFA HT')
+    expect(fromPriceLabel('en', { amount: 350000, ht: true })).toBe('From 350,000 FCFA excl. tax')
+  })
+
+  it('reads the first amount of the price label otherwise', () => {
+    expect(basePrice({ priceLabel: '600 000 – 1 000 000 FCFA' })).toEqual({ amount: 600000, ht: false })
+    expect(basePrice({ priceLabel: 'À partir de 1.200.000 F CFA' })).toEqual({ amount: 1200000, ht: false })
+    expect(basePrice({ priceLabel: '150 000 FCFA' })).toEqual({ amount: 150000, ht: false })
+    expect(basePrice({ priceLabel: '45000 XAF' })).toEqual({ amount: 45000, ht: false })
+    expect(fromPriceLabel('fr', { amount: 150000, ht: false })).toBe('À partir de 150 000 FCFA')
+  })
+
+  it('says "on quote" instead of inventing a number', () => {
+    for (const priceLabel of ['Sur devis', '', 'Gratuit', 'Nous consulter']) expect(basePrice({ priceLabel }), priceLabel).toBeNull()
+    expect(basePrice({ priceHTMin: 0, priceLabel: 'Sur devis' })).toBeNull()
+    expect(fromPriceLabel('fr', null)).toBe('Sur devis')
+    expect(fromPriceLabel('en', null)).toBe('On quote')
+  })
+
+  it('follows each offer, including one added later, with no fixed floor', () => {
+    const cards = serviceCards([
+      offer({ id: 'a', title: 'Vitrine', priceLabel: '350 000 – 600 000 FCFA' }),
+      offer({ id: 'b', title: 'Mini', priceLabel: '80 000 FCFA' }),
+      offer({ id: 'c', title: 'Nouvelle offre', priceLabel: '2 500 000 FCFA', priceHTMin: undefined }),
+      offer({ id: 'd', title: 'Sur mesure', priceLabel: 'Sur devis' }),
+    ])
+    expect(cards.map((c) => c.price?.amount ?? null)).toEqual([350000, 80000, 2500000, null])
+    expect(cards.map((c) => c.price?.amount).filter((n) => n === 100000)).toHaveLength(0)
   })
 
   it('is always presented as indicative', () => {

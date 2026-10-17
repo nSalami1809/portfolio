@@ -79,7 +79,7 @@ export function ServiceCards({ offers, failed, locale, busy, onRequestQuote, onB
               {card.features.map((f) => <li key={f} className="flex gap-1.5"><span aria-hidden="true">·</span><span>{f}</span></li>)}
             </ul>
           )}
-          <p className="text-sm font-semibold" data-testid="chat-service-price" style={{ color: 'var(--text)' }}>{fromPriceLabel(locale)}</p>
+          <p className="text-sm font-semibold" data-testid="chat-service-price" style={{ color: 'var(--text)' }}>{fromPriceLabel(locale, card.price)}</p>
           <p className="text-[11px]" style={{ color: 'var(--text-subtle)' }}>
             {PRICE_DISCLAIMER[locale]}{card.priceDetail ? ` ${t.siteGrid} : ${card.priceDetail}.` : ''}
           </p>

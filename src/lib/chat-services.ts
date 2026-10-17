@@ -5,13 +5,34 @@ import type { Offer } from '@/types'
 
 export type ChatLocale = 'fr' | 'en'
 
-/** The indicative starting price shown on every service card (decided by the owner; the quote is what counts). */
-export const INDICATIVE_FROM_FCFA = 100_000
-
 const group = (n: number, sep: string) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, sep)
 
-export function fromPriceLabel(locale: ChatLocale, amount: number = INDICATIVE_FROM_FCFA): string {
-  return locale === 'en' ? `From ${group(amount, ',')} FCFA` : `À partir de ${group(amount, ' ')} FCFA`
+// Every card shows the starting price of ITS OWN offer, so a new offer, or a price changed
+// in the back-office, shows up with no code change. The price comes from the offer's
+// numeric minimum when it has one (excluding tax, like the quote builder), otherwise from
+// the first amount written in its price label ("350 000 – 600 000 FCFA" gives 350 000).
+// With neither ("Sur devis"), the card says so instead of inventing a number.
+const AMOUNT = String.raw`\d[\d\s.,  ]*\d|\d`
+const LABEL_PRICE = new RegExp(String.raw`(${AMOUNT})(?:\s*[–—-]\s*(?:${AMOUNT}))?\s*(?:F\s?CFA|XAF)`, 'i')
+
+export interface BasePrice {
+  amount: number
+  /** Known to be excluding tax (it comes from the offer's numeric range). */
+  ht: boolean
+}
+
+export function basePrice(offer: Pick<Offer, 'priceHTMin' | 'priceLabel'>): BasePrice | null {
+  if (typeof offer.priceHTMin === 'number' && Number.isFinite(offer.priceHTMin) && offer.priceHTMin > 0) return { amount: offer.priceHTMin, ht: true }
+  const m = LABEL_PRICE.exec(offer.priceLabel ?? '')
+  if (!m) return null
+  const amount = Number(m[1].replace(/\D/g, ''))
+  return Number.isFinite(amount) && amount > 0 ? { amount, ht: false } : null
+}
+
+export function fromPriceLabel(locale: ChatLocale, price: BasePrice | null): string {
+  if (!price) return locale === 'en' ? 'On quote' : 'Sur devis'
+  const amount = group(price.amount, locale === 'en' ? ',' : ' ')
+  return locale === 'en' ? `From ${amount} FCFA${price.ht ? ' excl. tax' : ''}` : `À partir de ${amount} FCFA${price.ht ? ' HT' : ''}`
 }
 
 export const PRICE_DISCLAIMER: Record<ChatLocale, string> = {
@@ -24,7 +45,9 @@ export interface ServiceCard {
   title: string
   summary: string
   features: string[]
-  /** The offer's own price line from the site, when it has one worth showing. */
+  /** Starting price of this offer, or null when it is on quote. */
+  price: BasePrice | null
+  /** The offer's own price line from the site (the full range), when it has one worth showing. */
   priceDetail: string | null
 }
 
@@ -41,6 +64,7 @@ export function serviceCards(offers: Offer[], max = 6): ServiceCard[] {
         title: o.title.trim(),
         summary: clip((o.description ?? '').replace(/\s+/g, ' ').trim(), 110),
         features: (o.features ?? []).filter(Boolean).slice(0, 3),
+        price: basePrice(o),
         priceDetail: label && !/^sur devis$/i.test(label) ? label : null,
       }
     })
