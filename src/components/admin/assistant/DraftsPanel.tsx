@@ -23,7 +23,7 @@ function downloadText(filename: string, content: string) {
 
 function Box({ title, children, tone }: { title: string; children: React.ReactNode; tone?: 'warn' }) {
   return (
-    <div className="rounded-xl p-3 text-sm" style={{ border: `1px solid ${tone === 'warn' ? '#D97706' : 'var(--border)'}`, background: 'var(--bg-secondary)', fontFamily: 'var(--font-poppins)' }}>
+    <div className="p-3 text-sm" style={{ border: `1px solid ${tone === 'warn' ? '#D97706' : 'var(--border)'}`, background: 'var(--bg-secondary)', fontFamily: 'var(--font-poppins)' }}>
       <p className="text-[10px] font-bold tracking-wider uppercase mb-1" style={{ color: tone === 'warn' ? '#D97706' : 'var(--text-subtle)' }}>{title}</p>
       {children}
     </div>
@@ -96,7 +96,7 @@ function BlogView({ draft, payload, onChanged }: { draft: DraftDTO; payload: Blo
           <button type="button" className="btn-secondary btn-xs mt-2" disabled={busy} onClick={regenerate}>{busy ? 'Génération…' : 'Générer la version anglaise'}</button>
         </Box>
       ) : fields ? (
-        <article className="rounded-xl p-4 text-sm" style={{ border: '1px solid var(--border)', background: 'var(--surface)', fontFamily: 'var(--font-poppins)' }}>
+        <article className="p-4 text-sm" style={{ border: '1px solid var(--border)', background: 'var(--surface)', fontFamily: 'var(--font-poppins)' }}>
           <h3 className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{fields.title}</h3>
           <p className="mb-3 italic" style={{ color: 'var(--text-muted)' }}>{fields.excerpt}</p>
           <ChatMarkdown text={fields.content} safeImages />
@@ -287,7 +287,7 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
           <ul className="space-y-2">
             {drafts.map((d) => (
               <li key={d.id}>
-                <button type="button" onClick={() => onSelect(d.id)} className="w-full text-left rounded-xl p-3 transition-colors hover:bg-[var(--surface-hover)]" style={{ border: '1px solid var(--border)' }}>
+                <button type="button" onClick={() => onSelect(d.id)} className="w-full text-left p-3 transition-colors hover:bg-[var(--surface-hover)]" style={{ border: '1px solid var(--border)' }}>
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{d.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)' }}>
                     {d.status === 'applied' ? 'Appliqué · ' : ''}{d.kind === 'blog_post' ? 'Article' : 'Réécriture'} · v{d.version} · {when(d.updatedAt)}

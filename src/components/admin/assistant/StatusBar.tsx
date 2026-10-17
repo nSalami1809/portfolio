@@ -25,8 +25,8 @@ function ModelRow({ m }: { m: ModelStatus }) {
           <strong style={{ color: 'var(--text)' }}>{m.usedToday} / {m.dailyCap}</strong> requêtes aujourd&apos;hui
         </span>
       </div>
-      <div className="mt-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }} role="progressbar" aria-valuemin={0} aria-valuemax={m.dailyCap} aria-valuenow={m.usedToday} aria-label={`Requêtes utilisées aujourd'hui, ${ROLE_LABEL[m.role]}`}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 90 ? '#D90000' : 'var(--accent)' }} />
+      <div className="mt-1 h-1.5 overflow-hidden" style={{ background: 'var(--border)' }} role="progressbar" aria-valuemin={0} aria-valuemax={m.dailyCap} aria-valuenow={m.usedToday} aria-label={`Requêtes utilisées aujourd'hui, ${ROLE_LABEL[m.role]}`}>
+        <div className="h-full transition-all" style={{ width: `${pct}%`, background: pct >= 90 ? '#D90000' : 'var(--accent)' }} />
       </div>
       <p className="mt-0.5" style={{ color: 'var(--text-subtle)' }}>
         {m.id} · limite de Google : {m.official.rpd} par jour, {m.official.rpm} par minute

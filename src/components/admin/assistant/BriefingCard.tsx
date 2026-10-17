@@ -24,8 +24,8 @@ export default function BriefingCard({ briefing, onRefresh }: { briefing: Briefi
         <ul className="space-y-1.5">
           {briefing.items.map((item) => (
             <li key={item.id}>
-              <Link href={item.href} className="flex items-start gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--surface-hover)]">
-                <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ background: DOT[item.level] }} aria-label={LABEL[item.level]} />
+              <Link href={item.href} className="flex items-start gap-2.5 px-2 py-1.5 transition-colors hover:bg-[var(--surface-hover)]">
+                <span className="mt-1.5 w-2 h-2 flex-shrink-0" style={{ background: DOT[item.level] }} aria-label={LABEL[item.level]} />
                 <span className="min-w-0 text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
                   {item.title}
                   {item.detail && <span className="block text-xs truncate" style={{ color: 'var(--text-subtle)' }}>{item.detail}</span>}

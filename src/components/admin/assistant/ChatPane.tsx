@@ -47,13 +47,13 @@ function Message({ message, onOpenDraft }: { message: UIMessage; onOpenDraft: (i
     const text = message.parts.map((p) => (p.type === 'text' ? p.text : '')).join('')
     return (
       <div className="flex justify-end">
-        <p className="text-sm rounded-3xl px-4 py-2.5 max-w-[85%]" style={{ background: 'var(--surface-hover)', color: 'var(--text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontFamily: 'var(--font-poppins)' }}>{text}</p>
+        <p className="text-sm px-4 py-2.5 max-w-[85%]" style={{ background: 'var(--surface-hover)', color: 'var(--text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontFamily: 'var(--font-poppins)' }}>{text}</p>
       </div>
     )
   }
   return (
     <div className="flex gap-3">
-      <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true">
+      <span className="w-7 h-7 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true">
         <BotIcon width={15} height={15} />
       </span>
       <div className="min-w-0 flex-1 text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
@@ -77,7 +77,7 @@ interface Props {
   onOpenDraft: (id: string) => void
 }
 
-// One conversation, in the style of a modern chat app: a greeting and a rounded
+// One conversation, in the style of a modern chat app: a greeting and a
 // composer while it is empty, then the messages with the composer pinned below.
 export default function ChatPane({ conversationId, initialMessages, variant, blocked, onTurnFinished, onOpenDraft }: Props) {
   const popover = variant === 'popover'
@@ -123,14 +123,14 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
   const composer = (
     <div className="w-full">
       <form
-        className="relative flex items-end gap-1.5 rounded-[28px] px-2.5 py-2"
+        className="relative flex items-end gap-1.5 px-2.5 py-2"
         style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: '0 2px 14px rgba(0,0,0,0.08)' }}
         onSubmit={(e) => { e.preventDefault(); send(input) }}
       >
         {menu && (
-          <div className="absolute bottom-full left-0 mb-2 w-72 max-w-[85vw] rounded-2xl p-1.5 z-10" role="menu" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: '0 8px 30px rgba(0,0,0,0.18)' }}>
+          <div className="absolute bottom-full left-0 mb-2 w-72 max-w-[85vw] p-1.5 z-10" role="menu" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: '0 8px 30px rgba(0,0,0,0.18)' }}>
             {SUGGESTIONS.map((s) => (
-              <button key={s.label} type="button" role="menuitem" className="w-full text-left text-sm rounded-xl px-3 py-2 transition-colors hover:bg-[var(--surface-hover)]" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }} onClick={() => send(s.text)}>
+              <button key={s.label} type="button" role="menuitem" className="w-full text-left text-sm px-3 py-2 transition-colors hover:bg-[var(--surface-hover)]" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }} onClick={() => send(s.text)}>
                 {s.label}
               </button>
             ))}
@@ -139,7 +139,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
         <button
           type="button" aria-label="Actions rapides" aria-expanded={menu} disabled={blocked || busy}
           onClick={() => setMenu((v) => !v)}
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40"
+          className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40"
           style={{ color: 'var(--text-muted)' }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
@@ -159,11 +159,11 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
           style={{ resize: 'none', color: 'var(--text)', fontFamily: 'var(--font-poppins)', maxHeight: 160 }}
         />
         {busy ? (
-          <button type="button" aria-label="Arrêter la génération" onClick={() => stop()} className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--text)', color: 'var(--bg)' }}>
+          <button type="button" aria-label="Arrêter la génération" onClick={() => stop()} className="w-9 h-9 flex items-center justify-center flex-shrink-0" style={{ background: 'var(--text)', color: 'var(--bg)' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" /></svg>
           </button>
         ) : (
-          <button type="submit" aria-label="Envoyer" disabled={blocked || !input.trim()} className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}>
+          <button type="submit" aria-label="Envoyer" disabled={blocked || !input.trim()} className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
           </button>
         )}
@@ -175,14 +175,14 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
   )
 
   const errorBox = error && (
-    <div role="alert" className="text-sm rounded-2xl px-3.5 py-2.5 mx-auto w-full" style={{ border: '1px solid #D90000', color: '#D90000', fontFamily: 'var(--font-poppins)' }}>{error.message}</div>
+    <div role="alert" className="text-sm px-3.5 py-2.5 mx-auto w-full" style={{ border: '1px solid #D90000', color: '#D90000', fontFamily: 'var(--font-poppins)' }}>{error.message}</div>
   )
 
   if (empty) {
     return (
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
         <div className={`w-full ${popover ? 'max-w-sm' : 'max-w-2xl'} flex flex-col items-center`}>
-          <span className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true"><BotIcon width={26} height={26} /></span>
+          <span className="w-12 h-12 flex items-center justify-center mb-4" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true"><BotIcon width={26} height={26} /></span>
           <h2 className={`font-display font-semibold text-center mb-1 ${popover ? 'text-xl' : 'text-3xl'}`} style={{ color: 'var(--text)' }}>Par quoi commençons-nous ?</h2>
           <p className="text-sm text-center mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
             Je connais ton portfolio : analyse, audit, statistiques, brouillons d&apos;articles FR/EN.
@@ -190,7 +190,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
           {composer}
           <div className={`mt-5 w-full grid gap-2 ${popover ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
             {SUGGESTIONS.slice(0, popover ? 4 : 6).map((s) => (
-              <button key={s.label} type="button" disabled={blocked} onClick={() => send(s.text)} className="text-left text-sm rounded-2xl px-3.5 py-2.5 transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-50" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+              <button key={s.label} type="button" disabled={blocked} onClick={() => send(s.text)} className="text-left text-sm px-3.5 py-2.5 transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-50" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                 {s.label}
               </button>
             ))}

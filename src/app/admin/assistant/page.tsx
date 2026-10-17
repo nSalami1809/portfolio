@@ -129,7 +129,7 @@ export default function AdminAssistantPage() {
           <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
             <button type="button" className="lg:hidden btn-secondary btn-xs" aria-label="Ouvrir la liste des conversations" onClick={() => setMenuOpen(true)}>☰</button>
             <span className="flex-1" />
-            <span className="text-xs rounded-full px-2.5 py-1" style={{ border: '1px solid var(--border)', color: blocked ? '#D90000' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }} title="Requêtes du palier gratuit utilisées aujourd'hui par le modèle de conversation (sous la limite de Google, marge incluse)">
+            <span className="text-xs px-2.5 py-1" style={{ border: '1px solid var(--border)', color: blocked ? '#D90000' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }} title="Requêtes du palier gratuit utilisées aujourd'hui par le modèle de conversation (sous la limite de Google, marge incluse)">
               {blocked ? 'En pause' : status ? `${used} / ${cap} requêtes` : '…'}
             </span>
             <button type="button" className="btn-secondary btn-xs" aria-pressed={draftsOpen} onClick={() => setDraftsOpen((v) => !v)}>

@@ -70,11 +70,11 @@ export default function AdminAssistantLauncher() {
             style={{
               right: '1.25rem', bottom: 'calc(5.5rem + env(safe-area-inset-bottom))',
               width: 'min(calc(100vw - 2.5rem), 420px)', height: 'min(calc(100dvh - 8rem), 640px)',
-              background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
             }}
           >
             <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-              <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true"><BotIcon width={15} height={15} /></span>
+              <span className="w-7 h-7 flex items-center justify-center" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true"><BotIcon width={15} height={15} /></span>
               <span className="font-display font-semibold text-sm flex-1" style={{ color: 'var(--text)' }}>Assistant IA</span>
               <button type="button" className="btn-secondary btn-xs" onClick={() => setConversationId(newId())}>Nouveau</button>
               <Link href="/admin/assistant" onClick={close} className="btn-secondary btn-xs">Ouvrir en grand</Link>
