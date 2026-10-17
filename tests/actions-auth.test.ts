@@ -20,6 +20,7 @@ const PUBLIC_ACTIONS: Record<string, string[]> = {
   'contact.ts': ['submitContact'],
   'escalation.ts': ['requestHumanHelp'],
   'lifecycle.ts': ['getAcceptanceByToken', 'signAcceptance'],
+  'offers.ts': ['getPublicOffers'],
   'quotes.ts': ['submitQuote', 'lookupQuote', 'downloadQuotePdf', 'sendQuoteEmail', 'getQuoteByToken', 'requestSignatureCode', 'signQuote', 'declineQuote'],
   'testimonials.ts': ['submitTestimonial'],
   'tracking.ts': ['getProjectTracking'],

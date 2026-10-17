@@ -9,12 +9,16 @@ import { m, AnimatePresence } from 'framer-motion'
 import type { Quote } from '@/actions/quotes'
 import type { Booking } from '@/actions/bookings'
 import { requestHumanHelp } from '@/actions/escalation'
+import { getPublicOffers } from '@/actions/offers'
+import type { Offer } from '@/types'
 import { usePortfolio } from '@/providers/portfolio-core'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
 import { onOpenChatRequest } from '@/lib/chat-bridge'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { BotIcon, BotAvatar, type BotMood } from './BotIcon'
+import { ServiceCards, QuoteTracker, QuoteProgress, HandoffLinks, talkLabel } from './ChatPanels'
+import { contactHref, lastVisitorText } from '@/lib/chat-services'
 
 // Only needed once a visitor actually opens a generated devis (QR code lib
 // included) — keep it split out of the widget's own chunk until then.
@@ -116,7 +120,7 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
   )
 }
 
-function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () => void; adminEmail?: string; t: Dictionary['chat'] }) {
+function QuoteCard({ quote, onView, adminEmail, t, progress }: { quote: Quote; onView: () => void; adminEmail?: string; t: Dictionary['chat']; progress?: boolean }) {
   const locale = useLocale()
   const callHref = adminEmail
     ? `mailto:${adminEmail}?subject=${encodeURIComponent(`${t.callSubject} ${quote.numero}`)}&body=${encodeURIComponent(`${t.callBodyIntro} ${quote.numero} (${quote.clientNom}).\n\n${t.callBodyOutro}`)}`
@@ -137,6 +141,7 @@ function QuoteCard({ quote, onView, adminEmail, t }: { quote: Quote; onView: () 
       <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>
         {t.trackingCode} : <strong style={{ color: 'var(--text)', letterSpacing: '0.05em' }}>{quote.accessCode}</strong>
       </p>
+      {progress && <div className="mb-3"><QuoteProgress quote={quote} locale={locale} /></div>}
       <div className="flex items-center gap-3 flex-wrap">
         <button onClick={onView} className="btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}>
           {t.viewPrintQuote}
@@ -283,10 +288,19 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   const { data: { personal } } = usePortfolio()
   const locale = useLocale()
   const t = useDictionary()
-  const suggestions = personal.cvUrl ? [...t.chat.suggestions, t.chat.cvSuggestion] : t.chat.suggestions
+  const suggestions: { label: string; text: string; action?: 'services' | 'track' }[] = personal.cvUrl ? [...t.chat.suggestions, t.chat.cvSuggestion] : t.chat.suggestions
   const [open, setOpen] = useState(autoOpen)
   const [input, setInput] = useState('')
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
+  // Local panels of the empty chat (service cards, quote tracking): no model request.
+  const [panel, setPanel] = useState<null | 'services' | 'track'>(null)
+  // The offers are not part of the public page payload: fetched the first time the pricing panel opens.
+  const [offers, setOffers] = useState<Offer[] | null>(null)
+  const [offersFailed, setOffersFailed] = useState(false)
+  const openPanel = (next: 'services' | 'track') => {
+    setPanel(next)
+    if (next === 'services' && offers === null) getPublicOffers().then(setOffers, () => setOffersFailed(true))
+  }
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -310,6 +324,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   const [altVariant, setAltVariant] = useState(false)
   const sendCount = useRef(0)
   const dispatch = useCallback((text: string) => {
+    setPanel(null)
     setPendingCategory(categorizeMessage(text))
     sendCount.current += 1
     setAltVariant(sendCount.current % 2 === 0)
@@ -417,6 +432,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
         aria-label={open ? t.chat.toggleClose : t.chat.toggleOpen}
         aria-expanded={open}
         aria-controls="chat-widget-panel"
+        data-chat-toggle
         className="fixed right-5 z-40 flex items-center justify-center"
         style={{
           // Clear the iPhone home indicator when installed to the home screen.
@@ -542,6 +558,8 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
             <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3">
               {messages.length === 0 && (
                 <div className="space-y-2.5">
+                  {/* The greeting makes room for the panel the visitor opened. */}
+                  {!panel && (<>
                   <div className="flex items-end gap-2">
                     <BotAvatar mood="happy" />
                     <div
@@ -555,11 +573,17 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                     {t.chat.privacyNote}{' '}
                     <a href={`/${locale}/confidentialite`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.chat.privacyLink}</a>
                   </p>
+                  </>)}
+                  {panel === 'services' ? (
+                    <ServiceCards offers={offers} failed={offersFailed} locale={locale} busy={busy} onRequestQuote={quickSend} onBack={() => setPanel(null)} />
+                  ) : panel === 'track' ? (
+                    <QuoteTracker locale={locale} busy={busy} onAsk={quickSend} onBack={() => setPanel(null)} />
+                  ) : (
                   <div className="flex flex-wrap gap-1.5">
-                    {suggestions.map(({ label, text }) => (
+                    {suggestions.map(({ label, text, action }) => (
                       <m.button
                         key={label}
-                        onClick={() => quickSend(text)}
+                        onClick={() => (action ? openPanel(action) : quickSend(text))}
                         className="text-xs font-medium"
                         style={{
                           background: 'var(--accent-glow)',
@@ -575,6 +599,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                       </m.button>
                     ))}
                   </div>
+                  )}
                 </div>
               )}
               {messages.map((message) => {
@@ -653,7 +678,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="happy" />
-                              <QuoteCard quote={output} onView={() => setViewingQuote(output)} adminEmail={personal.email} t={t.chat} />
+                              <QuoteCard quote={output} onView={() => setViewingQuote(output)} adminEmail={personal.email} t={t.chat} progress />
                             </div>
                           )
                         }
@@ -959,6 +984,11 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   </div>
                 </div>
               )}
+              {error && (
+                <div style={{ marginLeft: 32 }}>
+                  <HandoffLinks locale={locale} lastQuestion={lastVisitorText(messages)} whatsapp={personal.whatsapp} />
+                </div>
+              )}
             </div>
 
             {/* Input */}
@@ -984,6 +1014,9 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                 </svg>
               </button>
             </form>
+            <p className="text-[11px] text-center pb-2 flex-shrink-0" style={{ color: 'var(--text-subtle)' }}>
+              <a href={contactHref(locale, lastVisitorText(messages))} className="underline" style={{ color: 'var(--text-muted)' }}>{talkLabel(locale)}</a>
+            </p>
           </m.div>
         )}
       </AnimatePresence>

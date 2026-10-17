@@ -138,7 +138,7 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
     ? `WhatsApp : ${personal.whatsapp} (lien direct à utiliser EXACTEMENT tel quel, message pré-rempli inclus : ${whatsappLink})`
     : 'Non disponible.'
 
-  return `Tu es l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, documents téléchargeables, témoignages, réseaux sociaux), pas seulement une partie.
+  return `Tu es NemCopilotIA, l'assistant du portfolio de ${personal.name}, ${personal.role}. Tu réponds aux visiteurs du site à propos de son profil, en te basant UNIQUEMENT sur les informations ci-dessous — mais tu dois pouvoir répondre à TOUT ce qui concerne le portfolio (parcours, projets, compétences, articles de blog, documents téléchargeables, témoignages, réseaux sociaux), pas seulement une partie.
 
 Bio : ${personal.bio}
 Localisation : ${personal.location}

@@ -86,7 +86,7 @@ function content(locale: 'fr' | 'en', email: string) {
         b: `Vous pouvez demander l'accès, la correction ou la suppression de toute donnée que vous avez transmise, à tout moment, en écrivant à ${email}.`,
       },
       {
-        h: 'Assistant de chat',
+        h: 'Assistant de chat (NemCopilotIA)',
         b: `Si vous utilisez l'assistant de chat, le texte de vos messages et de ses réponses est conservé 90 jours, rattaché uniquement à un identifiant aléatoire stocké dans votre navigateur (ni nom ni email, sauf si vous les écrivez dans la conversation), puis supprimé automatiquement. Il permet à l'éditeur du site de voir ce que les visiteurs demandent et de donner suite à une demande. N'écrivez pas d'informations sensibles dans le chat. La conversation est aussi conservée 24 heures dans votre navigateur pour survivre à un rechargement de page ; le bouton « Effacer la conversation » la supprime.`,
       },
       {

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname } from 'next/navigation'
 import { onOpenChatRequest } from '@/lib/chat-bridge'
+import { TEASER_TEXT, teaserAllowed } from '@/lib/chat-services'
 
 // The chat widget (react-markdown, remark-gfm, AI SDK client, the whole
 // quote/booking UI) is a ~155KB gzipped chunk that only matters once a visitor
@@ -34,7 +35,75 @@ const ChatWidget = dynamic(() => import('./ChatWidget'), {
 
 // Two strings is not worth pulling the full ~30KB bilingual dictionary into
 // the shared layout bundle just to label a button.
-const TOGGLE_LABEL = { fr: "Ouvrir l'assistant", en: 'Open the assistant' } as const
+const TOGGLE_LABEL = { fr: 'Ouvrir NemCopilotIA', en: 'Open NemCopilotIA' } as const
+
+// The invitation bubble: shown once per browser session, a few seconds after arriving
+// on a page where it does not get in the way, and gone as soon as the chat is opened
+// or the visitor closes it. Dependency-free, like the stub, so it costs no extra chunk.
+const TEASER_KEY = 'nemcopilot-invite-seen'
+const TEASER_DELAY_MS = 9000
+const TEASER_VISIBLE_MS = 16000
+
+function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: string | null }) {
+  const [visible, setVisible] = useState(false)
+  const allowed = teaserAllowed(pathname)
+
+  useEffect(() => {
+    if (!allowed) return
+    let seen = false
+    try { seen = sessionStorage.getItem(TEASER_KEY) === '1' } catch { /* private mode: show it once per page load */ }
+    if (seen) return
+    const show = setTimeout(() => {
+      try { sessionStorage.setItem(TEASER_KEY, '1') } catch { /* ignore */ }
+      setVisible(true)
+    }, TEASER_DELAY_MS)
+    const hide = setTimeout(() => setVisible(false), TEASER_DELAY_MS + TEASER_VISIBLE_MS)
+    // Opening the chat (by its button or the panel itself) makes the invitation pointless.
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as Element | null)?.closest?.('[data-chat-toggle], #chat-widget-panel')) {
+        clearTimeout(show)
+        setVisible(false)
+      }
+    }
+    document.addEventListener('click', onClick, true)
+    const stopBridge = onOpenChatRequest(() => { clearTimeout(show); setVisible(false) })
+    return () => {
+      clearTimeout(show)
+      clearTimeout(hide)
+      document.removeEventListener('click', onClick, true)
+      stopBridge()
+    }
+  }, [allowed])
+
+  if (!allowed || !visible) return null
+  const t = TEASER_TEXT[locale]
+  return (
+    <div
+      role="status"
+      data-testid="chat-invite"
+      className="fixed z-40 flex items-start gap-2 p-3"
+      style={{
+        right: '1.25rem',
+        bottom: 'calc(5.25rem + env(safe-area-inset-bottom))',
+        maxWidth: 'min(260px, calc(100vw - 2.5rem))',
+        background: 'var(--bg)',
+        color: 'var(--text)',
+        border: '1px solid var(--accent)',
+        boxShadow: '4px 4px 0 var(--accent)',
+      }}
+    >
+      <button
+        type="button"
+        className="text-left text-xs leading-snug"
+        style={{ fontFamily: 'var(--font-poppins)' }}
+        onClick={() => document.querySelector<HTMLElement>('[data-chat-toggle]')?.click()}
+      >
+        {t.text}
+      </button>
+      <button type="button" aria-label={t.close} onClick={() => setVisible(false)} className="flex-shrink-0 text-sm leading-none px-1" style={{ color: 'var(--text-subtle)' }}>×</button>
+    </div>
+  )
+}
 
 const IDLE_TIMEOUT_MS = 4000
 
@@ -65,6 +134,7 @@ function ChatBubbleStub({ label, onClick }: { label: string; onClick: () => void
       onClick={onClick}
       aria-label={label}
       aria-expanded={false}
+      data-chat-toggle
       className="fixed bottom-5 right-5 z-40 flex items-center justify-center"
       style={{
         width: 56,
@@ -129,15 +199,23 @@ export default function ChatWidgetLoader() {
 
   if (!loaded) {
     return (
-      <ChatBubbleStub
-        label={TOGGLE_LABEL[locale]}
-        onClick={() => {
-          setAutoOpen(true)
-          load()
-        }}
-      />
+      <>
+        <InviteBubble locale={locale} pathname={pathname} />
+        <ChatBubbleStub
+          label={TOGGLE_LABEL[locale]}
+          onClick={() => {
+            setAutoOpen(true)
+            load()
+          }}
+        />
+      </>
     )
   }
 
-  return <ChatWidget autoOpen={autoOpen} initialMessage={pendingMessage} />
+  return (
+    <>
+      <InviteBubble locale={locale} pathname={pathname} />
+      <ChatWidget autoOpen={autoOpen} initialMessage={pendingMessage} />
+    </>
+  )
 }

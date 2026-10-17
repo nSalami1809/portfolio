@@ -1,19 +1,26 @@
 import type { Locale } from './locale'
 import type { WorkTerms } from '@/lib/business'
 
-const chatSuggestionsFr = [
+// `action` suggestions open a local panel (real data, no model request); the others send their text.
+type ChatSuggestion = { label: string; text: string; action?: 'services' | 'track' }
+
+const chatSuggestionsFr: ChatSuggestion[] = [
+  { label: 'Voir les tarifs', text: '', action: 'services' },
+  { label: 'Réserver un appel', text: 'Je souhaite réserver un appel avec Nawaf.' },
+  { label: 'Suivre mon devis', text: '', action: 'track' },
   { label: 'Voir les projets', text: 'Quels sont tes projets les plus intéressants ?' },
-  { label: 'Compétences & stack', text: 'Quelles sont tes compétences techniques ?' },
-  { label: 'Combien coûte un site vitrine ?', text: 'Combien coûterait un site vitrine simple ?' },
   { label: 'Demander un devis', text: "J'aimerais obtenir un devis pour mon projet." },
+  { label: 'Compétences & stack', text: 'Quelles sont tes compétences techniques ?' },
   { label: 'Comment se passe un projet ?', text: 'Comment se déroule un projet avec toi, du devis à la livraison ?' },
 ]
 
-const chatSuggestionsEn = [
+const chatSuggestionsEn: ChatSuggestion[] = [
+  { label: 'See pricing', text: '', action: 'services' },
+  { label: 'Book a call', text: "I'd like to book a call with Nawaf." },
+  { label: 'Track my quote', text: '', action: 'track' },
   { label: 'View projects', text: 'What are your most interesting projects?' },
-  { label: 'Skills & stack', text: 'What are your technical skills?' },
-  { label: 'How much for a showcase website?', text: 'How much would a simple showcase website cost?' },
   { label: 'Request a quote', text: "I'd like to get a quote for my project." },
+  { label: 'Skills & stack', text: 'What are your technical skills?' },
   { label: 'How does a project run?', text: 'How does a project with you run, from the quote to delivery?' },
 ]
 
@@ -520,8 +527,8 @@ console.log("Prix final :", finalPrice + " FCFA");
   chat: {
     toggleOpen: 'Ouvrir le chat',
     toggleClose: 'Fermer le chat',
-    panelAria: 'Assistant du portfolio',
-    headerTitle: 'Nem CopilotIA',
+    panelAria: 'NemCopilotIA, assistant du portfolio',
+    headerTitle: 'NemCopilotIA',
     headerStatus: 'En ligne',
     clearChat: 'Effacer la conversation',
     privacyNote: 'Le texte de cette conversation est conservé 90 jours pour améliorer le service.',
@@ -1084,8 +1091,8 @@ console.log("Final price:", finalPrice + " FCFA");
   chat: {
     toggleOpen: 'Open chat',
     toggleClose: 'Close chat',
-    panelAria: 'Portfolio assistant',
-    headerTitle: 'Nem CopilotIA',
+    panelAria: 'NemCopilotIA, portfolio assistant',
+    headerTitle: 'NemCopilotIA',
     headerStatus: 'Online',
     clearChat: 'Clear conversation',
     privacyNote: 'The text of this conversation is kept for 90 days to improve the service.',

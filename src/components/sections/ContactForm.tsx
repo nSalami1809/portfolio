@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { submitContact } from '@/actions/contact'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -24,6 +24,15 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
   })
   const [emailError, setEmailError] = useState('')
   const [emailTouched, setEmailTouched] = useState(false)
+
+  // "Write to Nawaf" from the chat arrives with the visitor's last question in ?message=.
+  // Read after hydration (never during render) and only into an empty message box. Plain
+  // text in a textarea, bounded: nothing in it is ever interpreted.
+  useEffect(() => {
+    const prefill = new URLSearchParams(window.location.search).get('message')?.slice(0, 500)
+    if (!prefill) return
+    Promise.resolve().then(() => setForm((p) => (p.message ? p : { ...p, message: prefill })))
+  }, [])
 
   const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
