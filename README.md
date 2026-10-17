@@ -54,9 +54,9 @@ Variables d'environnement principales (détails et instructions de génération 
 
 - **Le modèle ne peut rien écrire.** Ses outils lisent le portfolio ou écrivent dans ses propres collections `assistant_*` (brouillons, historique, compteurs). C'est garanti par `tests/assistant-tools.test.ts` et par une règle ESLint sur `src/lib/assistant`.
 - **Seul le bouton « Appliquer » écrit sur le site**, après confirmation de l'administrateur : une seule clé du portfolio est modifiée, uniquement si le site n'a pas changé entre-temps (contrôle de version côté serveur) ; un article est ajouté masqué (publication en option, avec accusé de réception des affirmations à vérifier) ; l'anglais relu est enregistré dans le cache de traduction ; l'opération est annulable en un clic tant que la zone n'a pas été retouchée (`src/lib/draft-apply.ts`, `src/actions/assistant-apply.ts`).
-- **Palier gratuit uniquement** : `src/lib/assistant/config.ts` liste les modèles gratuits ; tout autre modèle est refusé. Aucun basculement automatique. Quota atteint : l'assistant se met en pause et l'indique (renouvellement à minuit, heure du Pacifique).
+- **Palier gratuit uniquement, deux modèles** : `gemini-3.1-flash-lite` pour la conversation, les outils, les audits, les documents et les traductions ; `gemini-3.6-flash` uniquement pour rédiger et réviser les articles. `src/lib/assistant/config.ts` liste les modèles gratuits et leurs limites réelles (relevées dans Google AI Studio) ; tout autre modèle est refusé. Chaque requête envoyée à un modèle, y compris celles des outils, est comptée par modèle (par minute, avec attente brève, et par jour) sous la limite de Google moins une marge de 20 %. Aucun basculement automatique : quota atteint, l'assistant se met en pause et l'indique (renouvellement à minuit, heure du Pacifique).
 - **Contenus de tiers** (documents, conversations de visiteurs) : lus dans un appel séparé sans aucun outil ; coordonnées retirées avant envoi à Google.
-- Les plafonds de l'application sont prudents et propres à l'application, pas les quotas officiels de Google (visibles dans AI Studio).
+- Format des articles : le blog public n'affiche que `##` / `###`, les paragraphes, le **gras**, `---`, les images et les vidéos ; l'assistant rédige dans ce format (`toBlogMarkdown`).
 
 ## Tests
 

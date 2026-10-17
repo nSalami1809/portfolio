@@ -65,7 +65,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         aria-live="polite"
         aria-atomic="false"
         className="fixed right-6 z-[9999] flex flex-col gap-2 pointer-events-none"
-        style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', maxWidth: 'min(360px, calc(100vw - 48px))' }}
+        // Clear of the floating assistant button (56 px + its 20 px margin).
+        style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom))', maxWidth: 'min(360px, calc(100vw - 48px))' }}
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {toasts.map((t) => (

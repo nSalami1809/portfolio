@@ -124,3 +124,61 @@ describe('patch targets are resolved against the real data', () => {
     expect(fingerprint('abc')).not.toBe(fingerprint('abd'))
   })
 })
+
+// ── The public blog only renders a small subset of Markdown ────────────────────────────────────
+
+import { cleanPatchText, toBlogMarkdown } from '@/lib/assistant/drafts'
+import { BLOG_WRITER_SYSTEM, PATCH_SYSTEM, REVISER_SYSTEM } from '@/lib/assistant/prompts'
+
+describe('toBlogMarkdown — what the blog page cannot display is turned into plain text', () => {
+  it('turns bullet and numbered lists into lines the page shows properly', () => {
+    expect(toBlogMarkdown('Intro\n\n- un\n* deux\n+ trois\n  - imbriqué\n\n1. premier\n2) second')).toBe('Intro\n\n• un\n• deux\n• trois\n• imbriqué\n\n1. premier\n2. second')
+  })
+
+  it('unwraps code fences and inline code, links and quotes', () => {
+    const md = 'Voir [la doc](https://example.com/doc) et `npm run build`.\n\n```ts\nconst a = 1\n  const b = 2\n```\n\n> une citation'
+    expect(toBlogMarkdown(md)).toBe('Voir la doc (https://example.com/doc) et npm run build.\n\nconst a = 1\nconst b = 2\n\nune citation')
+  })
+
+  it('removes italics but keeps bold, headings, rules and normal punctuation', () => {
+    const md = '## Titre\n\nDu *texte en italique*, du _autre italique_ et du **gras**.\n\n---\n\n### Sous-titre\n\nUn prix de 3*4 = 12 et snake_case_name restent.'
+    const out = toBlogMarkdown(md)
+    expect(out).toContain('## Titre')
+    expect(out).toContain('Du texte en italique, du autre italique et du **gras**.')
+    expect(out).toContain('---')
+    expect(out).toContain('### Sous-titre')
+    expect(out).toContain('snake_case_name')
+    expect(out).toContain('3*4 = 12')
+  })
+
+  it('brings deeper headings back to the three levels the page knows', () => {
+    expect(toBlogMarkdown('#### Détail\n\n##### Encore')).toBe('### Détail\n\n### Encore')
+  })
+
+  it('leaves text that is already in the blog format exactly as it is', () => {
+    const ok = '## Contexte\n\nUn paragraphe avec du **gras**.\n\n---\n\n### Suite\n\nUne autre phrase.'
+    expect(toBlogMarkdown(ok)).toBe(ok)
+  })
+
+  it('is applied to a generated article, whatever the model wrote', () => {
+    const { payload } = finalizeBlogDraft(
+      { title: 'Un titre assez long pour passer', slug: 'un-titre', category: 'Dev', excerpt: 'Un extrait assez long pour passer la validation du blog.', unverifiedClaims: [], content: '## A\n\n- point un\n- point deux\n\n```js\nx()\n```\n\n' + 'Une phrase de test suffisamment longue pour le contenu. '.repeat(10) },
+      { existingSlugs: [], categories: [] },
+    )
+    expect(payload.fr.content).not.toMatch(/^\s*[-*]\s|```|\]\(/m)
+    expect(payload.fr.content).toContain('• point un')
+  })
+
+  it('only the body of an article gets this treatment when rewriting a field', () => {
+    expect(cleanPatchText({ section: 'blog', field: 'content' }, '- a\n- b')).toBe('• a\n• b')
+    expect(cleanPatchText({ section: 'blog', field: 'excerpt' }, '- a')).toBe('- a')
+    expect(cleanPatchText({ section: 'projects', field: 'description' }, '- a')).toBe('- a')
+  })
+
+  it('tells the model about the format, and no longer invites lists or code', () => {
+    expect(BLOG_WRITER_SYSTEM).toMatch(/N'utilise PAS de listes/)
+    expect(BLOG_WRITER_SYSTEM).not.toMatch(/listes courtes|blocs de code seulement/)
+    expect(REVISER_SYSTEM).toMatch(/ni liste, ni lien, ni code/)
+    expect(PATCH_SYSTEM).toMatch(/ni liste, ni lien, ni code/)
+  })
+})

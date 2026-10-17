@@ -73,7 +73,7 @@ export default function CodePlayground({ t }: Props) {
   // Keeps Ctrl+Enter bound to the latest `run` without re-registering the
   // Monaco command (and losing the closure) on every keystroke.
   const runRef = useRef(run)
-  runRef.current = run
+  useEffect(() => { runRef.current = run })
 
   useEffect(() => () => cancelRef.current?.(), [])
 

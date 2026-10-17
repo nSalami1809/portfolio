@@ -11,7 +11,7 @@ import type { OverviewStats } from '@/lib/admin-stats'
 import type { AssistantLimits } from '@/lib/assistant/config'
 import { auditPortfolio } from '@/lib/assistant/audit'
 import {
-  PATCH_FIELDS, blogFieldsSchema, finalizeBlogDraft, fingerprint, readPatchTarget, readTimeOf, sanitizeMarkdown, uniqueSlug,
+  PATCH_FIELDS, blogFieldsSchema, cleanPatchText, finalizeBlogDraft, fingerprint, readPatchTarget, readTimeOf, toBlogMarkdown, sanitizeMarkdown, uniqueSlug,
   type BlogFields, type BlogPayload, type DraftDTO, type PatchPayload, type PatchSection,
 } from '@/lib/assistant/drafts'
 import type { NewDraft, ReviseResult } from '@/lib/assistant/draft-store'
@@ -386,7 +386,7 @@ export function buildAssistantTools(deps: AssistantDeps) {
         }
         const env = genEnv()
         const { after, rationale } = await rewriteField(env, { label: `${input.section} / ${input.id} / ${input.field}`, before, instruction: input.instruction })
-        const payload: PatchPayload = { target, before, after: sanitizeMarkdown(after), afterEn: null, rationale }
+        const payload: PatchPayload = { target, before, after: cleanPatchText(target, after), afterEn: null, rationale }
         if (input.withEnglish) {
           try {
             payload.afterEn = (await translateFields(env, { text: payload.after })).text ?? null
@@ -422,7 +422,7 @@ export function buildAssistantTools(deps: AssistantDeps) {
         if (draft.kind === 'blog_post') {
           const current = draft.payload as BlogPayload
           const revised: BlogFields = await reviseBlogFields(env, current.fr, input.instruction)
-          const fr = blogFieldsSchema.parse({ ...revised, content: sanitizeMarkdown(revised.content) })
+          const fr = blogFieldsSchema.parse({ ...revised, content: toBlogMarkdown(sanitizeMarkdown(revised.content)) })
           const payload: BlogPayload = { ...current, readTime: readTimeOf(fr.content), fr, en: input.keepEnglish ? current.en : null }
           if (input.keepEnglish) payload.enError = 'Version anglaise non mise à jour (obsolète) : régénère-la.'
           else {
@@ -441,7 +441,7 @@ export function buildAssistantTools(deps: AssistantDeps) {
 
         const current = draft.payload as PatchPayload
         const { after, rationale } = await rewriteField(env, { label: `${current.target.section} / ${current.target.id} / ${current.target.field}`, before: current.after, instruction: input.instruction })
-        const payload: PatchPayload = { ...current, after: sanitizeMarkdown(after), afterEn: null, rationale }
+        const payload: PatchPayload = { ...current, after: cleanPatchText(current.target, after), afterEn: null, rationale }
         const result = await deps.drafts.revise(draft.id, draft.version, { payload, note: clip(input.instruction, 120) })
         return result.ok ? { draftId: draft.id, version: result.draft.version, note: 'Nouvelle version enregistrée.' } : fail(reviseFailure(result.reason))
       }),

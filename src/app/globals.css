@@ -679,3 +679,11 @@ select.input {
 @media (prefers-reduced-motion: reduce) {
   .disclosure, .disclosure::before, .disclosure-body, .disclosure-toggle, .disclosure-tile { transition: none; }
 }
+
+/* Assistant: the delete button of a conversation shows on hover where there is a
+   hover, and always on touch screens (where "hover" never happens). */
+.conv-delete { display: flex; }
+@media (hover: hover) {
+  .conv-delete { display: none; }
+  .conv-row:hover .conv-delete, .conv-delete:focus-visible { display: flex; }
+}

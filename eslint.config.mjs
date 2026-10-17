@@ -38,6 +38,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party bundles copied here by `npm install` (Monaco, pdf.js): not our code.
+    "public/**",
   ]),
 ]);
 

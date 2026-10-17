@@ -129,6 +129,37 @@ export function sanitizeMarkdown(md: string): string {
     .trim()
 }
 
+// The public blog renders a small subset of Markdown, line by line (headings, bold,
+// a rule, images, videos, paragraphs). Anything else would show up as raw symbols:
+// "- item" lines, "```" fences, "[text](url)", "*italics*"... The model is told so,
+// and this turns what slips through into plain text the page displays properly.
+export function toBlogMarkdown(md: string): string {
+  const out: string[] = []
+  let inFence = false
+  for (const raw of md.replace(/\r\n/g, '\n').split('\n')) {
+    if (/^\s*(```|~~~)/.test(raw)) { inFence = !inFence; continue }
+    if (inFence) { out.push(raw.trim() === '' ? '' : raw.replace(/^\s+/, '')); continue }
+    let line = raw
+      .replace(/^(#{4,})\s+/, '### ') // the page knows three heading levels
+      .replace(/^\s*>\s?/, '') // quotes
+      .replace(/^\s*[-*+]\s+/, '• ') // bullets
+      .replace(/^\s*(\d+)[.)]\s+/, '$1. ') // numbered items
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '$1 ($2)') // links
+      .replace(/`([^`]+)`/g, '$1') // inline code
+    line = line
+      .replace(/(^|[^*])\*(?!\s)([^*\n]+?)(?<!\s)\*(?!\*)/g, '$1$2') // *italics* (keeps **bold**)
+      .replace(/(^|[^\w])_(?!\s)([^_\n]+?)(?<!\s)_(?!\w)/g, '$1$2') // _italics_
+    out.push(line)
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+}
+
+/** The text of a rewrite, cleaned for where it will go (an article body also has to fit the blog's format). */
+export function cleanPatchText(target: { section: string; field: string }, text: string): string {
+  const safe = sanitizeMarkdown(text)
+  return target.section === 'blog' && target.field === 'content' ? toBlogMarkdown(safe) : safe
+}
+
 const todayIso = (now: Date) => now.toISOString().slice(0, 10)
 
 export interface FinalizeContext {
@@ -144,7 +175,7 @@ export interface FinalizeContext {
  * Throws a ZodError when the result does not meet the blog's constraints.
  */
 export function finalizeBlogDraft(raw: BlogModelOutput, ctx: FinalizeContext): { payload: Omit<BlogPayload, 'en'>; unverifiedClaims: string[] } {
-  const content = sanitizeMarkdown(raw.content)
+  const content = toBlogMarkdown(sanitizeMarkdown(raw.content))
   const fields = blogFieldsSchema.parse({ title: raw.title.trim(), excerpt: raw.excerpt.trim(), content })
 
   const wanted = raw.category.trim()
