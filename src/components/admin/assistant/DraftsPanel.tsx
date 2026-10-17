@@ -237,9 +237,12 @@ interface Props {
   onSelect: (id: string | null) => void
   onChanged: (draft: DraftDTO) => void
   onDiscarded: (id: string) => void
+  /** Rendered inside the chat window (no card of its own) with a close button. */
+  embedded?: boolean
+  onClose?: () => void
 }
 
-export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, onDiscarded }: Props) {
+export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, onDiscarded, embedded, onClose }: Props) {
   const toast = useToast()
   const selected = drafts.find((d) => d.id === selectedId) ?? null
 
@@ -250,12 +253,15 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
   }
 
   return (
-    <section className="card no-lift flex flex-col" style={{ minHeight: 520, maxHeight: '75dvh' }} aria-label="Brouillons de l'assistant">
+    <section className={embedded ? 'flex flex-col h-full' : 'card no-lift flex flex-col'} style={embedded ? undefined : { minHeight: 520, maxHeight: '75dvh' }} aria-label="Brouillons de l'assistant">
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
         <h2 className="font-display font-semibold text-sm" style={{ color: 'var(--text)' }}>
           {selected ? 'Brouillon' : `Brouillons (${drafts.length})`}
         </h2>
-        {selected && <button type="button" className="btn-secondary btn-xs" onClick={() => onSelect(null)}>← Liste</button>}
+        <div className="flex items-center gap-2">
+          {selected && <button type="button" className="btn-secondary btn-xs" onClick={() => onSelect(null)}>← Liste</button>}
+          {onClose && <button type="button" className="btn-secondary btn-xs" aria-label="Fermer les brouillons" onClick={onClose}>✕</button>}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
