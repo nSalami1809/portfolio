@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import type { PortfolioData } from '@/types'
+import type { ReminderPayload } from '@/lib/assistant/reminders'
 
 export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
@@ -62,8 +63,11 @@ export interface PatchPayload {
   enError?: string
 }
 
-export type DraftKind = 'blog_post' | 'field_patch'
-export type DraftPayload = BlogPayload | PatchPayload
+export type DraftKind = 'blog_post' | 'field_patch' | 'email_reminder'
+export type DraftPayload = BlogPayload | PatchPayload | ReminderPayload
+
+/** Kinds that can be applied to the site. An e-mail draft cannot: the admin sends it from their own mail app. */
+export const APPLICABLE_KINDS: readonly DraftKind[] = ['blog_post', 'field_patch']
 
 export interface DraftDTO {
   id: string

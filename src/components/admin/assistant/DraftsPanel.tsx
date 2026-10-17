@@ -1,12 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import ChatMarkdown from '@/components/chat/ChatMarkdown'
+import { diffStats, diffText } from '@/lib/text-diff'
 import { useToast } from '@/components/admin/Toast'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { discardAssistantDraft, regenerateDraftEnglish } from '@/actions/assistant'
 import { applyAssistantDraft, undoAssistantDraft } from '@/actions/assistant-apply'
-import type { BlogPayload, DraftDTO, PatchPayload } from '@/lib/assistant/drafts'
+import type { BlogPayload, DraftDTO, DraftKind, PatchPayload } from '@/lib/assistant/drafts'
+import { mailtoHref, type ReminderPayload } from '@/lib/assistant/reminders'
+
+const KIND_LABEL: Record<DraftKind, string> = { blog_post: 'Article', field_patch: 'Réécriture', email_reminder: 'E-mail' }
 
 const when = (iso: string) => new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -30,10 +34,34 @@ function Box({ title, children, tone }: { title: string; children: React.ReactNo
   )
 }
 
+// Word-level before/after: removed words struck through on red, added words on green.
+function DiffText({ before, after }: { before: string; after: string }) {
+  const segments = useMemo(() => diffText(before, after), [before, after])
+  return (
+    <p className="text-sm" data-testid="diff-text" style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontFamily: 'var(--font-poppins)' }}>
+      {segments.map((s, i) => s.kind === 'same'
+        ? <span key={i}>{s.text}</span>
+        : s.kind === 'del'
+          ? <del key={i} style={{ background: 'rgba(185,28,28,0.16)', color: 'inherit', textDecorationColor: '#B91C1C' }}>{s.text}</del>
+          : <ins key={i} style={{ background: 'rgba(21,128,61,0.2)', color: 'inherit', textDecoration: 'none' }}>{s.text}</ins>)}
+    </p>
+  )
+}
+
+function DiffBox({ title, before, after }: { title: string; before: string; after: string }) {
+  const stats = useMemo(() => diffStats(diffText(before, after)), [before, after])
+  return (
+    <Box title={`${title} · ${stats.changed ? `+${stats.added} mot${stats.added > 1 ? 's' : ''}, −${stats.removed}` : 'inchangé'}`}>
+      <DiffText before={before} after={after} />
+    </Box>
+  )
+}
+
 function BlogView({ draft, payload, onChanged }: { draft: DraftDTO; payload: BlogPayload; onChanged: (d: DraftDTO) => void }) {
   const toast = useToast()
   const [lang, setLang] = useState<'fr' | 'en'>('fr')
   const [showPrevious, setShowPrevious] = useState(false)
+  const [showDiff, setShowDiff] = useState(false)
   const [busy, setBusy] = useState(false)
   const previous = draft.previousPayload as BlogPayload | null
   const shown = showPrevious && previous ? previous : payload
@@ -88,9 +116,27 @@ function BlogView({ draft, payload, onChanged }: { draft: DraftDTO; payload: Blo
             {showPrevious ? 'Voir la version actuelle' : 'Voir la version précédente'}
           </button>
         )}
+        {previous && (
+          <button type="button" className={showDiff ? 'btn-primary btn-xs' : 'btn-secondary btn-xs'} onClick={() => setShowDiff((v) => !v)} aria-pressed={showDiff}>
+            Voir les changements
+          </button>
+        )}
       </div>
 
-      {lang === 'en' && !shown.en ? (
+      {showDiff && previous && (() => {
+        const was = lang === 'fr' ? previous.fr : previous.en
+        const now = lang === 'fr' ? payload.fr : payload.en
+        if (!was || !now) return <Box title="Changements" tone="warn"><p style={{ color: 'var(--text)' }}>Pas de version {lang === 'fr' ? 'française' : 'anglaise'} à comparer.</p></Box>
+        return (
+          <div className="space-y-2">
+            <DiffBox title="Titre" before={was.title} after={now.title} />
+            <DiffBox title="Extrait" before={was.excerpt} after={now.excerpt} />
+            <DiffBox title="Contenu" before={was.content} after={now.content} />
+          </div>
+        )
+      })()}
+
+      {showDiff ? null : lang === 'en' && !shown.en ? (
         <Box title="Version anglaise" tone="warn">
           <p style={{ color: 'var(--text)' }}>{payload.enError ?? 'Pas de version anglaise.'}</p>
           <button type="button" className="btn-secondary btn-xs mt-2" disabled={busy} onClick={regenerate}>{busy ? 'Génération…' : 'Générer la version anglaise'}</button>
@@ -121,21 +167,67 @@ function BlogView({ draft, payload, onChanged }: { draft: DraftDTO; payload: Blo
 
 function PatchView({ payload }: { payload: PatchPayload }) {
   const toast = useToast()
+  const [sideBySide, setSideBySide] = useState(false)
   const copy = async (text: string) => {
     try { await navigator.clipboard.writeText(text); toast('Copié ✓') } catch { toast('Copie impossible.', 'error') }
   }
   return (
     <div className="space-y-3">
       <Box title="Cible"><p style={{ color: 'var(--text)' }}>{payload.target.section} · {payload.target.id} · {payload.target.field}</p></Box>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Box title="Avant"><p style={{ color: 'var(--text-muted)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{payload.before}</p></Box>
-        <Box title="Proposition"><p style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{payload.after}</p></Box>
+      <div className="flex gap-2">
+        <button type="button" className={sideBySide ? 'btn-secondary btn-xs' : 'btn-primary btn-xs'} aria-pressed={!sideBySide} onClick={() => setSideBySide(false)}>Changements</button>
+        <button type="button" className={sideBySide ? 'btn-primary btn-xs' : 'btn-secondary btn-xs'} aria-pressed={sideBySide} onClick={() => setSideBySide(true)}>Avant / après</button>
       </div>
+      {sideBySide ? (
+        <div className="grid gap-3 md:grid-cols-2">
+          <Box title="Avant"><p style={{ color: 'var(--text-muted)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{payload.before}</p></Box>
+          <Box title="Proposition"><p style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{payload.after}</p></Box>
+        </div>
+      ) : (
+        <DiffBox title="Ce qui changerait" before={payload.before} after={payload.after} />
+      )}
       {payload.rationale && <Box title="Pourquoi"><p style={{ color: 'var(--text)' }}>{payload.rationale}</p></Box>}
       {payload.afterEn && <Box title="English"><p style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{payload.afterEn}</p></Box>}
       {payload.enError && <Box title="Version anglaise" tone="warn"><p style={{ color: 'var(--text)' }}>{payload.enError}</p></Box>}
       <button type="button" className="btn-primary btn-sm" onClick={() => copy(payload.after)}>Copier la proposition</button>
       <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>Pour l&apos;appliquer : ouvre la page correspondante du menu et remplace le texte. Rien n&apos;a été modifié sur ton site.</p>
+    </div>
+  )
+}
+
+// A reminder e-mail: written by the code from the real quote, editable here, and sent by
+// the admin from their own mail app. This view has no way to send anything.
+function EmailView({ draft, payload }: { draft: DraftDTO; payload: ReminderPayload }) {
+  const toast = useToast()
+  const [subject, setSubject] = useState(payload.subject)
+  const [body, setBody] = useState(payload.body)
+  const copy = async (text: string, done: string) => {
+    try { await navigator.clipboard.writeText(text); toast(done) } catch { toast('Copie impossible : sélectionne le texte à la main.', 'error') }
+  }
+  const mailto = mailtoHref({ to: payload.to, subject, body })
+  return (
+    <div className="space-y-3">
+      <Box title="Non envoyé">
+        <p className="text-xs" style={{ color: 'var(--text)' }}>
+          Relance du devis {payload.quoteNumero} · {payload.daysWaiting} jour{payload.daysWaiting > 1 ? 's' : ''} sans réponse{payload.expired ? ' · devis expiré' : ''}.
+          NemCopilotIA n&apos;envoie rien : tu relis, tu copies ou tu ouvres ta messagerie, puis tu envoies toi-même.
+        </p>
+      </Box>
+      {payload.to ? (
+        <p className="text-sm" data-testid="email-to" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}><strong>À :</strong> {payload.toName ? `${payload.toName} · ` : ''}{payload.to}</p>
+      ) : (
+        <Box title="Pas d'adresse e-mail" tone="warn"><p style={{ color: 'var(--text)' }}>Ce devis n&apos;a pas d&apos;adresse e-mail : contacte le client par un autre moyen (téléphone, WhatsApp) avec ce texte.</p></Box>
+      )}
+      <label className="block text-xs font-bold tracking-wider uppercase" style={{ color: 'var(--text-subtle)' }} htmlFor={`mail-subject-${draft.id}`}>Objet</label>
+      <input id={`mail-subject-${draft.id}`} value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={200} className="input text-sm w-full" />
+      <label className="block text-xs font-bold tracking-wider uppercase" style={{ color: 'var(--text-subtle)' }} htmlFor={`mail-body-${draft.id}`}>Message</label>
+      <textarea id={`mail-body-${draft.id}`} value={body} onChange={(e) => setBody(e.target.value)} rows={12} maxLength={4000} className="input text-sm w-full" style={{ resize: 'vertical', fontFamily: 'var(--font-poppins)' }} />
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className="btn-primary btn-sm" onClick={() => copy(body, 'Mail copié ✓')}>Copier le mail</button>
+        <a className="btn-secondary btn-sm" href={mailto}>Ouvrir dans ma messagerie</a>
+        <button type="button" className="btn-secondary btn-sm" onClick={() => copy(subject, 'Objet copié ✓')}>Copier l&apos;objet</button>
+      </div>
+      <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>Tes modifications ici ne sont pas enregistrées : copie le texte avant de fermer. Demande un autre ton à NemCopilotIA pour régénérer.</p>
     </div>
   )
 }
@@ -270,13 +362,13 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
             <div>
               <h3 className="font-display font-bold text-base" style={{ color: 'var(--text)' }}>{selected.title}</h3>
               <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>
-                {selected.kind === 'blog_post' ? 'Article' : 'Réécriture'} · version {selected.version} · {when(selected.updatedAt)}
+                {KIND_LABEL[selected.kind]} · version {selected.version} · {when(selected.updatedAt)}
               </p>
             </div>
-            <ApplyBox key={selected.id + selected.version + selected.status} draft={selected} onChanged={onChanged} />
-            {selected.kind === 'blog_post'
-              ? <BlogView draft={selected} payload={selected.payload as BlogPayload} onChanged={onChanged} />
-              : <PatchView payload={selected.payload as PatchPayload} />}
+            {selected.kind !== 'email_reminder' && <ApplyBox key={selected.id + selected.version + selected.status} draft={selected} onChanged={onChanged} />}
+            {selected.kind === 'blog_post' && <BlogView draft={selected} payload={selected.payload as BlogPayload} onChanged={onChanged} />}
+            {selected.kind === 'field_patch' && <PatchView payload={selected.payload as PatchPayload} />}
+            {selected.kind === 'email_reminder' && <EmailView key={selected.id + selected.version} draft={selected} payload={selected.payload as ReminderPayload} />}
             {selected.status === 'draft' && <button type="button" className="btn-danger btn-sm" onClick={() => discard(selected)}>Écarter ce brouillon</button>}
           </div>
         ) : drafts.length === 0 ? (
@@ -290,7 +382,7 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
                 <button type="button" onClick={() => onSelect(d.id)} className="w-full text-left p-3 transition-colors hover:bg-[var(--surface-hover)]" style={{ border: '1px solid var(--border)' }}>
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{d.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)' }}>
-                    {d.status === 'applied' ? 'Appliqué · ' : ''}{d.kind === 'blog_post' ? 'Article' : 'Réécriture'} · v{d.version} · {when(d.updatedAt)}
+                    {d.status === 'applied' ? 'Appliqué · ' : ''}{KIND_LABEL[d.kind]} · v{d.version} · {when(d.updatedAt)}
                     {d.unverifiedClaims.length > 0 ? ` · ${d.unverifiedClaims.length} à vérifier` : ''}
                   </p>
                 </button>

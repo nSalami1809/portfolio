@@ -3,6 +3,7 @@
 import { ObjectId } from 'mongodb'
 import { requireAdmin } from '@/lib/require-admin'
 import { chatLogCol, type ChatLogMessage } from '@/lib/chat-log'
+import { triageChat, type ChatTriage } from '@/lib/chat-triage'
 
 export interface AdminChat {
   id: string
@@ -11,6 +12,8 @@ export interface AdminChat {
   updatedAt: string
   read: boolean
   messages: ChatLogMessage[]
+  /** What the visitor wanted, lead signal, unanswered flag: computed by rules, see lib/chat-triage.ts. */
+  triage: ChatTriage
 }
 
 export async function listChats(): Promise<AdminChat[]> {
@@ -24,6 +27,7 @@ export async function listChats(): Promise<AdminChat[]> {
     updatedAt: d.updatedAt.toISOString(),
     read: d.read,
     messages: d.messages,
+    triage: triageChat(d.messages),
   }))
 }
 

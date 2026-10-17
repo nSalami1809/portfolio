@@ -8,6 +8,8 @@ import { assistantProviderOptions, getChatModel, getWriterModel } from '@/lib/as
 import { handleProviderError, preflight, recordTokens, releaseLock } from '@/lib/assistant/guard'
 import { classifyModelError } from '@/lib/assistant/quota'
 import { SYSTEM_PROMPT } from '@/lib/assistant/prompts'
+import { contextHint } from '@/lib/assistant/page-context'
+import { loadQuotesForReminders, QUOTE_SITE_URL } from '@/lib/assistant-quotes-data'
 import { buildAssistantTools, type AssistantDeps } from '@/lib/assistant/tools'
 import { createDraft, getDraft, listDrafts, reviseDraft } from '@/lib/assistant/draft-store'
 import { isConversationId, logToolCalls, saveConversation, type ToolCallLog } from '@/lib/assistant/history'
@@ -91,7 +93,7 @@ export async function POST(req: NextRequest) {
       await finalize()
       return text('Conversation trop volumineuse : démarre une nouvelle conversation.', 413)
     }
-    let body: { messages?: unknown; conversationId?: unknown } | null = null
+    let body: { messages?: unknown; conversationId?: unknown; pageKey?: unknown } | null = null
     try { body = JSON.parse(raw) } catch { body = null }
     if (!body || !Array.isArray(body.messages) || !body.messages.every(isUiMessage) || body.messages.length === 0) {
       await finalize()
@@ -121,13 +123,16 @@ export async function POST(req: NextRequest) {
       conversationId,
       fetchDocument: (url) => fetchDocumentBytes(url),
       getChatTranscripts: () => recentChatTranscripts(40),
+      getQuotesForReminders: () => loadQuotesForReminders(),
+      siteUrl: QUOTE_SITE_URL,
       handleModelError: (err) => handleProviderError(err),
       abortSignal: req.signal,
     }
 
     const result = streamText({
       model: deps.models.chat,
-      system: SYSTEM_PROMPT,
+      // The page is a key looked up in a fixed table: nothing typed in the browser reaches the prompt.
+      system: SYSTEM_PROMPT + contextHint(body.pageKey),
       messages: await convertToModelMessages(messages),
       tools: buildAssistantTools(deps),
       stopWhen: stepCountIs(limits.maxSteps),

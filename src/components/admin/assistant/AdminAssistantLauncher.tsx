@@ -8,6 +8,8 @@ import { BotIcon } from '@/components/chat/BotIcon'
 import ChatPane from '@/components/admin/assistant/ChatPane'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { getAssistantStatus } from '@/actions/assistant'
+import { getDailyBriefing } from '@/actions/briefing'
+import { pageKeyForPath } from '@/lib/assistant/page-context'
 
 const newId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`)
 
@@ -22,12 +24,36 @@ export default function AdminAssistantLauncher() {
   const [everOpened, setEverOpened] = useState(false)
   const [conversationId, setConversationId] = useState(newId)
   const [blocked, setBlocked] = useState(false)
+  const [briefingSummary, setBriefingSummary] = useState<string | null>(null)
 
   const refreshStatus = useCallback(() => {
     getAssistantStatus().then((s) => setBlocked(!s.enabled || Boolean(s.modelError) || s.paused), () => undefined)
   }, [])
 
   useEffect(() => { if (open) refreshStatus() }, [open, refreshStatus])
+
+  // The briefing line under the greeting: computed by the code, no model request.
+  useEffect(() => {
+    if (!open) return
+    getDailyBriefing().then((b) => setBriefingSummary(b.summary), () => undefined)
+  }, [open])
+
+  // Ctrl/Cmd+K opens or closes the robot from anywhere in the back-office. On the
+  // assistant page itself (where the robot is hidden) it focuses the message box.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey)) || e.shiftKey || e.altKey) return
+      e.preventDefault()
+      if (pathname === '/admin/assistant') {
+        document.getElementById('assistant-input-page')?.focus()
+        return
+      }
+      setOpen((v) => !v)
+      setEverOpened(true)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [pathname])
 
   const close = useCallback(() => setOpen(false), [])
   useEscapeKey(open, close)
@@ -78,6 +104,7 @@ export default function AdminAssistantLauncher() {
               <span className="font-display font-semibold text-sm flex-1" style={{ color: 'var(--text)' }}>NemCopilotIA</span>
               <button type="button" className="btn-secondary btn-xs" onClick={() => setConversationId(newId())}>Nouveau</button>
               <Link href="/admin/assistant" onClick={close} className="btn-secondary btn-xs">Ouvrir en grand</Link>
+              <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5" style={{ border: '1px solid var(--border)', color: 'var(--text-subtle)' }} title="Raccourci clavier">Ctrl K</kbd>
             </div>
             {everOpened && (
               <ChatPane
@@ -86,6 +113,8 @@ export default function AdminAssistantLauncher() {
                 initialMessages={[]}
                 variant="popover"
                 blocked={blocked}
+                briefingSummary={briefingSummary}
+                contextKey={pageKeyForPath(pathname)}
                 onTurnFinished={refreshStatus}
                 onOpenDraft={(id) => { close(); router.push(`/admin/assistant?draft=${encodeURIComponent(id)}`) }}
               />

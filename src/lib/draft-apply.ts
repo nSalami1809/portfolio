@@ -132,7 +132,9 @@ function planPatch(draft: DraftDTO, data: PortfolioData): PlanResult {
 
 export function planApply(draft: DraftDTO, data: PortfolioData, opts: ApplyOptions): PlanResult {
   if (draft.status !== 'draft') return fail('already', draft.status === 'applied' ? 'Ce brouillon est déjà appliqué.' : 'Ce brouillon a été écarté.')
-  return draft.kind === 'blog_post' ? planBlog(draft, data, opts) : planPatch(draft, data)
+  if (draft.kind === 'blog_post') return planBlog(draft, data, opts)
+  if (draft.kind === 'field_patch') return planPatch(draft, data)
+  return fail('invalid', "Ce brouillon n'est pas une modification du site : un e-mail se copie ou s'ouvre dans ta messagerie, il ne s'applique pas.")
 }
 
 // ── Orchestration over ports ────────────────────────────────────────────────────────────

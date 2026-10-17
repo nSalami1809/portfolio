@@ -41,6 +41,7 @@ export async function regenerateDraftEnglish(id: string): Promise<RegenerateResu
   await requireAdmin()
   const draft = await getDraft(id)
   if (!draft || draft.status !== 'draft') return { ok: false, error: 'Brouillon introuvable.' }
+  if (draft.kind === 'email_reminder') return { ok: false, error: "Ce brouillon est un e-mail : il n'a pas de version anglaise à générer." }
 
   const gate = await preflight()
   if (!gate.ok) return { ok: false, error: gate.message }

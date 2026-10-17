@@ -8,6 +8,13 @@ import { DEFAULT_LIMITS } from '@/lib/assistant/config'
 import { classifyModelError } from '@/lib/assistant/quota'
 import type { DraftDTO } from '@/lib/assistant/drafts'
 import { makePortfolio } from './assistant-data'
+import type { PendingQuote } from '@/lib/assistant/reminders'
+
+// Two quotes still waiting for an answer: one old (with a signing link), one recent without an e-mail address.
+export const pendingQuotes: PendingQuote[] = [
+  { numero: 'DEV-2026-014', clientNom: 'Awa Mbeki', clientSociete: 'Studio Mbeki', clientEmail: 'awa@studio-mbeki.example', locale: 'fr', dateEmission: '2026-10-01T09:00:00Z', validiteJours: 30, totalTTC: 1850000, signToken: 'tok_abc123' },
+  { numero: 'DEV-2026-016', clientNom: 'John Doe', locale: 'en', dateEmission: '2026-10-12T09:00:00Z', validiteJours: 30, totalTTC: 450000 },
+]
 
 // ── Fakes ──────────────────────────────────────────────────────────────────────────────
 
@@ -69,6 +76,8 @@ export function fakeDeps(over: Partial<AssistantDeps> & { replies?: Reply[]; wri
     getOverview: vi.fn(async () => ({ contacts30d: 1, quotes30d: 2, bookings30d: 3, views30d: 400, views24h: 10, contactsPrev30d: 0, quotesPrev30d: 0, bookingsPrev30d: 0, viewsPrev30d: 300, upcomingBookings: 1, acceptedQuotes: 1, quoteAcceptanceRate: 0.5 })),
     fetchDocument: vi.fn(async () => ({ ok: true as const, bytes: new Uint8Array([37, 80, 68, 70]) })),
     getChatTranscripts: vi.fn(async () => []),
+    getQuotesForReminders: vi.fn(async () => pendingQuotes),
+    siteUrl: 'https://site.example',
     drafts,
     models: { chat, writer },
     providerOptions: {},

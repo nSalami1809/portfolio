@@ -129,14 +129,19 @@ export default function AdminAssistantPage() {
           <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
             <button type="button" className="lg:hidden btn-secondary btn-xs" aria-label="Ouvrir la liste des conversations" onClick={() => setMenuOpen(true)}>☰</button>
             <span className="flex-1" />
-            <span className="text-xs px-2.5 py-1" style={{ border: '1px solid var(--border)', color: blocked ? '#D90000' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }} title="Requêtes du palier gratuit utilisées aujourd'hui par le modèle de conversation (sous la limite de Google, marge incluse)">
-              {blocked ? 'En pause' : status ? `${used} / ${cap} requêtes` : '…'}
+            <span className="flex items-center gap-2 text-xs px-2.5 py-1" data-testid="quota-gauge" style={{ border: '1px solid var(--border)', color: blocked ? '#D90000' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }} title="Requêtes du palier gratuit utilisées aujourd'hui par le modèle de conversation (sous la limite de Google, marge incluse)">
+              <span>{blocked ? 'En pause' : status ? `${used} / ${cap} requêtes` : '…'}</span>
+              {status && cap > 0 && (
+                <span className="block w-12 h-1" aria-hidden="true" style={{ background: 'var(--border)' }}>
+                  <span className="block h-full" style={{ width: `${Math.min(100, Math.round((used / cap) * 100))}%`, background: blocked || used / cap >= 0.9 ? '#D90000' : 'var(--accent)' }} />
+                </span>
+              )}
             </span>
             <button type="button" className="btn-secondary btn-xs" aria-pressed={draftsOpen} onClick={() => setDraftsOpen((v) => !v)}>
               Brouillons{activeDrafts ? ` (${activeDrafts})` : ''}
             </button>
           </div>
-          <ChatPane key={chat.id} conversationId={chat.id} initialMessages={chat.initial} variant="page" blocked={blocked} onTurnFinished={onTurnFinished} onOpenDraft={openDraft} />
+          <ChatPane key={chat.id} conversationId={chat.id} initialMessages={chat.initial} variant="page" blocked={blocked} briefingSummary={briefing?.summary ?? null} onTurnFinished={onTurnFinished} onOpenDraft={openDraft} />
         </section>
 
         {draftsOpen && (
