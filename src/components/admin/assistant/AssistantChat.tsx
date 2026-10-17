@@ -12,6 +12,7 @@ const SUGGESTIONS = [
   "Analyse mes projets et identifie les compétences techniques qui ne sont pas suffisamment représentées dans mon portfolio.",
   "Prépare un nouvel article de blog sur mon expérience de développement chez SING SA. Propose un titre, rédige le contenu en Markdown et prépare une version anglaise.",
   "Quels sont mes articles les plus lus, et que me conseilles-tu d'écrire ensuite ?",
+  'Que demandent mes visiteurs au chatbot, et à quelles questions ne répond-il pas bien ?',
 ]
 
 const TOOL_LABELS: Record<string, string> = {
@@ -27,6 +28,9 @@ const TOOL_LABELS: Record<string, string> = {
   getSiteStats: 'Statistiques d’audience',
   getBusinessOverview: 'Synthèse d’activité',
   checkSlug: 'Vérification du slug',
+  listDocuments: 'Liste des documents',
+  analyzeDocument: 'Lecture d’un document',
+  analyzeChatLogs: 'Analyse des conversations du chatbot',
   listMyDrafts: 'Liste des brouillons',
   draftBlogPost: 'Rédaction d’un article (FR + EN)',
   draftFieldPatch: 'Réécriture d’un champ',

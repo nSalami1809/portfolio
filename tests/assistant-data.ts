@@ -47,6 +47,10 @@ export function makePortfolio(): PortfolioData {
       { id: 'o2', title: 'Conseil', description: '', priceLabel: 'sur devis' },
     ],
     availability: defaultAvailability,
-    documents: [],
+    documents: [
+      { slug: 'cv', title: 'CV 2026', description: 'Mon CV complet.', category: 'CV', fileUrl: 'https://abc123.public.blob.vercel-storage.com/cv.pdf', fileName: 'cv.pdf', fileType: 'pdf', fileSize: 120_000, date: '2026-01-01' },
+      { slug: 'guide', title: 'Guide', description: 'Un guide.', category: 'Guide', fileUrl: 'https://abc123.public.blob.vercel-storage.com/guide.docx', fileName: 'guide.docx', fileType: 'docx', fileSize: 40_000, date: '2026-01-02' },
+      { slug: 'ancien', title: 'Ancien', description: 'Vieux format.', category: 'Autre', fileUrl: 'https://abc123.public.blob.vercel-storage.com/old.doc', fileName: 'old.doc', fileType: 'doc', fileSize: 10_000, date: '2020-01-01' },
+    ],
   }
 }

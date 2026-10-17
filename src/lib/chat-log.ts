@@ -76,3 +76,12 @@ export async function saveChatConversation(conversationId: string, locale: strin
     console.error('[chat-log] save failed:', e)
   }
 }
+
+// For the admin assistant's analysis: the text of the most recent exchanges, newest
+// first. Read-only; personal data is stripped by the caller before anything is sent
+// to a model.
+export async function recentChatTranscripts(limit: number): Promise<ChatLogMessage[][]> {
+  const col = await chatLogCol()
+  const docs = await col.find({}).sort({ updatedAt: -1 }).limit(Math.max(1, Math.min(limit, 100))).toArray()
+  return docs.map((d) => d.messages)
+}

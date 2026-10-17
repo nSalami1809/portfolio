@@ -12,6 +12,8 @@ import { SYSTEM_PROMPT } from '@/lib/assistant/prompts'
 import { buildAssistantTools, type AssistantDeps } from '@/lib/assistant/tools'
 import { createDraft, getDraft, listDrafts, reviseDraft } from '@/lib/assistant/draft-store'
 import { isConversationId, logToolCalls, saveConversation, type ToolCallLog } from '@/lib/assistant/history'
+import { fetchDocumentBytes } from '@/lib/assistant/documents'
+import { recentChatTranscripts } from '@/lib/chat-log'
 
 // Admin-only assistant. Read-only on site data: its tools can look at the
 // portfolio and write drafts into assistant_* collections, nothing else (see
@@ -118,6 +120,8 @@ export async function POST(req: NextRequest) {
       limits,
       meter,
       conversationId,
+      fetchDocument: (url) => fetchDocumentBytes(url),
+      getChatTranscripts: () => recentChatTranscripts(40),
       handleModelError: (err) => handleProviderError(err),
       abortSignal: req.signal,
     }

@@ -17,9 +17,9 @@ export interface GenerationEnv {
 }
 
 // Providers options are typed as JSON; ours are plain objects of primitives.
-const options = (env: GenerationEnv) => env.providerOptions as never
+export const options = (env: GenerationEnv) => env.providerOptions as never
 
-function charge(env: GenerationEnv): void {
+export function charge(env: GenerationEnv): void {
   if (!env.meter.canSpend(1)) throw new BudgetExceededError()
   env.meter.spend(1)
 }
