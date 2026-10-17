@@ -44,8 +44,18 @@ Variables d'environnement principales (détails et instructions de génération 
 | `NEXT_PUBLIC_SITE_URL` | URL canonique (SEO, QR codes, liens absolus) |
 | `BLOB_READ_WRITE_TOKEN` | Stockage de fichiers (Vercel Blob) |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Chatbot et traduction (Google AI Studio) |
+| `ASSISTANT_*` (facultatives) | Assistant IA du back-office : palier Gemini gratuit uniquement, plafonds réglables (voir `.env.local.example`) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Notifications push admin |
 | `BACKUP_ENCRYPTION_KEY` | Chiffrement des sauvegardes |
+
+## Assistant IA du back-office
+
+`/admin/assistant` : analyse du portfolio, audit de qualité, statistiques et brouillons d'articles FR/EN.
+
+- **Lecture seule** : l'assistant ne modifie, ne publie et n'envoie rien. Ses seules écritures vont dans les collections `assistant_*` (brouillons, historique, compteurs). Garanti par `tests/assistant-tools.test.ts` et par une règle ESLint sur `src/lib/assistant`.
+- **Palier gratuit uniquement** : `src/lib/assistant/config.ts` liste les modèles gratuits ; tout autre modèle est refusé. Aucun basculement automatique. Quota atteint : l'assistant se met en pause et l'indique (renouvellement à minuit, heure du Pacifique).
+- **Brouillons** : à relire puis à reprendre soi-même dans l'éditeur du blog / du portfolio.
+- Les plafonds de l'application sont prudents et propres à l'application, pas les quotas officiels de Google (visibles dans AI Studio).
 
 ## Tests
 

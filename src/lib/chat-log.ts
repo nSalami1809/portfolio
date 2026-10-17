@@ -42,7 +42,7 @@ export async function chatLogCol() {
 
 // Text of the exchange, with a short marker where the assistant used a tool
 // (so the admin sees "a quote was generated" without the quote itself).
-export function toLogMessages(messages: UIMessage[]): ChatLogMessage[] {
+export function toLogMessages(messages: UIMessage[], maxText: number = MAX_TEXT): ChatLogMessage[] {
   const out: ChatLogMessage[] = []
   for (const m of messages) {
     if (m.role !== 'user' && m.role !== 'assistant') continue
@@ -51,7 +51,7 @@ export function toLogMessages(messages: UIMessage[]): ChatLogMessage[] {
       if (p.type === 'text' && p.text.trim()) parts.push(p.text.trim())
       else if (p.type.startsWith('tool-')) parts.push(`[${p.type.slice(5)}]`)
     }
-    const text = parts.join('\n').slice(0, MAX_TEXT)
+    const text = parts.join('\n').slice(0, maxText)
     if (text) out.push({ role: m.role, text })
   }
   return out.slice(-MAX_MESSAGES)

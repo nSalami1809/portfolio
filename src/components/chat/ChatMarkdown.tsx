@@ -6,6 +6,19 @@ import type { Components } from 'react-markdown'
 
 const wrapStyle: React.CSSProperties = { overflowWrap: 'anywhere', wordBreak: 'break-word' }
 
+function ChatImage({ src, alt }: { src?: string | Blob; alt?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded images, unknown aspect ratio
+    <img
+      src={typeof src === 'string' ? src : undefined}
+      alt={alt ?? ''}
+      loading="lazy"
+      className="rounded-lg mt-1 mb-2"
+      style={{ maxWidth: '100%', height: 'auto', border: '1px solid var(--border)' }}
+    />
+  )
+}
+
 const markdownComponents: Components = {
   p: ({ children }) => <p className="mb-2 last:mb-0" style={wrapStyle}>{children}</p>,
   strong: ({ children }) => <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{children}</strong>,
@@ -54,16 +67,7 @@ const markdownComponents: Components = {
       </code>
     )
   },
-  img: ({ src, alt }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded images, unknown aspect ratio
-    <img
-      src={typeof src === 'string' ? src : undefined}
-      alt={alt ?? ''}
-      loading="lazy"
-      className="rounded-lg mt-1 mb-2"
-      style={{ maxWidth: '100%', height: 'auto', border: '1px solid var(--border)' }}
-    />
-  ),
+  img: ChatImage,
   // GFM tables (remark-gfm) don't wrap by nature — scope the horizontal
   // scroll to the table itself instead of letting it stretch the bubble.
   table: ({ children }) => (
@@ -83,14 +87,38 @@ const markdownComponents: Components = {
   ),
 }
 
+// Images are the one markdown feature that makes the *reader's browser* fetch a
+// URL chosen by whoever wrote the text. For text a model produced from data it
+// read, that is a data-leak channel (the URL can carry what it saw), so the admin
+// assistant renders only images from this site or from the project's Blob store.
+const BLOB_HOST = /^[a-z0-9-]+.public.blob.vercel-storage.com$/i
+export function isTrustedImageSrc(src: string): boolean {
+  if (src.startsWith('/') && !src.startsWith('//')) return true
+  try {
+    const url = new URL(src)
+    return url.protocol === 'https:' && BLOB_HOST.test(url.hostname)
+  } catch {
+    return false
+  }
+}
+
+const safeComponents: Components = {
+  ...markdownComponents,
+  img: (props) => {
+    const src = typeof props.src === 'string' ? props.src : ''
+    if (src && isTrustedImageSrc(src)) return <ChatImage src={src} alt={props.alt} />
+    return <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>[image externe bloquée]</span>
+  },
+}
+
 // react-markdown + remark-gfm pull in a sizeable AST/parser dependency tree —
 // split out from ChatWidget's own chunk so it's only fetched once a message
 // actually needs rendering, not the instant the (closed) chat bubble mounts
 // on every page.
-export default function ChatMarkdown({ text }: { text: string }) {
+export default function ChatMarkdown({ text, safeImages = false }: { text: string; safeImages?: boolean }) {
   return (
     <div className="chat-markdown">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeImages ? safeComponents : markdownComponents}>
         {text}
       </ReactMarkdown>
     </div>

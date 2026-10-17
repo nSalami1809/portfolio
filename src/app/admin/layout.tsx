@@ -33,6 +33,7 @@ const navItems: SidebarLinkData[] = [
   { href: '/admin/blog', label: 'Blog', icon: <PathIcon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /> },
   { href: '/admin/contacts', label: 'Messages', icon: <PathIcon d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6" /> },
   { href: '/admin/business', label: 'Activité', icon: <PathIcon d="M3 3v18h18 M7 15l4-4 3 3 5-6" /> },
+  { href: '/admin/assistant', label: 'Assistant IA', icon: <PathIcon d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z" /> },
   { href: '/admin/chats', label: 'Conversations chat', icon: <PathIcon d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /> },
   { href: '/admin/quotes', label: 'Devis', icon: <PathIcon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /> },
   { href: '/admin/documents', label: 'Documents', icon: <HugeiconsIcon icon={File02Icon} size={15} strokeWidth={1.75} /> },
