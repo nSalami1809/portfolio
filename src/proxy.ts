@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/locale'
-import { getJwtSecret } from '@/lib/jwt-secret'
+import { verifyAdminToken } from '@/lib/admin-token'
 import { verifyPreAuth } from '@/lib/admin-pre'
 
 function getPreferredLocale(req: NextRequest): string {
@@ -41,12 +40,7 @@ export async function proxy(req: NextRequest) {
     const jwtToken = req.cookies.get('admin-token')?.value
 
     // Déjà connecté → dashboard
-    if (jwtToken) {
-      try {
-        await jwtVerify(jwtToken, getJwtSecret())
-        return NextResponse.redirect(new URL('/admin', req.url))
-      } catch { /* token invalide, continuer */ }
-    }
+    if (await verifyAdminToken(jwtToken)) return NextResponse.redirect(new URL('/admin', req.url))
 
     // Accès autorisé uniquement avec le cookie admin-pre (posé par /api/admin-gate)
     if (await verifyPreAuth(req.cookies.get('admin-pre')?.value)) return NextResponse.next()
@@ -65,14 +59,10 @@ export async function proxy(req: NextRequest) {
     const jwtToken = req.cookies.get('admin-token')?.value
     if (!jwtToken) return new NextResponse(null, { status: 404 })
 
-    try {
-      await jwtVerify(jwtToken, getJwtSecret())
-      return NextResponse.next()
-    } catch {
-      const res = new NextResponse(null, { status: 404 })
-      res.cookies.delete('admin-token')
-      return res
-    }
+    if (await verifyAdminToken(jwtToken)) return NextResponse.next()
+    const res = new NextResponse(null, { status: 404 })
+    res.cookies.delete('admin-token')
+    return res
   }
 
   // ── Public routes: enforce a /fr or /en prefix ──────────────────────────

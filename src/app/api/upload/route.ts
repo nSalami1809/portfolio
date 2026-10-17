@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
+import { verifyAdminToken } from '@/lib/admin-token'
 import { put, del } from '@vercel/blob'
 import sharp from 'sharp'
-import { getJwtSecret } from '@/lib/jwt-secret'
 
 // Keeps only characters that are safe in a Blob path segment — strips any
 // `/`, `..`, or other path-altering sequence out of the client-supplied
@@ -78,14 +77,7 @@ async function compressImage(file: File): Promise<{ body: Buffer; filename: stri
 }
 
 async function requireAdmin(req: NextRequest) {
-  const token = req.cookies.get('admin-token')?.value
-  if (!token) return false
-  try {
-    await jwtVerify(token, getJwtSecret())
-    return true
-  } catch {
-    return false
-  }
+  return verifyAdminToken(req.cookies.get('admin-token')?.value)
 }
 
 export async function POST(req: NextRequest) {

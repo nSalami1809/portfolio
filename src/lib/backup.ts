@@ -26,6 +26,13 @@ export async function backupsCol() {
   return db.collection<BackupRecord>('backups')
 }
 
+/** When the most recent backup was made (null if none). */
+export async function latestBackupAt(): Promise<Date | null> {
+  const col = await backupsCol()
+  const doc = await col.find({}).sort({ createdAt: -1 }).limit(1).next()
+  return doc?.createdAt ?? null
+}
+
 export const backupConfigured = () => (process.env.BACKUP_ENCRYPTION_KEY ?? '').length >= MIN_SECRET_LENGTH
 
 export async function createBackup(): Promise<{ ok: true; record: Omit<BackupRecord, 'url'> & { url?: string } } | { ok: false; error: string }> {

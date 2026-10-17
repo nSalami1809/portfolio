@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
+import { verifyAdminToken } from '@/lib/admin-token'
 import { isStatsRange } from '@/lib/admin-stats'
 import { getViewsStats } from '@/lib/admin-stats-data'
 
-const getSecret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
-
 async function requireAdmin(req: NextRequest) {
-  const token = req.cookies.get('admin-token')?.value
-  if (!token) return false
-  try {
-    await jwtVerify(token, getSecret())
-    return true
-  } catch {
-    return false
-  }
+  return verifyAdminToken(req.cookies.get('admin-token')?.value)
 }
 
 export async function GET(req: NextRequest) {

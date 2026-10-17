@@ -10,6 +10,7 @@ import { joinWaitlist } from '@/actions/waitlist'
 import type { PortfolioData } from '@/types'
 import { resolveBusiness } from '@/lib/business'
 import { isConversationId, saveChatConversation } from '@/lib/chat-log'
+import { clientIpFromHeaders } from '@/lib/client-ip'
 
 const MAX_ATTEMPTS = 20
 const WINDOW_S = 10 * 60 // 10 minutes
@@ -236,10 +237,9 @@ async function countRecentAttempts(ip: string): Promise<number> {
 }
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    req.headers.get('x-real-ip') ??
-    'unknown'
+  // Same source as every other limiter (see lib/client-ip.ts): the leftmost
+  // x-forwarded-for hop is whatever the client sent.
+  const ip = clientIpFromHeaders(req.headers)
 
   // These three are mutually independent, and every one of them used to sit
   // on the critical path *before* the first token could stream: index check →

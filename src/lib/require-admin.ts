@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers'
-import { jwtVerify } from 'jose'
-import { getJwtSecret } from '@/lib/jwt-secret'
+import { verifyAdminToken } from '@/lib/admin-token'
 
 // Server Actions are callable directly (POST + Next-Action header) by
 // anyone who can read the action reference out of the client bundle —
@@ -11,10 +10,5 @@ import { getJwtSecret } from '@/lib/jwt-secret'
 // the session itself rather than relying on which page happened to call it.
 export async function requireAdmin(): Promise<void> {
   const token = (await cookies()).get('admin-token')?.value
-  if (!token) throw new Error('Non autorisé.')
-  try {
-    await jwtVerify(token, getJwtSecret())
-  } catch {
-    throw new Error('Non autorisé.')
-  }
+  if (!(await verifyAdminToken(token))) throw new Error('Non autorisé.')
 }
