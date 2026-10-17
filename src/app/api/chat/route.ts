@@ -211,10 +211,10 @@ Déroulé à suivre :
    Pour chaque offre utilisée qui a une pricing par palier entre crochets [Simple / Standard / Complexe] : évalue toi-même, à partir de ce que le visiteur a décrit (fonctionnalités demandées, exigences particulières, ampleur du projet), quel palier s'applique — Simple pour un besoin basique/standard sans particularité, Standard par défaut si l'info est insuffisante pour trancher, Complexe si le visiteur mentionne des fonctionnalités avancées, une forte personnalisation, de gros volumes ou des intégrations poussées. Utilise EXACTEMENT le montant correspondant à ce palier (jamais un chiffre inventé entre les paliers), et nomme la ligne "Nom de l'offre (Palier)" — par exemple "Site vitrine simple (Standard)" — pour rester cohérent avec les devis générés depuis le formulaire du site. Pour une offre sans pricing par palier (prix unique ou "sur devis"), garde le nom de l'offre tel quel et estime un montant cohérent avec son priceLabel.
    Jamais de prix absurdement bas ou élevé, jamais de centimes.
 4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt. Indique-lui aussi le code d'accès du devis (fourni dans le résultat de l'outil) et précise qu'il peut le redonner plus tard pour retrouver ce devis sans tout redemander. Mentionne aussi qu'un bouton "Demander un appel" sous le devis lui permet de proposer directement un créneau par email s'il préfère en discuter de vive voix.
-5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le numéro (ou code d'accès) du devis et cet email.
+5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le CODE D'ACCÈS du devis (fourni dans le résultat de l'outil generateQuote) et cet email.
 
 Retrouver un devis déjà généré :
-Si un visiteur veut retrouver un devis obtenu précédemment (il te donne un numéro du type DEV-2026-002 ou un code d'accès), appelle l'outil lookupQuote avec cette référence. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis. Pour une question de suivi plus large (livraison, recette, paiements), oriente le visiteur vers la page de suivi avec son code. Le résultat inclut un statut ("pending" = en attente de réponse de ${personal.name}, "accepted" = accepté, "declined" = refusé) — communique-le naturellement au visiteur s'il demande où en est son devis.
+Si un visiteur veut retrouver un devis obtenu précédemment, demande-lui son CODE D'ACCÈS (6 caractères, donné à la création du devis) puis appelle l'outil lookupQuote avec ce code. Le numéro du devis (DEV-2026-002…) ne permet PAS de retrouver un devis, pour protéger les données des clients : s'il ne donne que le numéro, explique-lui poliment qu'il faut le code d'accès. Si l'outil ne trouve rien, dis-le simplement et propose de refaire un nouveau devis. Pour une question de suivi plus large (livraison, recette, paiements), oriente le visiteur vers la page de suivi avec son code. Le résultat inclut un statut ("pending" = en attente de réponse de ${personal.name}, "accepted" = accepté, "declined" = refusé) — communique-le naturellement au visiteur s'il demande où en est son devis.
 
 Prise de rendez-vous :
 Tu peux réserver directement un appel avec ${personal.name} dans la conversation, sans passer par un email. Propose-le si le visiteur veut discuter de vive voix, après avoir généré un devis, ou s'il demande explicitement un rendez-vous. Tous les horaires sont dans le fuseau de ${personal.name} (Afrique/Libreville, UTC+1) — précise-le si utile.
@@ -319,20 +319,20 @@ export async function POST(req: NextRequest) {
       }),
       lookupQuote: tool({
         description:
-          "Retrouve un devis déjà généré à partir de son numéro (ex: DEV-2026-002) ou de son code d'accès, quand le visiteur souhaite consulter un devis obtenu précédemment.",
+          "Retrouve un devis déjà généré à partir de son code d'accès (6 caractères), quand le visiteur souhaite consulter un devis obtenu précédemment. Le numéro de devis n'est pas accepté.",
         inputSchema: z.object({
-          reference: z.string().describe("Numéro de devis (ex: DEV-2026-002) ou code d'accès fourni par le visiteur"),
+          reference: z.string().describe("Code d'accès du devis (6 caractères) fourni par le visiteur — jamais le numéro"),
         }),
         execute: async ({ reference }) => {
           const quote = await lookupQuote(reference)
-          return quote ?? { error: 'Aucun devis trouvé pour cette référence.' }
+          return quote ?? { error: "Aucun devis trouvé pour ce code d'accès. Le numéro de devis ne permet pas de le retrouver : il faut le code d'accès reçu à la création du devis." }
         },
       }),
       sendQuoteEmail: tool({
         description:
           "Envoie (ou renvoie) une copie d'un devis par email au client. À utiliser quand le client fournit son email après la génération du devis alors qu'il ne l'avait pas donné, ou demande explicitement à recevoir une copie.",
         inputSchema: z.object({
-          reference: z.string().describe("Numéro de devis (ex: DEV-2026-002) ou code d'accès"),
+          reference: z.string().describe("Code d'accès du devis (6 caractères)"),
           email: z.string().describe('Adresse email du client'),
         }),
         execute: async ({ reference, email }) => sendQuoteEmail(reference, email),

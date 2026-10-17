@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { getJwtSecret } from '@/lib/jwt-secret'
+import { verifyPreAuth } from '@/lib/admin-pre'
 
 function getPreferredLocale(req: NextRequest): string {
   const cookieLocale = req.cookies.get('NEXT_LOCALE')?.value
@@ -48,16 +49,14 @@ export async function proxy(req: NextRequest) {
     }
 
     // Accès autorisé uniquement avec le cookie admin-pre (posé par /api/admin-gate)
-    const preAuth = req.cookies.get('admin-pre')?.value
-    if (preAuth === '1') return NextResponse.next()
+    if (await verifyPreAuth(req.cookies.get('admin-pre')?.value)) return NextResponse.next()
 
     return new NextResponse(null, { status: 404 })
   }
 
   // ── /admin/verify ────────────────────────────────────────────────────────
   if (pathname.startsWith('/admin/verify')) {
-    const preAuth = req.cookies.get('admin-pre')?.value
-    if (!preAuth) return new NextResponse(null, { status: 404 })
+    if (!(await verifyPreAuth(req.cookies.get('admin-pre')?.value))) return new NextResponse(null, { status: 404 })
     return NextResponse.next()
   }
 

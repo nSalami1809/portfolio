@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongodb'
 import { clientIpFromHeaders } from '@/lib/client-ip'
+import { signPreAuth } from '@/lib/admin-pre'
 
 const MAX_ATTEMPTS = 5
 const WINDOW_S = 15 * 60 // 15 minutes
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true })
-  res.cookies.set('admin-pre', '1', {
+  res.cookies.set('admin-pre', await signPreAuth(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

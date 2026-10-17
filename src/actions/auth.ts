@@ -12,6 +12,7 @@ import { getAdminEmail } from '@/lib/admin-config'
 import { requireAdmin } from '@/lib/require-admin'
 import { getClientIp } from '@/lib/client-ip'
 import { getJwtSecret } from '@/lib/jwt-secret'
+import { signPreAuth, verifyPreAuth } from '@/lib/admin-pre'
 
 const getSecret   = getJwtSecret
 const COOKIE      = 'admin-token'
@@ -117,7 +118,7 @@ export async function loginWithCredentials(
 
   // Set pre-auth cookie so /admin/verify is accessible
   const jar = await cookies()
-  jar.set('admin-pre', '1', {
+  jar.set('admin-pre', await signPreAuth(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -141,7 +142,7 @@ export async function verifyOTPAction(
   // a live 6-digit OTP window gets a full admin session without ever
   // knowing the password, making the login effectively single-factor.
   const jar = await cookies()
-  if (jar.get('admin-pre')?.value !== '1') {
+  if (!(await verifyPreAuth(jar.get('admin-pre')?.value))) {
     return { error: 'Session expirée — merci de vous reconnecter.' }
   }
 

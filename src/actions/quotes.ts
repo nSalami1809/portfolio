@@ -241,25 +241,23 @@ export async function submitQuote(payload: QuotePayload): Promise<Quote> {
   return quote
 }
 
-// Retrieve a previously generated quote by its number (DEV-2026-002) or its
-// short access code, so a visitor can find it again without redoing the chat.
+// Retrieve a previously generated quote by its private access code, so a
+// visitor can find it again without redoing the chat. The sequential number
+// (DEV-2026-002) is deliberately NOT accepted: it is guessable, and a quote holds
+// the client's name, email, phone, address and brief — anyone could have walked
+// through DEV-2026-001, -002… and read them. The access code (~33^6 keyspace) is
+// given to the client privately, and lookups are rate-limited.
 export async function lookupQuote(reference: string): Promise<Quote | null> {
   if (typeof reference !== 'string') return null
   const ref = reference.trim().toUpperCase()
   if (!ref) return null
   if (!(await checkRateLimit('lookup-quote', LOOKUP_RATE_LIMIT_PER_HOUR))) return null
   const col = await quotesCol()
-  const doc = await col.findOne({ $or: [{ numero: ref }, { accessCode: ref }] })
+  const doc = await col.findOne({ accessCode: ref })
   if (!doc) return null
-  const quote = toQuote(doc)
-  // signToken grants full read+sign access to the quote — only hand it back
-  // when the visitor proved they know the random accessCode (given to the
-  // client privately, ~33^6 keyspace, rate-limited). `numero` is sequential
-  // and guessable (DEV-2026-001, -002, …), so a lookup by numero alone must
-  // never return it — otherwise anyone could enumerate numeros and sign
-  // other clients' contracts. See getQuoteByToken()'s docblock.
-  if (doc.accessCode !== ref) delete quote.signToken
-  return quote
+  // signToken grants read+sign access: handed back only because the visitor
+  // proved they know the random accessCode. See getQuoteByToken()'s docblock.
+  return toQuote(doc)
 }
 
 // Server-rendered PDF for the "Télécharger PDF" button in QuoteView — reuses
@@ -296,9 +294,11 @@ export async function downloadQuotePdf(
 
 // Called when a visitor supplies their email *after* the quote was already
 // generated without one — records the email and sends them their copy.
-// Deliberately refuses to overwrite an already-recorded clientEmail: doing so
-// would let anyone who guesses a quote reference (numero is sequential)
-// redirect that client's future contract/signature emails to themselves.
+// Deliberately refuses to overwrite an already-recorded clientEmail, and is keyed
+// on the private access code only: with the sequential numero, anyone could attach
+// their own address to a client's quote that has no email yet, receive the signing
+// link (and the signature code, which is sent to the quote's address) and sign in
+// that client's place.
 export async function sendQuoteEmail(reference: string, email: string): Promise<{ ok: boolean; message: string }> {
   if (typeof reference !== 'string' || typeof email !== 'string') {
     return { ok: false, message: 'Requête invalide.' }
@@ -312,8 +312,8 @@ export async function sendQuoteEmail(reference: string, email: string): Promise<
   }
   const ref = reference.trim().toUpperCase()
   const col = await quotesCol()
-  const doc = await col.findOne({ $or: [{ numero: ref }, { accessCode: ref }] })
-  if (!doc) return { ok: false, message: 'Devis introuvable pour cette référence.' }
+  const doc = await col.findOne({ accessCode: ref })
+  if (!doc) return { ok: false, message: "Devis introuvable pour ce code d'accès." }
   if (doc.clientEmail && doc.clientEmail !== trimmedEmail) {
     return { ok: false, message: 'Un email est déjà enregistré pour ce devis.' }
   }
