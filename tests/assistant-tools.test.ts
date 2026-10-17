@@ -7,6 +7,7 @@ import { ALLOWED_CAPABILITIES, TOOL_CAPABILITIES, buildAssistantTools } from '@/
 import { DEFAULT_LIMITS } from '@/lib/assistant/config'
 import type { BlogPayload, PatchPayload } from '@/lib/assistant/drafts'
 import { apiError, article, english, fakeDeps, run, usage } from './assistant-helpers'
+import { LocalQuotaError } from '@/lib/assistant/limiter-core'
 import { makePortfolio } from './assistant-data'
 
 // Unit tests never touch the database. If a tool ever reached for it, this would throw.
@@ -44,10 +45,10 @@ describe('the assistant cannot change site data', () => {
     for (const n of names) expect(n.split(':')[1], n).toMatch(/^assistant_/)
   })
 
-  it('performs database writes only inside its three store modules', () => {
+  it('performs database writes only inside its four store modules (drafts, history, usage counters, limiter)', () => {
     const WRITE = /\.(insertOne|insertMany|updateOne|updateMany|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|replaceOne|bulkWrite|drop|createCollection)\(/
     const writers = assistantFiles.filter((f) => WRITE.test(read(f))).map(rel).sort()
-    expect(writers).toEqual(['lib/assistant/draft-store.ts', 'lib/assistant/guard.ts', 'lib/assistant/history.ts'])
+    expect(writers).toEqual(['lib/assistant/draft-store.ts', 'lib/assistant/guard.ts', 'lib/assistant/history.ts', 'lib/assistant/limiter.ts'])
   })
 
   it('does not import anything that publishes, sends or stores files', () => {
@@ -149,15 +150,16 @@ describe('draftBlogPost', () => {
   const input = { brief: 'Mon expérience de développement chez SING SA', length: 'moyen' as const }
 
   it('writes a French article and its English version into a draft, and nothing else', async () => {
-    const f = fakeDeps({ replies: [article, english] })
+    const f = fakeDeps({ writerReplies: [article], replies: [english] })
     const before = JSON.stringify(f.portfolio)
     const out = await run(buildAssistantTools(f.deps).draftBlogPost, input)
 
     expect(out.draftId).toBe('d1')
     expect(out.englishReady).toBe(true)
     expect(out.unverifiedClaims).toEqual(['Durée exacte de la mission'])
-    expect(f.doGenerate).toHaveBeenCalledTimes(2) // article + translation, nothing more
-    expect(f.deps.meter.toolRequests).toBe(2)
+    // The writer model wrote the article, the chat model translated it: one request each, nothing more.
+    expect(f.writerGenerate).toHaveBeenCalledTimes(1)
+    expect(f.doGenerate).toHaveBeenCalledTimes(1)
 
     const saved = f.drafts.store.get('d1')!
     const payload = saved.payload as BlogPayload
@@ -170,7 +172,7 @@ describe('draftBlogPost', () => {
   })
 
   it('still saves the French draft when the English quota is exhausted, and pauses', async () => {
-    const f = fakeDeps({ replies: [article, apiError(429, 'quota', 'RESOURCE_EXHAUSTED PerDay')] })
+    const f = fakeDeps({ writerReplies: [article], replies: [apiError(429, 'quota', 'RESOURCE_EXHAUSTED PerDay')] })
     const out = await run(buildAssistantTools(f.deps).draftBlogPost, input)
     expect(out.englishReady).toBe(false)
     expect(out.englishNote).toMatch(/quota/i)
@@ -179,29 +181,30 @@ describe('draftBlogPost', () => {
   })
 
   it('creates no draft and asks for a pause when the first request is refused', async () => {
-    const f = fakeDeps({ replies: [apiError(429, 'quota', 'RESOURCE_EXHAUSTED PerDay')] })
+    const f = fakeDeps({ writerReplies: [apiError(429, 'quota', 'RESOURCE_EXHAUSTED PerDay')] })
     const out = await run(buildAssistantTools(f.deps).draftBlogPost, input)
     expect(out).toMatchObject({ error: expect.stringMatching(/quota/i), quotaPause: true })
     expect(f.drafts.create).not.toHaveBeenCalled()
   })
 
-  it('does not call the model when the daily budget cannot cover it', async () => {
-    const f = fakeDeps({ replies: [article, english], used: DEFAULT_LIMITS.dailyRequests - 2 }) // 1 chat + 2 needed > remaining
+  it('relays the limiter\'s refusal (writer quota used up) without creating anything', async () => {
+    const refusal = new LocalQuotaError('gemini-3.6-flash', 'daily', new Date('2026-10-18T07:00:00Z'), "Quota gratuit du jour atteint pour gemini-3.6-flash (16 requêtes, marge de sécurité incluse). Aucune facturation n'est activée.")
+    const f = fakeDeps({ writerReplies: [refusal], replies: [english] })
     const out = await run(buildAssistantTools(f.deps).draftBlogPost, input)
-    expect(out).toMatchObject({ error: expect.stringMatching(/plafond/i) })
-    expect(f.doGenerate).not.toHaveBeenCalled()
+    expect(out).toMatchObject({ error: expect.stringMatching(/Quota gratuit du jour/), quotaPause: true })
     expect(f.drafts.create).not.toHaveBeenCalled()
+    expect(f.doGenerate).not.toHaveBeenCalled() // the translation is not attempted without an article
   })
 
   it('rejects an article that breaks the blog constraints instead of saving it', async () => {
-    const f = fakeDeps({ replies: [{ ...article, content: 'x'.repeat(299) }, english] })
+    const f = fakeDeps({ writerReplies: [{ ...article, content: 'x'.repeat(299) }], replies: [english] })
     const out = await run(buildAssistantTools(f.deps).draftBlogPost, input)
     expect(out).toMatchObject({ error: expect.stringMatching(/contraintes/) })
     expect(f.drafts.create).not.toHaveBeenCalled()
   })
 
   it('strips images and scripts the model slipped into the text', async () => {
-    const f = fakeDeps({ replies: [{ ...article, content: article.content + '\n\n![x](https://evil.example/?d=1)<script>1</script>' }, english] })
+    const f = fakeDeps({ writerReplies: [{ ...article, content: article.content + '\n\n![x](https://evil.example/?d=1)<script>1</script>' }], replies: [english] })
     await run(buildAssistantTools(f.deps).draftBlogPost, input)
     expect(JSON.stringify(f.drafts.store.get('d1')!.payload)).not.toMatch(/evil\.example|<script/)
   })
@@ -209,7 +212,7 @@ describe('draftBlogPost', () => {
 
 describe('draftFieldPatch', () => {
   it('reads the current text from the real data and stores a before/after proposal', async () => {
-    const f = fakeDeps({ replies: [{ after: 'Une description plus claire et plus percutante de la boutique en ligne.', rationale: 'Plus concis.' }] })
+    const f = fakeDeps({ writerReplies: [{ after: 'Une description plus claire et plus percutante de la boutique en ligne.', rationale: 'Plus concis.' }] })
     const out = await run(buildAssistantTools(f.deps).draftFieldPatch, { section: 'projects', id: 'shop', field: 'description', instruction: 'Rends-la plus percutante', withEnglish: false })
     expect(out.draftId).toBe('d1')
     const payload = f.drafts.store.get('d1')!.payload as PatchPayload
@@ -220,17 +223,18 @@ describe('draftFieldPatch', () => {
   })
 
   it('refuses a field that is not patchable without calling the model', async () => {
-    const f = fakeDeps({ replies: [{ after: 'x', rationale: 'y' }] })
+    const f = fakeDeps({ writerReplies: [{ after: 'x', rationale: 'y' }] })
     const out = await run(buildAssistantTools(f.deps).draftFieldPatch, { section: 'personal', id: 'personal', field: 'signatureUrl', instruction: 'Change la signature', withEnglish: false })
     expect(out).toMatchObject({ error: expect.stringMatching(/non autorisé/) })
     expect(f.doGenerate).not.toHaveBeenCalled()
+    expect(f.writerGenerate).not.toHaveBeenCalled()
     expect(f.drafts.create).not.toHaveBeenCalled()
   })
 })
 
 describe('reviseDraft', () => {
   it('stores a new version and regenerates the English text', async () => {
-    const f = fakeDeps({ replies: [article, english, { ...article, content: article.content.replace('Contexte', 'Introduction courte') }, english] })
+    const f = fakeDeps({ writerReplies: [article, { ...article, content: article.content.replace('Contexte', 'Introduction courte') }], replies: [english, english] })
     const tools = buildAssistantTools(f.deps)
     await run(tools.draftBlogPost, { brief: 'Sujet de test pour le brouillon', length: 'court' })
     const out = await run(tools.reviseDraft, { draftId: 'd1', instruction: "Raccourcis l'introduction", keepEnglish: false })
@@ -242,7 +246,7 @@ describe('reviseDraft', () => {
   })
 
   it('reports a conflict instead of overwriting a draft that changed meanwhile', async () => {
-    const f = fakeDeps({ replies: [article, english, article, english] })
+    const f = fakeDeps({ writerReplies: [article, article], replies: [english, english] })
     const tools = buildAssistantTools(f.deps)
     await run(tools.draftBlogPost, { brief: 'Sujet de test pour le brouillon', length: 'court' })
     f.drafts.get.mockImplementationOnce(async (id: string) => ({ ...f.drafts.store.get(id)!, version: 0 })) // stale read
@@ -252,7 +256,7 @@ describe('reviseDraft', () => {
   })
 
   it('does not touch a discarded or unknown draft', async () => {
-    const f = fakeDeps({ replies: [article, english] })
+    const f = fakeDeps({ writerReplies: [article], replies: [english] })
     const tools = buildAssistantTools(f.deps)
     expect(await run(tools.reviseDraft, { draftId: 'nope', instruction: 'Raccourcis tout', keepEnglish: false })).toMatchObject({ error: expect.any(String) })
     await run(tools.draftBlogPost, { brief: 'Sujet de test pour le brouillon', length: 'court' })

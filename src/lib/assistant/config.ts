@@ -1,14 +1,12 @@
 // Settings of the admin assistant. Everything that touches the free Gemini tier
-// is decided here, in one place, and every number is a *cautious default of our
-// own* — NOT an official Google quota. Google publishes the real per-model
-// limits only inside AI Studio; adjust the ASSISTANT_* variables to match them.
+// is decided here, in one place.
 
 // Models Google lists as "Free of charge" on the Gemini API pricing page
 // (checked 2026-10-17: https://ai.google.dev/gemini-api/docs/pricing). Google can
 // change this list: this is the ONLY place to update it. Anything outside it is
 // refused, so a typo or a copy-pasted paid model id can never be called.
-// Deliberately excluded even though some are free: the Pro models (heavy on the
-// quota) — and every model that is not free (e.g. gemini-3.1-pro-preview).
+// Deliberately excluded even though some are free: the Pro models (no quota left
+// on this project) — and every model that is not free (e.g. gemini-3.1-pro-preview).
 export const FREE_TIER_MODELS = [
   'gemini-3.8-flash',
   'gemini-3.6-flash',
@@ -19,7 +17,16 @@ export const FREE_TIER_MODELS = [
   'gemini-2.5-flash-lite',
 ] as const
 
-export const DEFAULT_ASSISTANT_MODEL = 'gemini-3.6-flash'
+export type FreeTierModel = (typeof FREE_TIER_MODELS)[number]
+
+// The assistant uses two models, each in its own quota bucket:
+//  - the "chat" model answers, calls the tools, reads documents and conversations
+//    and translates: many small requests, so a model with a generous daily quota;
+//  - the "writer" model only writes and revises articles: few requests, better prose.
+// There is no automatic fallback from one to the other, nor to any other model:
+// when a quota is used up the assistant says so and waits.
+export const DEFAULT_ASSISTANT_MODEL: FreeTierModel = 'gemini-3.1-flash-lite'
+export const DEFAULT_WRITER_MODEL: FreeTierModel = 'gemini-3.6-flash'
 
 export class ModelNotAllowedError extends Error {
   constructor(public readonly modelId: string) {
@@ -28,17 +35,57 @@ export class ModelNotAllowedError extends Error {
   }
 }
 
-export function resolveAssistantModelId(requested: string | undefined = process.env.ASSISTANT_MODEL): string {
-  const id = requested?.trim() || DEFAULT_ASSISTANT_MODEL
+function resolveModelId(requested: string | undefined, fallback: FreeTierModel): FreeTierModel {
+  const id = requested?.trim() || fallback
   if (!(FREE_TIER_MODELS as readonly string[]).includes(id)) throw new ModelNotAllowedError(id)
-  return id
+  return id as FreeTierModel
+}
+
+export function resolveAssistantModelId(requested: string | undefined = process.env.ASSISTANT_MODEL): FreeTierModel {
+  return resolveModelId(requested, DEFAULT_ASSISTANT_MODEL)
+}
+
+export function resolveWriterModelId(requested: string | undefined = process.env.ASSISTANT_WRITER_MODEL): FreeTierModel {
+  return resolveModelId(requested, DEFAULT_WRITER_MODEL)
+}
+
+export interface FreeLimits {
+  /** Requests per minute. */
+  rpm: number
+  /** Requests per day (Pacific-time day: the quota renews at midnight Pacific). */
+  rpd: number
+}
+
+// The free-tier limits of this project's key, as shown by Google AI Studio →
+// "Limites de débit" (read 2026-10-17, project « Default Gemini Project »). These
+// are Google's numbers, per model; the app stays below them by QUOTA_MARGIN.
+// Update them if AI Studio shows different ones.
+export const MODEL_FREE_LIMITS: Record<FreeTierModel, FreeLimits> = {
+  'gemini-3.8-flash': { rpm: 5, rpd: 20 },
+  'gemini-3.6-flash': { rpm: 5, rpd: 20 },
+  'gemini-3.5-flash-lite': { rpm: 15, rpd: 500 },
+  'gemini-3.1-flash-lite': { rpm: 15, rpd: 500 },
+  'gemini-3-flash-preview': { rpm: 5, rpd: 20 },
+  'gemini-2.5-flash': { rpm: 5, rpd: 20 },
+  'gemini-2.5-flash-lite': { rpm: 10, rpd: 20 },
+}
+
+export const DEFAULT_QUOTA_MARGIN = 0.8
+
+/** Share of Google's limit the app allows itself (ASSISTANT_QUOTA_MARGIN, between 0.1 and 1). */
+export function quotaMargin(env: Record<string, string | undefined> = process.env): number {
+  const n = Number.parseFloat(env.ASSISTANT_QUOTA_MARGIN ?? '')
+  return Number.isFinite(n) ? Math.min(1, Math.max(0.1, n)) : DEFAULT_QUOTA_MARGIN
+}
+
+/** What the app lets itself send to one model: Google's limit minus the safety margin (at least 1). */
+export function effectiveCaps(modelId: string, margin: number = quotaMargin()): FreeLimits {
+  const official = (MODEL_FREE_LIMITS as Record<string, FreeLimits | undefined>)[modelId]
+  if (!official) return { rpm: 1, rpd: 1 } // unknown model: as careful as possible
+  return { rpm: Math.max(1, Math.floor(official.rpm * margin)), rpd: Math.max(1, Math.floor(official.rpd * margin)) }
 }
 
 export interface AssistantLimits {
-  /** Model requests per Pacific-time day (Google's daily quota resets at midnight Pacific). */
-  dailyRequests: number
-  /** Model requests per minute. */
-  perMinute: number
   /** Model steps (calls) in one chat turn. */
   maxSteps: number
   maxOutputTokens: number
@@ -53,8 +100,6 @@ export interface AssistantLimits {
 }
 
 export const DEFAULT_LIMITS: AssistantLimits = {
-  dailyRequests: 50,
-  perMinute: 4,
   maxSteps: 5,
   maxOutputTokens: 2500,
   maxDraftTokens: 8000,
@@ -70,8 +115,6 @@ function intFrom(raw: string | undefined, fallback: number, min: number, max: nu
 
 export function readLimits(env: Record<string, string | undefined> = process.env): AssistantLimits {
   return {
-    dailyRequests: intFrom(env.ASSISTANT_DAILY_REQUESTS, DEFAULT_LIMITS.dailyRequests, 1, 10_000),
-    perMinute: intFrom(env.ASSISTANT_PER_MINUTE, DEFAULT_LIMITS.perMinute, 1, 600),
     maxSteps: intFrom(env.ASSISTANT_MAX_STEPS, DEFAULT_LIMITS.maxSteps, 1, 12),
     maxOutputTokens: intFrom(env.ASSISTANT_MAX_OUTPUT_TOKENS, DEFAULT_LIMITS.maxOutputTokens, 256, 16_000),
     maxDraftTokens: intFrom(env.ASSISTANT_MAX_DRAFT_TOKENS, DEFAULT_LIMITS.maxDraftTokens, 1000, 32_000),

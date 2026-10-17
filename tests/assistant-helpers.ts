@@ -5,7 +5,6 @@ import { APICallError, type LanguageModel } from 'ai'
 import { MockLanguageModelV4 } from 'ai/test'
 import type { AssistantDeps } from '@/lib/assistant/tools'
 import { DEFAULT_LIMITS } from '@/lib/assistant/config'
-import { UsageMeter } from '@/lib/assistant/meter'
 import { classifyModelError } from '@/lib/assistant/quota'
 import type { DraftDTO } from '@/lib/assistant/drafts'
 import { makePortfolio } from './assistant-data'
@@ -53,10 +52,14 @@ export function fakeDraftStore() {
   }
 }
 
-export function fakeDeps(over: Partial<AssistantDeps> & { replies?: Reply[]; used?: number } = {}) {
+// `replies` script the chat model (translations, documents, conversations, chat steps);
+// `writerReplies` script the writer model (articles and rewrites). They are separate
+// mocks on purpose: the tests check which model does which job.
+export function fakeDeps(over: Partial<AssistantDeps> & { replies?: Reply[]; writerReplies?: Reply[] } = {}) {
   const portfolio = makePortfolio()
   const drafts = fakeDraftStore()
-  const { model, doGenerate } = mockModel(over.replies ?? [])
+  const { model: chat, doGenerate } = mockModel(over.replies ?? [])
+  const { model: writer, doGenerate: writerGenerate } = mockModel(over.writerReplies ?? [])
   const handleModelError = vi.fn(async (err: unknown) => classifyModelError(err))
   const deps: AssistantDeps = {
     getPortfolio: vi.fn(async () => portfolio),
@@ -67,16 +70,15 @@ export function fakeDeps(over: Partial<AssistantDeps> & { replies?: Reply[]; use
     fetchDocument: vi.fn(async () => ({ ok: true as const, bytes: new Uint8Array([37, 80, 68, 70]) })),
     getChatTranscripts: vi.fn(async () => []),
     drafts,
-    model,
+    models: { chat, writer },
     providerOptions: {},
     limits: DEFAULT_LIMITS,
-    meter: new UsageMeter(over.used ?? 0, DEFAULT_LIMITS.dailyRequests),
     conversationId: 'conv-1',
     handleModelError,
     now: () => new Date('2026-10-17T10:00:00Z'),
     ...over,
   }
-  return { deps, portfolio, drafts, doGenerate, handleModelError }
+  return { deps, portfolio, drafts, doGenerate, writerGenerate, handleModelError }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

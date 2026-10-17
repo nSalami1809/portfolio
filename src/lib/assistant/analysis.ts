@@ -7,7 +7,7 @@
 // main agent receives as data, marked untrusted.
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { charge, options, type GenerationEnv } from '@/lib/assistant/draft-generation'
+import { options, type GenerationEnv } from '@/lib/assistant/draft-generation'
 import { CHATLOG_ANALYST_SYSTEM, DOC_ANALYST_SYSTEM } from '@/lib/assistant/prompts'
 import { redactPersonalData } from '@/lib/assistant/redact'
 import { sanitizeMarkdown } from '@/lib/assistant/drafts'
@@ -35,7 +35,6 @@ export interface DocumentInput {
 }
 
 export async function analyzeDocument(env: GenerationEnv, input: DocumentInput): Promise<DocumentAnalysis> {
-  charge(env)
   const ask = [
     `DOCUMENT : « ${input.title} »`,
     input.task === 'question' && input.question ? `QUESTION DE L'ADMINISTRATEUR : ${input.question}` : '',
@@ -102,7 +101,6 @@ export function buildTranscript(conversations: ChatLogMessage[][]): { text: stri
 export async function analyzeChatLogs(env: GenerationEnv, conversations: ChatLogMessage[][], focus?: string): Promise<ChatAnalysis | { empty: true }> {
   const { text, used } = buildTranscript(conversations)
   if (used === 0) return { empty: true }
-  charge(env)
   const { object } = await generateObject({
     model: env.model,
     schema: chatSchema,

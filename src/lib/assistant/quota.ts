@@ -37,9 +37,18 @@ export interface ClassifiedError {
   retryAt?: Date
   /** What the admin reads. */
   message: string
+  /** The model the error came from, when known. */
+  modelId?: string
+  /** True when our own limiter refused the request (nothing was sent to Google). */
+  local?: boolean
 }
 
 interface ErrorLike {
+  name?: string
+  scope?: string
+  retryAt?: Date
+  modelId?: string
+  assistantModelId?: string
   statusCode?: number
   message?: string
   responseBody?: string
@@ -65,6 +74,19 @@ const UNKNOWN_429_RETRY_S = 5 * 60
 
 export function classifyModelError(err: unknown, now: Date = new Date()): ClassifiedError {
   const chain = unwrap(err)
+  const modelId = chain.map((e) => e.assistantModelId ?? (e.name === 'LocalQuotaError' ? e.modelId : undefined)).find((m) => typeof m === 'string')
+
+  // Our own limiter said no: nothing was sent to Google, the message is already written.
+  const local = chain.find((e) => e.name === 'LocalQuotaError')
+  if (local) {
+    return {
+      kind: local.scope === 'daily' ? 'quota_daily' : 'rate_limit',
+      retryAt: local.retryAt,
+      message: local.message ?? 'Quota gratuit atteint : assistant en pause.',
+      modelId,
+      local: true,
+    }
+  }
   const status = chain.map((e) => e.statusCode).find((s) => typeof s === 'number')
   const text = chain.map((e) => `${e.message ?? ''} ${typeof e.responseBody === 'string' ? e.responseBody : ''}`).join(' ')
 
@@ -75,6 +97,7 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
       return {
         kind: 'quota_daily',
         retryAt,
+        modelId,
         message: `Le quota gratuit quotidien de Gemini est atteint. Il se renouvelle à minuit (heure du Pacifique), soit vers ${formatLibrevilleTime(retryAt)} à Libreville. L'assistant reste en pause d'ici là : aucune facturation n'est activée.`,
       }
     }
@@ -84,6 +107,7 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
     return {
       kind: 'rate_limit',
       retryAt,
+      modelId,
       message: `Limite de débit gratuite de Gemini atteinte (par minute ou par jour). Réessayez vers ${formatLibrevilleTime(retryAt)}. Si cela se reproduit, le quota quotidien est épuisé : il se renouvelle à minuit, heure du Pacifique.`,
     }
   }

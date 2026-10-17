@@ -6,7 +6,7 @@ import { redactPersonalData } from '@/lib/assistant/redact'
 import { docxToText, fetchDocumentBytes, isAllowedDocumentUrl, MAX_DOCUMENT_BYTES } from '@/lib/assistant/documents'
 import { MAX_TRANSCRIPT_CHARS, buildTranscript } from '@/lib/assistant/analysis'
 import { buildAssistantTools } from '@/lib/assistant/tools'
-import { DEFAULT_LIMITS } from '@/lib/assistant/config'
+import { LocalQuotaError } from '@/lib/assistant/limiter-core'
 import { apiError, fakeDeps, run } from './assistant-helpers'
 
 vi.mock('@/lib/mongodb', () => ({ getDb: async () => { throw new Error('no database in unit tests') } }))
@@ -164,7 +164,8 @@ describe('analyzeDocument', () => {
     expect(f.deps.fetchDocument).toHaveBeenCalledWith('https://abc123.public.blob.vercel-storage.com/cv.pdf')
     expect(callPrompt(f)).toContain('application/pdf')
     expect(callOptions(f).tools ?? []).toHaveLength(0) // nothing the document could trigger
-    expect(f.deps.meter.toolRequests).toBe(1)
+    expect(f.doGenerate).toHaveBeenCalledTimes(1) // one request, on the chat model
+    expect(f.writerGenerate).not.toHaveBeenCalled()
   })
 
   it('sends the extracted text of a Word file', async () => {
@@ -194,18 +195,17 @@ describe('analyzeDocument', () => {
     expect(f.deps.fetchDocument).not.toHaveBeenCalled()
   })
 
-  it('stops before downloading when the daily budget is gone', async () => {
-    const f = fakeDeps({ replies: [docAnalysis], used: DEFAULT_LIMITS.dailyRequests - 1 })
-    expect(await run(buildAssistantTools(f.deps).analyzeDocument, { slug: 'cv', task: 'summary' })).toMatchObject({ error: expect.stringMatching(/plafond/i) })
-    expect(f.deps.fetchDocument).not.toHaveBeenCalled()
+  it('relays the limiter\'s refusal when the chat model\'s daily quota is used up', async () => {
+    const refusal = new LocalQuotaError('gemini-3.1-flash-lite', 'daily', new Date('2026-10-18T07:00:00Z'), 'Quota gratuit du jour atteint pour gemini-3.1-flash-lite (400 requêtes, marge de sécurité incluse). Aucune facturation n\'est activée.')
+    const f = fakeDeps({ replies: [refusal] })
+    expect(await run(buildAssistantTools(f.deps).analyzeDocument, { slug: 'cv', task: 'summary' })).toMatchObject({ error: expect.stringMatching(/Quota gratuit du jour/), quotaPause: true })
   })
 
-  it('reports a download failure without spending a request', async () => {
+  it('reports a download failure without calling the model', async () => {
     const f = fakeDeps({ replies: [docAnalysis] })
     f.deps.fetchDocument = vi.fn(async () => ({ ok: false as const, error: 'Document trop volumineux (maximum 6 Mo).' }))
     expect(await run(buildAssistantTools(f.deps).analyzeDocument, { slug: 'cv', task: 'summary' })).toMatchObject({ error: expect.stringMatching(/volumineux/) })
     expect(f.doGenerate).not.toHaveBeenCalled()
-    expect(f.deps.meter.toolRequests).toBe(0)
   })
 
   it('pauses on a quota answer from the provider', async () => {
@@ -253,11 +253,11 @@ describe('analyzeChatLogs', () => {
     expect(f.doGenerate).not.toHaveBeenCalled()
   })
 
-  it('stops when the daily budget is gone', async () => {
-    const f = fakeDeps({ replies: [reply], used: DEFAULT_LIMITS.dailyRequests - 1 })
+  it('relays the limiter\'s refusal', async () => {
+    const refusal = new LocalQuotaError('gemini-3.1-flash-lite', 'minute', new Date('2026-10-17T10:01:00Z'), 'Trop de requêtes en une minute pour gemini-3.1-flash-lite (maximum 12, marge de sécurité incluse). Réessaie dans quelques secondes.')
+    const f = fakeDeps({ replies: [refusal] })
     f.deps.getChatTranscripts = vi.fn(async () => logs)
-    expect(await run(buildAssistantTools(f.deps).analyzeChatLogs, {})).toMatchObject({ error: expect.stringMatching(/plafond/i) })
-    expect(f.deps.getChatTranscripts).not.toHaveBeenCalled()
+    expect(await run(buildAssistantTools(f.deps).analyzeChatLogs, {})).toMatchObject({ error: expect.stringMatching(/Trop de requêtes/), quotaPause: true })
   })
 })
 

@@ -4,10 +4,9 @@ import { requireAdmin } from '@/lib/require-admin'
 import { fetchPortfolioFresh } from '@/lib/portfolio-data'
 import { getBlogPostViews, getOverviewStats } from '@/lib/admin-stats-data'
 import { getBusinessStats } from '@/actions/business'
-import { getAssistantModel, assistantProviderOptions } from '@/lib/assistant/models'
-import { handleProviderError, preflight, recordUsage, releaseLock } from '@/lib/assistant/guard'
+import { assistantProviderOptions, getChatModel, getWriterModel } from '@/lib/assistant/models'
+import { handleProviderError, preflight, recordTokens, releaseLock } from '@/lib/assistant/guard'
 import { classifyModelError } from '@/lib/assistant/quota'
-import { UsageMeter } from '@/lib/assistant/meter'
 import { SYSTEM_PROMPT } from '@/lib/assistant/prompts'
 import { buildAssistantTools, type AssistantDeps } from '@/lib/assistant/tools'
 import { createDraft, getDraft, listDrafts, reviseDraft } from '@/lib/assistant/draft-store'
@@ -69,10 +68,9 @@ export async function POST(req: NextRequest) {
     return text(gate.message, gate.status, gate.retryAt ? { 'Retry-After': String(Math.max(1, Math.ceil((gate.retryAt.getTime() - Date.now()) / 1000))) } : {})
   }
   // From here on the generation lock is held: every exit must release it.
-  const { limits, usedToday } = gate
+  const { limits } = gate
 
   let finished = false
-  const meter = new UsageMeter(usedToday, limits.dailyRequests)
   const toolLog: ToolCallLog[] = []
   let conversationId: string | null = null
   let inputTokens = 0
@@ -82,7 +80,7 @@ export async function POST(req: NextRequest) {
     if (finished) return
     finished = true
     await Promise.all([
-      recordUsage({ requests: meter.total, inputTokens, outputTokens }),
+      recordTokens({ inputTokens, outputTokens }),
       logToolCalls(conversationId, toolLog),
       releaseLock(),
     ])
@@ -117,10 +115,9 @@ export async function POST(req: NextRequest) {
       getOverview: () => getOverviewStats(),
       getBriefingInputs: () => loadBriefingInputs(),
       drafts: { create: createDraft, get: getDraft, list: listDrafts, revise: reviseDraft },
-      model: getAssistantModel(),
+      models: { chat: getChatModel(), writer: getWriterModel() },
       providerOptions: assistantProviderOptions,
       limits,
-      meter,
       conversationId,
       fetchDocument: (url) => fetchDocumentBytes(url),
       getChatTranscripts: () => recentChatTranscripts(40),
@@ -129,7 +126,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = streamText({
-      model: deps.model,
+      model: deps.models.chat,
       system: SYSTEM_PROMPT,
       messages: await convertToModelMessages(messages),
       tools: buildAssistantTools(deps),
@@ -145,7 +142,6 @@ export async function POST(req: NextRequest) {
       },
       onAbort: async () => { await finalize() },
       onFinish: async (event) => {
-        meter.chatRequests = Math.max(1, event.steps.length)
         inputTokens += event.totalUsage?.inputTokens ?? 0
         outputTokens += event.totalUsage?.outputTokens ?? 0
         for (const step of event.steps) {

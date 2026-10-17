@@ -24,7 +24,7 @@ export default function AdminAssistantLauncher() {
   const [blocked, setBlocked] = useState(false)
 
   const refreshStatus = useCallback(() => {
-    getAssistantStatus().then((s) => setBlocked(!s.enabled || Boolean(s.modelError) || Boolean(s.blockedUntil)), () => undefined)
+    getAssistantStatus().then((s) => setBlocked(!s.enabled || Boolean(s.modelError) || s.paused), () => undefined)
   }, [])
 
   useEffect(() => { if (open) refreshStatus() }, [open, refreshStatus])

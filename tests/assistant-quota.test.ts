@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { APICallError } from 'ai'
 import {
-  DEFAULT_ASSISTANT_MODEL, FREE_TIER_MODELS, ModelNotAllowedError, readLimits, resolveAssistantModelId, isAssistantEnabled, DEFAULT_LIMITS,
+  DEFAULT_ASSISTANT_MODEL, DEFAULT_WRITER_MODEL, FREE_TIER_MODELS, MODEL_FREE_LIMITS, ModelNotAllowedError, effectiveCaps, quotaMargin,
+  readLimits, resolveAssistantModelId, resolveWriterModelId, isAssistantEnabled, DEFAULT_LIMITS,
 } from '@/lib/assistant/config'
 import { classifyModelError, nextPacificMidnight, pacificDayKey, formatLibrevilleTime } from '@/lib/assistant/quota'
 
@@ -9,6 +10,7 @@ describe('free-tier model allowlist', () => {
   it('defaults to a free model', () => {
     expect(resolveAssistantModelId(undefined)).toBe(DEFAULT_ASSISTANT_MODEL)
     expect(FREE_TIER_MODELS).toContain(DEFAULT_ASSISTANT_MODEL)
+    expect(FREE_TIER_MODELS).toContain(DEFAULT_WRITER_MODEL)
   })
 
   it('accepts every listed free model', () => {
@@ -31,19 +33,65 @@ describe('free-tier model allowlist', () => {
   })
 })
 
+describe('the two models', () => {
+  it('chat model: the light one, with the big daily quota; writer model: the better writer', () => {
+    expect(DEFAULT_ASSISTANT_MODEL).toBe('gemini-3.1-flash-lite')
+    expect(DEFAULT_WRITER_MODEL).toBe('gemini-3.6-flash')
+    expect(resolveAssistantModelId(undefined)).toBe('gemini-3.1-flash-lite')
+    expect(resolveWriterModelId(undefined)).toBe('gemini-3.6-flash')
+  })
+
+  it('refuses a paid or unknown model for either role', () => {
+    for (const id of ['gemini-3.1-pro-preview', 'gemini-2.5-pro', 'gpt-5']) {
+      expect(() => resolveAssistantModelId(id)).toThrow(ModelNotAllowedError)
+      expect(() => resolveWriterModelId(id)).toThrow(ModelNotAllowedError)
+    }
+  })
+
+  it('knows the free limits of every allowed model (read from AI Studio on 2026-10-17)', () => {
+    for (const id of FREE_TIER_MODELS) expect(MODEL_FREE_LIMITS[id], id).toBeDefined()
+    expect(MODEL_FREE_LIMITS['gemini-3.1-flash-lite']).toEqual({ rpm: 15, rpd: 500 })
+    expect(MODEL_FREE_LIMITS['gemini-3.5-flash-lite']).toEqual({ rpm: 15, rpd: 500 })
+    expect(MODEL_FREE_LIMITS['gemini-3.6-flash']).toEqual({ rpm: 5, rpd: 20 })
+  })
+})
+
+describe('effective caps (Google\'s limit minus a safety margin)', () => {
+  it('keeps 20 % below Google by default', () => {
+    expect(quotaMargin({})).toBe(0.8)
+    expect(effectiveCaps('gemini-3.1-flash-lite', 0.8)).toEqual({ rpm: 12, rpd: 400 })
+    expect(effectiveCaps('gemini-3.6-flash', 0.8)).toEqual({ rpm: 4, rpd: 16 })
+    expect(effectiveCaps('gemini-2.5-flash-lite', 0.8)).toEqual({ rpm: 8, rpd: 16 })
+  })
+
+  it('never exceeds Google\'s limit, whatever the margin setting', () => {
+    expect(quotaMargin({ ASSISTANT_QUOTA_MARGIN: '5' })).toBe(1)
+    expect(quotaMargin({ ASSISTANT_QUOTA_MARGIN: '0' })).toBe(0.1)
+    expect(quotaMargin({ ASSISTANT_QUOTA_MARGIN: 'abc' })).toBe(0.8)
+    for (const id of FREE_TIER_MODELS) {
+      const caps = effectiveCaps(id, quotaMargin({ ASSISTANT_QUOTA_MARGIN: '99' }))
+      expect(caps.rpd).toBeLessThanOrEqual(MODEL_FREE_LIMITS[id].rpd)
+      expect(caps.rpm).toBeLessThanOrEqual(MODEL_FREE_LIMITS[id].rpm)
+    }
+  })
+
+  it('allows at least one request, and only one for an unknown model', () => {
+    expect(effectiveCaps('gemini-3.6-flash', 0.1)).toEqual({ rpm: 1, rpd: 2 })
+    expect(effectiveCaps('some-new-model')).toEqual({ rpm: 1, rpd: 1 })
+  })
+})
+
 describe('limits', () => {
   it('uses cautious defaults', () => {
-    const l = readLimits({})
-    expect(l).toEqual(DEFAULT_LIMITS)
-    expect(l.dailyRequests).toBeLessThanOrEqual(100)
-    expect(l.perMinute).toBeLessThanOrEqual(10)
+    expect(readLimits({})).toEqual(DEFAULT_LIMITS)
+    expect(DEFAULT_LIMITS.maxSteps).toBeLessThanOrEqual(6)
   })
 
   it('reads overrides and clamps nonsense', () => {
-    expect(readLimits({ ASSISTANT_DAILY_REQUESTS: '120', ASSISTANT_PER_MINUTE: '6' })).toMatchObject({ dailyRequests: 120, perMinute: 6 })
-    expect(readLimits({ ASSISTANT_DAILY_REQUESTS: '-5' }).dailyRequests).toBe(1)
-    expect(readLimits({ ASSISTANT_DAILY_REQUESTS: 'abc' }).dailyRequests).toBe(DEFAULT_LIMITS.dailyRequests)
+    expect(readLimits({ ASSISTANT_MAX_STEPS: '3' }).maxSteps).toBe(3)
     expect(readLimits({ ASSISTANT_MAX_STEPS: '999' }).maxSteps).toBe(12)
+    expect(readLimits({ ASSISTANT_MAX_STEPS: '-5' }).maxSteps).toBe(1)
+    expect(readLimits({ ASSISTANT_MAX_STEPS: 'abc' }).maxSteps).toBe(DEFAULT_LIMITS.maxSteps)
   })
 
   it('has a kill switch', () => {

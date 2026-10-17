@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { AssistantStatus } from '@/lib/assistant/guard'
+import type { AssistantStatus, ModelStatus } from '@/lib/assistant/guard'
 
 const time = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Libreville', hour: '2-digit', minute: '2-digit' })
 
@@ -13,7 +13,30 @@ function countdown(ms: number): string {
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : m > 0 ? `${m} min ${String(sec).padStart(2, '0')} s` : `${sec} s`
 }
 
-// Read-only reminder, free-tier usage meter, and the pause banner shown when the
+const ROLE_LABEL: Record<ModelStatus['role'], string> = { chat: 'Analyses, audits, documents, conversations, traductions', writer: 'Rédaction et révision des articles' }
+
+function ModelRow({ m }: { m: ModelStatus }) {
+  const pct = m.dailyCap > 0 ? Math.min(100, Math.round((m.usedToday / m.dailyCap) * 100)) : 0
+  return (
+    <li>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <span style={{ color: 'var(--text)' }}>{ROLE_LABEL[m.role]}</span>
+        <span>
+          <strong style={{ color: 'var(--text)' }}>{m.usedToday} / {m.dailyCap}</strong> requêtes aujourd&apos;hui
+        </span>
+      </div>
+      <div className="mt-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }} role="progressbar" aria-valuemin={0} aria-valuemax={m.dailyCap} aria-valuenow={m.usedToday} aria-label={`Requêtes utilisées aujourd'hui, ${ROLE_LABEL[m.role]}`}>
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 90 ? '#D90000' : 'var(--accent)' }} />
+      </div>
+      <p className="mt-0.5" style={{ color: 'var(--text-subtle)' }}>
+        {m.id} · limite de Google : {m.official.rpd} par jour, {m.official.rpm} par minute
+        {m.blockedUntil ? ' · en pause' : ''}
+      </p>
+    </li>
+  )
+}
+
+// Read-only reminder, free-tier usage per model, and the pause banner shown when a
 // quota is used up. No money anywhere: the free tier costs nothing by design.
 export default function StatusBar({ status, onExpire }: { status: AssistantStatus | null; onExpire: () => void }) {
   const [now, setNow] = useState(() => Date.now())
@@ -23,17 +46,14 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
     return () => clearInterval(id)
   }, [])
 
-  const blockedMs = status?.blockedUntil ? new Date(status.blockedUntil).getTime() - now : 0
-  const blocked = blockedMs > 0
+  const pausedMs = status?.pausedUntil ? new Date(status.pausedUntil).getTime() - now : 0
+  const paused = Boolean(status?.paused) && pausedMs > 0
+  const expired = Boolean(status?.pausedUntil) && pausedMs <= 0
 
   useEffect(() => {
-    if (status?.blockedUntil && blockedMs <= 0) onExpire()
+    if (expired) onExpire()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when the countdown reaches zero
-  }, [blockedMs <= 0 && Boolean(status?.blockedUntil)])
-
-  const used = status?.today.requests ?? 0
-  const cap = status?.limits.dailyRequests ?? 0
-  const pct = cap > 0 ? Math.min(100, Math.round((used / cap) * 100)) : 0
+  }, [expired])
 
   return (
     <div className="space-y-3 mb-5">
@@ -44,18 +64,13 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
         </span>
       </div>
 
-      {status && (
+      {status && status.models.length > 0 && (
         <div className="card no-lift px-4 py-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-            <span>Modèle : <strong style={{ color: 'var(--text)' }}>{status.model ?? '—'}</strong> (palier gratuit)</span>
-            <span>Requêtes aujourd&apos;hui : <strong style={{ color: 'var(--text)' }}>{used} / {cap}</strong></span>
-            <span>Renouvellement : {time.format(new Date(status.nextReset))} (Libreville)</span>
-          </div>
-          <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }} role="progressbar" aria-valuemin={0} aria-valuemax={cap} aria-valuenow={used} aria-label="Requêtes utilisées aujourd'hui">
-            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 90 ? '#D90000' : 'var(--accent)' }} />
-          </div>
-          <p className="mt-2" style={{ color: 'var(--text-subtle)' }}>
-            Plafond prudent de l&apos;application (réglable), pas le quota officiel de Google. Aucune facturation n&apos;est activée.
+          <ul className="space-y-3">
+            {status.models.map((m) => <ModelRow key={m.role} m={m} />)}
+          </ul>
+          <p className="mt-3" style={{ color: 'var(--text-subtle)' }}>
+            Renouvellement à {time.format(new Date(status.nextReset))} (Libreville). Les plafonds restent sous les limites de Google (marge de sécurité) et chaque requête est comptée, y compris celles des outils. Aucune facturation n&apos;est activée.
           </p>
         </div>
       )}
@@ -66,10 +81,10 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
       {status?.modelError && (
         <div className="card no-lift px-4 py-3 text-sm" role="alert" style={{ color: '#D90000' }}>{status.modelError}</div>
       )}
-      {blocked && (
+      {paused && (
         <div className="card no-lift px-4 py-3 text-sm" role="alert" style={{ borderColor: '#D90000' }}>
-          <p style={{ color: 'var(--text)' }}>{status?.blockMessage}</p>
-          <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>Reprise automatique dans <strong>{countdown(blockedMs)}</strong>. Rien n&apos;est facturé en attendant.</p>
+          <p style={{ color: 'var(--text)' }}>{status?.pauseMessage}</p>
+          <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>Reprise automatique dans <strong>{countdown(pausedMs)}</strong>. Rien n&apos;est facturé en attendant.</p>
         </div>
       )}
     </div>

@@ -1,28 +1,24 @@
 // The model calls that produce draft text. Each one is bounded (output tokens,
-// no automatic retries, abort signal) and counted against the daily cap by the
-// UsageMeter, because on the free tier every request is quota.
+// no automatic retries, abort signal). Counting against the free quota is done by
+// the limiter wrapped around each model (limiter.ts), not here.
 import { generateObject, type LanguageModel } from 'ai'
 import { z } from 'zod'
 import { translateEntries } from '@/lib/translate'
-import { BudgetExceededError, type UsageMeter } from '@/lib/assistant/meter'
 import { BLOG_WRITER_SYSTEM, LENGTH_WORDS, PATCH_SYSTEM, REVISER_SYSTEM } from '@/lib/assistant/prompts'
 import { blogFieldsSchema, blogModelSchema, type BlogFields, type BlogModelOutput } from '@/lib/assistant/drafts'
 
 export interface GenerationEnv {
+  /** The chat model: translations (and, in analysis.ts, documents and conversations). */
   model: LanguageModel
+  /** The writer model: articles and rewrites only. */
+  writerModel: LanguageModel
   providerOptions: Record<string, Record<string, unknown>>
   maxDraftTokens: number
-  meter: UsageMeter
   abortSignal?: AbortSignal
 }
 
 // Providers options are typed as JSON; ours are plain objects of primitives.
 export const options = (env: GenerationEnv) => env.providerOptions as never
-
-export function charge(env: GenerationEnv): void {
-  if (!env.meter.canSpend(1)) throw new BudgetExceededError()
-  env.meter.spend(1)
-}
 
 export interface BlogRequest {
   brief: string
@@ -36,9 +32,8 @@ export interface BlogRequest {
 }
 
 export async function writeBlogArticle(env: GenerationEnv, req: BlogRequest): Promise<BlogModelOutput> {
-  charge(env)
   const { object } = await generateObject({
-    model: env.model,
+    model: env.writerModel,
     schema: blogModelSchema,
     system: BLOG_WRITER_SYSTEM,
     prompt: [
@@ -61,9 +56,8 @@ export async function writeBlogArticle(env: GenerationEnv, req: BlogRequest): Pr
 const reviseSchema = blogFieldsSchema
 
 export async function reviseBlogFields(env: GenerationEnv, current: BlogFields, instruction: string): Promise<BlogFields> {
-  charge(env)
   const { object } = await generateObject({
-    model: env.model,
+    model: env.writerModel,
     schema: reviseSchema,
     system: REVISER_SYSTEM,
     prompt: `CONSIGNE DE L'ADMINISTRATEUR :\n${instruction}\n\nTEXTE ACTUEL (JSON) :\n${JSON.stringify(current)}`,
@@ -76,9 +70,8 @@ export async function reviseBlogFields(env: GenerationEnv, current: BlogFields, 
 }
 
 export async function rewriteField(env: GenerationEnv, input: { label: string; before: string; instruction: string }): Promise<{ after: string; rationale: string }> {
-  charge(env)
   const { object } = await generateObject({
-    model: env.model,
+    model: env.writerModel,
     schema: z.object({ after: z.string().min(1).max(12_000), rationale: z.string().max(600) }),
     system: PATCH_SYSTEM,
     prompt: `CHAMP : ${input.label}\n\nCONSIGNE :\n${input.instruction}\n\nTEXTE ACTUEL :\n${input.before}`,
@@ -92,7 +85,6 @@ export async function rewriteField(env: GenerationEnv, input: { label: string; b
 
 /** French → English with the same prompt the public site uses (lib/translate.ts), on the assistant's model. */
 export async function translateFields(env: GenerationEnv, fields: Record<string, string>): Promise<Record<string, string>> {
-  charge(env)
   const entries = Object.entries(fields).filter(([, v]) => v.trim()) as [string, string][]
   return translateEntries(entries, {
     model: env.model,

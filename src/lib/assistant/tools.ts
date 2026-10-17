@@ -20,7 +20,6 @@ import { analyzeChatLogs, analyzeDocument } from '@/lib/assistant/analysis'
 import { docxToText, type FetchResult } from '@/lib/assistant/documents'
 import type { ChatLogMessage } from '@/lib/chat-log'
 import { buildBriefing, type BriefingInputs } from '@/lib/briefing'
-import { BudgetExceededError, type UsageMeter } from '@/lib/assistant/meter'
 import { BLOCKING_KINDS, type ClassifiedError } from '@/lib/assistant/quota'
 import {
   blogDetail, blogSummary, businessOverview, capResult, clip, educationView, experienceView, offerView, profileView, projectDetail, projectSummary,
@@ -66,10 +65,10 @@ export interface AssistantDeps {
     list(opts?: { limit?: number }): Promise<DraftDTO[]>
     revise(id: string, expectedVersion: number, patch: { payload: BlogPayload | PatchPayload; title?: string; unverifiedClaims?: string[]; note: string }): Promise<ReviseResult>
   }
-  model: LanguageModel
+  /** `chat`: answers, tools, documents, conversations, translations. `writer`: articles only. Both go through the request limiter. */
+  models: { chat: LanguageModel; writer: LanguageModel }
   providerOptions: Record<string, Record<string, unknown>>
   limits: AssistantLimits
-  meter: UsageMeter
   conversationId: string | null
   /** Downloads a published document from the site's own storage (see documents.ts for the limits). */
   fetchDocument(url: string): Promise<FetchResult>
@@ -106,10 +105,10 @@ export function buildAssistantTools(deps: AssistantDeps) {
   const NO_DATA = fail('Le portfolio est momentanément illisible (base de données indisponible).')
 
   const genEnv = (): GenerationEnv => ({
-    model: deps.model,
+    model: deps.models.chat,
+    writerModel: deps.models.writer,
     providerOptions: deps.providerOptions,
     maxDraftTokens: deps.limits.maxDraftTokens,
-    meter: deps.meter,
     abortSignal: deps.abortSignal,
   })
 
@@ -119,7 +118,6 @@ export function buildAssistantTools(deps: AssistantDeps) {
     try {
       return await run()
     } catch (err) {
-      if (err instanceof BudgetExceededError) return { error: "Plafond quotidien de requêtes atteint : impossible de rédiger maintenant. Dis-le à l'administrateur." }
       // The model answered, but not in the shape the blog accepts (too short, wrong format): a content problem, not a provider one.
       if (err instanceof ZodError || NoObjectGeneratedError.isInstance(err) || TypeValidationError.isInstance(err)) return { error: "Le texte généré ne respecte pas les contraintes du blog (longueur ou format). Reformule la demande ou réessaie." }
       const classified = await deps.handleModelError(err)
@@ -270,7 +268,6 @@ export function buildAssistantTools(deps: AssistantDeps) {
         if (!doc) return fail(`Aucun document avec le slug « ${input.slug} ». Utilise listDocuments.`)
         if (doc.fileType === 'doc') return fail('Les anciens fichiers Word (.doc) ne sont pas lisibles : seuls les PDF et les .docx le sont.')
         if (input.task === 'question' && !input.question?.trim()) return fail('Précise la question à poser au document.')
-        if (!deps.meter.canSpend(1)) throw new BudgetExceededError()
 
         const file = await deps.fetchDocument(doc.fileUrl)
         if (!file.ok) return fail(file.error)
@@ -289,7 +286,6 @@ export function buildAssistantTools(deps: AssistantDeps) {
       description: "Analyse les conversations récentes des visiteurs avec le chatbot du site (coordonnées retirées avant l'analyse) : thèmes fréquents, questions restées sans réponse, signaux d'intérêt, idées d'amélioration. Coûte 1 requête d'API gratuite.",
       inputSchema: z.object({ focus: z.string().max(200).optional().describe("point d'attention éventuel de l'administrateur") }),
       execute: ({ focus }) => guarded(async () => {
-        if (!deps.meter.canSpend(1)) throw new BudgetExceededError()
         const transcripts = await deps.getChatTranscripts()
         const result = await analyzeChatLogs(genEnv(), transcripts, focus)
         if ('empty' in result) return { empty: true, note: "Aucune conversation enregistrée à analyser pour l'instant." }
@@ -337,8 +333,6 @@ export function buildAssistantTools(deps: AssistantDeps) {
       execute: (input) => guarded(async () => {
         const data = await needPortfolio()
         if (!data) return NO_DATA
-        if (!deps.meter.canSpend(2)) throw new BudgetExceededError()
-
         const categories = [...new Set(data.blog.map((p) => p.category).filter(Boolean))]
         const env = genEnv()
         const raw = await writeBlogArticle(env, { ...input, categories, sources: buildSources(data) })
@@ -390,8 +384,6 @@ export function buildAssistantTools(deps: AssistantDeps) {
         if (before === null) {
           return fail(`Cible introuvable ou champ non autorisé. Champs possibles pour « ${input.section} » : ${(PATCH_FIELDS[input.section] as readonly string[]).join(', ')}.`)
         }
-        if (!deps.meter.canSpend(input.withEnglish ? 2 : 1)) throw new BudgetExceededError()
-
         const env = genEnv()
         const { after, rationale } = await rewriteField(env, { label: `${input.section} / ${input.id} / ${input.field}`, before, instruction: input.instruction })
         const payload: PatchPayload = { target, before, after: sanitizeMarkdown(after), afterEn: null, rationale }
@@ -425,8 +417,6 @@ export function buildAssistantTools(deps: AssistantDeps) {
         if (!draft) return fail('Brouillon introuvable. Utilise listMyDrafts.')
         if (draft.status === 'discarded') return fail('Ce brouillon a été écarté.')
         if (draft.status === 'applied') return fail("Ce brouillon a déjà été appliqué au site : il ne peut plus être révisé. Prépare-en un nouveau.")
-        const wantsEnglish = draft.kind === 'blog_post' && !input.keepEnglish
-        if (!deps.meter.canSpend(wantsEnglish ? 2 : 1)) throw new BudgetExceededError()
         const env = genEnv()
 
         if (draft.kind === 'blog_post') {

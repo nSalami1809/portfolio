@@ -1,13 +1,12 @@
 'use server'
 
 import { requireAdmin } from '@/lib/require-admin'
-import { getStatus, handleProviderError, preflight, recordUsage, releaseLock, type AssistantStatus } from '@/lib/assistant/guard'
+import { getStatus, handleProviderError, preflight, releaseLock, type AssistantStatus } from '@/lib/assistant/guard'
 import { discardDraft, getDraft, listDrafts, reviseDraft } from '@/lib/assistant/draft-store'
 import { deleteConversation, listConversations, type ConversationDTO } from '@/lib/assistant/history'
 import { blogFieldsSchema, type BlogPayload, type DraftDTO, type PatchPayload } from '@/lib/assistant/drafts'
 import { translateFields } from '@/lib/assistant/draft-generation'
-import { assistantProviderOptions, getAssistantModel } from '@/lib/assistant/models'
-import { UsageMeter } from '@/lib/assistant/meter'
+import { assistantProviderOptions, getChatModel } from '@/lib/assistant/models'
 
 // Back-office side of the assistant: its status, its drafts, its history. Every
 // action checks the admin session first (Server Actions are reachable by direct
@@ -45,10 +44,10 @@ export async function regenerateDraftEnglish(id: string): Promise<RegenerateResu
 
   const gate = await preflight()
   if (!gate.ok) return { ok: false, error: gate.message }
-  const meter = new UsageMeter(gate.usedToday, gate.limits.dailyRequests)
-  meter.chatRequests = 0
   try {
-    const env = { model: getAssistantModel(), providerOptions: assistantProviderOptions, maxDraftTokens: gate.limits.maxDraftTokens, meter }
+    // Translating is a chat-model job; the request is counted by the limiter around the model.
+    const model = getChatModel()
+    const env = { model, writerModel: model, providerOptions: assistantProviderOptions, maxDraftTokens: gate.limits.maxDraftTokens }
 
     if (draft.kind === 'blog_post') {
       const payload = draft.payload as BlogPayload
@@ -71,7 +70,6 @@ export async function regenerateDraftEnglish(id: string): Promise<RegenerateResu
     const classified = await handleProviderError(err)
     return { ok: false, error: classified.message }
   } finally {
-    await recordUsage({ requests: meter.total, inputTokens: 0, outputTokens: 0 })
     await releaseLock()
   }
 }

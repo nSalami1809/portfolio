@@ -3,7 +3,6 @@ import { ZodError } from 'zod'
 import {
   PATCH_FIELDS, SLUG_RE, finalizeBlogDraft, fingerprint, readPatchTarget, readTimeOf, sanitizeMarkdown, slugify, uniqueSlug, type BlogModelOutput,
 } from '@/lib/assistant/drafts'
-import { UsageMeter } from '@/lib/assistant/meter'
 import { makePortfolio } from './assistant-data'
 
 const raw = (over: Partial<BlogModelOutput> = {}): BlogModelOutput => ({
@@ -123,23 +122,5 @@ describe('patch targets are resolved against the real data', () => {
   it('fingerprints text stably', () => {
     expect(fingerprint('abc')).toBe(fingerprint('abc'))
     expect(fingerprint('abc')).not.toBe(fingerprint('abd'))
-  })
-})
-
-describe('UsageMeter', () => {
-  it('counts the running chat request and tool requests against the cap', () => {
-    const m = new UsageMeter(46, 50)
-    expect(m.total).toBe(1)
-    expect(m.canSpend(3)).toBe(true) // 46 + 1 + 3 = 50
-    expect(m.canSpend(4)).toBe(false)
-    m.spend(2)
-    expect(m.total).toBe(3)
-    expect(m.remaining()).toBe(1)
-    expect(m.canSpend(2)).toBe(false)
-  })
-
-  it('refuses everything once the day is full', () => {
-    expect(new UsageMeter(50, 50).canSpend(1)).toBe(false)
-    expect(new UsageMeter(50, 50).remaining()).toBe(0)
   })
 })

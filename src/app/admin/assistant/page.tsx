@@ -88,10 +88,11 @@ export default function AdminAssistantPage() {
     toast('Conversation supprimée.')
   }
 
-  // blockedUntil is cleared by the server once it has passed; StatusBar triggers that refresh when its countdown ends.
-  const blocked = Boolean(status && (!status.enabled || status.modelError || status.blockedUntil))
-  const used = status?.today.requests ?? 0
-  const cap = status?.limits.dailyRequests ?? 0
+  // The pause is computed by the server; StatusBar triggers a refresh when its countdown ends.
+  const blocked = Boolean(status && (!status.enabled || status.modelError || status.paused))
+  const chatModel = status?.models.find((m) => m.role === 'chat')
+  const used = chatModel?.usedToday ?? 0
+  const cap = chatModel?.dailyCap ?? 0
   const activeDrafts = drafts.filter((d) => d.status === 'draft').length
 
   const sidebar = (onClose?: () => void) => (
@@ -128,7 +129,7 @@ export default function AdminAssistantPage() {
           <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
             <button type="button" className="lg:hidden btn-secondary btn-xs" aria-label="Ouvrir la liste des conversations" onClick={() => setMenuOpen(true)}>☰</button>
             <span className="flex-1" />
-            <span className="text-xs rounded-full px-2.5 py-1" style={{ border: '1px solid var(--border)', color: blocked ? '#D90000' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }} title="Requêtes du palier gratuit utilisées aujourd'hui (plafond prudent de l'application)">
+            <span className="text-xs rounded-full px-2.5 py-1" style={{ border: '1px solid var(--border)', color: blocked ? '#D90000' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }} title="Requêtes du palier gratuit utilisées aujourd'hui par le modèle de conversation (sous la limite de Google, marge incluse)">
               {blocked ? 'En pause' : status ? `${used} / ${cap} requêtes` : '…'}
             </span>
             <button type="button" className="btn-secondary btn-xs" aria-pressed={draftsOpen} onClick={() => setDraftsOpen((v) => !v)}>
