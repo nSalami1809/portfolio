@@ -13,7 +13,7 @@ import { quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail, quot
 import { getAdminEmail } from '@/lib/admin-config'
 import { notifyAdmin } from '@/lib/push'
 import { requireAdmin } from '@/lib/require-admin'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
 import { computeTotals, resolveTerms, snapshotTerms, wantsAutoDeposit, wantsSignatureOtp, type QuoteTerms } from '@/lib/business'

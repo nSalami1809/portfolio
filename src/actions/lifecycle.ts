@@ -12,7 +12,7 @@ import { acceptanceSignedAdminEmail } from '@/lib/email-templates'
 import { deliveryEmail, acceptanceSignedClientEmail, quoteClientCopyEmail } from '@/lib/email-client'
 import { computeTotals, resolveTerms, snapshotTerms } from '@/lib/business'
 import { CURRENT_DOC_VERSION } from '@/lib/quote-document'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
 import {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo, defaultOffers } from '@/data/defaultData'
 import { generateSampleDocument, SAMPLE_KINDS, type SampleKind } from '@/lib/sample-documents'
 

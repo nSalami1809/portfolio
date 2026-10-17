@@ -6,7 +6,7 @@
 import type { Filter, WithId } from 'mongodb'
 import { sendMailLogged } from '@/lib/mail-safe'
 import { getAdminEmail } from '@/lib/admin-config'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { resolveTerms, wantsReminders } from '@/lib/business'
 import { quotesCol, SITE_URL, type QuoteRecord, type QuoteRecordEvent } from '@/lib/quotes-core'

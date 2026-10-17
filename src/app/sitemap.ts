@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { LOCALES } from '@/lib/i18n/locale'
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'

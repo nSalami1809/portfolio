@@ -1,47 +1,16 @@
 'use server'
 
-import { cache } from 'react'
-import { updateTag, unstable_cache } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import { requireAdmin } from '@/lib/require-admin'
+import { fetchPortfolio, fetchPortfolioFresh } from '@/lib/portfolio-data'
 import type { PortfolioData } from '@/types'
-import {
-  defaultPersonalInfo,
-  defaultSocials,
-  defaultProjects,
-  defaultExperiences,
-  defaultEducations,
-  defaultSkills,
-  defaultTestimonials,
-  defaultSettings,
-  defaultVision,
-  defaultBlogPosts,
-  defaultOffers,
-  defaultAvailability,
-  defaultDocuments,
-} from '@/data/defaultData'
 
 const DOC_ID = 'main'
 
-// Documents saved before a given field existed simply don't have that key in
-// MongoDB — merging over these defaults means adding a new top-level field
-// to PortfolioData can never again crash existing users on `undefined`
-// (e.g. `.length`/`.map` on a field that predates it).
-const DEFAULTS: PortfolioData = {
-  personal: defaultPersonalInfo,
-  socials: defaultSocials,
-  projects: defaultProjects,
-  experiences: defaultExperiences,
-  educations: defaultEducations,
-  skills: defaultSkills,
-  testimonials: defaultTestimonials,
-  settings: defaultSettings,
-  vision: defaultVision,
-  blog: defaultBlogPosts,
-  offers: defaultOffers,
-  availability: defaultAvailability,
-  documents: defaultDocuments,
-}
+// Everything exported here is a Server Action, i.e. callable by a direct POST:
+// each one must check the admin session itself. Server-side readers live in
+// lib/portfolio-data.ts (not an action file) for exactly that reason.
 
 export async function publishPortfolio(data: PortfolioData): Promise<void> {
   await requireAdmin()
@@ -67,45 +36,15 @@ export async function publishPortfolio(data: PortfolioData): Promise<void> {
   }
 }
 
-async function fetchPortfolioFromDb(): Promise<PortfolioData | null> {
-  const db = await getDb()
-  const doc = await db.collection('portfolio').findOne({ _id: DOC_ID as unknown as never })
-  if (!doc) return null
-  const { _id: _docId, updatedAt: _updatedAt, ...data } = doc
-  return { ...DEFAULTS, ...data } as PortfolioData
+// Back-office readers for PortfolioContext (a client component, so it needs
+// Server Actions). Same data as the public readers, but only for an admin:
+// the document holds unpublished posts and the business settings.
+export async function fetchPortfolioForAdmin(): Promise<PortfolioData | null> {
+  await requireAdmin()
+  return fetchPortfolio()
 }
 
-// Cached + tagged — the version every public-facing reader should use
-// (pages, API routes, the chatbot, sitemap, bookings' availability rules).
-// react's `cache()` dedupes calls within a single request on top of
-// `unstable_cache`'s cross-request cache, which `publishPortfolio` above
-// invalidates on-demand via `updateTag('portfolio')`; `revalidate: 30`
-// is only a fallback if that tag invalidation is ever missed.
-export const fetchPortfolio = cache(
-  unstable_cache(fetchPortfolioFromDb, ['portfolio'], { tags: ['portfolio'], revalidate: 30 }),
-)
-
-// Uncached — reads MongoDB directly, every time. Reserved for
-// PortfolioContext's syncAndPublish(), which must merge against the true
-// current state right before publishing so a stale open tab can never
-// clobber fields it never touched. Do not use this for rendering; it
-// defeats the point of the cached version above.
-export const fetchPortfolioFresh = fetchPortfolioFromDb
-
-// Every public page/route falls back to hardcoded placeholder data
-// (defaultProjects, etc.) when fetchPortfolio() fails, rather than showing
-// an error screen to a visitor over a transient Mongo hiccup. That's the
-// right call for visitors, but a bare `.catch(() => null)` at each of the
-// dozen call sites made those failures completely invisible — nothing in
-// the server logs ever showed that real data had silently been swapped for
-// placeholders. This centralizes the fallback so every call site logs the
-// same way; the behavior (fall back to null → caller's own defaults) is
-// unchanged.
-export async function fetchPortfolioSafe(context: string): Promise<PortfolioData | null> {
-  try {
-    return await fetchPortfolio()
-  } catch (err) {
-    console.error(`[fetchPortfolioSafe] ${context}: fetchPortfolio() failed, falling back to defaults`, err)
-    return null
-  }
+export async function fetchPortfolioFreshForAdmin(): Promise<PortfolioData | null> {
+  await requireAdmin()
+  return fetchPortfolioFresh()
 }

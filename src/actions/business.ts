@@ -3,7 +3,7 @@
 import { requireAdmin } from '@/lib/require-admin'
 import { quotesCol, toQuote } from '@/lib/quotes-core'
 import { invoicesCol, toInvoice } from '@/lib/invoicing'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { computeBusinessStats, type BusinessStats } from '@/lib/business-stats'
 

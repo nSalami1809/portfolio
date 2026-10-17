@@ -1,4 +1,4 @@
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultOffers } from '@/data/defaultData'
 import { jsonLdScript } from '@/lib/json-ld'
 import { translateFieldsBatch } from '@/lib/translate'

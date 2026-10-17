@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 
 // Builds a clean "FirstLast.pdf" filename from the admin's full name —
 // derived from data instead of hardcoded, so it stays correct if the name

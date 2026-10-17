@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { identityLines, resolveBusiness, type ResolvedBusiness } from '@/lib/business'

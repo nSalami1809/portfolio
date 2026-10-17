@@ -1,4 +1,4 @@
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultDocuments } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'

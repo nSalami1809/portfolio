@@ -3,7 +3,7 @@
 import { createHash } from 'crypto'
 import sharp from 'sharp'
 import { requireAdmin } from '@/lib/require-admin'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { previewDocxSignatures, signDocxDocument, buildSignatureTriggers, type SignaturePlaceholder } from '@/lib/docx-signature'
 
 export type { SignaturePlaceholder }

@@ -3,7 +3,7 @@ import { streamText, convertToModelMessages, tool, stepCountIs, type UIMessage }
 import { google } from '@ai-sdk/google'
 import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import { joinWaitlist } from '@/actions/waitlist'

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { LOCALES, isLocale } from '@/lib/i18n/locale'
 import { getDictionary } from '@/lib/i18n/dictionaries'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { translateFields } from '@/lib/translate'
 import { defaultPersonalInfo, defaultSocials } from '@/data/defaultData'
 import Navbar from '@/components/layout/Navbar'

@@ -10,7 +10,7 @@ import { bookingNotificationEmail, bookingClientCopyEmail, bookingReminderEmail 
 import { getAdminEmail } from '@/lib/admin-config'
 import { notifyAdmin } from '@/lib/push'
 import { buildICS } from '@/lib/ics'
-import { fetchPortfolio } from '@/actions/portfolio'
+import { fetchPortfolio } from '@/lib/portfolio-data'
 import { notifyWaitlist } from '@/actions/waitlist'
 import { requireAdmin } from '@/lib/require-admin'
 import { getClientIp } from '@/lib/client-ip'

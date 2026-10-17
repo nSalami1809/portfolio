@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultBlogPosts } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
 import { jsonLdScript } from '@/lib/json-ld'

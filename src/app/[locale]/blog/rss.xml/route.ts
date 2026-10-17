@@ -1,4 +1,4 @@
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultBlogPosts } from '@/data/defaultData'
 import { translateFieldsBatch } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'

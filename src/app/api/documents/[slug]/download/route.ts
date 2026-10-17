@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchPortfolioSafe } from '@/actions/portfolio'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultDocuments } from '@/data/defaultData'
 
 // A document's fileUrl is a Vercel Blob URL on its own subdomain

@@ -17,7 +17,7 @@ import {
   defaultAvailability,
   defaultDocuments,
 } from '@/data/defaultData'
-import { publishPortfolio, fetchPortfolio, fetchPortfolioFresh } from '@/actions/portfolio'
+import { publishPortfolio, fetchPortfolioForAdmin, fetchPortfolioFreshForAdmin } from '@/actions/portfolio'
 import { PortfolioContext, type PortfolioContextValue } from './portfolio-core'
 
 // Admin code imports these from here; the public tree imports them from
@@ -76,7 +76,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       // Uncached, direct-from-MongoDB read (never the tagged/cached
       // fetchPortfolio) so the merge base is always truly current — this is
       // what stops a stale open tab from clobbering fields it never touched.
-      const fresh = await fetchPortfolioFresh()
+      const fresh = await fetchPortfolioFreshForAdmin()
       if (fresh) base = fresh
     } catch { /* offline — fall back to publishing local state as-is */ }
 
@@ -113,7 +113,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const refreshIfIdle = useCallback(async () => {
     if (dirtyKeys.current.size > 0 || syncing.current) return
     try {
-      const fresh = await fetchPortfolio()
+      const fresh = await fetchPortfolioForAdmin()
       if (fresh) {
         setData(fresh)
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch { /* quota */ }
@@ -194,7 +194,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     // which has its own separate 15s cache) — near-instantly fresh after a
     // publish via revalidateTag, 30s max staleness otherwise. Fine here:
     // this is a one-time hydration, not the pre-publish merge guard.
-    fetchPortfolio()
+    fetchPortfolioForAdmin()
       .then((fresh) => {
         if (!fresh || hydratedFromMongo.current) return
         hydratedFromMongo.current = true
