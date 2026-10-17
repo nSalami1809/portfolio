@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# One run per branch: a new push cancels the previous, still-running one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Types
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      # The build needs no real secrets: pages that read the database fall back
+      # to the bundled default content when it is unreachable (5 s timeout).
+      - name: Build
+        run: npm run build
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:1/ci
+          JWT_SECRET: ci-only-secret-not-used-in-production
+          NEXT_PUBLIC_SITE_URL: https://nawafsalami-itech.vercel.app
+          NEXT_TELEMETRY_DISABLED: '1'
