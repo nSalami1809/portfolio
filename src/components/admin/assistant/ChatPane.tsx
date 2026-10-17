@@ -144,7 +144,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </button>
-        <label htmlFor={`assistant-input-${variant}`} className="sr-only">Message à l&apos;assistant</label>
+        <label htmlFor={`assistant-input-${variant}`} className="sr-only">Message à NemCopilotIA</label>
         <textarea
           id={`assistant-input-${variant}`}
           ref={areaRef}
@@ -152,7 +152,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
           maxLength={4000}
           value={input}
           disabled={blocked}
-          placeholder={blocked ? 'Assistant en pause (quota gratuit atteint)' : 'Poser une question'}
+          placeholder={blocked ? 'NemCopilotIA en pause (quota gratuit atteint)' : 'Poser une question'}
           onChange={(e) => { setInput(e.target.value); grow() }}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(input) } }}
           className="flex-1 bg-transparent outline-none text-sm py-2 px-1"
@@ -169,7 +169,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
         )}
       </form>
       <p className="text-[11px] text-center mt-2" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-        L&apos;assistant peut se tromper : vérifie avant d&apos;appliquer. Il ne modifie jamais ton site de lui-même.
+        NemCopilotIA peut se tromper : vérifie avant d&apos;appliquer. Il ne modifie jamais ton site de lui-même.
       </p>
     </div>
   )
@@ -207,7 +207,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
         <div className={`mx-auto space-y-6 ${popover ? '' : 'max-w-3xl'}`}>
           {messages.map((m) => <Message key={m.id} message={m} onOpenDraft={onOpenDraft} />)}
           {busy && (
-            <p role="status" className="text-xs pl-10" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>L&apos;assistant travaille… (un article complet peut prendre une minute)</p>
+            <p role="status" className="text-xs pl-10" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>NemCopilotIA travaille… (un article complet peut prendre une minute)</p>
           )}
           {errorBox}
         </div>

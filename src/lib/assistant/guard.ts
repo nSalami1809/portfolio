@@ -67,19 +67,19 @@ async function modelStatus(role: 'chat' | 'writer', id: string, now: Date): Prom
  * still has room today, and no other generation is running.
  */
 export async function preflight(now: Date = new Date()): Promise<Preflight> {
-  if (!isAssistantEnabled()) return { ok: false, status: 503, code: 'disabled', message: "L'assistant est désactivé (ASSISTANT_ENABLED=0)." }
+  if (!isAssistantEnabled()) return { ok: false, status: 503, code: 'disabled', message: "NemCopilotIA est désactivé (ASSISTANT_ENABLED=0)." }
   let chatId: string
   try {
     chatId = resolveAssistantModelId()
     resolveWriterModelId()
   } catch (e) {
-    const message = e instanceof ModelNotAllowedError ? e.message : 'Modèle de l’assistant invalide.'
+    const message = e instanceof ModelNotAllowedError ? e.message : 'Modèle de NemCopilotIA invalide.'
     return { ok: false, status: 503, code: 'model', message }
   }
 
   const chat = await modelStatus('chat', chatId, now)
   if (chat.blockedUntil) {
-    return { ok: false, status: 429, code: 'blocked', message: chat.blockMessage ?? "L'assistant est en pause : quota gratuit atteint.", retryAt: new Date(chat.blockedUntil) }
+    return { ok: false, status: 429, code: 'blocked', message: chat.blockMessage ?? "NemCopilotIA est en pause : quota gratuit atteint.", retryAt: new Date(chat.blockedUntil) }
   }
   if (chat.usedToday >= chat.dailyCap) {
     const retryAt = nextPacificMidnight(now)

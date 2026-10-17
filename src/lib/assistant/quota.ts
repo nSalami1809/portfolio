@@ -82,7 +82,7 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
     return {
       kind: local.scope === 'daily' ? 'quota_daily' : 'rate_limit',
       retryAt: local.retryAt,
-      message: local.message ?? 'Quota gratuit atteint : assistant en pause.',
+      message: local.message ?? 'Quota gratuit atteint : NemCopilotIA en pause.',
       modelId,
       local: true,
     }
@@ -98,7 +98,7 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
         kind: 'quota_daily',
         retryAt,
         modelId,
-        message: `Le quota gratuit quotidien de Gemini est atteint. Il se renouvelle à minuit (heure du Pacifique), soit vers ${formatLibrevilleTime(retryAt)} à Libreville. L'assistant reste en pause d'ici là : aucune facturation n'est activée.`,
+        message: `Le quota gratuit quotidien de Gemini est atteint. Il se renouvelle à minuit (heure du Pacifique), soit vers ${formatLibrevilleTime(retryAt)} à Libreville. NemCopilotIA reste en pause d'ici là : aucune facturation n'est activée.`,
       }
     }
     const hinted = /retry(?:Delay|[ _-]?after)?["':\s=in]*"?(\d+(?:\.\d+)?)\s*s/i.exec(text)

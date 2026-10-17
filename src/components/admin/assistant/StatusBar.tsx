@@ -60,7 +60,7 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
       <div className="card no-lift px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2" style={{ borderColor: 'var(--accent)' }}>
         <span className="text-xs font-bold tracking-wider uppercase" style={{ color: 'var(--accent)' }}>Sous ton contrôle</span>
         <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          L&apos;assistant ne modifie jamais le site de lui-même : il analyse, conseille et prépare des brouillons. Seul le bouton « Appliquer », que tu valides, écrit sur le site (annulable).
+          NemCopilotIA ne modifie jamais le site de lui-même : il analyse, conseille et prépare des brouillons. Seul le bouton « Appliquer », que tu valides, écrit sur le site (annulable).
         </span>
       </div>
 
@@ -76,7 +76,7 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
       )}
 
       {status && !status.enabled && (
-        <div className="card no-lift px-4 py-3 text-sm" role="alert" style={{ color: '#D90000' }}>L&apos;assistant est désactivé (ASSISTANT_ENABLED=0).</div>
+        <div className="card no-lift px-4 py-3 text-sm" role="alert" style={{ color: '#D90000' }}>NemCopilotIA est désactivé (ASSISTANT_ENABLED=0).</div>
       )}
       {status?.modelError && (
         <div className="card no-lift px-4 py-3 text-sm" role="alert" style={{ color: '#D90000' }}>{status.modelError}</div>

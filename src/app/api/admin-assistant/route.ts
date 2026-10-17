@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     gate = await preflight()
   } catch (error) {
     console.error('[admin-assistant] preflight failed:', error)
-    return text("La base de données est momentanément indisponible : l'assistant ne peut pas démarrer.", 503)
+    return text("La base de données est momentanément indisponible : NemCopilotIA ne peut pas démarrer.", 503)
   }
   if (!gate.ok) {
     return text(gate.message, gate.status, gate.retryAt ? { 'Retry-After': String(Math.max(1, Math.ceil((gate.retryAt.getTime() - Date.now()) / 1000))) } : {})

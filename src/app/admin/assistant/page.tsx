@@ -107,7 +107,7 @@ export default function AdminAssistantPage() {
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="font-display font-bold text-2xl leading-tight" style={{ color: 'var(--text)' }}>Assistant IA</h1>
+          <h1 className="font-display font-bold text-2xl leading-tight" style={{ color: 'var(--text)' }}>NemCopilotIA</h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>Tu relis et tu décides : rien n&apos;est appliqué au site sans ton clic.</p>
         </div>
         <button type="button" className="btn-secondary btn-sm" aria-expanded={infoOpen} onClick={() => setInfoOpen((v) => !v)}>
@@ -125,7 +125,7 @@ export default function AdminAssistantPage() {
       <div className="card no-lift relative flex overflow-hidden" style={{ height: 'calc(100dvh - 10.5rem)', minHeight: 520, padding: 0 }}>
         <aside className="hidden lg:block w-64 flex-shrink-0" style={{ borderRight: '1px solid var(--border)' }}>{sidebar()}</aside>
 
-        <section className="flex-1 min-w-0 flex flex-col" aria-label="Conversation avec l'assistant">
+        <section className="flex-1 min-w-0 flex flex-col" aria-label="Conversation avec NemCopilotIA">
           <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
             <button type="button" className="lg:hidden btn-secondary btn-xs" aria-label="Ouvrir la liste des conversations" onClick={() => setMenuOpen(true)}>☰</button>
             <span className="flex-1" />

@@ -41,7 +41,7 @@ export default function AdminAssistantLauncher() {
       <m.button
         type="button"
         onClick={toggle}
-        aria-label={open ? "Fermer l'assistant IA" : "Ouvrir l'assistant IA"}
+        aria-label={open ? "Fermer NemCopilotIA" : "Ouvrir NemCopilotIA"}
         aria-expanded={open}
         aria-controls="admin-assistant-panel"
         className="fixed right-5 z-40 flex items-center justify-center"
@@ -61,7 +61,7 @@ export default function AdminAssistantLauncher() {
           <m.div
             id="admin-assistant-panel"
             role="dialog"
-            aria-label="Assistant IA"
+            aria-label="NemCopilotIA"
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -75,7 +75,7 @@ export default function AdminAssistantLauncher() {
           >
             <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
               <span className="w-7 h-7 flex items-center justify-center" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true"><BotIcon width={15} height={15} /></span>
-              <span className="font-display font-semibold text-sm flex-1" style={{ color: 'var(--text)' }}>Assistant IA</span>
+              <span className="font-display font-semibold text-sm flex-1" style={{ color: 'var(--text)' }}>NemCopilotIA</span>
               <button type="button" className="btn-secondary btn-xs" onClick={() => setConversationId(newId())}>Nouveau</button>
               <Link href="/admin/assistant" onClick={close} className="btn-secondary btn-xs">Ouvrir en grand</Link>
             </div>
