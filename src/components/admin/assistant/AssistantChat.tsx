@@ -28,6 +28,7 @@ const TOOL_LABELS: Record<string, string> = {
   getSiteStats: 'Statistiques d’audience',
   getBusinessOverview: 'Synthèse d’activité',
   checkSlug: 'Vérification du slug',
+  getDailyBriefing: 'Briefing du jour',
   listDocuments: 'Liste des documents',
   analyzeDocument: 'Lecture d’un document',
   analyzeChatLogs: 'Analyse des conversations du chatbot',

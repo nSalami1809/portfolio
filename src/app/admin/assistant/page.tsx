@@ -5,7 +5,10 @@ import StatusBar from '@/components/admin/assistant/StatusBar'
 import AssistantChat from '@/components/admin/assistant/AssistantChat'
 import DraftsPanel from '@/components/admin/assistant/DraftsPanel'
 import HistoryPanel from '@/components/admin/assistant/HistoryPanel'
+import BriefingCard from '@/components/admin/assistant/BriefingCard'
 import { getAssistantStatus, listAssistantDrafts } from '@/actions/assistant'
+import { getDailyBriefing } from '@/actions/briefing'
+import type { Briefing } from '@/lib/briefing'
 import type { AssistantStatus } from '@/lib/assistant/guard'
 import type { DraftDTO } from '@/lib/assistant/drafts'
 
@@ -15,6 +18,7 @@ export default function AdminAssistantPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [tab, setTab] = useState<'chat' | 'drafts'>('chat')
   const [turns, setTurns] = useState(0)
+  const [briefing, setBriefing] = useState<Briefing | null>(null)
 
   const refresh = useCallback(async () => {
     const [s, d] = await Promise.allSettled([getAssistantStatus(), listAssistantDrafts()])
@@ -25,13 +29,16 @@ export default function AdminAssistantPage() {
   // First load. (Later refreshes come from onTurnFinished / onExpire / openDraft.)
   useEffect(() => {
     let alive = true
-    Promise.allSettled([getAssistantStatus(), listAssistantDrafts()]).then(([s, d]) => {
+    Promise.allSettled([getAssistantStatus(), listAssistantDrafts(), getDailyBriefing()]).then(([s, d, b]) => {
       if (!alive) return
       if (s.status === 'fulfilled') setStatus(s.value)
       if (d.status === 'fulfilled') setDrafts(d.value)
+      if (b.status === 'fulfilled') setBriefing(b.value)
     })
     return () => { alive = false }
   }, [])
+
+  const refreshBriefing = useCallback(() => { getDailyBriefing().then(setBriefing, () => undefined) }, [])
 
   const onTurnFinished = useCallback(() => { setTurns((n) => n + 1); refresh() }, [refresh])
   const openDraft = useCallback((id: string) => {
@@ -51,6 +58,8 @@ export default function AdminAssistantPage() {
       </div>
 
       <StatusBar status={status} onExpire={refresh} />
+
+      <BriefingCard briefing={briefing} onRefresh={refreshBriefing} />
 
       <div className="lg:hidden flex gap-2 mb-3" role="tablist" aria-label="Affichage">
         <button type="button" role="tab" aria-selected={tab === 'chat'} className={tab === 'chat' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'} onClick={() => setTab('chat')}>Conversation</button>

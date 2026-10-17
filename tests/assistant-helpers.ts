@@ -62,6 +62,7 @@ export function fakeDeps(over: Partial<AssistantDeps> & { replies?: Reply[]; use
     getPortfolio: vi.fn(async () => portfolio),
     getBlogViews: vi.fn(async () => ({ premier: 120 })),
     getBusinessStats: vi.fn(async () => null),
+    getBriefingInputs: vi.fn(async () => null),
     getOverview: vi.fn(async () => ({ contacts30d: 1, quotes30d: 2, bookings30d: 3, views30d: 400, views24h: 10, contactsPrev30d: 0, quotesPrev30d: 0, bookingsPrev30d: 0, viewsPrev30d: 300, upcomingBookings: 1, acceptedQuotes: 1, quoteAcceptanceRate: 0.5 })),
     fetchDocument: vi.fn(async () => ({ ok: true as const, bytes: new Uint8Array([37, 80, 68, 70]) })),
     getChatTranscripts: vi.fn(async () => []),

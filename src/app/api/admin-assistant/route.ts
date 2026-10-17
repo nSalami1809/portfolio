@@ -13,6 +13,7 @@ import { buildAssistantTools, type AssistantDeps } from '@/lib/assistant/tools'
 import { createDraft, getDraft, listDrafts, reviseDraft } from '@/lib/assistant/draft-store'
 import { isConversationId, logToolCalls, saveConversation, type ToolCallLog } from '@/lib/assistant/history'
 import { fetchDocumentBytes } from '@/lib/assistant/documents'
+import { loadBriefingInputs } from '@/lib/briefing-data'
 import { recentChatTranscripts } from '@/lib/chat-log'
 
 // Admin-only assistant. Read-only on site data: its tools can look at the
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
       getBlogViews: () => (views ??= getBlogPostViews()),
       getBusinessStats: () => getBusinessStats(),
       getOverview: () => getOverviewStats(),
+      getBriefingInputs: () => loadBriefingInputs(),
       drafts: { create: createDraft, get: getDraft, list: listDrafts, revise: reviseDraft },
       model: getAssistantModel(),
       providerOptions: assistantProviderOptions,
