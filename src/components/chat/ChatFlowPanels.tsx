@@ -79,7 +79,7 @@ export function SlotPicker({ days, locale, busy, onPick }: { days: SlotDay[]; lo
                 key={time} type="button" disabled={busy} data-slot={`${d.date}T${time}`}
                 aria-label={t.slotLabel(formatSlotDay(locale, d.date), time)}
                 onClick={() => onPick(slotMessage(locale, d.date, time))}
-                className="text-xs font-medium px-2.5 py-1.5 transition-colors hover:bg-[var(--brand)] hover:text-[var(--brand-contrast)] disabled:opacity-50"
+                className="text-xs font-medium px-2.5 py-1.5 transition-colors hover:bg-[var(--brand, var(--accent))] hover:text-[var(--brand-contrast, var(--accent-contrast))] disabled:opacity-50"
                 style={{ border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}
               >
                 {time}
@@ -98,7 +98,7 @@ export function QuoteConfirm({ input, locale, busy, onConfirm, onEdit }: { input
   const t = T[locale]
   const s = summarizeQuoteDraft(input, locale)
   return (
-    <div className="p-3 space-y-2.5" style={{ ...box, border: '1px solid var(--brand)', maxWidth: '100%' }} data-testid="chat-quote-confirm">
+    <div className="p-3 space-y-2.5" style={{ ...box, border: '1px solid var(--brand, var(--accent))', maxWidth: '100%' }} data-testid="chat-quote-confirm">
       <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>{t.confirmTitle}</p>
       <dl className="text-xs space-y-1" style={{ color: 'var(--text-muted)' }}>
         {s.client && <div className="flex gap-2"><dt className="font-semibold flex-shrink-0" style={{ color: 'var(--text)' }}>{t.client}</dt><dd className="min-w-0" style={{ overflowWrap: 'anywhere' }}>{s.client}</dd></div>}
@@ -169,13 +169,13 @@ export function EmailCopyButton({ accessCode, clientEmail, locale }: { accessCod
 export function PageHintBox({ suggestions, locale, busy, onChip }: { suggestions: PageSuggestions; locale: ChatLocale; busy: boolean; onChip: (chip: HintChip) => void }) {
   const t = T[locale]
   return (
-    <div className="px-3 py-2.5" data-testid="chat-page-hint" style={{ border: '1px dashed var(--brand)', background: 'var(--surface-hover)' }}>
+    <div className="px-3 py-2.5" data-testid="chat-page-hint" style={{ border: '1px dashed var(--brand, var(--accent))', background: 'var(--surface-hover)' }}>
       <p className="text-[11px] mb-1.5" style={{ color: 'var(--text-muted)' }}>
         <span className="font-bold tracking-wider uppercase text-[10px]" style={{ color: 'var(--text)' }}>{t.pageLabel} : </span>{suggestions.label}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {suggestions.chips.map((chip) => (
-          <button key={chip.label} type="button" disabled={busy} onClick={() => onChip(chip)} className="text-xs px-2.5 py-1.5 transition-colors hover:bg-[var(--brand)] hover:text-[var(--brand-contrast)] disabled:opacity-50" style={{ border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}>
+          <button key={chip.label} type="button" disabled={busy} onClick={() => onChip(chip)} className="text-xs px-2.5 py-1.5 transition-colors hover:bg-[var(--brand, var(--accent))] hover:text-[var(--brand-contrast, var(--accent-contrast))] disabled:opacity-50" style={{ border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}>
             {chip.label}
           </button>
         ))}

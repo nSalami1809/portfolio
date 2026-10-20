@@ -99,7 +99,7 @@ export default function AdminAssistantLauncher() {
             }}
           >
             <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-              <span className="w-7 h-7 flex items-center justify-center" style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }} aria-hidden="true"><BotIcon width={17} height={17} /></span>
+              <span className="w-7 h-7 flex items-center justify-center" style={{ background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))' }} aria-hidden="true"><BotIcon width={17} height={17} /></span>
               <span className="font-display font-semibold text-sm flex-1" style={{ color: 'var(--text)' }}>NemCopilotIA</span>
               <button type="button" className="btn-secondary btn-xs" onClick={() => setConversationId(newId())}>Nouveau</button>
               <Link href="/admin/assistant" onClick={close} className="btn-secondary btn-xs">Ouvrir en grand</Link>

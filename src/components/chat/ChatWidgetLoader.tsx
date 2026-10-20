@@ -90,8 +90,8 @@ function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: str
         maxWidth: 'min(260px, calc(100vw - 2.5rem))',
         background: 'var(--bg)',
         color: 'var(--text)',
-        border: '1px solid var(--brand)',
-        boxShadow: '4px 4px 0 var(--brand)',
+        border: '1px solid var(--brand, var(--accent))',
+        boxShadow: '4px 4px 0 var(--brand, var(--accent))',
       }}
     >
       <button

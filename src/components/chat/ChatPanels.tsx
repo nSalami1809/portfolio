@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import type { Offer } from '@/types'
 import {
   PRICE_DISCLAIMER, bookingHref, contactHref, fromPriceLabel, normalizeAccessCode, quoteProgress, quoteRequestMessage, serviceCards, trackingHref,
@@ -56,6 +58,16 @@ const S = {
   },
 } as const
 
+/** "Back" is a real button, with an arrow, so nobody has to guess it can be clicked. */
+function BackButton({ label, onBack }: { label: string; onBack: () => void }) {
+  return (
+    <button type="button" onClick={onBack} className="btn-secondary btn-xs inline-flex items-center gap-1" data-testid="chat-back" style={{ padding: '0.3rem 0.65rem 0.3rem 0.4rem' }}>
+      <HugeiconsIcon icon={ArrowLeft01Icon} size={14} strokeWidth={2} aria-hidden="true" />
+      {label}
+    </button>
+  )
+}
+
 const box = { border: '1px solid var(--border)', background: 'var(--surface-hover)', color: 'var(--text)' } as const
 const small = { fontSize: '0.75rem', padding: '0.4rem 0.8rem' } as const
 
@@ -66,7 +78,7 @@ export function ServiceCards({ offers, failed, locale, busy, onRequestQuote, onB
     <div className="space-y-2.5" data-testid="chat-services">
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>{t.servicesTitle}</p>
-        <button type="button" onClick={onBack} className="text-xs underline" style={{ color: 'var(--text-muted)' }}>{t.back}</button>
+        <BackButton label={t.back} onBack={onBack} />
       </div>
       {offers === null && !failed && <p role="status" className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.loading}</p>}
       {(failed || (offers !== null && cards.length === 0)) && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.servicesEmpty}</p>}
@@ -100,7 +112,7 @@ export function QuoteTracker({ locale, busy, onAsk, onBack }: { locale: ChatLoca
     <div className="space-y-2.5 p-3" style={box} data-testid="chat-tracker">
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-poppins)' }}>{t.trackTitle}</p>
-        <button type="button" onClick={onBack} className="text-xs underline" style={{ color: 'var(--text-muted)' }}>{t.back}</button>
+        <BackButton label={t.back} onBack={onBack} />
       </div>
       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.trackHelp}</p>
       <label htmlFor="chat-track-code" className="sr-only">{t.trackLabel}</label>
@@ -144,7 +156,7 @@ export function HandoffLinks({ locale, lastQuestion, whatsapp, title }: { locale
   const t = S[locale]
   const wa = whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : ''
   return (
-    <div className="p-3 space-y-2" style={{ border: '1px solid var(--brand)', background: 'var(--surface-hover)' }} data-testid="chat-handoff">
+    <div className="p-3 space-y-2" style={{ border: '1px solid var(--brand, var(--accent))', background: 'var(--surface-hover)' }} data-testid="chat-handoff">
       {title !== false && <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{t.handoffTitle}</p>}
       <div className="flex flex-wrap gap-2">
         <a className="btn-primary btn-sm" style={small} href={contactHref(locale, lastQuestion)}>{t.write}</a>

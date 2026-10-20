@@ -110,7 +110,7 @@ function Message({ message, last, busy, onOpenDraft, onRegenerate }: { message: 
   }
   return (
     <div className="flex gap-3">
-      <span className="w-7 h-7 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }} aria-hidden="true">
+      <span className="w-7 h-7 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))' }} aria-hidden="true">
         <BotIcon width={17} height={17} />
       </span>
       <div className="min-w-0 flex-1 text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
@@ -259,7 +259,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
         onSubmit={(e) => { e.preventDefault(); send(input) }}
       >
         {(menu || slashOpen) && (
-          <div className="absolute bottom-full left-0 mb-2 w-80 max-w-[90vw] p-1 z-10 max-h-72 overflow-y-auto" role="menu" aria-label="Commandes" style={{ background: 'var(--surface)', border: '1px solid var(--brand)', boxShadow: '4px 4px 0 var(--brand)' }}>
+          <div className="absolute bottom-full left-0 mb-2 w-80 max-w-[90vw] p-1 z-10 max-h-72 overflow-y-auto" role="menu" aria-label="Commandes" style={{ background: 'var(--surface)', border: '1px solid var(--brand, var(--accent))', boxShadow: '4px 4px 0 var(--brand, var(--accent))' }}>
             {(slashOpen ? slashMatches : SLASH_COMMANDS).map((c, i) => {
               const on = slashOpen && i === activeIndex
               return (
@@ -346,7 +346,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
     return (
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
         <div className={`w-full ${popover ? 'max-w-sm' : 'max-w-2xl'} flex flex-col items-center`}>
-          <span className="w-12 h-12 flex items-center justify-center mb-4" style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }} aria-hidden="true"><BotIcon width={28} height={28} /></span>
+          <span className="w-12 h-12 flex items-center justify-center mb-4" style={{ background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))' }} aria-hidden="true"><BotIcon width={28} height={28} /></span>
           <h2 className={`font-display font-semibold text-center mb-1 ${popover ? 'text-xl' : 'text-3xl'}`} style={{ color: 'var(--text)' }}>
             {firstName ? `Bonjour ${firstName}.` : 'Bonjour.'}
           </h2>
@@ -354,7 +354,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
             {briefingSummary || 'Je connais ton portfolio : analyse, audit, statistiques, brouillons d’articles FR/EN.'}
           </p>
           {context && (
-            <div className="w-full mb-4 px-3 py-2 text-xs" data-testid="assistant-context" style={{ border: '1px dashed var(--brand)', background: 'var(--surface)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+            <div className="w-full mb-4 px-3 py-2 text-xs" data-testid="assistant-context" style={{ border: '1px dashed var(--brand, var(--accent))', background: 'var(--surface)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
               <span className="font-bold tracking-wider uppercase text-[10px]" style={{ color: 'var(--text)' }}>Page : </span>{context.label}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {context.chips.map((chip) => (

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ROOT = join(__dirname, '..', 'src')
@@ -84,8 +84,31 @@ describe('NemCopilotIA\'s mark', () => {
   })
 
   it('is worn on a teal square by the public chat and by the assistant', () => {
-    expect(icon).toMatch(/background:\s*'var\(--brand\)'/)
-    expect(read('components/admin/assistant/ChatPane.tsx')).toContain("background: 'var(--brand)', color: 'var(--brand-contrast)'")
-    expect(read('components/admin/assistant/AdminAssistantLauncher.tsx')).toContain("background: 'var(--brand)', color: 'var(--brand-contrast)'")
+    const square = "background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))'"
+    expect(icon).toContain(square)
+    expect(read('components/admin/assistant/ChatPane.tsx')).toContain(square)
+    expect(read('components/admin/assistant/AdminAssistantLauncher.tsx')).toContain(square)
+  })
+})
+
+describe('the colour never makes a control vanish', () => {
+  const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]))
+  const sources = walk(ROOT).filter((p) => p.endsWith('.tsx')).map((p) => ({ p: p.slice(ROOT.length + 1), text: readFileSync(p, 'utf8') }))
+
+  it('uses the teal tokens only with a black-and-white fallback, so an old stylesheet still shows borders and fills', () => {
+    for (const { p, text } of sources) {
+      expect(text, `${p}: bare var(--brand)`).not.toMatch(/var\(--brand\)/)
+      expect(text, `${p}: bare var(--brand-soft)`).not.toMatch(/var\(--brand-soft\)/)
+      expect(text, `${p}: bare var(--brand-contrast)`).not.toMatch(/var\(--brand-contrast\)/)
+    }
+  })
+
+  it('makes "Back" and "Talk to Nawaf" real buttons with an arrow, in the public chat', () => {
+    const panels = read('components/chat/ChatPanels.tsx')
+    const widget = read('components/chat/ChatWidget.tsx')
+    expect(panels).toContain('icon={ArrowLeft01Icon}')
+    expect(panels).not.toMatch(/className="text-xs underline"[^>]*>\{t\.back\}/)
+    expect(widget).toMatch(/data-testid="chat-talk"[\s\S]*?btn-secondary|btn-secondary[\s\S]*?data-testid="chat-talk"/)
+    expect(widget).toContain('icon={ArrowRight01Icon}')
   })
 })

@@ -39,7 +39,7 @@ export default function MobileBottomNav({ pathname, onMenu }: { pathname: string
           <Link
             key={href} href={href} aria-current={active ? 'page' : undefined}
             className={cell}
-            style={{ color: active ? 'var(--text)' : 'var(--text-subtle)', fontFamily: 'var(--font-poppins)', borderTop: `2px solid ${active ? 'var(--brand)' : 'transparent'}` }}
+            style={{ color: active ? 'var(--text)' : 'var(--text-subtle)', fontFamily: 'var(--font-poppins)', borderTop: `2px solid ${active ? 'var(--brand, var(--accent))' : 'transparent'}` }}
           >
             {icon === null
               ? <HugeiconsIcon icon={ChatBotIcon} size={18} strokeWidth={1.8} aria-hidden="true" />

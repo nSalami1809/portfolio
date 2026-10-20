@@ -41,7 +41,7 @@ export function BotAvatar({ mood }: { mood: BotMood }) {
   return (
     <div
       className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-      style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }}
+      style={{ background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))' }}
       aria-hidden="true"
     >
       <BotIcon width={16} height={16} mood={mood} />

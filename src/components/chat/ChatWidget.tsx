@@ -17,6 +17,8 @@ import { onOpenChatRequest } from '@/lib/chat-bridge'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { BotIcon, BotAvatar, type BotMood } from './BotIcon'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowRight01Icon, CustomerService01Icon } from '@hugeicons/core-free-icons'
 import { ServiceCards, QuoteTracker, QuoteProgress, HandoffLinks, ThumbButtons, talkLabel } from './ChatPanels'
 import { EmailCopyButton, PageHintBox, QuoteConfirm, SlotPicker } from './ChatFlowPanels'
 import { QUOTE_EDIT_REQUEST, type QuoteDraftInput } from '@/lib/chat-flows'
@@ -105,8 +107,8 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
     weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville',
   })
   return (
-    <div className="rounded-xl p-3.5" style={{ maxWidth: '85%', background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
-      <p className="text-xs font-bold mb-1 capitalize" style={{ color: 'var(--brand)', fontFamily: 'var(--font-poppins)' }}>{t.bookingPrefix}</p>
+    <div className="rounded-xl p-3.5" style={{ maxWidth: '85%', background: 'var(--brand-soft, var(--accent-glow))', border: '1px solid var(--brand, var(--accent))' }}>
+      <p className="text-xs font-bold mb-1 capitalize" style={{ color: 'var(--brand, var(--accent))', fontFamily: 'var(--font-poppins)' }}>{t.bookingPrefix}</p>
       <p className="text-sm font-semibold mb-1 capitalize" style={{ color: 'var(--text)' }}>{when}</p>
       {booking.status === 'cancelled' && (
         <p className="text-xs font-semibold mb-1" style={{ color: '#D90000' }}>{t.bookingCancelled}</p>
@@ -138,9 +140,9 @@ function QuoteCard({ quote, onView, adminEmail, t, progress }: { quote: Quote; o
   return (
     <div
       className="rounded-xl p-3.5"
-      style={{ maxWidth: '85%', background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}
+      style={{ maxWidth: '85%', background: 'var(--brand-soft, var(--accent-glow))', border: '1px solid var(--brand, var(--accent))' }}
     >
-      <p className="text-xs font-bold mb-1" style={{ color: 'var(--brand)', fontFamily: 'var(--font-poppins)' }}>
+      <p className="text-xs font-bold mb-1" style={{ color: 'var(--brand, var(--accent))', fontFamily: 'var(--font-poppins)' }}>
         {t.quotePrefix} {quote.numero}
       </p>
       <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{quote.clientNom}</p>
@@ -193,7 +195,7 @@ function HumanHelpForm({ onSubmit, t }: { onSubmit: (fields: { clientNom: string
   return (
     <div
       className="rounded-xl p-3.5"
-      style={{ maxWidth: '85%', background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}
+      style={{ maxWidth: '85%', background: 'var(--brand-soft, var(--accent-glow))', border: '1px solid var(--brand, var(--accent))' }}
     >
       <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text)' }}>{t.humanHelpTitle}</p>
       <form onSubmit={handleSubmit} className="space-y-2">
@@ -550,7 +552,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
             >
               <div
                 className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-                style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }}
+                style={{ background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))' }}
                 aria-hidden="true"
               >
                 <BotIcon width={19} height={19} mood={headerMood} />
@@ -633,9 +635,9 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                         onClick={() => (action ? openPanel(action) : quickSend(text))}
                         className="text-xs font-medium"
                         style={{
-                          background: 'var(--brand-soft)',
-                          color: 'var(--brand)',
-                          border: '1px solid var(--brand)',
+                          background: 'var(--brand-soft, var(--accent-glow))',
+                          color: 'var(--brand, var(--accent))',
+                          border: '1px solid var(--brand, var(--accent))',
                           padding: '0.45rem 0.9rem',
                         }}
                         whileHover={{ scale: 1.05, opacity: 0.8 }}
@@ -947,7 +949,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                               <BotAvatar mood={output.ok ? 'happy' : 'confused'} />
                               <div
                                 className="rounded-xl px-3.5 py-2.5 text-sm"
-                                style={{ maxWidth: '78%', background: 'var(--brand-soft)', border: '1px solid var(--brand)', color: 'var(--text)' }}
+                                style={{ maxWidth: '78%', background: 'var(--brand-soft, var(--accent-glow))', border: '1px solid var(--brand, var(--accent))', color: 'var(--text)' }}
                               >
                                 {output.message}
                               </div>
@@ -1087,9 +1089,18 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                 </svg>
               </button>
             </form>
-            <p className="text-[11px] text-center pb-2 flex-shrink-0" style={{ color: 'var(--text-subtle)' }}>
-              <a href={contactHref(locale, lastVisitorText(messages))} className="underline" style={{ color: 'var(--text-muted)' }}>{talkLabel(locale)}</a>
-            </p>
+            <div className="px-3 pb-3 flex-shrink-0">
+              <a
+                href={contactHref(locale, lastVisitorText(messages))}
+                className="btn-secondary btn-sm w-full inline-flex items-center justify-center gap-2"
+                data-testid="chat-talk"
+                style={{ fontSize: '0.8rem', padding: '0.5rem 0.9rem' }}
+              >
+                <HugeiconsIcon icon={CustomerService01Icon} size={16} strokeWidth={1.75} aria-hidden="true" />
+                {talkLabel(locale)}
+                <HugeiconsIcon icon={ArrowRight01Icon} size={14} strokeWidth={2} aria-hidden="true" />
+              </a>
+            </div>
           </m.div>
         )}
       </AnimatePresence>
