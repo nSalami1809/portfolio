@@ -108,7 +108,7 @@ export default function AdminChats() {
                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                           <span className="text-[11px] px-2 py-0.5" data-testid="chat-tag" style={{ border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text)' }}>{CHAT_TAG_LABEL[tag]}</span>
                           {lead && <span className="text-[11px] px-2 py-0.5 font-semibold" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}>Contact possible</span>}
-                          {unanswered && <span className="text-[11px] px-2 py-0.5" style={{ border: '1px solid var(--warn, #A16207)', color: 'var(--warn, #A16207)' }}>Sans réponse</span>}
+                          {unanswered && <span className="text-[11px] px-2 py-0.5" style={{ border: '1px solid #D97706', color: '#D97706' }}>Sans réponse</span>}
                           {down > 0 && <span className="text-[11px] px-2 py-0.5" data-testid="chat-disliked" style={{ border: '1px solid #D90000', color: '#D90000' }}>À améliorer ({down})</span>}
                           {up > 0 && down === 0 && <span className="text-[11px] px-2 py-0.5" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}>Utile ({up})</span>}
                           <span className="text-xs" style={{ color: 'var(--text-subtle)' }}>

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { Briefing, BriefingLevel } from '@/lib/briefing'
 
-const DOT: Record<BriefingLevel, string> = { urgent: '#D90000', todo: 'var(--warn, #A16207)', info: 'var(--text-subtle)' }
+const DOT: Record<BriefingLevel, string> = { urgent: '#D90000', todo: '#D97706', info: 'var(--text-subtle)' }
 const LABEL: Record<BriefingLevel, string> = { urgent: 'Urgent', todo: 'À traiter', info: 'À savoir' }
 
 // "À traiter aujourd'hui", computed by the code from the back-office's own data:

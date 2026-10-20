@@ -19,17 +19,14 @@
   --accent-light: #4B5563;
   --accent-glow: rgba(0, 0, 0, 0.08);
   --accent-contrast: #FFFFFF;
-  /* The one colour of the site, on top of the black-and-white base: coral. It marks focus,
+  /* The one colour of the site, on top of the black-and-white base: teal. It marks focus,
      selection, the current page, small labels and NemCopilotIA's identity, never large
      surfaces or the main buttons (those stay --accent). As text on --bg it passes AA
-     (5.2:1 here, 8.7:1 in dark); --brand-contrast is the text colour ON a --brand fill.
-     --warn is the "attention" state colour, kept a yellow-gold on purpose so it never
-     reads as the brand coral. */
-  --brand: #C2410C;
-  --brand-soft: rgba(194, 65, 12, 0.12);
-  --brand-line: rgba(194, 65, 12, 0.35);
+     (5.5:1 here, 11:1 in dark); --brand-contrast is the text colour ON a --brand fill. */
+  --brand: #0F766E;
+  --brand-soft: rgba(15, 118, 110, 0.12);
+  --brand-line: rgba(15, 118, 110, 0.35);
   --brand-contrast: #FFFFFF;
-  --warn: #A16207;
   /* Fixed black badge gradient for logo/brand marks — deliberately
      theme-independent, like .liquid-glass, so these read as a wordmark
      rather than a themed UI element. */
@@ -79,11 +76,10 @@
   --accent-light: #9CA3AF;
   --accent-glow: rgba(255, 255, 255, 0.14);
   --accent-contrast: #000000;
-  --brand: #FB923C;
-  --brand-soft: rgba(251, 146, 60, 0.18);
-  --brand-line: rgba(251, 146, 60, 0.5);
+  --brand: #2DD4BF;
+  --brand-soft: rgba(45, 212, 191, 0.18);
+  --brand-line: rgba(45, 212, 191, 0.5);
   --brand-contrast: #0B0B0F;
-  --warn: #FACC15;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
   --shadow-lg: 0 10px 40px rgba(0,0,0,0.5);
