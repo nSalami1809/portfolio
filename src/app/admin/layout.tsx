@@ -8,6 +8,8 @@ import { ToastProvider } from '@/components/admin/Toast'
 import { PortfolioProvider } from '@/providers/PortfolioContext'
 import NotificationBell from '@/components/admin/NotificationBell'
 import AdminAssistantLauncher from '@/components/admin/assistant/AdminAssistantLauncher'
+import CommandPalette from '@/components/admin/CommandPalette'
+import MobileBottomNav, { showBottomNav } from '@/components/admin/MobileBottomNav'
 import { logout } from '@/actions/auth'
 import { Sidebar, DesktopSidebar, MobileSidebarPanel, SidebarLink, useSidebar } from '@/components/ui/Sidebar'
 import type { SidebarLinkData } from '@/components/ui/Sidebar'
@@ -198,13 +200,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 )}
               </nav>
 
-              <div className="ml-auto flex-shrink-0">
+              <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+                <CommandPalette pages={navItems.map(({ href, label }) => ({ href, label }))} />
                 <NotificationBell />
               </div>
             </header>
 
             {/* Content */}
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            <main className={`flex-1 p-4 sm:p-6 lg:p-8 overflow-auto ${showBottomNav(pathname) ? 'pb-24 lg:pb-8' : ''}`}>
               <div className={pathname === '/admin/assistant' ? 'max-w-7xl mx-auto' : 'max-w-5xl mx-auto'}>
                 {children}
               </div>
@@ -213,6 +216,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </Sidebar>
       <AdminAssistantLauncher />
+      <MobileBottomNav pathname={pathname} onMenu={() => setSidebarOpen(true)} />
     </PortfolioProvider>
     </ToastProvider>
   )

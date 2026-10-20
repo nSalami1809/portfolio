@@ -8,6 +8,9 @@ import type { AdminQuote, QuoteStatus } from '@/actions/quotes'
 import { listInvoices } from '@/actions/billing'
 import type { Invoice } from '@/lib/invoicing'
 import QuoteWorkflowPanel from '@/components/admin/QuoteWorkflowPanel'
+import QuotePipeline from '@/components/admin/QuotePipeline'
+import { getQuoteReminderHistory } from '@/actions/assistant'
+import type { ReminderHistoryEntry } from '@/lib/assistant/reminders'
 import { useToast } from '@/components/admin/Toast'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
@@ -62,15 +65,26 @@ export default function AdminQuotes() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [search, setSearch]   = useState('')
   const [visible, setVisible] = useState(PAGE_SIZE)
+  // List (default) or pipeline by stage, kept in the address (?vue=pipeline) so it can be linked.
+  const [view, setView] = useState<'list' | 'pipeline'>('list')
+  const [reminders, setReminders] = useState<Record<string, ReminderHistoryEntry>>({})
+  const changeView = (next: 'list' | 'pipeline') => {
+    setView(next)
+    const url = new URL(window.location.href)
+    if (next === 'pipeline') url.searchParams.set('vue', 'pipeline')
+    else url.searchParams.delete('vue')
+    window.history.replaceState(null, '', url)
+  }
 
   // `silent` refreshes in place (after an action in a row's panel) instead of
   // swapping the whole list for skeletons and collapsing the open panel.
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [q, inv] = await Promise.all([listQuotes(), listInvoices()])
+      const [q, inv, rem] = await Promise.all([listQuotes(), listInvoices(), getQuoteReminderHistory().catch(() => ({}))])
       setQuotes(q)
       setInvoices(inv)
+      setReminders(rem)
     } finally { if (!silent) setLoading(false) }
   }, [])
 
@@ -79,8 +93,10 @@ export default function AdminQuotes() {
 
   // A link from the invoices page (?q=DEV-2026-001) opens the list already searched.
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('q')
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q')
     if (q) setSearch(q) // eslint-disable-line react-hooks/set-state-in-effect
+    if (params.get('vue') === 'pipeline') setView('pipeline')
   }, [])
 
   // Quotes that still have an unpaid invoice behind them.
@@ -187,15 +203,21 @@ export default function AdminQuotes() {
   return (
     <>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="font-display font-bold text-2xl leading-tight mb-1" style={{ color: 'var(--text)' }}>
-          Devis générés par le chatbot
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          {unreadCount > 0
-            ? `${unreadCount} devis non lu${unreadCount > 1 ? 's' : ''}`
-            : 'Aucun nouveau devis'}
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display font-bold text-2xl leading-tight mb-1" style={{ color: 'var(--text)' }}>
+            Devis générés par le chatbot
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+            {unreadCount > 0
+              ? `${unreadCount} devis non lu${unreadCount > 1 ? 's' : ''}`
+              : 'Aucun nouveau devis'}
+          </p>
+        </div>
+        <div className="flex gap-1.5" role="group" aria-label="Affichage des devis">
+          <button type="button" aria-pressed={view === 'list'} className={view === 'list' ? 'btn-primary btn-xs' : 'btn-secondary btn-xs'} onClick={() => changeView('list')}>Liste</button>
+          <button type="button" aria-pressed={view === 'pipeline'} className={view === 'pipeline' ? 'btn-primary btn-xs' : 'btn-secondary btn-xs'} onClick={() => changeView('pipeline')}>Pipeline</button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -213,6 +235,17 @@ export default function AdminQuotes() {
         ))}
       </div>
 
+      {view === 'pipeline' && !loading && (
+        <QuotePipeline
+          quotes={quotes}
+          unpaid={unpaidNumeros}
+          reminders={reminders}
+          onOpen={(q) => { setFilter('tous'); setSearch(q.numero); setExpandedId(q.id); changeView('list') }}
+        />
+      )}
+      {view === 'pipeline' && loading && <div className="card no-lift p-4 animate-pulse" style={{ height: 160 }} />}
+
+      {view === 'list' && (<>
       {/* Filter tabs */}
       <div className="flex gap-0 mb-3 overflow-x-auto" style={{ borderBottom: '1px solid var(--border)' }}>
         {TABS.map(({ id, label }) => (
@@ -427,6 +460,8 @@ export default function AdminQuotes() {
           )}
         </div>
       )}
+
+      </>)}
 
       {selected && <QuoteView quote={selected} onClose={() => setSelected(null)} variant={selected.status === 'accepted' ? 'contrat' : 'devis'} />}
     </>

@@ -9,7 +9,7 @@ import { isConversationId, toLogMessages, type ChatLogMessage } from '@/lib/chat
 
 export { isConversationId }
 
-interface ConversationRecord { conversationId: string; messages: ChatLogMessage[]; createdAt: Date; updatedAt: Date }
+interface ConversationRecord { conversationId: string; messages: ChatLogMessage[]; createdAt: Date; updatedAt: Date; pinned?: boolean }
 interface AuditRecord { at: Date; conversationId: string | null; tool: string; summary: string; ok: boolean; expiresAt: Date }
 
 const MAX_TEXT = 8000
@@ -45,7 +45,7 @@ export async function saveConversation(conversationId: string, messages: UIMessa
   }
 }
 
-export interface ConversationDTO { id: string; conversationId: string; createdAt: string; updatedAt: string; messages: ChatLogMessage[] }
+export interface ConversationDTO { id: string; conversationId: string; createdAt: string; updatedAt: string; messages: ChatLogMessage[]; pinned: boolean }
 
 const toDto = (d: ConversationRecord & { _id: ObjectId }): ConversationDTO => ({
   id: d._id.toString(),
@@ -53,12 +53,20 @@ const toDto = (d: ConversationRecord & { _id: ObjectId }): ConversationDTO => ({
   createdAt: d.createdAt.toISOString(),
   updatedAt: d.updatedAt.toISOString(),
   messages: d.messages,
+  pinned: d.pinned === true,
 })
 
 export async function listConversations(limit = 40): Promise<ConversationDTO[]> {
   const { conversations } = await cols()
-  const docs = await conversations.find({}).sort({ updatedAt: -1 }).limit(limit).toArray()
+  const docs = await conversations.find({}).sort({ pinned: -1, updatedAt: -1 }).limit(limit).toArray()
   return docs.map(toDto)
+}
+
+/** Pinned conversations stay at the top of the list (they still expire with the retention period). */
+export async function setConversationPinned(id: string, pinned: boolean): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false
+  const { conversations } = await cols()
+  return (await conversations.updateOne({ _id: new ObjectId(id) }, { $set: { pinned } })).matchedCount === 1
 }
 
 export async function deleteConversation(id: string): Promise<boolean> {

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import ViewsWidget from '@/components/admin/ViewsWidget'
+import TodayWidget from '@/components/admin/TodayWidget'
 import TrendBadge, { trend } from '@/components/admin/TrendBadge'
 import type { Trend } from '@/components/admin/TrendBadge'
 import type { OverviewStats, ViewsStats } from '@/lib/admin-stats'
@@ -79,6 +80,8 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
           Gérez votre portfolio depuis cet espace d&apos;administration.
         </p>
       </div>
+
+      <TodayWidget />
 
       {/* Aperçu — every KPI and content count grouped into one card */}
       <div className="card no-lift p-6">

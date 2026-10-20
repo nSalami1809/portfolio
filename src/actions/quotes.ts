@@ -13,6 +13,7 @@ import { quoteClientCopyEmail, quoteAcceptedEmail, testimonialRequestEmail, quot
 import { getAdminEmail } from '@/lib/admin-config'
 import { notifyAdmin } from '@/lib/push'
 import { requireAdmin } from '@/lib/require-admin'
+import { escapeRegex, quoteSearchTerm, type PaletteQuote } from '@/lib/admin-palette'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { getClientIp } from '@/lib/client-ip'
@@ -652,6 +653,23 @@ export async function listQuotes(): Promise<AdminQuote[]> {
       files: (doc.files ?? []).map((f) => ({ name: f.name, url: f.url, size: f.size, at: f.at.toISOString() })),
     }
   }))
+}
+
+// The command palette (Ctrl+K): a light search over the quotes, five at most, with only
+// what a result line shows. The term is escaped, so it is never read as a pattern.
+export async function searchQuotesForPalette(query: string): Promise<PaletteQuote[]> {
+  await requireAdmin()
+  const term = quoteSearchTerm(query)
+  if (!term) return []
+  const rx = new RegExp(escapeRegex(term), 'i')
+  const col = await quotesCol()
+  const docs = await col
+    .find({ $or: [{ numero: rx }, { clientNom: rx }, { clientSociete: rx }, { accessCode: rx }] })
+    .project<{ numero: string; clientNom: string; status?: string; totalTTC: number }>({ numero: 1, clientNom: 1, status: 1, totalTTC: 1 })
+    .sort({ dateEmission: -1 })
+    .limit(5)
+    .toArray()
+  return docs.map((d) => ({ numero: d.numero, clientNom: d.clientNom, status: d.status ?? 'pending', totalTTC: d.totalTTC }))
 }
 
 export async function markQuoteRead(id: string): Promise<void> {

@@ -3,6 +3,7 @@
 // nothing is sent anywhere: it is shown to the administrator, or handed to the
 // assistant WITHOUT client names.
 import type { BusinessStats, TodoKind } from '@/lib/business-stats'
+import type { FollowUp } from '@/lib/assistant/reminders'
 
 export interface BriefingCounts {
   unreadContacts: number
@@ -19,6 +20,8 @@ export interface BriefingInputs {
   counts: BriefingCounts
   bookingsToday: number
   bookingsTomorrow: number
+  /** Quotes waiting for an answer that are due a reminder today (see quotesToFollowUp). */
+  followUps?: FollowUp[]
 }
 
 export type BriefingLevel = 'urgent' | 'todo' | 'info'
@@ -76,6 +79,17 @@ export function buildBriefing(inputs: BriefingInputs, opts: { includeNames: bool
     }
   }
 
+  const followUps = inputs.followUps ?? []
+  if (followUps.length > 0) {
+    const refs = followUps.slice(0, 4).map((f) => {
+      const state = f.reminders > 0 ? `relancé ${f.reminders} fois` : 'jamais relancé'
+      return `${opts.includeNames && f.clientNom ? `${f.numero} · ${f.clientNom}` : f.numero} (${f.daysWaiting} j, ${state})`
+    })
+    items.push({
+      id: 'quotes:followup', level: 'todo', title: plural(followUps.length, 'devis à relancer', 'devis à relancer'),
+      detail: refs.join(', ') + (followUps.length > 4 ? '…' : ''), href: '/admin/assistant',
+    })
+  }
   if (counts.failedMails > 0) items.push({ id: 'mail:failed', level: 'urgent', title: `${plural(counts.failedMails, 'e-mail', 'e-mails')} en échec d'envoi`, detail: 'Un client n’a peut-être rien reçu.', href: '/admin/emails' })
   if (counts.unreadContacts > 0) items.push({ id: 'contacts:unread', level: 'todo', title: `${plural(counts.unreadContacts, 'nouveau message', 'nouveaux messages')} de contact`, href: '/admin/contacts' })
   if (counts.unreadQuotes > 0) items.push({ id: 'quotes:unread', level: 'todo', title: `${plural(counts.unreadQuotes, 'devis non lu', 'devis non lus')}`, href: '/admin/quotes' })

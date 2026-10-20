@@ -17,6 +17,8 @@ export const CHAT_TAG_LABEL: Record<ChatTag, string> = {
   autre: 'Autre',
 }
 
+export type ChatThumb = 'up' | 'down'
+
 export interface ChatTriage {
   tag: ChatTag
   /** The visitor left a way to reach them, or the chat produced a quote, a booking or a help request. */
@@ -25,6 +27,9 @@ export interface ChatTriage {
   unanswered: boolean
   /** The first thing the visitor asked, shortened, without e-mail addresses or phone numbers. */
   summary: string
+  /** Thumbs the visitor gave to the answers. A thumb down is the clearest "to improve" signal. */
+  up: number
+  down: number
 }
 
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/g
@@ -44,7 +49,8 @@ const UNANSWERED = /(je n['’]ai pas (cette |l['’])information|je ne (sais|di
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
 
-export function triageChat(messages: ChatLogMessage[]): ChatTriage {
+/** @param ratings the visitor's thumb for each message of `messages` (null: none), same order. */
+export function triageChat(messages: ChatLogMessage[], ratings: (ChatThumb | null)[] = []): ChatTriage {
   const visitor = messages.filter((m) => m.role === 'user').map((m) => m.text)
   const bot = messages.filter((m) => m.role === 'assistant').map((m) => m.text)
   const all = messages.map((m) => m.text).join('\n')
@@ -55,19 +61,43 @@ export function triageChat(messages: ChatLogMessage[]): ChatTriage {
     if ((rule.marker && rule.marker.test(all)) || rule.words.test(visitorText)) { tag = rule.tag; break }
   }
 
-  const leftContact = new RegExp(EMAIL.source).test(visitorText) || new RegExp(PHONE.source).test(visitorText)
-  const lead = leftContact || /\[(generateQuote|bookMeeting|requestHumanHelp)\]/.test(all)
+  const signals = leadSignals(messages)
+  const lead = signals.contactLeft || signals.quote || signals.booking || signals.humanHelp
   const unanswered = bot.some((t) => UNANSWERED.test(t.replace(/\[[A-Za-z]+\]/g, '')))
 
   const first = (visitor[0] ?? messages[0]?.text ?? '').replace(EMAIL, '[e-mail]').replace(PHONE, '[téléphone]').replace(/\s+/g, ' ').trim()
-  return { tag, lead, unanswered, summary: clip(first, 120) }
+  return { tag, lead, unanswered, summary: clip(first, 120), up: ratings.filter((r) => r === 'up').length, down: ratings.filter((r) => r === 'down').length }
 }
 
-export type ChatFilter = 'all' | 'lead' | 'unanswered' | ChatTag
+export interface LeadSignals {
+  /** The visitor wrote an e-mail address or a phone number in the conversation. */
+  contactLeft: boolean
+  quote: boolean
+  booking: boolean
+  humanHelp: boolean
+}
+
+/** Why a conversation counts as a possible contact. Booking and human-help requests already alert the admin by themselves. */
+export function leadSignals(messages: ChatLogMessage[]): LeadSignals {
+  const visitorText = messages.filter((m) => m.role === 'user').map((m) => m.text).join('\n')
+  const all = messages.map((m) => m.text).join('\n')
+  return {
+    contactLeft: new RegExp(EMAIL.source).test(visitorText) || new RegExp(PHONE.source).test(visitorText),
+    quote: /\[generateQuote\]/.test(all),
+    booking: /\[bookMeeting\]/.test(all),
+    humanHelp: /\[requestHumanHelp\]/.test(all),
+  }
+}
+
+/** A contact left in the text, or a quote generated: worth an immediate notification. */
+export const shouldAlertLead = (s: LeadSignals): boolean => s.contactLeft || s.quote
+
+export type ChatFilter = 'all' | 'lead' | 'unanswered' | 'disliked' | ChatTag
 
 export function matchesFilter(t: ChatTriage, filter: ChatFilter): boolean {
   if (filter === 'all') return true
   if (filter === 'lead') return t.lead
   if (filter === 'unanswered') return t.unanswered
+  if (filter === 'disliked') return t.down > 0
   return t.tag === filter
 }

@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ChatMarkdown from '@/components/chat/ChatMarkdown'
 import { diffStats, diffText } from '@/lib/text-diff'
 import { useToast } from '@/components/admin/Toast'
 import { usePortfolio } from '@/providers/PortfolioContext'
-import { discardAssistantDraft, regenerateDraftEnglish } from '@/actions/assistant'
+import { discardAssistantDraft, markReminderSent, regenerateDraftEnglish, saveReminderText } from '@/actions/assistant'
 import { applyAssistantDraft, undoAssistantDraft } from '@/actions/assistant-apply'
 import type { BlogPayload, DraftDTO, DraftKind, PatchPayload } from '@/lib/assistant/drafts'
 import { mailtoHref, type ReminderPayload } from '@/lib/assistant/reminders'
@@ -197,10 +197,35 @@ function PatchView({ payload }: { payload: PatchPayload }) {
 
 // A reminder e-mail: written by the code from the real quote, editable here, and sent by
 // the admin from their own mail app. This view has no way to send anything.
-function EmailView({ draft, payload }: { draft: DraftDTO; payload: ReminderPayload }) {
+function EmailView({ draft, payload, onChanged }: { draft: DraftDTO; payload: ReminderPayload; onChanged: (d: DraftDTO) => void }) {
   const toast = useToast()
+  const [marking, setMarking] = useState(false)
+  const sentCount = draft.sentCount ?? 0
+  const markSent = async (sent: boolean) => {
+    setMarking(true)
+    try {
+      const r = await markReminderSent(draft.id, sent)
+      if (r.ok) { onChanged(r.draft); toast(sent ? 'Relance notée comme envoyée ✓' : 'Note retirée.') } else toast(r.error, 'error')
+    } catch {
+      toast('Impossible de modifier la note (erreur serveur).', 'error')
+    } finally { setMarking(false) }
+  }
   const [subject, setSubject] = useState(payload.subject)
   const [body, setBody] = useState(payload.body)
+  // Edits are saved a moment after the last keystroke, so they survive closing the panel.
+  const [save, setSave] = useState<'saved' | 'saving' | 'error'>('saved')
+  const last = useRef({ subject: payload.subject, body: payload.body })
+  useEffect(() => {
+    if (subject === last.current.subject && body === last.current.body) return
+    const timer = setTimeout(() => {
+      setSave('saving')
+      saveReminderText(draft.id, subject, body).then(
+        (r) => { if (r.ok) { last.current = { subject, body }; setSave('saved') } else setSave('error') },
+        () => setSave('error'),
+      )
+    }, 900)
+    return () => clearTimeout(timer)
+  }, [subject, body, draft.id])
   const copy = async (text: string, done: string) => {
     try { await navigator.clipboard.writeText(text); toast(done) } catch { toast('Copie impossible : sélectionne le texte à la main.', 'error') }
   }
@@ -227,7 +252,25 @@ function EmailView({ draft, payload }: { draft: DraftDTO; payload: ReminderPaylo
         <a className="btn-secondary btn-sm" href={mailto}>Ouvrir dans ma messagerie</a>
         <button type="button" className="btn-secondary btn-sm" onClick={() => copy(subject, 'Objet copié ✓')}>Copier l&apos;objet</button>
       </div>
-      <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>Tes modifications ici ne sont pas enregistrées : copie le texte avant de fermer. Demande un autre ton à NemCopilotIA pour régénérer.</p>
+      <div className="p-3 text-sm space-y-2" data-testid="email-sent-box" style={{ border: '1px solid var(--border)', background: 'var(--bg-secondary)', fontFamily: 'var(--font-poppins)' }}>
+        {sentCount > 0 && draft.sentAt ? (
+          <>
+            <p style={{ color: 'var(--text)' }} data-testid="email-sent">Marquée envoyée le {when(draft.sentAt)}{sentCount > 1 ? ` (${sentCount} fois)` : ''}. NemCopilotIA s&apos;en sert pour ne pas relancer trop tôt.</p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary btn-xs" disabled={marking} onClick={() => markSent(true)}>Envoyée de nouveau</button>
+              <button type="button" className="btn-secondary btn-xs" disabled={marking} onClick={() => markSent(false)}>Retirer la note</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Après l&apos;avoir envoyé depuis ta messagerie, note-le : le briefing et NemCopilotIA sauront que ce devis a été relancé.</p>
+            <button type="button" className="btn-primary btn-sm" disabled={marking} onClick={() => markSent(true)}>{marking ? 'Enregistrement…' : "J'ai envoyé ce mail"}</button>
+          </>
+        )}
+      </div>
+      <p className="text-xs" role="status" data-testid="email-save-state" style={{ color: save === 'error' ? '#D90000' : 'var(--text-subtle)' }}>
+        {save === 'saving' ? 'Enregistrement…' : save === 'error' ? "Modifications non enregistrées (objet et message ne doivent pas être vides). Copie le texte avant de fermer." : 'Modifications enregistrées automatiquement.'} Demande un autre ton à NemCopilotIA pour régénérer.
+      </p>
     </div>
   )
 }
@@ -368,7 +411,7 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
             {selected.kind !== 'email_reminder' && <ApplyBox key={selected.id + selected.version + selected.status} draft={selected} onChanged={onChanged} />}
             {selected.kind === 'blog_post' && <BlogView draft={selected} payload={selected.payload as BlogPayload} onChanged={onChanged} />}
             {selected.kind === 'field_patch' && <PatchView payload={selected.payload as PatchPayload} />}
-            {selected.kind === 'email_reminder' && <EmailView key={selected.id + selected.version} draft={selected} payload={selected.payload as ReminderPayload} />}
+            {selected.kind === 'email_reminder' && <EmailView key={selected.id + selected.version} draft={selected} payload={selected.payload as ReminderPayload} onChanged={onChanged} />}
             {selected.status === 'draft' && <button type="button" className="btn-danger btn-sm" onClick={() => discard(selected)}>Écarter ce brouillon</button>}
           </div>
         ) : drafts.length === 0 ? (
@@ -382,7 +425,7 @@ export default function DraftsPanel({ drafts, selectedId, onSelect, onChanged, o
                 <button type="button" onClick={() => onSelect(d.id)} className="w-full text-left p-3 transition-colors hover:bg-[var(--surface-hover)]" style={{ border: '1px solid var(--border)' }}>
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{d.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-subtle)' }}>
-                    {d.status === 'applied' ? 'Appliqué · ' : ''}{KIND_LABEL[d.kind]} · v{d.version} · {when(d.updatedAt)}
+                    {d.status === 'applied' ? 'Appliqué · ' : ''}{d.sentAt ? 'Envoyé · ' : ''}{KIND_LABEL[d.kind]} · v{d.version} · {when(d.updatedAt)}
                     {d.unverifiedClaims.length > 0 ? ` · ${d.unverifiedClaims.length} à vérifier` : ''}
                   </p>
                 </button>

@@ -87,6 +87,9 @@ export interface DraftDTO {
   versions: { n: number; at: string; note: string }[]
   /** Set once the administrator has applied the draft to the site. */
   applied: { at: string; published: boolean; summary: string } | null
+  /** E-mail drafts only: when the admin marked them as sent from their own mail app (latest), and how many times. */
+  sentAt?: string | null
+  sentCount?: number
 }
 
 export const MAX_VERSIONS = 10

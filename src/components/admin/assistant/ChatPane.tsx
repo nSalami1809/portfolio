@@ -10,6 +10,24 @@ import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { SLASH_COMMANDS, START_CARDS, commandByName, matchCommands, type SlashCommand } from '@/lib/assistant/commands'
 import { contextForKey, type ContextChip } from '@/lib/assistant/page-context'
+import { appendDictation, transcriptOf } from '@/lib/assistant/dictation'
+
+// The browser's speech recognition (Chrome, Edge, Safari): absent elsewhere, then no microphone button.
+interface SpeechLike {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
+  onend: (() => void) | null
+  onerror: (() => void) | null
+  start(): void
+  stop(): void
+}
+type SpeechCtor = new () => SpeechLike
+const speechCtor = (): SpeechCtor | null => {
+  const w = window as unknown as { SpeechRecognition?: SpeechCtor; webkitSpeechRecognition?: SpeechCtor }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
+}
 
 const TOOL_LABELS: Record<string, string> = {
   getProfile: 'Lecture du profil', listProjects: 'Liste des projets', getProject: 'Lecture d’un projet', listBlogPosts: 'Liste des articles',
@@ -115,6 +133,8 @@ interface Props {
   blocked: boolean
   /** One line from the daily briefing, shown under the greeting. */
   briefingSummary?: string | null
+  /** A question to put in the message box (from the command palette). Never sent for the admin. */
+  prefill?: { text: string; nonce: number } | null
   /** Key of the back-office page the admin is on (see lib/assistant/page-context.ts). */
   contextKey?: string | null
   onTurnFinished: () => void
@@ -124,7 +144,7 @@ interface Props {
 // One conversation, in the style of a modern chat app: a greeting, four entry cards
 // and a composer while it is empty (typing "/" opens ready-made commands), then the
 // messages with the composer pinned below.
-export default function ChatPane({ conversationId, initialMessages, variant, blocked, briefingSummary, contextKey, onTurnFinished, onOpenDraft }: Props) {
+export default function ChatPane({ conversationId, initialMessages, variant, blocked, briefingSummary, contextKey, prefill, onTurnFinished, onOpenDraft }: Props) {
   const popover = variant === 'popover'
   const { data: { personal } } = usePortfolio()
   const firstName = (personal?.name ?? '').trim().split(/\s+/)[0] ?? ''
@@ -132,6 +152,9 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
   const [input, setInput] = useState('')
   const [menu, setMenu] = useState(false)
   const [active, setActive] = useState(0)
+  const [canDictate, setCanDictate] = useState(false)
+  const [listening, setListening] = useState(false)
+  const recognition = useRef<SpeechLike | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const areaRef = useRef<HTMLTextAreaElement>(null)
   const transport = useMemo(() => new DefaultChatTransport({ api: '/api/admin-assistant', body: { conversationId } }), [conversationId])
@@ -152,6 +175,11 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, status])
 
+  useEffect(() => {
+    if (speechCtor()) Promise.resolve().then(() => setCanDictate(true))
+    return () => recognition.current?.stop()
+  }, [])
+
   const closeMenu = useCallback(() => setMenu(false), [])
   useEscapeKey(menu, closeMenu)
 
@@ -164,6 +192,23 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+  }
+
+  // One sentence at a time: the words land in the message box, to be read and sent by the admin.
+  const toggleDictation = () => {
+    if (listening) { recognition.current?.stop(); return }
+    const Ctor = speechCtor()
+    if (!Ctor) return
+    const r = new Ctor()
+    r.lang = 'fr-FR'
+    r.interimResults = false
+    r.continuous = false
+    r.onresult = (e) => { setInput((prev) => appendDictation(prev, transcriptOf(e.results))); requestAnimationFrame(grow) }
+    r.onend = () => setListening(false)
+    r.onerror = () => setListening(false)
+    recognition.current = r
+    setListening(true)
+    r.start()
   }
 
   const send = (text: string) => {
@@ -185,6 +230,13 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
       if (el) { el.focus(); el.setSelectionRange(text.length, text.length) }
     })
   }
+
+  useEffect(() => {
+    if (!prefill) return
+    const id = requestAnimationFrame(() => fill(prefill.text))
+    return () => cancelAnimationFrame(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fill only touches this component's own state
+  }, [prefill])
 
   const run = (c: Pick<SlashCommand, 'mode' | 'prompt'> | ContextChip) => ((c.mode ?? 'send') === 'send' ? send(c.prompt) : fill(c.prompt))
 
@@ -248,6 +300,17 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
           className="flex-1 bg-transparent outline-none text-sm py-2 px-1"
           style={{ resize: 'none', color: 'var(--text)', fontFamily: 'var(--font-poppins)', maxHeight: 160 }}
         />
+        {canDictate && !busy && (
+          <button
+            type="button" aria-label={listening ? 'Arrêter la dictée' : 'Dicter un message'} aria-pressed={listening} disabled={blocked} onClick={toggleDictation}
+            title="La dictée utilise le service vocal de ton navigateur"
+            className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40"
+            style={{ color: listening ? 'var(--accent-contrast)' : 'var(--text-muted)', background: listening ? 'var(--accent)' : undefined }}
+            data-testid="dictation"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" /><path d="M5 11a7 7 0 0014 0M12 18v4" /></svg>
+          </button>
+        )}
         {busy ? (
           <button type="button" aria-label="Arrêter la génération" onClick={() => stop()} className="w-9 h-9 flex items-center justify-center flex-shrink-0" style={{ background: 'var(--text)', color: 'var(--bg)' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="16" height="16" /></svg>

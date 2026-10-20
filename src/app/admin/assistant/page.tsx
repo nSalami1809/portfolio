@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import type { UIMessage } from 'ai'
 import StatusBar from '@/components/admin/assistant/StatusBar'
 import BriefingCard from '@/components/admin/assistant/BriefingCard'
@@ -8,10 +9,11 @@ import ChatPane from '@/components/admin/assistant/ChatPane'
 import ConversationSidebar from '@/components/admin/assistant/ConversationSidebar'
 import DraftsPanel from '@/components/admin/assistant/DraftsPanel'
 import { useToast } from '@/components/admin/Toast'
-import { deleteAssistantConversation, getAssistantStatus, listAssistantConversations, listAssistantDrafts } from '@/actions/assistant'
+import { deleteAssistantConversation, getAssistantStatus, listAssistantConversations, listAssistantDrafts, pinAssistantConversation } from '@/actions/assistant'
 import { getDailyBriefing } from '@/actions/briefing'
 import type { AssistantStatus } from '@/lib/assistant/guard'
 import type { Briefing } from '@/lib/briefing'
+import { cleanQuery } from '@/lib/admin-palette'
 import type { DraftDTO } from '@/lib/assistant/drafts'
 import type { ConversationDTO } from '@/lib/assistant/history'
 
@@ -27,6 +29,18 @@ function toUiMessages(c: ConversationDTO): UIMessage[] {
   })).filter((m) => m.parts[0].text)
 }
 
+// A question handed over by the command palette (?prefill=...). Read from the router, not once
+// at mount, so it also works when the palette is used while this page is already open.
+function PrefillFromAddress({ onPrefill }: { onPrefill: (text: string) => void }) {
+  const asked = useSearchParams().get('prefill')
+  useEffect(() => {
+    if (!asked) return
+    onPrefill(cleanQuery(asked, 500))
+    window.history.replaceState(null, '', window.location.pathname)
+  }, [asked, onPrefill])
+  return null
+}
+
 export default function AdminAssistantPage() {
   const toast = useToast()
   const [status, setStatus] = useState<AssistantStatus | null>(null)
@@ -39,6 +53,9 @@ export default function AdminAssistantPage() {
   const [infoOpen, setInfoOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const pendingDraft = useRef<string | null>(null)
+  // A question handed over by the command palette (?prefill=...): put in the message box, never sent.
+  const [prefill, setPrefill] = useState<{ text: string; nonce: number } | null>(null)
+  const onPrefill = useCallback((text: string) => setPrefill({ text, nonce: Date.now() }), [])
 
   const refreshAll = useCallback(async () => {
     const [s, d, c] = await Promise.allSettled([getAssistantStatus(), listAssistantDrafts(), listAssistantConversations()])
@@ -50,7 +67,8 @@ export default function AdminAssistantPage() {
   // First load. A link like /admin/assistant?draft=ID (from the floating robot) opens that draft.
   useEffect(() => {
     let alive = true
-    pendingDraft.current = new URLSearchParams(window.location.search).get('draft')
+    const params = new URLSearchParams(window.location.search)
+    pendingDraft.current = params.get('draft')
     Promise.allSettled([getAssistantStatus(), listAssistantDrafts(), listAssistantConversations(), getDailyBriefing()]).then(([s, d, c, b]) => {
       if (!alive) return
       if (s.status === 'fulfilled') setStatus(s.value)
@@ -79,6 +97,15 @@ export default function AdminAssistantPage() {
 
   const startNew = () => setChat({ id: newId(), initial: [] })
   const openConversation = (c: ConversationDTO) => setChat({ id: c.conversationId, initial: toUiMessages(c) })
+  const pinConversation = async (c: ConversationDTO) => {
+    const next = !c.pinned
+    setConversations((prev) => (prev ?? []).map((x) => (x.id === c.id ? { ...x, pinned: next } : x)))
+    const r = await pinAssistantConversation(c.id, next).catch(() => ({ ok: false }))
+    if (!r.ok) {
+      setConversations((prev) => (prev ?? []).map((x) => (x.id === c.id ? { ...x, pinned: c.pinned } : x)))
+      toast("Impossible d'épingler cette conversation.", 'error')
+    }
+  }
   const removeConversation = async (c: ConversationDTO) => {
     if (!confirm('Supprimer cette conversation de l’historique ?')) return
     const r = await deleteAssistantConversation(c.id)
@@ -98,7 +125,7 @@ export default function AdminAssistantPage() {
   const sidebar = (onClose?: () => void) => (
     <ConversationSidebar
       items={conversations} activeConversationId={chat.id} draftCount={activeDrafts}
-      onNew={startNew} onSelect={openConversation} onDelete={removeConversation}
+      onNew={startNew} onSelect={openConversation} onDelete={removeConversation} onPin={pinConversation}
       onOpenDrafts={() => setDraftsOpen(true)} onClose={onClose}
     />
   )
@@ -110,6 +137,7 @@ export default function AdminAssistantPage() {
           <h1 className="font-display font-bold text-2xl leading-tight" style={{ color: 'var(--text)' }}>NemCopilotIA</h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>Tu relis et tu décides : rien n&apos;est appliqué au site sans ton clic.</p>
         </div>
+        <Suspense fallback={null}><PrefillFromAddress onPrefill={onPrefill} /></Suspense>
         <button type="button" className="btn-secondary btn-sm" aria-expanded={infoOpen} onClick={() => setInfoOpen((v) => !v)}>
           {infoOpen ? 'Masquer le briefing et le quota' : 'Briefing et quota'}
         </button>
@@ -141,7 +169,7 @@ export default function AdminAssistantPage() {
               Brouillons{activeDrafts ? ` (${activeDrafts})` : ''}
             </button>
           </div>
-          <ChatPane key={chat.id} conversationId={chat.id} initialMessages={chat.initial} variant="page" blocked={blocked} briefingSummary={briefing?.summary ?? null} onTurnFinished={onTurnFinished} onOpenDraft={openDraft} />
+          <ChatPane key={chat.id} conversationId={chat.id} initialMessages={chat.initial} variant="page" blocked={blocked} briefingSummary={briefing?.summary ?? null} prefill={prefill} onTurnFinished={onTurnFinished} onOpenDraft={openDraft} />
         </section>
 
         {draftsOpen && (

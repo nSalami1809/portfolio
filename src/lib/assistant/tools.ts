@@ -20,7 +20,7 @@ import { analyzeChatLogs, analyzeDocument } from '@/lib/assistant/analysis'
 import { docxToText, type FetchResult } from '@/lib/assistant/documents'
 import type { ChatLogMessage } from '@/lib/chat-log'
 import { buildBriefing, type BriefingInputs } from '@/lib/briefing'
-import { buildReminder, oldestFirst, reminderToneSchema, viewOf, type PendingQuote, type ReminderPayload } from '@/lib/assistant/reminders'
+import { oldestFirst, planReminder, reminderHistory, reminderToneSchema, viewOf, type PendingQuote, type ReminderPayload } from '@/lib/assistant/reminders'
 import { BLOCKING_KINDS, type ClassifiedError } from '@/lib/assistant/quota'
 import {
   blogDetail, blogSummary, businessOverview, capResult, clip, educationView, experienceView, offerView, profileView, projectDetail, projectSummary,
@@ -323,13 +323,14 @@ export function buildAssistantTools(deps: AssistantDeps) {
     }),
 
     listPendingQuotes: tool({
-      description: "Devis envoyés qui attendent encore la réponse du client, du plus ancien au plus récent : numéro, jours d'attente, échéance, montant. Aucun nom ni adresse n'est renvoyé. À utiliser avant draftQuoteReminder.",
+      description: "Devis envoyés qui attendent encore la réponse du client, du plus ancien au plus récent : numéro, jours d'attente, échéance, montant, relances déjà envoyées (remindersSent), jours depuis la dernière (daysSinceLastReminder) et ton conseillé (suggestedTone). Aucun nom ni adresse n'est renvoyé. À utiliser avant draftQuoteReminder.",
       inputSchema: z.object({}),
       execute: async () => {
         const quotes = await deps.getQuotesForReminders().catch(() => null)
         if (!quotes) return fail('Les devis sont momentanément illisibles (base de données indisponible).')
         const now = deps.now?.() ?? new Date()
-        return cap(oldestFirst(quotes).map((q) => viewOf(q, now)))
+        const history = reminderHistory(await deps.drafts.list({ limit: 100 }))
+        return cap(oldestFirst(quotes).map((q) => viewOf(q, now, history)))
       },
     }),
 
@@ -337,22 +338,23 @@ export function buildAssistantTools(deps: AssistantDeps) {
       description: "Prépare un BROUILLON de mail de relance pour un devis en attente (modèle FR/EN rédigé par le code avec les vraies données du devis). N'envoie RIEN : l'administrateur copie le texte ou l'ouvre dans sa messagerie. Ton : courtois (premier rappel), direct (relance ferme), dernier (échéance ou devis expiré). Ne coûte aucune requête d'API.",
       inputSchema: z.object({
         quoteNumero: z.string().min(5).max(30).describe('Numéro du devis, par exemple DEV-2026-014 (voir listPendingQuotes)'),
-        tone: reminderToneSchema.default('courtois'),
+        tone: reminderToneSchema.optional().describe('Par défaut : le ton conseillé selon les relances déjà envoyées (courtois, puis direct, puis dernier)'),
       }),
-      execute: async ({ quoteNumero, tone }) => {
+      execute: async ({ quoteNumero, tone: requestedTone }) => {
         const quotes = await deps.getQuotesForReminders().catch(() => null)
         if (!quotes) return fail('Les devis sont momentanément illisibles (base de données indisponible).')
         const quote = quotes.find((q) => q.numero.toUpperCase() === quoteNumero.trim().toUpperCase())
         if (!quote) return fail("Ce devis n'est pas dans la liste des devis en attente. Utilise listPendingQuotes.")
         const data = await needPortfolio()
-        const payload = buildReminder(quote, { tone, now: deps.now?.() ?? new Date(), adminName: data?.personal.name ?? '', siteUrl: deps.siteUrl })
-        const existing = (await deps.drafts.list({ limit: 100 })).find((d) => d.kind === 'email_reminder' && d.status === 'draft' && (d.payload as ReminderPayload).quoteNumero === quote.numero && (d.payload as ReminderPayload).tone === tone)
+        const plan = planReminder(quote, await deps.drafts.list({ limit: 100 }), { now: deps.now?.() ?? new Date(), adminName: data?.personal.name ?? '', siteUrl: deps.siteUrl, tone: requestedTone })
+        const { payload, tone, existing } = plan
+        const warning = plan.warning ? { warning: plan.warning } : {}
         if (existing) {
           const revised = await deps.drafts.revise(existing.id, existing.version, { payload, note: 'Relance régénérée' })
-          if (revised.ok) return { draftId: revised.draft.id, quoteNumero: quote.numero, hasEmail: Boolean(payload.to), note: "Brouillon de relance mis à jour dans le panneau « Brouillons ». Rien n'a été envoyé." }
+          if (revised.ok) return { draftId: revised.draft.id, quoteNumero: quote.numero, hasEmail: Boolean(payload.to), tone, ...warning, note: "Brouillon de relance mis à jour dans le panneau « Brouillons ». Rien n'a été envoyé." }
         }
         const draft = await deps.drafts.create({ kind: 'email_reminder', title: `Relance ${quote.numero}`, payload, conversationId: deps.conversationId })
-        return { draftId: draft.id, quoteNumero: quote.numero, hasEmail: Boolean(payload.to), note: payload.to ? "Brouillon de relance enregistré dans le panneau « Brouillons ». Rien n'a été envoyé : l'administrateur l'envoie lui-même." : "Brouillon enregistré, mais ce devis n'a pas d'adresse e-mail : l'administrateur devra contacter le client autrement." }
+        return { draftId: draft.id, quoteNumero: quote.numero, hasEmail: Boolean(payload.to), tone, ...warning, note: payload.to ? "Brouillon de relance enregistré dans le panneau « Brouillons ». Rien n'a été envoyé : l'administrateur l'envoie lui-même." : "Brouillon enregistré, mais ce devis n'a pas d'adresse e-mail : l'administrateur devra contacter le client autrement." }
       },
     }),
 

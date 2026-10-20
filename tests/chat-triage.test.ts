@@ -50,7 +50,7 @@ describe('chat triage', () => {
   })
 
   it('copes with an empty conversation', () => {
-    expect(triageChat([])).toEqual({ tag: 'autre', lead: false, unanswered: false, summary: '' })
+    expect(triageChat([])).toEqual({ tag: 'autre', lead: false, unanswered: false, summary: '', up: 0, down: 0 })
   })
 
   it('filters by lead, unanswered and tag', () => {
@@ -60,6 +60,15 @@ describe('chat triage', () => {
     expect(matchesFilter(t, 'unanswered')).toBe(true)
     expect(matchesFilter(t, 'devis')).toBe(true)
     expect(matchesFilter(t, 'rdv')).toBe(false)
+  })
+
+  it('counts the visitor thumbs and filters on a thumb down', () => {
+    const messages = [u('Quel est votre numéro de TVA ?'), a('Je ne sais pas.'), u('Merci'), a('De rien')]
+    const t = triageChat(messages, [null, 'down', null, 'up'])
+    expect(t).toMatchObject({ up: 1, down: 1 })
+    expect(matchesFilter(t, 'disliked')).toBe(true)
+    expect(matchesFilter(triageChat(messages, [null, 'up', null, 'up']), 'disliked')).toBe(false)
+    expect(matchesFilter(triageChat(messages), 'disliked')).toBe(false)
   })
 
   it('has a label for every tag', () => {

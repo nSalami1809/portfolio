@@ -18,6 +18,8 @@ interface DraftRecord {
   payload: DraftPayload
   versions: VersionRecord[]
   applied?: { at: Date; published: boolean; summary: string }
+  /** E-mail drafts: each time the admin marked the e-mail as sent. */
+  sentLog?: Date[]
 }
 
 const COLLECTION = 'assistant_drafts'
@@ -47,6 +49,8 @@ function toDTO(doc: WithId<DraftRecord>): DraftDTO {
     previousPayload: previous,
     versions: doc.versions.map((v) => ({ n: v.n, at: v.at.toISOString(), note: v.note })),
     applied: doc.applied ? { at: doc.applied.at.toISOString(), published: doc.applied.published, summary: doc.applied.summary } : null,
+    sentAt: doc.sentLog?.length ? doc.sentLog[doc.sentLog.length - 1].toISOString() : null,
+    sentCount: doc.sentLog?.length ?? 0,
   }
 }
 
@@ -137,6 +141,33 @@ export async function discardDraft(id: string): Promise<boolean> {
   const c = await col()
   const r = await c.updateOne({ _id: new ObjectId(id), status: 'draft' }, { $set: { status: 'discarded', updatedAt: new Date() } })
   return r.matchedCount === 1
+}
+
+/**
+ * The admin edited the subject or the text of an e-mail draft: saved in place (not a new
+ * version, the assistant did not write it). Touches only the assistant's own record.
+ */
+export async function updateEmailDraftText(id: string, text: { subject: string; body: string }, at: Date = new Date()): Promise<DraftDTO | null> {
+  if (!ObjectId.isValid(id)) return null
+  const c = await col()
+  const updated = await c.findOneAndUpdate(
+    { _id: new ObjectId(id), kind: 'email_reminder', status: 'draft' },
+    { $set: { 'payload.subject': text.subject, 'payload.body': text.body, updatedAt: at } },
+    { returnDocument: 'after' },
+  )
+  return updated ? toDTO(updated) : null
+}
+
+/**
+ * The admin sent this e-mail draft from their own mail app and says so (or takes it back).
+ * Only touches the assistant's own record; the quote is never modified.
+ */
+export async function markDraftSent(id: string, sent: boolean, at: Date = new Date()): Promise<DraftDTO | null> {
+  if (!ObjectId.isValid(id)) return null
+  const c = await col()
+  const filter = { _id: new ObjectId(id), kind: 'email_reminder' as const, status: 'draft' as const }
+  const updated = await c.findOneAndUpdate(filter, sent ? { $push: { sentLog: at }, $set: { updatedAt: at } } : { $pop: { sentLog: 1 } }, { returnDocument: 'after' })
+  return updated ? toDTO(updated) : null
 }
 
 // Bookkeeping for the administrator's "Appliquer" button.

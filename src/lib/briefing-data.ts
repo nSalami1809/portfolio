@@ -3,6 +3,9 @@ import 'server-only'
 import { getDb } from '@/lib/mongodb'
 import { getBusinessStats } from '@/actions/business'
 import type { BriefingInputs } from '@/lib/briefing'
+import { loadQuotesForReminders } from '@/lib/assistant-quotes-data'
+import { listDrafts } from '@/lib/assistant/draft-store'
+import { quotesToFollowUp, reminderHistory } from '@/lib/assistant/reminders'
 
 // Reads what the briefing needs: the same counts the notification bell shows, the
 // agenda of today and tomorrow, and the business figures of the "Activité" page.
@@ -15,6 +18,14 @@ export async function loadBriefingInputs(now: Date = new Date()): Promise<Briefi
   const startOfTomorrow = new Date(startOfToday.getTime() + 86_400_000)
   const endOfTomorrow = new Date(startOfToday.getTime() + 2 * 86_400_000)
   const confirmed = { status: 'confirmed' }
+
+  // Reminders due today: from the quotes still waiting and the reminders the admin marked as sent.
+  const followUps = Promise.all([loadQuotesForReminders(), listDrafts({ limit: 100 })])
+    .then(([quotes, drafts]) => quotesToFollowUp(quotes, reminderHistory(drafts), now))
+    .catch((e) => {
+      console.error('[briefing] follow-ups unavailable:', e)
+      return []
+    })
 
   const [counts, business] = await Promise.all([
     Promise.all([
@@ -39,5 +50,6 @@ export async function loadBriefingInputs(now: Date = new Date()): Promise<Briefi
     counts: { unreadContacts, unreadQuotes, unreadBookings, pendingTestimonials, failedMails, unreadChats, assistantDrafts },
     bookingsToday,
     bookingsTomorrow,
+    followUps: await followUps,
   }
 }
