@@ -9,6 +9,7 @@ import BlogPostView from './BlogPostView'
 import NotFoundMessage from '@/components/NotFoundMessage'
 import { LOCALES } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
+import ChatPageHint from '@/components/chat/ChatPageHint'
 
 // Regenerate at most once every 30s, matching every sibling route;
 // invalidated instantly on admin publish via updateTag('portfolio').
@@ -92,6 +93,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ local
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      <ChatPageHint kind="blog" title={translated.title} />
       <BlogPostView post={{ ...post, ...translated }} locale={locale} t={t.blog} />
     </>
   )

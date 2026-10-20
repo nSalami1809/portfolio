@@ -11,6 +11,10 @@ const dir = join(ROOT, 'components', 'admin', 'assistant')
 const files = [
   ...readdirSync(dir).filter((f) => f.endsWith('.tsx')).map((f) => ({ name: `components/admin/assistant/${f}`, path: join(dir, f) })),
   { name: 'app/admin/assistant/page.tsx', path: join(ROOT, 'app', 'admin', 'assistant', 'page.tsx') },
+  // Screens added around NemCopilotIA: the command palette, the quotes pipeline, the dashboard widget, the visitor chat panels.
+  ...['CommandPalette.tsx', 'QuotePipeline.tsx', 'TodayWidget.tsx', 'MobileBottomNav.tsx'].map((f) => ({ name: `components/admin/${f}`, path: join(ROOT, 'components', 'admin', f) })),
+  { name: 'components/chat/ChatPanels.tsx', path: join(ROOT, 'components', 'chat', 'ChatPanels.tsx') },
+  { name: 'components/chat/ChatFlowPanels.tsx', path: join(ROOT, 'components', 'chat', 'ChatFlowPanels.tsx') },
 ]
 
 describe('the assistant UI keeps the site\'s square corners', () => {

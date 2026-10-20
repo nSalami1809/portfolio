@@ -9,6 +9,7 @@ import ProjectDetailView from './ProjectDetailView'
 import NotFoundMessage from '@/components/NotFoundMessage'
 import { LOCALES } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
+import ChatPageHint from '@/components/chat/ChatPageHint'
 
 // Regenerate at most once every 30s, matching every sibling route;
 // invalidated instantly on admin publish via updateTag('portfolio').
@@ -91,6 +92,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      <ChatPageHint kind="project" title={translated.title} />
       <ProjectDetailView
         project={{ ...project, ...translated }}
         locale={locale}

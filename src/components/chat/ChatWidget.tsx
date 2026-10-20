@@ -1,12 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from 'ai'
 import { m, AnimatePresence } from 'framer-motion'
-import type { Quote } from '@/actions/quotes'
+import { submitQuote, type Quote, type QuotePayload } from '@/actions/quotes'
 import type { Booking } from '@/actions/bookings'
 import { requestHumanHelp } from '@/actions/escalation'
 import { getPublicOffers } from '@/actions/offers'
@@ -17,7 +17,11 @@ import { onOpenChatRequest } from '@/lib/chat-bridge'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { BotIcon, BotAvatar, type BotMood } from './BotIcon'
-import { ServiceCards, QuoteTracker, QuoteProgress, HandoffLinks, talkLabel } from './ChatPanels'
+import { ServiceCards, QuoteTracker, QuoteProgress, HandoffLinks, ThumbButtons, talkLabel } from './ChatPanels'
+import { EmailCopyButton, PageHintBox, QuoteConfirm, SlotPicker } from './ChatFlowPanels'
+import { QUOTE_EDIT_REQUEST, type QuoteDraftInput } from '@/lib/chat-flows'
+import { getPageHint, pageSuggestions, subscribePageHint } from '@/lib/chat-page-context'
+import { rateChatMessage } from '@/actions/chat-feedback'
 import { contactHref, lastVisitorText } from '@/lib/chat-services'
 
 // Only needed once a visitor actually opens a generated devis (QR code lib
@@ -28,6 +32,11 @@ const QuoteView = dynamic(() => import('./QuoteView'), { ssr: false })
 // needs rendering, not the instant the (closed) chat bubble mounts.
 const ChatMarkdown = dynamic(() => import('./ChatMarkdown'), { ssr: false })
 
+
+// The text of an answer exactly as the server logs it (text parts, trimmed, one per line).
+function answerText(m: UIMessage): string {
+  return m.parts.flatMap((p) => (p.type === 'text' && p.text.trim() ? [p.text.trim()] : [])).join('\n')
+}
 
 function moodForText(text: string): BotMood {
   const t = text.toLowerCase()
@@ -162,6 +171,7 @@ function QuoteCard({ quote, onView, adminEmail, t, progress }: { quote: Quote; o
             {t.requestCall}
           </a>
         )}
+        {quote.accessCode && <EmailCopyButton accessCode={quote.accessCode} clientEmail={quote.clientEmail} locale={locale} />}
       </div>
     </div>
   )
@@ -294,6 +304,22 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null)
   // Local panels of the empty chat (service cards, quote tracking): no model request.
   const [panel, setPanel] = useState<null | 'services' | 'track'>(null)
+  // The summary of a quote is confirmed by the visitor before it is generated (see tool-generateQuote below).
+  const [quoteBusy, setQuoteBusy] = useState<string | null>(null)
+  // The page the visitor is on, for suggestions that fit it (a project, an article, the offers…).
+  const pageHint = useSyncExternalStore(subscribePageHint, getPageHint, () => null)
+  // The visitor's thumbs, by message id (the server matches them to the answer text).
+  const [ratings, setRatings] = useState<Record<string, 'up' | 'down'>>({})
+  const rate = (m: UIMessage, value: 'up' | 'down') => {
+    const next = ratings[m.id] === value ? 'none' : value
+    setRatings((r) => {
+      const copy = { ...r }
+      if (next === 'none') delete copy[m.id]
+      else copy[m.id] = next
+      return copy
+    })
+    rateChatMessage({ conversationId: currentConversationId, answer: answerText(m), rating: next }).catch(() => undefined)
+  }
   // The offers are not part of the public page payload: fetched the first time the pricing panel opens.
   const [offers, setOffers] = useState<Offer[] | null>(null)
   const [offersFailed, setOffersFailed] = useState(false)
@@ -346,6 +372,22 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   }, [messages, status])
 
   const busy = status === 'submitted' || status === 'streaming'
+
+  // The visitor confirmed the summary: the quote is generated now, by the same public action as
+  // the quote form, and its result goes back to the assistant like any tool result.
+  const confirmQuote = async (toolCallId: string, input: QuoteDraftInput) => {
+    setQuoteBusy(toolCallId)
+    try {
+      const quote = await submitQuote({ ...(input as QuotePayload), locale: locale === 'en' ? 'en' : 'fr' })
+      addToolOutput({ tool: 'generateQuote', toolCallId, output: quote })
+    } catch (e) {
+      addToolOutput({ tool: 'generateQuote', toolCallId, output: { error: e instanceof Error ? e.message : 'Impossible de générer le devis.' } })
+    } finally {
+      setQuoteBusy(null)
+    }
+  }
+  const editQuote = (toolCallId: string) => addToolOutput({ tool: 'generateQuote', toolCallId, output: { error: QUOTE_EDIT_REQUEST } })
+  const pageSugg = pageSuggestions(pathname, pageHint, locale === 'en' ? 'en' : 'fr')
   // True once the in-progress assistant message has any part to show —
   // streamed text or a tool call's own bubble — at which point that *is*
   // the status indicator and the generic category bubble should step aside.
@@ -403,6 +445,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
   const handleClear = () => {
     setMessages([])
+    setRatings({})
     writeStoredChat(null)
     currentConversationId = newConversationId()
   }
@@ -579,6 +622,10 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   ) : panel === 'track' ? (
                     <QuoteTracker locale={locale} busy={busy} onAsk={quickSend} onBack={() => setPanel(null)} />
                   ) : (
+                  <>
+                  {pageSugg && (
+                    <PageHintBox suggestions={pageSugg} locale={locale === 'en' ? 'en' : 'fr'} busy={busy} onChip={(chip) => (chip.action ? openPanel(chip.action) : quickSend(chip.text ?? ''))} />
+                  )}
                   <div className="flex flex-wrap gap-1.5">
                     {suggestions.map(({ label, text, action }) => (
                       <m.button
@@ -599,6 +646,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                       </m.button>
                     ))}
                   </div>
+                  </>
                   )}
                 </div>
               )}
@@ -635,7 +683,16 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
                       if (part.type === 'tool-generateQuote') {
                         if (part.state === 'output-available') {
-                          const quote = part.output as Quote
+                          const quote = part.output as Quote | { error: string }
+                          // The visitor asked to change the summary: the assistant answers, nothing to show here.
+                          if ('error' in quote) {
+                            return quote.error === QUOTE_EDIT_REQUEST ? null : (
+                              <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                                <BotAvatar mood="confused" />
+                                <div className="rounded-xl px-3.5 py-2.5 text-sm" style={{ maxWidth: '78%', background: 'var(--surface-hover)', border: '1px solid var(--border)', color: 'var(--text)' }}>{quote.error}</div>
+                              </div>
+                            )
+                          }
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="excited" />
@@ -643,7 +700,23 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                             </div>
                           )
                         }
-                        if (part.state === 'input-streaming' || part.state === 'input-available') {
+                        if (part.state === 'input-available') {
+                          return (
+                            <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
+                              <BotAvatar mood="excited" />
+                              <div style={{ maxWidth: '88%', minWidth: 0 }}>
+                                <QuoteConfirm
+                                  input={part.input as QuoteDraftInput}
+                                  locale={locale === 'en' ? 'en' : 'fr'}
+                                  busy={quoteBusy === part.toolCallId}
+                                  onConfirm={() => confirmQuote(part.toolCallId, part.input as QuoteDraftInput)}
+                                  onEdit={() => editQuote(part.toolCallId)}
+                                />
+                              </div>
+                            </div>
+                          )
+                        }
+                        if (part.state === 'input-streaming') {
                           return (
                             <div key={i} className="flex items-end gap-2" style={{ justifyContent: 'flex-start' }}>
                               <BotAvatar mood="thinking" />
@@ -742,12 +815,9 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                               >
                                 {rows.length === 0 || rows.every((r) => r.slots.length === 0) ? (
                                   <span style={{ color: 'var(--text-subtle)' }}>{t.chat.noAvailability}</span>
-                                ) : rows.map((r) => (
-                                  <p key={r.date}>
-                                    <strong>{new Date(`${r.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</strong>
-                                    {' — '}{r.slots.slice(0, 6).join(', ')}
-                                  </p>
-                                ))}
+                                ) : (
+                                  <SlotPicker days={rows} locale={locale === 'en' ? 'en' : 'fr'} busy={busy} onPick={quickSend} />
+                                )}
                               </div>
                             </div>
                           )
@@ -917,6 +987,9 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
 
                       return null
                     })}
+                    {!isUser && !(busy && message.id === lastMessage?.id) && answerText(message) && (
+                      <ThumbButtons rating={ratings[message.id] ?? null} locale={locale} onRate={(v) => rate(message, v)} />
+                    )}
                     <p
                       className="text-[10px]"
                       style={{

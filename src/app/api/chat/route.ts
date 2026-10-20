@@ -4,13 +4,17 @@ import { google } from '@ai-sdk/google'
 import { z } from 'zod'
 import { getDb } from '@/lib/mongodb'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
-import { submitQuote, lookupQuote, sendQuoteEmail } from '@/actions/quotes'
+import { lookupQuote, sendQuoteEmail } from '@/actions/quotes'
 import { getUpcomingAvailability, getDaySchedule, bookMeeting, lookupBooking, cancelBooking } from '@/actions/bookings'
 import { joinWaitlist } from '@/actions/waitlist'
 import type { PortfolioData } from '@/types'
 import { resolveBusiness } from '@/lib/business'
 import { isConversationId, saveChatConversation } from '@/lib/chat-log'
 import { clientIpFromHeaders } from '@/lib/client-ip'
+import { dropPendingToolCalls } from '@/lib/chat-messages'
+import { instantAnswer } from '@/lib/instant-answers'
+import { instantResponse, splitLastTurn } from '@/lib/instant-response'
+import { countInstantAnswer } from '@/lib/chat-instant-stats'
 
 const MAX_ATTEMPTS = 20
 const WINDOW_S = 10 * 60 // 10 minutes
@@ -207,11 +211,11 @@ Tu peux générer un devis officiel pour un visiteur qui a un projet en tête. M
 Déroulé à suivre :
 1. Demande, une question à la fois (pas toutes en même temps), les infos nécessaires : le type de projet souhaité, les fonctionnalités principales attendues, puis ses coordonnées (nom ou nom de société, email et/ou téléphone). Si le visiteur mentionne spontanément d'autres éléments de cadrage (objectif, public visé, échéance souhaitée, sites d'inspiration, contenus qu'il fournira, contraintes), reporte-les dans le champ "brief" de l'outil — sans jamais les inventer ni les réclamer tous.
 2. N'invente jamais les coordonnées du client : elles doivent venir de lui.
-3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur la grille tarifaire "Offres / prestations proposées" ci-dessus (FCFA, hors taxes) — ce sont les offres réelles et à jour du site, choisis toujours en priorité parmi elles.
+3. Une fois la description du projet et au moins son nom obtenus, appelle l'outil generateQuote (le visiteur verra d'abord un récapitulatif à confirmer ; ne le répète pas en texte avant l'appel) avec des lignes de prestation réalistes (2 à 4 lignes selon la complexité), basées sur la grille tarifaire "Offres / prestations proposées" ci-dessus (FCFA, hors taxes) — ce sont les offres réelles et à jour du site, choisis toujours en priorité parmi elles.
    Si le projet décrit combine plusieurs offres (ex: boutique en ligne + authentification + hébergement), inclus une ligne par offre concernée. Si aucune offre ne correspond exactement à un besoin mentionné (ex: une fonctionnalité très spécifique), estime une ligne complémentaire raisonnable en cohérence avec les ordres de grandeur de la grille.
    Pour chaque offre utilisée qui a une pricing par palier entre crochets [Simple / Standard / Complexe] : évalue toi-même, à partir de ce que le visiteur a décrit (fonctionnalités demandées, exigences particulières, ampleur du projet), quel palier s'applique — Simple pour un besoin basique/standard sans particularité, Standard par défaut si l'info est insuffisante pour trancher, Complexe si le visiteur mentionne des fonctionnalités avancées, une forte personnalisation, de gros volumes ou des intégrations poussées. Utilise EXACTEMENT le montant correspondant à ce palier (jamais un chiffre inventé entre les paliers), et nomme la ligne "Nom de l'offre (Palier)" — par exemple "Site vitrine simple (Standard)" — pour rester cohérent avec les devis générés depuis le formulaire du site. Pour une offre sans pricing par palier (prix unique ou "sur devis"), garde le nom de l'offre tel quel et estime un montant cohérent avec son priceLabel.
    Jamais de prix absurdement bas ou élevé, jamais de centimes.
-4. Après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt. Indique-lui aussi le code d'accès du devis (fourni dans le résultat de l'outil) et précise qu'il peut le redonner plus tard pour retrouver ce devis sans tout redemander. Mentionne aussi qu'un bouton "Demander un appel" sous le devis lui permet de proposer directement un créneau par email s'il préfère en discuter de vive voix.
+4. Si le résultat de l'outil indique que le visiteur souhaite modifier le récapitulatif, demande-lui ce qu'il veut changer puis rappelle generateQuote avec les informations corrigées. Sinon, après l'appel de l'outil, confirme au visiteur que le devis a été généré, qu'il peut le consulter et l'imprimer dans la conversation, et que Nawaf a été notifié et le recontactera bientôt. Indique-lui aussi le code d'accès du devis (fourni dans le résultat de l'outil) et précise qu'il peut le redonner plus tard pour retrouver ce devis sans tout redemander. Mentionne aussi qu'un bouton "Demander un appel" sous le devis lui permet de proposer directement un créneau par email s'il préfère en discuter de vive voix.
 5. Si le devis généré n'a PAS d'email client, propose explicitement au visiteur de laisser son email pour en recevoir une copie ; s'il en fournit un ensuite, appelle l'outil sendQuoteEmail avec le CODE D'ACCÈS du devis (fourni dans le résultat de l'outil generateQuote) et cet email.
 
 Retrouver un devis déjà généré :
@@ -276,16 +280,31 @@ export async function POST(req: NextRequest) {
   }
   const { messages, locale, conversationId } = body
 
+  // Questions about the standard terms (lead time, deposit, payment, revisions…) are
+  // answered by the code from the business settings: instant, no model request, so no
+  // free-tier quota spent. Anything unclear (or in the middle of a quote or a booking)
+  // falls through to the model below.
+  const turn = splitLastTurn(messages)
+  if (turn) {
+    const lang = locale === 'en' ? 'en' : 'fr'
+    const quick = instantAnswer(turn.question, turn.previous, { locale: lang, business: resolveBusiness(portfolio.personal), ownerName: portfolio.personal.name })
+    if (quick) {
+      void countInstantAnswer(quick.topic)
+      return instantResponse(messages, quick.text, (all) => (isConversationId(conversationId) ? saveChatConversation(conversationId, lang, all) : undefined))
+    }
+  }
+
   const result = streamText({
     model: google('gemini-3.5-flash-lite'),
     system: buildSystemPrompt(portfolio, locale === 'en' ? 'en' : 'fr'),
-    messages: await convertToModelMessages(messages),
+    // A call the visitor has not answered (a summary waiting for a click) would leave a hole the model refuses.
+    messages: await convertToModelMessages(dropPendingToolCalls(messages)),
     maxOutputTokens: 2000,
     stopWhen: stepCountIs(3),
     tools: {
       generateQuote: tool({
         description:
-          "Génère un devis officiel pour le visiteur une fois que tu as recueilli la description de son projet et au moins son nom. N'appelle cet outil qu'une fois ces informations obtenues — ne les invente jamais.",
+          "Propose un devis officiel au visiteur une fois que tu as recueilli la description de son projet et au moins son nom : un récapitulatif (client, projet, prestations, total HT) s'affiche et le visiteur le confirme avant que le devis soit créé. N'appelle cet outil qu'une fois ces informations obtenues — ne les invente jamais.",
         inputSchema: z.object({
           clientNom: z.string().describe('Nom du client ou de la société'),
           clientSociete: z.string().optional().describe('Nom de la société, si différent du nom du client'),
@@ -315,7 +334,9 @@ export async function POST(req: NextRequest) {
             .min(1)
             .max(6),
         }),
-        execute: async (input) => submitQuote({ ...input, locale: locale === 'en' ? 'en' : 'fr' }),
+        // No execute, on purpose: the chat window shows the summary below to the visitor, who
+        // confirms (or asks to change it) before the quote is created, with the same public
+        // action as the quote form. The result then comes back here as this tool's output.
       }),
       lookupQuote: tool({
         description:

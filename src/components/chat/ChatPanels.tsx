@@ -156,3 +156,26 @@ export function HandoffLinks({ locale, lastQuestion, whatsapp, title }: { locale
 }
 
 export const talkLabel = (locale: ChatLocale) => S[locale].talk
+
+const THUMBS = {
+  fr: { up: 'Réponse utile', down: 'Réponse à améliorer', thanks: 'Merci pour votre retour' },
+  en: { up: 'Helpful answer', down: 'Answer to improve', thanks: 'Thanks for your feedback' },
+} as const
+
+/** Thumbs under an answer: the visitor's signal of what the assistant gets right or wrong. */
+export function ThumbButtons({ rating, locale, onRate }: { rating: 'up' | 'down' | null; locale: ChatLocale; onRate: (value: 'up' | 'down') => void }) {
+  const t = THUMBS[locale]
+  const base = { width: 26, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' } as const
+  const icon = (flip: boolean) => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={flip ? { transform: 'rotate(180deg)' } : undefined}>
+      <path d="M7 10v11H3V10zM7 10l4-8a3 3 0 0 1 3 3v3h5.5a2 2 0 0 1 2 2.3l-1.4 8a2 2 0 0 1-2 1.7H7" />
+    </svg>
+  )
+  return (
+    <div className="flex items-center gap-1.5" style={{ paddingLeft: 32 }} data-testid="chat-thumbs">
+      <button type="button" aria-label={t.up} aria-pressed={rating === 'up'} onClick={() => onRate('up')} style={{ ...base, background: rating === 'up' ? 'var(--accent)' : 'transparent', color: rating === 'up' ? 'var(--accent-contrast)' : 'var(--text-subtle)' }}>{icon(false)}</button>
+      <button type="button" aria-label={t.down} aria-pressed={rating === 'down'} onClick={() => onRate('down')} style={{ ...base, background: rating === 'down' ? 'var(--accent)' : 'transparent', color: rating === 'down' ? 'var(--accent-contrast)' : 'var(--text-subtle)' }}>{icon(true)}</button>
+      {rating && <span role="status" className="text-[10px]" style={{ color: 'var(--text-subtle)' }}>{t.thanks}</span>}
+    </div>
+  )
+}

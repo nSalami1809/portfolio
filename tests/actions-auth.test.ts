@@ -16,6 +16,7 @@ const ACTIONS_DIR = join(ROOT, 'actions')
 const PUBLIC_ACTIONS: Record<string, string[]> = {
   'auth.ts': ['loginWithCredentials', 'verifyOTPAction', 'logout'],
   'bookings.ts': ['getMonthSlots', 'getDaySchedule', 'getUpcomingAvailability', 'bookMeeting', 'lookupBooking', 'cancelBooking', 'sendDueReminders'],
+  'chat-feedback.ts': ['rateChatMessage'],
   'client-space.ts': ['requestRevision'],
   'contact.ts': ['submitContact'],
   'escalation.ts': ['requestHumanHelp'],

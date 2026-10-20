@@ -43,6 +43,32 @@ Palier gratuit Gemini uniquement. Le modèle ne modifie, n'envoie ni ne publie r
 - `tests/assistant-ui-style.test.ts` : aucun arrondi.
 - `tests/actions-auth.test.ts` : `getPublicOffers` est la seule nouvelle action publique, et elle est déclarée.
 
+## Lots A à D (deuxième vague)
+
+| Lot | Contenu | État |
+| --- | --- | --- |
+| A | Réponses instantanées sans IA (délai, acompte, paiement, révisions, code source, garantie, TVA, déroulé), pouces haut/bas sur les réponses, « J'ai envoyé ce mail » avec historique des relances, alerte push quand un visiteur laisse ses coordonnées ou obtient un devis | Livré |
+| B | Pipeline des devis (liste / pipeline), palette Ctrl+K, widget « Aujourd'hui » du tableau de bord | Livré |
+| C | Créneaux de rendez-vous en boutons, récapitulatif du devis à confirmer, « M'envoyer ce devis par e-mail », chat qui connaît la page (projet, article, offres, devis, contact) | Livré |
+| D | Barre de navigation mobile, dictée vocale, recherche et épinglage des conversations, e-mails de relance enregistrés automatiquement, écrans vides plus utiles | Livré |
+
+### Décisions et garde-fous
+
+- **Réponses instantanées** : `src/lib/instant-answers.ts`, branchées dans `/api/chat` avant l'appel à Gemini. Elles ne répondent qu'à une question claire sur un seul sujet, jamais en plein devis ou rendez-vous (message précédent avec outil ou finissant par « ? »), jamais si le message contient une adresse e-mail ou un numéro. Chaque réponse est comptée (`chat_instant_stats`, 120 jours) et affichée dans `/admin/chats` : ce sont des requêtes gratuites non dépensées.
+- **Pouces** : action publique `rateChatMessage`, limitée par IP, qui ne peut marquer qu'une réponse de la conversation dont l'appelant détient l'identifiant aléatoire. Un pouce bas rend la conversation « non lue ».
+- **Relances** : « J'ai envoyé ce mail » écrit sur le brouillon de l'assistant (`sentLog`), jamais sur le devis. Le briefing et l'assistant s'en servent : ton conseillé (courtois, direct, dernier rappel), avertissement sous 3 jours, devis « à relancer » après 7 jours sans réponse.
+- **Alerte** : une notification push par conversation (réclamée de façon atomique), sans l'adresse du visiteur ; pas pour les rendez-vous ni les demandes d'aide, qui alertent déjà.
+- **Pipeline** : règles pures (`src/lib/quote-pipeline.ts`) sur les faits du devis. « Préparer la relance » crée le brouillon par le code (aucune requête Gemini) et l'ouvre : rien n'est envoyé.
+- **Palette** : remplace l'ancien raccourci Ctrl+K du robot ; sa première ligne reste « Demander à NemCopilotIA » (la question arrive dans le champ, jamais envoyée). La recherche de devis renvoie cinq lignes, texte échappé.
+- **Devis à confirmer** : l'outil `generateQuote` n'est plus exécuté côté serveur. La fenêtre affiche le récapitulatif ; le devis est créé par l'action publique habituelle (`submitQuote`) au clic, ou le modèle reçoit une demande de correction. Un appel en attente est écarté de ce que lit le modèle si le visiteur continue autrement (`dropPendingToolCalls`).
+- **Dictée** : service vocal du navigateur, bouton absent s'il n'existe pas ; le texte arrive dans le champ.
+- **Épinglage** : une conversation épinglée reste en tête mais expire comme les autres avec la durée de conservation.
+
+### Non fait
+
+- Annulation de la suppression d'une conversation pendant quelques secondes, bouton « aller en bas » du chat : repoussés.
+- Les lignes de la liste des devis sur très petit écran restent serrées (mise en page existante, non modifiée).
+
 ## Limites connues
 
 - Les modifications faites dans le brouillon d'e-mail (objet, message) ne sont pas enregistrées : il faut copier avant de fermer.
