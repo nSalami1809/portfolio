@@ -161,7 +161,7 @@ export default function AdminAssistantPage() {
               <span>{blocked ? 'En pause' : status ? `${used} / ${cap} requêtes` : '…'}</span>
               {status && cap > 0 && (
                 <span className="block w-12 h-1" aria-hidden="true" style={{ background: 'var(--border)' }}>
-                  <span className="block h-full" style={{ width: `${Math.min(100, Math.round((used / cap) * 100))}%`, background: blocked || used / cap >= 0.9 ? '#D90000' : 'var(--accent)' }} />
+                  <span className="block h-full" style={{ width: `${Math.min(100, Math.round((used / cap) * 100))}%`, background: blocked || used / cap >= 0.9 ? '#D90000' : 'var(--brand)' }} />
                 </span>
               )}
             </span>

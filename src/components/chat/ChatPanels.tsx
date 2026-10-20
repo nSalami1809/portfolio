@@ -144,7 +144,7 @@ export function HandoffLinks({ locale, lastQuestion, whatsapp, title }: { locale
   const t = S[locale]
   const wa = whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : ''
   return (
-    <div className="p-3 space-y-2" style={{ border: '1px solid var(--accent)', background: 'var(--surface-hover)' }} data-testid="chat-handoff">
+    <div className="p-3 space-y-2" style={{ border: '1px solid var(--brand)', background: 'var(--surface-hover)' }} data-testid="chat-handoff">
       {title !== false && <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{t.handoffTitle}</p>}
       <div className="flex flex-wrap gap-2">
         <a className="btn-primary btn-sm" style={small} href={contactHref(locale, lastQuestion)}>{t.write}</a>

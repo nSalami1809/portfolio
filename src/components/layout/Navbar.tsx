@@ -245,6 +245,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                       style={{
                         background: isActive ? 'var(--accent)' : isHovered ? 'var(--surface-hover)' : 'transparent',
                         color: isActive ? 'var(--accent-contrast)' : isHovered ? 'var(--text)' : 'var(--text-muted)',
+                        boxShadow: isActive ? 'inset 0 -3px 0 var(--brand)' : undefined,
                         fontFamily: 'var(--font-poppins)',
                       }}
                     >
@@ -382,6 +383,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                       style={{
                         color: isActive ? 'var(--accent)' : 'var(--text)',
                         background: isActive ? 'var(--accent-glow)' : 'transparent',
+                        boxShadow: isActive ? 'inset 3px 0 0 var(--brand)' : undefined,
                         fontFamily: 'var(--font-space-grotesk)',
                       }}
                     >

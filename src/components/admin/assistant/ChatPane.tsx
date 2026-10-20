@@ -5,6 +5,8 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import ChatMarkdown from '@/components/chat/ChatMarkdown'
 import { BotIcon } from '@/components/chat/BotIcon'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Copy01Icon, RefreshIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { useToast } from '@/components/admin/Toast'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { usePortfolio } from '@/providers/PortfolioContext'
@@ -87,6 +89,7 @@ function textOf(message: UIMessage): string {
 
 function Message({ message, last, busy, onOpenDraft, onRegenerate }: { message: UIMessage; last: boolean; busy: boolean; onOpenDraft: (id: string) => void; onRegenerate: () => void }) {
   const toast = useToast()
+  const [copied, setCopied] = useState(false)
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -99,14 +102,16 @@ function Message({ message, last, busy, onOpenDraft, onRegenerate }: { message: 
     try {
       await navigator.clipboard.writeText(answer)
       toast('Réponse copiée ✓')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
     } catch {
       toast('Copie impossible : sélectionne le texte à la main.', 'error')
     }
   }
   return (
     <div className="flex gap-3">
-      <span className="w-7 h-7 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true">
-        <BotIcon width={15} height={15} />
+      <span className="w-7 h-7 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }} aria-hidden="true">
+        <BotIcon width={17} height={17} />
       </span>
       <div className="min-w-0 flex-1 text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
         {message.parts.map((part, i) => {
@@ -116,8 +121,14 @@ function Message({ message, last, busy, onOpenDraft, onRegenerate }: { message: 
         })}
         {answer && !(last && busy) && (
           <div className="mt-1.5 flex gap-1.5">
-            <button type="button" className="btn-secondary btn-xs" onClick={copy}>Copier</button>
-            {last && <button type="button" className="btn-secondary btn-xs" onClick={onRegenerate} title="Relance la même demande (compte pour une requête du quota gratuit)">Régénérer</button>}
+            <button type="button" className="btn-secondary btn-xs inline-flex items-center justify-center" style={{ width: 30, height: 28, padding: 0 }} onClick={copy} aria-label="Copier la réponse" title="Copier la réponse" data-testid="copy-answer">
+              <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} size={15} strokeWidth={1.75} aria-hidden="true" />
+            </button>
+            {last && (
+              <button type="button" className="btn-secondary btn-xs inline-flex items-center justify-center" style={{ width: 30, height: 28, padding: 0 }} onClick={onRegenerate} aria-label="Régénérer la réponse" title="Régénérer la réponse (compte pour une requête du quota gratuit)" data-testid="regenerate-answer">
+                <HugeiconsIcon icon={RefreshIcon} size={15} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -248,7 +259,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
         onSubmit={(e) => { e.preventDefault(); send(input) }}
       >
         {(menu || slashOpen) && (
-          <div className="absolute bottom-full left-0 mb-2 w-80 max-w-[90vw] p-1 z-10 max-h-72 overflow-y-auto" role="menu" aria-label="Commandes" style={{ background: 'var(--surface)', border: '1px solid var(--accent)', boxShadow: '4px 4px 0 var(--accent)' }}>
+          <div className="absolute bottom-full left-0 mb-2 w-80 max-w-[90vw] p-1 z-10 max-h-72 overflow-y-auto" role="menu" aria-label="Commandes" style={{ background: 'var(--surface)', border: '1px solid var(--brand)', boxShadow: '4px 4px 0 var(--brand)' }}>
             {(slashOpen ? slashMatches : SLASH_COMMANDS).map((c, i) => {
               const on = slashOpen && i === activeIndex
               return (
@@ -335,7 +346,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
     return (
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
         <div className={`w-full ${popover ? 'max-w-sm' : 'max-w-2xl'} flex flex-col items-center`}>
-          <span className="w-12 h-12 flex items-center justify-center mb-4" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }} aria-hidden="true"><BotIcon width={26} height={26} /></span>
+          <span className="w-12 h-12 flex items-center justify-center mb-4" style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }} aria-hidden="true"><BotIcon width={28} height={28} /></span>
           <h2 className={`font-display font-semibold text-center mb-1 ${popover ? 'text-xl' : 'text-3xl'}`} style={{ color: 'var(--text)' }}>
             {firstName ? `Bonjour ${firstName}.` : 'Bonjour.'}
           </h2>
@@ -343,7 +354,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
             {briefingSummary || 'Je connais ton portfolio : analyse, audit, statistiques, brouillons d’articles FR/EN.'}
           </p>
           {context && (
-            <div className="w-full mb-4 px-3 py-2 text-xs" data-testid="assistant-context" style={{ border: '1px dashed var(--accent)', background: 'var(--surface)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+            <div className="w-full mb-4 px-3 py-2 text-xs" data-testid="assistant-context" style={{ border: '1px dashed var(--brand)', background: 'var(--surface)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
               <span className="font-bold tracking-wider uppercase text-[10px]" style={{ color: 'var(--text)' }}>Page : </span>{context.label}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {context.chips.map((chip) => (

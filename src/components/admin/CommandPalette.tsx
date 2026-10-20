@@ -88,7 +88,7 @@ export default function CommandPalette({ pages }: { pages: PalettePage[] }) {
 
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[60] flex items-start justify-center px-3 pt-[10vh]" role="presentation" style={{ background: 'rgba(0,0,0,0.5)' }} onMouseDown={(e) => { if (e.target === e.currentTarget) close() }}>
-          <div role="dialog" aria-modal="true" aria-label="Recherche et commandes" className="w-full max-w-xl flex flex-col" style={{ background: 'var(--bg)', border: '1px solid var(--accent)', boxShadow: '6px 6px 0 var(--accent)', maxHeight: '70dvh' }} data-testid="palette">
+          <div role="dialog" aria-modal="true" aria-label="Recherche et commandes" className="w-full max-w-xl flex flex-col" style={{ background: 'var(--bg)', border: '1px solid var(--brand)', boxShadow: '6px 6px 0 var(--brand)', maxHeight: '70dvh' }} data-testid="palette">
             <input
               ref={inputRef}
               value={query}

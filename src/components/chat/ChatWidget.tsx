@@ -105,8 +105,8 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
     weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Libreville',
   })
   return (
-    <div className="rounded-xl p-3.5" style={{ maxWidth: '85%', background: 'var(--accent-glow)', border: '1px solid var(--accent)' }}>
-      <p className="text-xs font-bold mb-1 capitalize" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>{t.bookingPrefix}</p>
+    <div className="rounded-xl p-3.5" style={{ maxWidth: '85%', background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
+      <p className="text-xs font-bold mb-1 capitalize" style={{ color: 'var(--brand)', fontFamily: 'var(--font-poppins)' }}>{t.bookingPrefix}</p>
       <p className="text-sm font-semibold mb-1 capitalize" style={{ color: 'var(--text)' }}>{when}</p>
       {booking.status === 'cancelled' && (
         <p className="text-xs font-semibold mb-1" style={{ color: '#D90000' }}>{t.bookingCancelled}</p>
@@ -138,9 +138,9 @@ function QuoteCard({ quote, onView, adminEmail, t, progress }: { quote: Quote; o
   return (
     <div
       className="rounded-xl p-3.5"
-      style={{ maxWidth: '85%', background: 'var(--accent-glow)', border: '1px solid var(--accent)' }}
+      style={{ maxWidth: '85%', background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}
     >
-      <p className="text-xs font-bold mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
+      <p className="text-xs font-bold mb-1" style={{ color: 'var(--brand)', fontFamily: 'var(--font-poppins)' }}>
         {t.quotePrefix} {quote.numero}
       </p>
       <p className="text-sm mb-1" style={{ color: 'var(--text)' }}>{quote.clientNom}</p>
@@ -193,7 +193,7 @@ function HumanHelpForm({ onSubmit, t }: { onSubmit: (fields: { clientNom: string
   return (
     <div
       className="rounded-xl p-3.5"
-      style={{ maxWidth: '85%', background: 'var(--accent-glow)', border: '1px solid var(--accent)' }}
+      style={{ maxWidth: '85%', background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}
     >
       <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text)' }}>{t.humanHelpTitle}</p>
       <form onSubmit={handleSubmit} className="space-y-2">
@@ -550,10 +550,10 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
             >
               <div
                 className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-                style={{ background: 'var(--accent-gradient)' }}
+                style={{ background: 'var(--brand)', color: 'var(--brand-contrast)' }}
                 aria-hidden="true"
               >
-                <BotIcon width={17} height={17} color="white" mood={headerMood} />
+                <BotIcon width={19} height={19} mood={headerMood} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>
@@ -633,9 +633,9 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                         onClick={() => (action ? openPanel(action) : quickSend(text))}
                         className="text-xs font-medium"
                         style={{
-                          background: 'var(--accent-glow)',
-                          color: 'var(--accent)',
-                          border: '1px solid var(--accent)',
+                          background: 'var(--brand-soft)',
+                          color: 'var(--brand)',
+                          border: '1px solid var(--brand)',
                           padding: '0.45rem 0.9rem',
                         }}
                         whileHover={{ scale: 1.05, opacity: 0.8 }}
@@ -947,7 +947,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                               <BotAvatar mood={output.ok ? 'happy' : 'confused'} />
                               <div
                                 className="rounded-xl px-3.5 py-2.5 text-sm"
-                                style={{ maxWidth: '78%', background: 'var(--accent-glow)', border: '1px solid var(--accent)', color: 'var(--text)' }}
+                                style={{ maxWidth: '78%', background: 'var(--brand-soft)', border: '1px solid var(--brand)', color: 'var(--text)' }}
                               >
                                 {output.message}
                               </div>

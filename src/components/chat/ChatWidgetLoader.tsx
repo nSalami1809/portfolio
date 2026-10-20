@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname } from 'next/navigation'
 import { onOpenChatRequest } from '@/lib/chat-bridge'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ChatBotIcon } from '@hugeicons/core-free-icons'
 import { TEASER_TEXT, teaserAllowed } from '@/lib/chat-services'
 
 // The chat widget (react-markdown, remark-gfm, AI SDK client, the whole
@@ -88,8 +90,8 @@ function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: str
         maxWidth: 'min(260px, calc(100vw - 2.5rem))',
         background: 'var(--bg)',
         color: 'var(--text)',
-        border: '1px solid var(--accent)',
-        boxShadow: '4px 4px 0 var(--accent)',
+        border: '1px solid var(--brand)',
+        boxShadow: '4px 4px 0 var(--brand)',
       }}
     >
       <button
@@ -107,22 +109,13 @@ function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: str
 
 const IDLE_TIMEOUT_MS = 4000
 
-// Static, dependency-free twin of ChatWidget's animated BotIcon in its 'idle'
-// mood. Deliberately duplicated rather than imported: importing it would drag
-// the widget module (and its AI SDK / markdown deps) back into this chunk,
-// which is the one thing this loader exists to avoid.
+// Static twin of ChatWidget's animated BotIcon in its 'idle' mood: the same Hugeicons
+// ChatBot drawing, drawn directly. BotIcon itself is not imported: it would drag the
+// animation library back into this chunk, which is the one thing this loader exists to
+// avoid (the icon data and its renderer are tiny and already on every public page).
 function StaticBotIcon({ size = 26 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="2.6" r="1.15" fill="currentColor" />
-      <line x1="12" y1="3.75" x2="12" y2="6.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <rect x="2.2" y="10.3" width="2.3" height="5" rx="1.15" fill="currentColor" />
-      <rect x="19.5" y="10.3" width="2.3" height="5" rx="1.15" fill="currentColor" />
-      <rect x="4.6" y="6.2" width="14.8" height="14" rx="5" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="9.7" cy="13.1" r="1.55" fill="currentColor" />
-      <circle cx="14.3" cy="13.1" r="1.55" fill="currentColor" />
-      <path d="M9.3 16.6c1 .95 4.4.95 5.4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
+    <HugeiconsIcon icon={ChatBotIcon} size={size} color="currentColor" strokeWidth={1.5} aria-hidden="true" />
   )
 }
 
