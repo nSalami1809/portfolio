@@ -27,8 +27,8 @@ function downloadText(filename: string, content: string) {
 
 function Box({ title, children, tone }: { title: string; children: React.ReactNode; tone?: 'warn' }) {
   return (
-    <div className="p-3 text-sm" style={{ border: `1px solid ${tone === 'warn' ? '#D97706' : 'var(--border)'}`, background: 'var(--bg-secondary)', fontFamily: 'var(--font-poppins)' }}>
-      <p className="text-[10px] font-bold tracking-wider uppercase mb-1" style={{ color: tone === 'warn' ? '#D97706' : 'var(--text-subtle)' }}>{title}</p>
+    <div className="p-3 text-sm" style={{ border: `1px solid ${tone === 'warn' ? 'var(--warn, #A16207)' : 'var(--border)'}`, background: 'var(--bg-secondary)', fontFamily: 'var(--font-poppins)' }}>
+      <p className="text-[10px] font-bold tracking-wider uppercase mb-1" style={{ color: tone === 'warn' ? 'var(--warn, #A16207)' : 'var(--text-subtle)' }}>{title}</p>
       {children}
     </div>
   )
@@ -350,7 +350,7 @@ function ApplyBox({ draft, onChanged }: { draft: DraftDTO; onChanged: (d: DraftD
               </label>
             )}
             {publish && claims > 0 && (
-              <label className="flex items-start gap-2" style={{ color: '#D97706' }}>
+              <label className="flex items-start gap-2" style={{ color: 'var(--warn, #A16207)' }}>
                 <input type="checkbox" checked={acknowledgeClaims} onChange={(e) => setAcknowledgeClaims(e.target.checked)} className="mt-0.5" />
                 <span>J&apos;ai vérifié les {claims} affirmation{claims > 1 ? 's' : ''} à vérifier ci-dessus</span>
               </label>

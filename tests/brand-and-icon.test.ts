@@ -15,10 +15,10 @@ const channel = (v: number) => { const c = v / 255; return c <= 0.03928 ? c / 12
 const luminance = (hex: string) => { const h = hex.replace('#', ''); const [r, g, b] = [0, 2, 4].map((i) => channel(parseInt(h.slice(i, i + 2), 16))); return 0.2126 * r + 0.7152 * g + 0.0722 * b }
 const ratio = (a: string, b: string) => { const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05) }
 
-describe('the teal brand colour', () => {
+describe('the coral brand colour', () => {
   it('is defined in light and dark, next to (never in place of) the black-and-white accent', () => {
-    expect(token(light, '--brand')).toBe('#0F766E')
-    expect(token(dark, '--brand')).toBe('#2DD4BF')
+    expect(token(light, '--brand')).toBe('#C2410C')
+    expect(token(dark, '--brand')).toBe('#FB923C')
     expect(token(light, '--accent')).toBe('#111111')
     expect(token(dark, '--accent')).toBe('#FFFFFF')
     for (const name of ['--brand-soft', '--brand-line', '--brand-contrast']) {
@@ -33,6 +33,14 @@ describe('the teal brand colour', () => {
     expect(ratio(token(dark, '--brand')!, token(dark, '--bg')!)).toBeGreaterThanOrEqual(4.5)
     expect(ratio(token(light, '--brand')!, token(light, '--brand-contrast')!)).toBeGreaterThanOrEqual(4.5)
     expect(ratio(token(dark, '--brand')!, token(dark, '--brand-contrast')!)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('keeps the "attention" colour a yellow-gold, apart from the coral, in light and dark', () => {
+    expect(token(light, '--warn')).toBe('#A16207')
+    expect(token(dark, '--warn')).toBe('#FACC15')
+    expect(ratio(token(light, '--warn')!, token(light, '--bg')!)).toBeGreaterThanOrEqual(4.5)
+    expect(ratio(token(dark, '--warn')!, token(dark, '--bg')!)).toBeGreaterThanOrEqual(4.5)
+    expect(readFileSync(join(ROOT, 'app/admin/chats/page.tsx'), 'utf8')).not.toContain('#D97706')
   })
 
   it('colours focus, selection, labels and form focus, and only those globally', () => {
@@ -83,7 +91,7 @@ describe('NemCopilotIA\'s mark', () => {
     expect(stub).not.toMatch(/rounded-full|borderRadius/)
   })
 
-  it('is worn on a teal square by the public chat and by the assistant', () => {
+  it('is worn on a coral square by the public chat and by the assistant', () => {
     const square = "background: 'var(--brand, var(--accent))', color: 'var(--brand-contrast, var(--accent-contrast))'"
     expect(icon).toContain(square)
     expect(read('components/admin/assistant/ChatPane.tsx')).toContain(square)
@@ -95,7 +103,7 @@ describe('the colour never makes a control vanish', () => {
   const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]))
   const sources = walk(ROOT).filter((p) => p.endsWith('.tsx')).map((p) => ({ p: p.slice(ROOT.length + 1), text: readFileSync(p, 'utf8') }))
 
-  it('uses the teal tokens only with a black-and-white fallback, so an old stylesheet still shows borders and fills', () => {
+  it('uses the brand tokens only with a black-and-white fallback, so an old stylesheet still shows borders and fills', () => {
     for (const { p, text } of sources) {
       expect(text, `${p}: bare var(--brand)`).not.toMatch(/var\(--brand\)/)
       expect(text, `${p}: bare var(--brand-soft)`).not.toMatch(/var\(--brand-soft\)/)
