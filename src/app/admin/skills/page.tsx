@@ -8,6 +8,7 @@ import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { compressImage, uploadFile } from '@/lib/upload'
 import type { Skill } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 export default function AdminSkills() {
   const { data, updateSkills } = usePortfolio()
@@ -98,7 +99,7 @@ export default function AdminSkills() {
         </div>
         {selected.size > 0 && (
           <button onClick={bulkDelete} className="btn-danger btn-sm">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            <Icon name="trash" size={13} />
             Supprimer ({selected.size})
           </button>
         )}
@@ -262,7 +263,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                     className="w-5 h-5 flex items-center justify-center rounded transition-colors hover:bg-[var(--accent-glow)] flex-shrink-0"
                     style={{ border: '1px dashed var(--border)', color: 'var(--text-muted)' }}
                   >
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <Icon name="add" size={8} />
                   </button>
                 )}
                 <span className="text-sm" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>{item}</span>
@@ -272,7 +273,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                   className="w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(217,0,0,0.15)] flex-shrink-0"
                   style={{ color: 'var(--text-muted)', marginLeft: '0.125rem' }}
                 >
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <Icon name="close" size={9} />
                 </button>
               </m.div>
             )
@@ -301,7 +302,7 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                   className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <Icon name="close" size={11} />
                 </button>
               </div>
               <ImageUpload
@@ -350,14 +351,12 @@ function SkillCard({ skill, selected, onToggleSelect, onUpdateCatName, onAddItem
                   style={{ background: 'rgba(0,0,0,0.5)' }}
                   aria-hidden="true"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <Icon name="edit" size={12} style={{ color: 'white' }} />
                 </div>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full gap-0.5">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--text-muted)' }} aria-hidden="true">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                </svg>
+                <Icon name="image" size={13} style={{ color: 'var(--text-muted)' }} />
               </div>
             )}
           </button>

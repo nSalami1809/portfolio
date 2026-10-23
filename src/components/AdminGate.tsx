@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { m, AnimatePresence } from 'framer-motion'
 import PasswordInput from '@/components/ui/PasswordInput'
+import Icon from '@/components/ui/Icon'
 
 export default function AdminGate() {
   const [open, setOpen]       = useState(false)
@@ -110,10 +111,7 @@ export default function AdminGate() {
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'var(--accent-gradient)' }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/>
-                    <path d="M7 11V7a5 5 0 0110 0v4"/>
-                  </svg>
+                  <Icon name="lock" size={14} style={{ color: 'white' }} />
                 </div>
                 <div>
                   <p className="text-sm font-bold" style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}>

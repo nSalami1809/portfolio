@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { ConversationDTO } from '@/lib/assistant/history'
 import { conversationTitle, filterConversations } from '@/lib/assistant/conversation-search'
+import Icon from '@/components/ui/Icon'
 
 function Row({ icon, label, onClick, active, badge }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean; badge?: number }) {
   return (
@@ -17,8 +18,6 @@ function Row({ icon, label, onClick, active, badge }: { icon: React.ReactNode; l
     </button>
   )
 }
-
-const stroke = { width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 
 interface Props {
   items: ConversationDTO[] | null
@@ -43,8 +42,8 @@ export default function ConversationSidebar({ items, activeConversationId, draft
 
   return (
     <nav className="h-full flex flex-col p-2.5 gap-0.5 overflow-y-auto" aria-label="Conversations">
-      <Row active icon={<svg {...stroke}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>} label="Nouveau chat" onClick={wrap(onNew)} />
-      <Row icon={<svg {...stroke}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8" /></svg>} label="Brouillons" badge={draftCount} onClick={wrap(onOpenDrafts)} />
+      <Row active icon={<Icon name="edit" size={16} />} label="Nouveau chat" onClick={wrap(onNew)} />
+      <Row icon={<Icon name="documents" size={16} />} label="Brouillons" badge={draftCount} onClick={wrap(onOpenDrafts)} />
 
       <div className="px-1 pt-3 pb-1">
         <label htmlFor="conversation-search" className="sr-only">Rechercher dans les conversations</label>
@@ -86,14 +85,14 @@ export default function ConversationSidebar({ items, activeConversationId, draft
                 className="conv-delete absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 items-center justify-center"
                 style={{ color: c.pinned ? 'var(--text)' : 'var(--text-subtle)', display: c.pinned ? 'flex' : undefined }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill={c.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z" /></svg>
+                <Icon name="pin" size={13} />
               </button>
               <button
                 type="button" aria-label={`Supprimer « ${conversationTitle(c)} »`} onClick={() => onDelete(c)}
                 className="conv-delete absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 items-center justify-center"
                 style={{ color: 'var(--text-subtle)' }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+                <Icon name="trash" size={14} />
               </button>
             </div>
           </div>

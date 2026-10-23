@@ -10,6 +10,7 @@ import FadeIn from '@/components/animations/FadeIn'
 import type { PortfolioDocument } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import Icon from '@/components/ui/Icon'
 
 // A grid card only needs these fields (see documents/page.tsx).
 export type DocumentCardData = Pick<PortfolioDocument, 'slug' | 'title' | 'description' | 'category' | 'fileType' | 'fileSize' | 'thumbnailUrl'>
@@ -63,14 +64,7 @@ export default function DocumentsView({ documents, locale, t }: Props) {
       {/* Search */}
       <FadeIn>
         <div className="relative mb-6 max-w-sm">
-          <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: 'var(--text-subtle)' }}
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
-          </svg>
+          <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }} />
           <input
             type="search"
             value={query}
@@ -175,9 +169,7 @@ export default function DocumentsView({ documents, locale, t }: Props) {
                   aria-hidden="true"
                 >
                   {t.viewDocument}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
+                  <Icon name="arrowRight" size={14} />
                 </div>
               </Link>
             </m.div>

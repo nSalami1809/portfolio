@@ -6,6 +6,7 @@ import { m, AnimatePresence } from 'framer-motion'
 import { loginWithCredentials } from '@/actions/auth'
 import type { LoginResult } from '@/actions/auth'
 import PasswordInput from '@/components/ui/PasswordInput'
+import Icon from '@/components/ui/Icon'
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState<LoginResult, FormData>(loginWithCredentials, null)
@@ -26,10 +27,7 @@ export default function LoginPage() {
             style={{ background: 'var(--accent-gradient)', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }}
             whileHover={{ scale: 1.05 }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <rect x="3" y="11" width="18" height="11" rx="2"/>
-              <path d="M7 11V7a5 5 0 0110 0v4"/>
-            </svg>
+            <Icon name="lock" size={24} style={{ color: 'white' }} />
           </m.div>
           <h1 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text)' }}>
             Admin Panel
@@ -83,9 +81,7 @@ export default function LoginPage() {
                   style={{ background: 'rgba(217,0,0,0.08)', color: '#D90000', border: '1px solid rgba(217,0,0,0.2)', fontFamily: 'var(--font-poppins)' }}
                   role="alert"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
+                  <Icon name="alert" size={14} />
                   {error}
                 </div>
               </m.div>
@@ -106,9 +102,7 @@ export default function LoginPage() {
             ) : (
               <>
                 Continuer
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
+                <Icon name="arrowRight" size={14} />
               </>
             )}
           </button>

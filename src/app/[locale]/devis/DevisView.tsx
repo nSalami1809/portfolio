@@ -10,6 +10,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 import type { Offer } from '@/types'
 import EurHint from '@/components/EurHint'
 import Disclosure from '@/components/ui/Disclosure'
+import Icon from '@/components/ui/Icon'
 
 // QuoteView (qrcode dependency) is only needed once a quote actually exists
 // — lazy-loaded so it never adds weight to visitors filling the form.
@@ -186,7 +187,7 @@ export default function DevisView({ t, offers }: Props) {
           <FadeIn>
             <div className="card p-8 text-center mb-10">
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(0,128,0,0.1)' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                <Icon name="check" size={24} style={{ color: '#008000' }} />
               </div>
               <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{createdQuote.numero}</p>
               <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{fmt(createdQuote.totalTTC)} TTC<EurHint fcfa={createdQuote.totalTTC} /></p>
@@ -245,11 +246,7 @@ export default function DevisView({ t, offers }: Props) {
                 subtitle={t.briefSubtitle}
                 badge={briefFilled > 0 ? `${briefFilled} / ${BRIEF_FIELDS.length}` : t.briefBadge}
                 icon={(
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="4" width="14" height="17" rx="2" />
-                    <path d="M9 4V3h6v1" />
-                    <path d="M9 10h6M9 14h6M9 18h3" />
-                  </svg>
+                  <Icon name="invoice" size={20} />
                 )}
               >
                 <p className="text-xs mb-4" style={{ color: 'var(--text-subtle)' }}>{t.briefHint}</p>

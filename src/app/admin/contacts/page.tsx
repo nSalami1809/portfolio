@@ -5,6 +5,7 @@ import { m, AnimatePresence } from 'framer-motion'
 import { listContacts, markContactRead, deleteContact } from '@/actions/contact'
 import type { ContactMessage } from '@/actions/contact'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
+import Icon from '@/components/ui/Icon'
 
 type Filter = 'tous' | 'unread' | 'read'
 
@@ -130,10 +131,7 @@ export default function AdminContacts() {
           style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
           title="Rafraîchir"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-          </svg>
+          <Icon name="refresh" size={12} />
           Actualiser
         </button>
       </div>
@@ -147,10 +145,7 @@ export default function AdminContacts() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="card no-lift p-12 text-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="mx-auto mb-3" style={{ color: 'var(--text-subtle)' }} aria-hidden="true">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
+          <Icon name="mail" size={28} className="mx-auto mb-3" style={{ color: 'var(--text-subtle)' }} />
           <p className="font-display font-semibold mb-1" style={{ color: 'var(--text)' }}>Aucun message</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
             {filter === 'unread' ? 'Tous les messages ont été lus.' : 'Aucun message reçu pour le moment.'}
@@ -214,9 +209,7 @@ export default function AdminContacts() {
                   title="Supprimer"
                   aria-label="Supprimer le message"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-                  </svg>
+                  <Icon name="trash" size={13} />
                 </button>
               </div>
             </m.div>
@@ -280,7 +273,7 @@ export default function AdminContacts() {
                     className="w-8 h-8 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--surface-hover)] flex-shrink-0"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <Icon name="close" size={13} />
                   </button>
                 </div>
 
@@ -288,7 +281,7 @@ export default function AdminContacts() {
                 <div className="px-6 pt-5 pb-3 flex flex-wrap gap-3">
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-secondary)' }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                      <Icon name="tag" size={11} />
                     </div>
                     <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                       {selected.subject === 'autre' && selected.customSubject
@@ -299,7 +292,7 @@ export default function AdminContacts() {
                   {selected.phone && (
                     <div className="flex items-center gap-1.5">
                       <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-secondary)' }}>
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <Icon name="phone" size={11} />
                       </div>
                       <a href={`tel:${selected.phone}`} className="text-xs hover:underline" style={{ color: 'var(--accent)', fontFamily: 'var(--font-poppins)' }}>
                         {selected.phone}
@@ -308,7 +301,7 @@ export default function AdminContacts() {
                   )}
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-secondary)' }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <Icon name="clock" size={11} />
                     </div>
                     <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                       {formatDate(selected.createdAt)}
@@ -331,7 +324,7 @@ export default function AdminContacts() {
                     href={`mailto:${selected.email}?subject=Re: ${selected.subject === 'autre' && selected.customSubject ? selected.customSubject : (SUBJECT_LABELS[selected.subject] ?? selected.subject)}`}
                     className="btn-primary btn-sm flex-1 justify-center"
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <Icon name="mail" size={13} />
                     Répondre
                   </a>
                   <button
@@ -340,7 +333,7 @@ export default function AdminContacts() {
                     className="btn-secondary btn-sm px-4 flex items-center gap-1.5"
                     style={{ color: '#D90000', borderColor: 'rgba(217,0,0,0.25)' }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                    <Icon name="trash" size={13} />
                     Supprimer
                   </button>
                 </div>

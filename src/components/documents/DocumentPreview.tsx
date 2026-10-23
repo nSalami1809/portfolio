@@ -4,6 +4,7 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import PreviewErrorBoundary from './PreviewErrorBoundary'
+import Icon from '@/components/ui/Icon'
 
 // Dynamically imported (ssr: false) so react-pdf/pdfjs-dist and docx-preview
 // — both non-trivial in size — are only ever downloaded on a document's own
@@ -39,9 +40,7 @@ function PreviewFallback({ title, t }: { title: string; t: Dictionary['documents
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
     >
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--accent-glow)' }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--accent)' }} aria-hidden="true">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>
-        </svg>
+        <Icon name="documents" size={24} style={{ color: 'var(--accent)' }} />
       </div>
       <p className="text-sm text-center px-6" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
         {t.previewUnavailable}

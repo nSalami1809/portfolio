@@ -10,6 +10,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 import ThemeToggle from './ThemeToggle'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { File02Icon } from '@hugeicons/core-free-icons'
+import Icon from '@/components/ui/Icon'
 
 interface NavbarProps {
   locale: Locale
@@ -32,52 +33,28 @@ export default function Navbar({ locale, t }: NavbarProps) {
       href: `/${locale}`,
       label: t.about,
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
-          <path d="M14 13.12c0 2.38 0 6.38-1 8.88"/>
-          <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/>
-          <path d="M2 12a10 10 0 0 1 18-6"/>
-          <path d="M2 16h.01"/>
-          <path d="M21.8 16c.2-2 .131-5.354 0-6"/>
-          <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/>
-          <path d="M8.65 22c.21-.66.45-1.32.57-2"/>
-          <path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>
-        </svg>
+        <Icon name="about" size={14} />
       ),
     },
     {
       href: `/${locale}/resume`,
       label: t.resume,
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
-        </svg>
+        <Icon name="server" size={14} />
       ),
     },
     {
       href: `/${locale}/vision`,
       label: t.vision,
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="14.31" y1="8" x2="20.05" y2="17.94"/>
-          <line x1="9.69" y1="8" x2="21.17" y2="8"/>
-          <line x1="7.38" y1="12" x2="13.12" y2="2.06"/>
-          <line x1="9.69" y1="16" x2="3.95" y2="6.06"/>
-          <line x1="14.31" y1="16" x2="2.83" y2="16"/>
-          <line x1="16.62" y1="12" x2="10.88" y2="21.94"/>
-        </svg>
+        <Icon name="vision" size={14} />
       ),
     },
     {
       href: `/${locale}/projects`,
       label: t.projects,
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
-          <path d="M9 2v2"/><path d="M15 2v2"/><path d="M9 20v2"/><path d="M15 20v2"/>
-          <path d="M2 9h2"/><path d="M2 15h2"/><path d="M20 9h2"/><path d="M20 15h2"/>
-        </svg>
+        <Icon name="cpu" size={14} />
       ),
     },
     {
@@ -87,27 +64,23 @@ export default function Navbar({ locale, t }: NavbarProps) {
       // list and method, the instant quote, booking a call, tracking a
       // project, and the terms of sale.
       children: [
-        { href: `/${locale}/offres`, label: t.workOffers },
-        { href: `/${locale}/methode`, label: t.workMethod },
-        { href: `/${locale}/contact`, label: t.contact },
-        { href: `/${locale}/devis`, label: t.workQuote },
-        { href: `/${locale}/calendrier`, label: t.workCall },
-        { href: `/${locale}/suivi`, label: t.workTrack },
-        { href: `/${locale}/cgv`, label: t.workTerms },
+        { href: `/${locale}/offres`, label: t.workOffers, icon: 'store' as const },
+        { href: `/${locale}/methode`, label: t.workMethod, icon: 'target' as const },
+        { href: `/${locale}/contact`, label: t.contact, icon: 'mail' as const },
+        { href: `/${locale}/devis`, label: t.workQuote, icon: 'invoice' as const },
+        { href: `/${locale}/calendrier`, label: t.workCall, icon: 'calendar' as const },
+        { href: `/${locale}/suivi`, label: t.workTrack, icon: 'delivery' as const },
+        { href: `/${locale}/cgv`, label: t.workTerms, icon: 'shield' as const },
       ],
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2.83 12.83A2 2 0 0 1 2 11.17V4a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.42.59l7.98 7.99a2 2 0 0 1 .02 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
-        </svg>
+        <Icon name="tag" size={14} />
       ),
     },
     {
       href: `/${locale}/blog`,
       label: t.blog,
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-        </svg>
+        <Icon name="blog" size={14} />
       ),
     },
     {
@@ -119,9 +92,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
       href: `/${locale}/playground`,
       label: t.playground,
       icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="6 9 10 12 6 15"/><line x1="12" y1="15" x2="16" y2="15"/>
-        </svg>
+        <Icon name="lab" size={14} />
       ),
     },
   ]
@@ -257,9 +228,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                       </span>
                       {label}
                       {children && (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`transition-transform duration-150 group-focus-within:rotate-180 [@media(hover:hover)]:group-hover:rotate-180 ${menuOpen === href ? 'rotate-180' : ''}`}>
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
+                        <Icon name="chevronDown" size={10} className={`transition-transform duration-150 group-focus-within:rotate-180 [@media(hover:hover)]:group-hover:rotate-180 ${menuOpen === href ? 'rotate-180' : ''}`} />
                       )}
                     </Link>
                     {children && (
@@ -275,9 +244,10 @@ export default function Navbar({ locale, t }: NavbarProps) {
                               <Link
                                 href={child.href}
                                 aria-current={pathname === child.href ? 'page' : undefined}
-                                className="block px-4 py-2.5 text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)]"
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors duration-150 hover:bg-[var(--surface-hover)]"
                                 style={{ color: pathname === child.href ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)', whiteSpace: 'nowrap' }}
                               >
+                                <Icon name={child.icon} size={16} className="flex-shrink-0" style={{ color: pathname === child.href ? 'var(--accent)' : 'var(--text-subtle)' }} />
                                 {child.label}
                               </Link>
                             </li>
@@ -380,9 +350,9 @@ export default function Navbar({ locale, t }: NavbarProps) {
                       aria-current={isActive ? 'page' : undefined}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium transition-colors duration-200"
                       style={{
-                        color: isActive ? 'var(--accent)' : 'var(--text)',
-                        background: isActive ? 'var(--accent-glow)' : 'transparent',
-                        boxShadow: isActive ? 'inset 3px 0 0 var(--accent)' : undefined,
+                        color: 'var(--text)',
+                        background: isActive ? 'var(--surface-hover)' : 'transparent',
+                        fontWeight: isActive ? 600 : undefined,
                         fontFamily: 'var(--font-space-grotesk)',
                       }}
                     >
@@ -390,8 +360,8 @@ export default function Navbar({ locale, t }: NavbarProps) {
                         aria-hidden="true"
                         className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
                         style={{
-                          background: isActive ? 'var(--accent-glow)' : 'var(--surface)',
-                          color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+                          background: isActive ? 'var(--accent)' : 'var(--surface)',
+                          color: isActive ? 'var(--accent-contrast)' : 'var(--text-muted)',
                         }}
                       >
                         {icon}
@@ -401,9 +371,9 @@ export default function Navbar({ locale, t }: NavbarProps) {
                         <m.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          style={{ color: 'var(--accent)', fontSize: '18px', lineHeight: 1 }}
+                          style={{ color: 'var(--accent)', lineHeight: 0 }}
                         >
-                          →
+                          <Icon name="arrowRight" size={18} />
                         </m.span>
                       )}
                     </Link>
@@ -414,9 +384,10 @@ export default function Navbar({ locale, t }: NavbarProps) {
                             <Link
                               href={child.href}
                               aria-current={pathname === child.href ? 'page' : undefined}
-                              className="block px-3 py-2.5 rounded-lg text-sm transition-colors duration-200"
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200"
                               style={{ color: pathname === child.href ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
                             >
+                              <Icon name={child.icon} size={16} className="flex-shrink-0" style={{ color: pathname === child.href ? 'var(--accent)' : 'var(--text-subtle)' }} />
                               {child.label}
                             </Link>
                           </li>

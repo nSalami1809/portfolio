@@ -230,19 +230,20 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+  /* Flat: no shadow under a card, at rest or on hover. The hover is a lift and a firmer border. */
+  box-shadow: none;
   -webkit-backdrop-filter: blur(10px) saturate(140%);
   backdrop-filter: blur(10px) saturate(140%);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
+  transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 
 /* Guarded on a real pointer: without it, the first tap on a touch screen
-   "sticks" the hover state until the visitor taps somewhere else. */
-@media (hover: hover) and (pointer: fine) {
+   "sticks" the hover state until the visitor taps somewhere else.
+   Also off when the visitor asks for less motion. No frame change on hover:
+   the card rises, nothing is outlined in black. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .card:hover {
-    box-shadow: var(--shadow-lg), inset 0 1px 0 var(--glass-highlight);
-    border-color: var(--accent);
-    transform: translateY(-1px);
+    transform: translateY(-3px);
   }
 }
 
@@ -539,6 +540,18 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
+/* The number of a step ("01"…): large, light, tabular, in a muted tone. */
+.step-number {
+  font-family: var(--font-space-grotesk), var(--font-poppins), sans-serif;
+  font-size: 1.9rem;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
+  opacity: 0.7;
+}
+
 /* No-lift modifier â€” suppresses card hover animation for data tables */
 .no-lift {
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
@@ -546,7 +559,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .no-lift:hover {
   transform: none !important;
-  box-shadow: var(--shadow-sm) !important;
+  box-shadow: none !important;
   border-color: var(--border) !important;
 }
 
@@ -600,8 +613,7 @@ select.input {
   border: 1px solid var(--border);
   background: linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
   border-radius: var(--radius);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
-  transition: border-color 0.25s ease, box-shadow 0.3s ease;
+  transition: border-color 0.25s ease;
   overflow: hidden;
 }
 .disclosure::before {
@@ -614,17 +626,9 @@ select.input {
   transform-origin: top;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.disclosure[data-open='true'] {
-  border-color: var(--accent);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
-}
 .disclosure[data-open='true']::before { transform: scaleY(1); }
-@media (hover: hover) and (pointer: fine) {
-  .disclosure:hover { border-color: var(--accent); }
-}
 .disclosure-prominent {
   border-style: dashed;
-  border-color: var(--accent);
 }
 .disclosure-prominent[data-open='true'] { border-style: solid; }
 
@@ -645,7 +649,7 @@ select.input {
   display: flex; align-items: center; justify-content: center;
   color: var(--accent);
   background: var(--accent-glow);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   transition: background 0.25s ease, color 0.25s ease, transform 0.3s ease;
 }
@@ -659,7 +663,7 @@ select.input {
   padding: 0.2rem 0.6rem;
   color: var(--accent);
   background: var(--accent-glow);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
   border-radius: 0;
   white-space: nowrap;
 }
@@ -674,7 +678,7 @@ select.input {
   border-radius: 0;
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
-.disclosure-trigger:hover .disclosure-toggle { color: var(--accent); border-color: var(--accent); }
+.disclosure-trigger:hover .disclosure-toggle { color: var(--accent); }
 .disclosure[data-open='true'] .disclosure-toggle { transform: rotate(180deg); color: var(--accent-contrast); background: var(--accent); border-color: var(--accent); }
 .disclosure-plus { transition: opacity 0.2s ease; }
 .disclosure[data-open='true'] .disclosure-plus { opacity: 0; }

@@ -11,16 +11,17 @@ import StarRatingInput from '@/components/ui/StarRatingInput'
 import { listPendingTestimonials, resolveTestimonialSubmission } from '@/actions/testimonials'
 import type { TestimonialSubmission } from '@/actions/testimonials'
 import type { Testimonial } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 const EMPTY: Omit<Testimonial, 'id'> = { name: '', role: '', company: '', text: '', avatar: '', rating: 5 }
 const GRID = '1rem 2.5rem 1fr 6rem'
 const uid = () => Date.now().toString()
 
 function TrashIcon() {
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+  return <Icon name="trash" size={13} />
 }
 function PencilIcon() {
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  return <Icon name="edit" size={13} />
 }
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
@@ -152,10 +153,7 @@ export default function AdminTestimonials() {
 
       {/* Search */}
       <div className="relative" style={{ maxWidth: '380px' }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }} aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+        <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
         <input className="input text-sm" style={{ paddingLeft: '2.25rem' }} placeholder="Rechercher…" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Rechercher un témoignage" />
       </div>
 
@@ -212,9 +210,7 @@ export default function AdminTestimonials() {
       {filtered.length === 0 && !editingId && (
         <div className="card no-lift p-12 text-center">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--accent-glow)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--accent)' }} aria-hidden="true">
-              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
+            <Icon name="chat" size={20} style={{ color: 'var(--accent)' }} />
           </div>
           <p className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>Aucun témoignage</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>

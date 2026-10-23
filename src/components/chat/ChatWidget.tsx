@@ -25,6 +25,7 @@ import { QUOTE_EDIT_REQUEST, type QuoteDraftInput } from '@/lib/chat-flows'
 import { getPageHint, pageSuggestions, subscribePageHint } from '@/lib/chat-page-context'
 import { rateChatMessage } from '@/actions/chat-feedback'
 import { contactHref, lastVisitorText } from '@/lib/chat-services'
+import Icon from '@/components/ui/Icon'
 
 // Only needed once a visitor actually opens a generated devis (QR code lib
 // included) — keep it split out of the widget's own chunk until then.
@@ -124,7 +125,7 @@ function BookingCard({ booking, t }: { booking: Booking; t: Dictionary['chat'] }
           style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
         >
           {t.joinMeeting}
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <Icon name="arrowRight" size={11} />
         </a>
       )}
     </div>
@@ -578,9 +579,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  </svg>
+                  <Icon name="trash" size={15} />
                 </m.button>
                 <m.button
                   type="button"
@@ -592,9 +591,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+                  <Icon name="close" size={15} />
                 </m.button>
               </div>
             </div>
@@ -1084,9 +1081,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
                 className="btn-primary btn-sm shrink-0"
                 style={{ padding: '0.6rem' }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
+                <Icon name="send" size={16} />
               </button>
             </form>
             <div className="px-3 pb-3 flex-shrink-0">

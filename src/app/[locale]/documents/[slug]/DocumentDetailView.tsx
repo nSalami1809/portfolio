@@ -7,6 +7,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 import FadeIn from '@/components/animations/FadeIn'
 import ShareButton from '@/components/ui/ShareButton'
 import DocumentPreview from '@/components/documents/DocumentPreview'
+import Icon from '@/components/ui/Icon'
 
 function formatSize(bytes: number): string {
   if (bytes <= 0) return '—'
@@ -24,9 +25,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
           className="inline-flex items-center gap-2 text-sm font-medium mb-16 transition-colors duration-200 hover:text-[var(--accent)]"
           style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
+          <Icon name="arrowLeft" size={16} />
           {t.allDocumentsLink}
         </Link>
       </FadeIn>
@@ -73,9 +72,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
               href={`/api/documents/${document.slug}/download`}
               className="btn-primary text-base px-8 py-4 mb-10"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
+              <Icon name="upload" size={16} />
               {t.download}
             </a>
           </FadeIn>
@@ -93,9 +90,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
               href={`/api/documents/${document.slug}/download`}
               className="btn-primary w-full justify-center text-sm py-3"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
+              <Icon name="upload" size={14} />
               {t.download}
             </a>
           </div>
@@ -124,9 +119,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
               style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
             >
               {t.viewAllDocuments}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
+              <Icon name="arrowRight" size={14} />
             </Link>
           </div>
         </FadeIn>

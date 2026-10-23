@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { submitContact } from '@/actions/contact'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import Icon from '@/components/ui/Icon'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 
@@ -79,9 +80,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
           className="w-16 h-16 rounded-full flex items-center justify-center mb-2"
           style={{ background: 'rgba(0,128,0,0.1)' }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+          <Icon name="check" size={28} style={{ color: '#008000' }} />
         </div>
         <h3 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>
           {t.successTitle}
@@ -139,25 +138,16 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             {emailTouched && form.email.length > 0 && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 {emailError ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D90000" strokeWidth="2.5" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                  </svg>
+                  <Icon name="closeCircle" size={16} style={{ color: '#D90000' }} />
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
+                  <Icon name="success" size={16} style={{ color: '#008000' }} />
                 )}
               </span>
             )}
           </div>
           {emailError && (
             <p id="cf-email-error" role="alert" className="mt-1.5 text-xs flex items-center gap-1.5" style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
+              <Icon name="alert" size={11} />
               {emailError}
             </p>
           )}
@@ -172,9 +162,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
+            <Icon name="phone" size={15} />
           </span>
           <input
             id="cf-phone" type="tel" inputMode="tel" autoComplete="tel" name="phone" value={form.phone}
@@ -271,10 +259,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
         ) : (
           <>
             {t.send}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
+            <Icon name="send" size={16} />
           </>
         )}
       </button>

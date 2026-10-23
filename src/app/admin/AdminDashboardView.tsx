@@ -8,28 +8,14 @@ import TodayWidget from '@/components/admin/TodayWidget'
 import TrendBadge, { trend } from '@/components/admin/TrendBadge'
 import type { Trend } from '@/components/admin/TrendBadge'
 import type { OverviewStats, ViewsStats } from '@/lib/admin-stats'
+import Icon, { type IconName } from '@/components/ui/Icon'
 
-const iconPaths = {
-  eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z',
-  messages: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6',
-  quotes: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8',
-  calendar: 'M8 2v4M16 2v4M3.5 9h17M4 4h16a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1z',
-  clock: 'M12 21a9 9 0 100-18 9 9 0 000 18z M12 7v5l3 3',
-  projects: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
-  experience: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-  skills: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
-  testimonials: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-} as const
+const PILL_ICONS = {
+  eye: 'eye', messages: 'mail', quotes: 'invoice', calendar: 'calendar', clock: 'clock',
+  projects: 'projects', experience: 'experience', skills: 'award', testimonials: 'quote',
+} as const satisfies Record<string, IconName>
 
-function PillIcon({ path }: { path: keyof typeof iconPaths }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={iconPaths[path]} />
-    </svg>
-  )
-}
-
-function StatPill({ icon, value, label, href, t }: { icon: keyof typeof iconPaths; value: number; label: string; href: string; t?: Trend }) {
+function StatPill({ icon, value, label, href, t }: { icon: keyof typeof PILL_ICONS; value: number; label: string; href: string; t?: Trend }) {
   return (
     <Link
       href={href}
@@ -38,7 +24,7 @@ function StatPill({ icon, value, label, href, t }: { icon: keyof typeof iconPath
       style={{ background: 'var(--surface)' }}
     >
       <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-hover)', color: 'var(--text)' }}>
-        <PillIcon path={icon} />
+        <Icon name={PILL_ICONS[icon]} size={17} />
       </span>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
@@ -160,14 +146,7 @@ export default function AdminDashboardView({ overview, initialViews }: { overvie
                   </p>
                   <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{desc}</p>
                 </div>
-                <svg
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                  className="flex-shrink-0 transition-transform duration-200 group-hover:translate-x-1"
-                  style={{ color: 'var(--accent)' }}
-                  aria-hidden="true"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
+                <Icon name="arrowRight" size={16} className="flex-shrink-0 transition-transform duration-200 group-hover:translate-x-1" style={{ color: 'var(--accent)' }} />
               </div>
             </Link>
           ))}

@@ -9,6 +9,7 @@ import { getWaitlistCounts } from '@/actions/waitlist'
 import type { AdminBooking } from '@/actions/bookings'
 import type { WeeklyHours } from '@/types'
 import MonthGrid, { type DayStatus } from '@/components/calendar/MonthGrid'
+import Icon from '@/components/ui/Icon'
 
 const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
 
@@ -295,7 +296,7 @@ export default function AdminCalendar() {
                     <button onClick={(e) => { e.stopPropagation(); handleCancel(b.id) }} className="btn-secondary btn-xs">Annuler</button>
                   )}
                   <button onClick={(e) => { e.stopPropagation(); handleDelete(b.id) }} className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-red-500/10" style={{ color: 'var(--text-subtle)' }} title="Supprimer" aria-label="Supprimer le rendez-vous">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                    <Icon name="trash" size={13} />
                   </button>
                 </div>
               </m.div>

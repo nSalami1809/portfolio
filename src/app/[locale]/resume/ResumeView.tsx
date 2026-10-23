@@ -4,6 +4,7 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import type { PersonalInfo, Experience, Education, Skill } from '@/types'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import Icon from '@/components/ui/Icon'
 
 interface Props {
   personal: PersonalInfo
@@ -31,9 +32,7 @@ export default function ResumeView({ personal, experiences, educations, skills, 
             // eslint-disable-next-line @next/next/no-html-link-for-pages -- forces a file download (Content-Disposition), not a page navigation
             <a href="/api/cv" className="btn-primary">
               {t.downloadCv}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-              </svg>
+              <Icon name="download" size={14} />
             </a>
           )}
         </FadeIn>

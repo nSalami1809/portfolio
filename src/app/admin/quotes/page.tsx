@@ -12,6 +12,7 @@ import QuotePipeline from '@/components/admin/QuotePipeline'
 import { getQuoteReminderHistory } from '@/actions/assistant'
 import type { ReminderHistoryEntry } from '@/lib/assistant/reminders'
 import { useToast } from '@/components/admin/Toast'
+import Icon from '@/components/ui/Icon'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
@@ -277,10 +278,7 @@ export default function AdminQuotes() {
           style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
           title="Rafraîchir"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-          </svg>
+          <Icon name="refresh" size={12} />
           Actualiser
         </button>
       </div>
@@ -302,9 +300,7 @@ export default function AdminQuotes() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="card no-lift p-12 text-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="mx-auto mb-3" style={{ color: 'var(--text-subtle)' }} aria-hidden="true">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>
-          </svg>
+          <Icon name="documents" size={28} className="mx-auto mb-3" style={{ color: 'var(--text-subtle)' }} />
           <p className="font-display font-semibold mb-1" style={{ color: 'var(--text)' }}>Aucun devis</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
             {search || filter !== 'tous' ? 'Aucun devis ne correspond à cette recherche.' : 'Aucun devis généré pour le moment.'}
@@ -387,9 +383,7 @@ export default function AdminQuotes() {
                   title="Copier le lien de signature"
                   aria-label={`Copier le lien de signature du devis ${q.numero}`}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                  </svg>
+                  <Icon name="copy" size={13} />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === q.id ? null : q.id) }}
@@ -399,9 +393,7 @@ export default function AdminQuotes() {
                   aria-label={`Historique du devis ${q.numero}`}
                   aria-expanded={expandedId === q.id}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expandedId === q.id ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s ease' }} aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
+                  <Icon name="chevronDown" size={13} style={{ transform: expandedId === q.id ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s ease' }} />
                 </button>
                 {q.clientEmail && (
                   <button
@@ -421,9 +413,7 @@ export default function AdminQuotes() {
                   title="Supprimer"
                   aria-label="Supprimer le devis"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-                  </svg>
+                  <Icon name="trash" size={13} />
                 </button>
               </div>
             </m.div>

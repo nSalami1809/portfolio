@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Image from 'next/image'
 import { compressImage, uploadFile } from '@/lib/upload'
+import Icon from '@/components/ui/Icon'
 
 interface Props {
   value?: string
@@ -111,16 +112,12 @@ export default function ImageUpload({
                 style={{ background: 'rgba(0,0,0,0.5)', borderRadius: radius }}
                 aria-hidden="true"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                </svg>
+                <Icon name="upload" size={16} style={{ color: 'white' }} />
               </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-1.5 pointer-events-none">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--text-muted)' }}>
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
+              <Icon name="upload" size={18} style={{ color: 'var(--text-muted)' }} />
               {size !== 'sm' && (
                 <span className="text-[10px] text-center leading-tight px-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                   {placeholder}

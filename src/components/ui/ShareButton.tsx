@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, m } from 'framer-motion'
+import Icon from '@/components/ui/Icon'
 
 interface Props {
   title: string
@@ -82,13 +83,7 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
         aria-haspopup={open ? 'menu' : undefined}
         aria-expanded={open || undefined}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="18" cy="5" r="3" />
-          <circle cx="6" cy="12" r="3" />
-          <circle cx="18" cy="19" r="3" />
-          <line x1="8.6" y1="10.6" x2="15.4" y2="6.4" />
-          <line x1="8.6" y1="13.4" x2="15.4" y2="17.6" />
-        </svg>
+        <Icon name="share" size={16} />
         {!iconOnly && label}
       </button>
 
@@ -110,9 +105,7 @@ export default function ShareButton({ title, text, url, label, copiedLabel, copy
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors hover:bg-[var(--surface-hover)] cursor-pointer"
               style={{ color: 'var(--text)', fontFamily: 'var(--font-poppins)' }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-              </svg>
+              <Icon name="copy" size={15} />
               {copied ? copiedLabel : copyLinkLabel}
             </button>
             {[

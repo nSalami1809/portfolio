@@ -5,6 +5,7 @@ import { m } from 'framer-motion'
 import { submitTestimonial } from '@/actions/testimonials'
 import StarRatingInput from '@/components/ui/StarRatingInput'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import Icon from '@/components/ui/Icon'
 
 export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage']['form'] }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -35,9 +36,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
         className="card p-10 text-center flex flex-col items-center justify-center gap-4"
       >
         <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2" style={{ background: 'rgba(0,128,0,0.1)' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <Icon name="check" size={28} style={{ color: '#008000' }} />
         </div>
         <h3 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>{t.successTitle}</h3>
         <p style={{ color: 'var(--text-muted)' }}>{t.successText}</p>
@@ -130,10 +129,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
         ) : (
           <>
             {t.send}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            <Icon name="send" size={16} />
           </>
         )}
       </button>

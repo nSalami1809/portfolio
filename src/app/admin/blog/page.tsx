@@ -8,6 +8,7 @@ import ImageUpload from '@/components/admin/ImageUpload'
 import { compressImage, uploadFile } from '@/lib/upload'
 import { getBlogViewCounts } from '@/actions/blog-stats'
 import type { BlogPost } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 const CATEGORIES = ['DevOps', 'Frontend', 'Backend', 'Architecture', 'Carrière', 'Autre']
 
@@ -35,14 +36,14 @@ function slugify(str: string) {
 }
 
 function TrashIcon() {
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+  return <Icon name="trash" size={13} />
 }
 function PencilIcon() {
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  return <Icon name="edit" size={13} />
 }
 function EyeIcon({ off }: { off?: boolean }) {
-  if (off) return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  if (off) return <Icon name="eyeOff" size={13} />
+  return <Icon name="eye" size={13} />
 }
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
@@ -254,7 +255,7 @@ export default function AdminBlog() {
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-muted)' }} aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
           <input
             type="search"
             value={search}
@@ -302,7 +303,7 @@ export default function AdminBlog() {
                 style={{ color: 'var(--text-muted)' }}
                 aria-label="Fermer"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <Icon name="close" size={12} />
               </button>
             </div>
 
@@ -407,9 +408,7 @@ export default function AdminBlog() {
               <F label="Auteur" />
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
+                  <Icon name="user" size={14} />
                 </span>
                 <input
                   type="text"
@@ -439,11 +438,7 @@ export default function AdminBlog() {
               <F label="Lien ressource / outil (optionnel)" />
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                    <polyline points="15 3 21 3 21 9"/>
-                    <line x1="10" y1="14" x2="21" y2="3"/>
-                  </svg>
+                  <Icon name="externalLink" size={14} />
                 </span>
                 <input
                   type="url"
@@ -478,7 +473,7 @@ export default function AdminBlog() {
                   {mediaUploading === 'image' ? (
                     <span className="w-3 h-3 rounded-full border-2 animate-spin inline-block" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
                   ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <Icon name="image" size={12} />
                   )}
                   Insérer une image
                 </button>
@@ -491,7 +486,7 @@ export default function AdminBlog() {
                   {mediaUploading === 'video' ? (
                     <span className="w-3 h-3 rounded-full border-2 animate-spin inline-block" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
                   ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    <Icon name="video" size={12} />
                   )}
                   Insérer une vidéo
                 </button>
@@ -555,7 +550,7 @@ export default function AdminBlog() {
       {posts.length === 0 && (
         <div className="card no-lift p-16 text-center">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'var(--accent-glow)' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--accent)' }}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <Icon name="documents" size={22} style={{ color: 'var(--accent)' }} />
           </div>
           <p className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>Aucun article pour l&apos;instant</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>Cliquez sur « Nouvel article » pour commencer à rédiger.</p>
@@ -620,9 +615,7 @@ export default function AdminBlog() {
                     <p className="text-xs mt-0.5 truncate flex items-center gap-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
                       <span>{new Date(p.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })} · {p.readTime}</span>
                       <span className="inline-flex items-center gap-1 flex-shrink-0" title="Vues (fr + en)">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" /><circle cx="12" cy="12" r="3" />
-                        </svg>
+                        <Icon name="eye" size={11} />
                         {(views[p.slug] ?? 0).toLocaleString('fr-FR')}
                       </span>
                     </p>
@@ -661,9 +654,7 @@ export default function AdminBlog() {
                         }}
                         title="Publier sur le site"
                       >
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                          <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                        </svg>
+                        <Icon name="taskDone" size={11} />
                         Publier
                       </button>
                     )}

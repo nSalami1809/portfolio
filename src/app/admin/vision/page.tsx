@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import type { VisionData } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
   <label className="field-label">{label}{req && <span style={{ color: '#D90000' }}> *</span>}</label>
@@ -53,9 +54,7 @@ function ParagraphList({
             className="btn-danger btn-icon self-start mt-0"
             aria-label="Supprimer ce paragraphe"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-            </svg>
+            <Icon name="trash" size={13} />
           </button>
         </div>
       ))}
@@ -172,9 +171,7 @@ export default function AdminVision() {
                 VALEUR {i + 1}
               </span>
               <button type="button" onClick={() => removeValeur(i)} className="btn-danger btn-icon">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-                </svg>
+                <Icon name="trash" size={12} />
               </button>
             </div>
             <div>

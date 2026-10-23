@@ -4,6 +4,22 @@ import Disclosure from '@/components/ui/Disclosure'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import type { Locale } from '@/lib/i18n/locale'
 import type { WorkTerms } from '@/lib/business'
+import Icon, { iconForText, type IconName } from '@/components/ui/Icon'
+
+// Used when a step's own words say nothing: the usual run of a project.
+const STEP_ICONS: IconName[] = ['invoice', 'signature', 'code', 'delivery', 'support', 'shield']
+
+// What each commitment is about, from its label (French or English); the list varies with the settings.
+function commitmentIcon(label: string): IconName {
+  const l = label.toLowerCase()
+  if (/délai|delai|lead time/.test(l)) return 'clock'
+  if (/acompte|deposit/.test(l)) return 'wallet'
+  if (/révision|revision/.test(l)) return 'pen'
+  if (/garantie|warranty/.test(l)) return 'shield'
+  if (/code source|source code/.test(l)) return 'code'
+  if (/signé|signed/.test(l)) return 'signature'
+  return 'check'
+}
 
 interface Props {
   t: Dictionary['work']
@@ -37,13 +53,10 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
             <li key={step.title}>
               <FadeIn delay={Math.min(i * 0.06, 0.3)}>
                 <div className="card p-6 h-full">
-                  <span
-                    className="inline-flex items-center justify-center font-display font-bold text-sm mb-4"
-                    style={{ width: 32, height: 32, background: 'var(--accent-glow)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
-                    aria-hidden="true"
-                  >
-                    {i + 1}
-                  </span>
+                  <div className="flex items-center justify-between mb-4" aria-hidden="true">
+                    <Icon name={iconForText(step.title, STEP_ICONS[i % STEP_ICONS.length])} size={30} style={{ color: 'var(--brand, var(--accent))' }} />
+                    <span className="step-number">{String(i + 1).padStart(2, '0')}</span>
+                  </div>
                   <h3 className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>{step.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.text}</p>
                 </div>
@@ -64,6 +77,7 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
           {commitments.map((c, i) => (
             <FadeIn key={c.label} delay={Math.min(i * 0.06, 0.3)}>
               <div className="card p-6 h-full">
+                <Icon name={commitmentIcon(c.label)} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
                 <p className="font-display font-bold text-3xl mb-1" style={{ color: 'var(--accent)' }}>{c.value}</p>
                 <p className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{c.label}</p>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{c.hint}</p>
@@ -110,9 +124,7 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
                 rel="noopener noreferrer"
                 className="card p-6 h-full flex flex-col"
               >
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="mb-4" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" /><path d="M16 13H8M16 17H8M10 9H8" />
-                </svg>
+                <Icon name="documents" size={26} className="mb-4" style={{ color: 'var(--accent)' }} />
                 <h3 className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>{sample.title}</h3>
                 <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: 'var(--text-muted)' }}>{sample.text}</p>
                 <span className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>{t.samplesOpen} →</span>

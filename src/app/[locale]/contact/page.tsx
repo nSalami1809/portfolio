@@ -3,6 +3,7 @@ import ContactForm from '@/components/sections/ContactForm'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
+import Icon from '@/components/ui/Icon'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params
@@ -36,10 +37,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
               {[
                 {
                   icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                      <polyline points="22,6 12,13 2,6"/>
-                    </svg>
+                    <Icon name="mail" size={18} />
                   ),
                   label: t.contact.email,
                   value: 'nemrodsalami1809@gmail.com',
@@ -47,10 +45,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                 },
                 {
                   icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
+                    <Icon name="location" size={18} />
                   ),
                   label: t.contact.location,
                   value: t.contact.locationValue,
@@ -84,9 +79,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                   className="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(0,128,0,0.12)', color: '#008000' }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
+                  <Icon name="check" size={18} />
                   <span
                     className="absolute -top-0.5 -right-0.5 inline-block w-2.5 h-2.5"
                     style={{ background: '#008000', border: '2px solid var(--surface)' }}

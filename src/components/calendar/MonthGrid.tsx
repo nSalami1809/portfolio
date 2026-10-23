@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import Icon from '@/components/ui/Icon'
 
 export type DayStatus = 'available' | 'blocked' | 'booked'
 
@@ -18,7 +19,7 @@ interface MonthGridProps {
 }
 
 const DOT_COLOR: Record<DayStatus, string> = {
-  available: 'var(--accent)',
+  available: 'var(--brand, var(--accent))',
   booked: '#E45742',
   blocked: 'var(--text-subtle)',
 }
@@ -92,10 +93,10 @@ export default function MonthGrid({
           style={{ width: 52, border: '1px solid var(--border)' }}
           aria-hidden="true"
         >
-          <div className="w-full text-center text-[10px] font-bold uppercase py-1" style={{ background: 'var(--bg-secondary)', color: 'var(--text-subtle)', letterSpacing: '0.06em' }}>
+          <div className="w-full text-center text-[10px] font-bold uppercase py-1" style={{ background: 'var(--brand-soft, var(--bg-secondary))', color: 'var(--brand, var(--text-subtle))', letterSpacing: '0.06em' }}>
             {new Intl.DateTimeFormat(intlLocale, { month: 'short' }).format(new Date())}
           </div>
-          <div className="w-full text-center text-lg font-display font-bold py-1" style={{ color: 'var(--text)' }}>
+          <div className="w-full text-center text-lg font-display font-bold py-1" style={{ color: 'var(--brand, var(--text))' }}>
             {new Date().getDate()}
           </div>
         </div>
@@ -112,7 +113,7 @@ export default function MonthGrid({
             className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+            <Icon name="chevronLeft" size={13} />
           </button>
           <button
             onClick={goToday}
@@ -127,7 +128,7 @@ export default function MonthGrid({
             className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface-hover)]"
             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+            <Icon name="chevronRight" size={13} />
           </button>
         </div>
 
@@ -161,7 +162,7 @@ export default function MonthGrid({
               className="relative flex flex-col items-start p-2 sm:p-2.5 text-left transition-colors"
               style={{
                 minHeight: 64,
-                background: isSelected ? 'var(--accent-glow)' : 'transparent',
+                background: isSelected ? 'var(--brand-soft, var(--accent-glow))' : 'transparent',
                 borderRight: (i + 1) % 7 !== 0 ? '1px solid var(--border)' : 'none',
                 borderBottom: i < 35 ? '1px solid var(--border)' : 'none',
                 opacity: inMonth ? 1 : 0.35,
@@ -172,8 +173,8 @@ export default function MonthGrid({
                 className="flex items-center justify-center rounded-full text-xs font-medium"
                 style={{
                   width: 22, height: 22,
-                  background: isToday ? 'var(--accent)' : 'transparent',
-                  color: isToday ? 'var(--accent-contrast)' : isPast ? 'var(--text-subtle)' : 'var(--text)',
+                  background: isToday ? 'var(--brand, var(--accent))' : 'transparent',
+                  color: isToday ? 'var(--brand-contrast, var(--accent-contrast))' : isPast ? 'var(--text-subtle)' : 'var(--text)',
                 }}
               >
                 {date.getDate()}

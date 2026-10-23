@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { useSwipe } from './swipe'
 import { fill, type GalleryLabels } from './gallery-text'
+import Icon from '@/components/ui/Icon'
 
 const controlStyle = { background: 'rgba(0,0,0,0.6)', color: '#fff', width: 44, height: 44, border: '1px solid rgba(255,255,255,0.35)' } as const
 
@@ -75,16 +76,16 @@ export default function ProjectLightbox({ images, index, onIndex, onClose, onBro
       </div>
 
       <button ref={closeRef} type="button" onClick={(e) => { stop(e); onClose() }} aria-label={labels.close} data-testid="gallery-close" className="absolute flex items-center justify-center" style={{ ...controlStyle, top: 8, right: 8 }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        <Icon name="close" size={18} />
       </button>
 
       {count > 1 && (
         <>
           <button type="button" onClick={(e) => { stop(e); go(-1) }} aria-label={labels.previous} data-testid="gallery-lightbox-prev" className="absolute flex items-center justify-center" style={{ ...controlStyle, left: 8, top: '50%', transform: 'translateY(-50%)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+            <Icon name="chevronLeft" size={18} />
           </button>
           <button type="button" onClick={(e) => { stop(e); go(1) }} aria-label={labels.next} data-testid="gallery-lightbox-next" className="absolute flex items-center justify-center" style={{ ...controlStyle, right: 8, top: '50%', transform: 'translateY(-50%)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+            <Icon name="chevronRight" size={18} />
           </button>
           <p aria-live="polite" className="absolute text-sm" style={{ bottom: 16, left: 0, right: 0, textAlign: 'center', color: '#fff', fontFamily: 'var(--font-poppins)' }}>
             {fill(labels.imageOf, index + 1, count)}

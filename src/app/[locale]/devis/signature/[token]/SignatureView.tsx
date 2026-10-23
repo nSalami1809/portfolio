@@ -10,6 +10,7 @@ import type { Quote } from '@/actions/quotes'
 import { useLocale } from '@/lib/i18n/useLocale'
 import { resolveTerms, splitPayment, wantsSignatureOtp } from '@/lib/business'
 import { fmt as fmtMoney } from '@/lib/doc-common'
+import Icon from '@/components/ui/Icon'
 
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
@@ -169,7 +170,7 @@ export default function SignatureView({ token }: Props) {
               {phase === 'signed' && (
                 <>
                   <div className="w-14 h-14 flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(0,128,0,0.1)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                    <Icon name="check" size={24} style={{ color: '#008000' }} />
                   </div>
                   <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{Noun} {T('signé', 'signed')} — {quote.numero}</p>
                   <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>

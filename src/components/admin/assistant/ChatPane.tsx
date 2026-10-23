@@ -13,6 +13,7 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { SLASH_COMMANDS, START_CARDS, commandByName, matchCommands, type SlashCommand } from '@/lib/assistant/commands'
 import { contextForKey, type ContextChip } from '@/lib/assistant/page-context'
 import { appendDictation, transcriptOf } from '@/lib/assistant/dictation'
+import Icon from '@/components/ui/Icon'
 
 // The browser's speech recognition (Chrome, Edge, Safari): absent elsewhere, then no microphone button.
 interface SpeechLike {
@@ -286,7 +287,7 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
           className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40"
           style={{ color: 'var(--text-muted)' }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          <Icon name="add" size={20} />
         </button>
         <label htmlFor={`assistant-input-${variant}`} className="sr-only">Message à NemCopilotIA</label>
         <textarea
@@ -319,16 +320,16 @@ export default function ChatPane({ conversationId, initialMessages, variant, blo
             style={{ color: listening ? 'var(--accent-contrast)' : 'var(--text-muted)', background: listening ? 'var(--accent)' : undefined }}
             data-testid="dictation"
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" /><path d="M5 11a7 7 0 0014 0M12 18v4" /></svg>
+            <Icon name="mic" size={17} />
           </button>
         )}
         {busy ? (
           <button type="button" aria-label="Arrêter la génération" onClick={() => stop()} className="w-9 h-9 flex items-center justify-center flex-shrink-0" style={{ background: 'var(--text)', color: 'var(--bg)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="16" height="16" /></svg>
+            <Icon name="stop" size={12} />
           </button>
         ) : (
           <button type="submit" aria-label="Envoyer" disabled={blocked || !input.trim()} className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+            <Icon name="arrowUp" size={17} />
           </button>
         )}
       </form>

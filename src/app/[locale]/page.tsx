@@ -20,6 +20,12 @@ import {
   defaultSkills,
   defaultTestimonials,
 } from '@/data/defaultData'
+import Icon, { iconForText, type IconName } from '@/components/ui/Icon'
+
+// The four figures of the About block, in the order of the dictionary: years, projects, technologies, commitment.
+// Used when a step's own words say nothing: the usual run of a project.
+const STEP_ICONS: IconName[] = ['invoice', 'signature', 'code', 'delivery']
+const STAT_ICONS: IconName[] = ['calendar', 'projectDone', 'layers', 'heart']
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
@@ -180,25 +186,26 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <div className="mt-8">
                 <Link href={`/${locale}/vision`} className="btn-secondary">
                   {t.home.aboutCta}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
+                  <Icon name="arrowRight" size={14} />
                 </Link>
               </div>
             </FadeIn>
 
-            <FadeIn delay={0.1} direction="left">
+            <div>
               <div className="grid grid-cols-2 gap-4">
-                {t.home.stats.map(({ value, label }) => (
-                  <div key={label} className="card p-6 text-center">
-                    <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}>{value}</p>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-                      {label}
-                    </p>
-                  </div>
+                {t.home.stats.map(({ value, label }, i) => (
+                  <FadeIn key={label} delay={0.1 + i * 0.08}>
+                    <div className="card p-6 text-center h-full">
+                      <Icon name={STAT_ICONS[i % STAT_ICONS.length]} size={26} className="mx-auto mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
+                      <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}>{value}</p>
+                      <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+                        {label}
+                      </p>
+                    </div>
+                  </FadeIn>
                 ))}
               </div>
-            </FadeIn>
+            </div>
           </div>
         </div>
       </section>
@@ -215,6 +222,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {skills.map((skill, i) => (
               <FadeIn key={skill.id} delay={Math.min(i * 0.07, 0.28)}>
                 <div className="card p-6 h-full">
+                  <Icon name={iconForText(skill.category, 'cpu')} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
                   <p className="font-display font-semibold text-base mb-4" style={{ color: 'var(--accent)' }}>
                     {skill.category}
                   </p>
@@ -277,13 +285,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <li key={step.title}>
                 <FadeIn delay={Math.min(i * 0.07, 0.28)}>
                   <div className="card p-6 h-full">
-                    <span
-                      className="inline-flex items-center justify-center font-display font-bold text-sm mb-4"
-                      style={{ width: 32, height: 32, background: 'var(--accent-glow)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
-                      aria-hidden="true"
-                    >
-                      {i + 1}
-                    </span>
+                    <div className="flex items-center justify-between mb-4" aria-hidden="true">
+                      <Icon name={iconForText(step.title, STEP_ICONS[i % STEP_ICONS.length])} size={30} style={{ color: 'var(--brand, var(--accent))' }} />
+                      <span className="step-number">{String(i + 1).padStart(2, '0')}</span>
+                    </div>
                     <h3 className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{step.title}</h3>
                     <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.text}</p>
                   </div>
@@ -294,9 +299,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="text-center">
             <Link href={`/${locale}/methode`} className="btn-secondary">
               {t.work.homeCta}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
+              <Icon name="arrowRight" size={14} />
             </Link>
           </div>
         </div>
@@ -313,9 +316,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             )}
             <Link href={`/${locale}/temoignage`} className="btn-secondary">
               {t.home.testimonialsCta}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
+              <Icon name="arrowRight" size={14} />
             </Link>
           </FadeIn>
         </div>

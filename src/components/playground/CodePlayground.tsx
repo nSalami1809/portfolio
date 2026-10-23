@@ -5,6 +5,7 @@ import Editor, { loader, type OnMount, type OnValidate } from '@monaco-editor/re
 import { useTheme } from '@/hooks/useTheme'
 import { runInSandbox, type PlaygroundLogEntry } from '@/lib/playground/runInSandbox'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import Icon from '@/components/ui/Icon'
 
 interface Props {
   t: Dictionary['playground']
@@ -187,9 +188,9 @@ export default function CodePlayground({ t }: Props) {
               style={{ color: status === 'done' ? '#008000' : '#D90000', fontFamily: 'var(--font-poppins)' }}
             >
               {status === 'done' ? (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <Icon name="check" size={13} />
               ) : (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <Icon name="alert" size={13} />
               )}
               {status === 'done' ? t.statusDone : t.statusError}
             </span>

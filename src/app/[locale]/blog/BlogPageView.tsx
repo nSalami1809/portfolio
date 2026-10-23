@@ -9,6 +9,7 @@ import ShareButton from '@/components/ui/ShareButton'
 import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import Icon from '@/components/ui/Icon'
 
 // A list card only needs these fields (see blog/page.tsx).
 export type BlogCardPost = Pick<BlogPost, 'slug' | 'title' | 'excerpt' | 'date' | 'category' | 'readTime' | 'coverImage'>
@@ -56,9 +57,7 @@ export default function BlogPageView({ posts, locale, t }: Props) {
             className="inline-flex items-center gap-1.5 text-xs font-semibold mb-16"
             style={{ color: 'var(--accent)' }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-              <path d="M4 11a9 9 0 019 9" /><path d="M4 4a16 16 0 0116 16" /><circle cx="5" cy="19" r="1" />
-            </svg>
+            <Icon name="rss" size={13} />
             RSS
           </a>
         </FadeIn>
@@ -70,13 +69,7 @@ export default function BlogPageView({ posts, locale, t }: Props) {
                 className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
                 style={{ background: 'var(--accent-glow)' }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--accent)' }}>
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                  <polyline points="10 9 9 9 8 9"/>
-                </svg>
+                <Icon name="documents" size={22} style={{ color: 'var(--accent)' }} />
               </div>
               <p className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>
                 {t.emptyTitle}
@@ -90,14 +83,7 @@ export default function BlogPageView({ posts, locale, t }: Props) {
           <>
             <FadeIn delay={0.05}>
               <div className="relative mb-6 max-w-sm">
-                <svg
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                  style={{ color: 'var(--text-subtle)' }}
-                  aria-hidden="true"
-                >
-                  <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
-                </svg>
+                <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }} />
                 <input
                   type="search"
                   value={query}
@@ -207,9 +193,7 @@ export default function BlogPageView({ posts, locale, t }: Props) {
                     </div>
                   </div>
                   <div className="self-center reveal-on-hover opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--accent)' }}>
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
+                    <Icon name="arrowRight" size={18} style={{ color: 'var(--accent)' }} />
                   </div>
                 </div>
               </FadeIn>

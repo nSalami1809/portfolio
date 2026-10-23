@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { uploadFile } from '@/lib/upload'
+import Icon from '@/components/ui/Icon'
 
 interface Props {
   value?: string
@@ -67,9 +68,7 @@ export default function FileUpload({ value, onChange, accept, maxSizeMb = 5, hin
             className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-[var(--surface-hover)]"
             style={{ border: '1px solid var(--border)', color: 'var(--text)' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>
-            </svg>
+            <Icon name="documents" size={16} style={{ color: 'var(--accent)' }} />
             <span className="truncate max-w-[220px]">{fileNameFromUrl(value)}</span>
           </a>
           <button
@@ -95,9 +94,7 @@ export default function FileUpload({ value, onChange, accept, maxSizeMb = 5, hin
           {loading ? (
             <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
           ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-            </svg>
+            <Icon name="upload" size={16} />
           )}
           {loading ? 'Envoi…' : 'Uploader un fichier'}
         </button>

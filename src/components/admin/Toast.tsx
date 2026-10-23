@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useRef, useState } from 'react'
 import { AnimatePresence, m } from 'framer-motion'
+import Icon from '@/components/ui/Icon'
 
 type ToastType = 'success' | 'error' | 'info'
 
@@ -20,17 +21,17 @@ const ToastContext = createContext<ToastCtx | null>(null)
 const ICONS = {
   success: (
     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(0,128,0,0.15)' }}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#008000" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <Icon name="check" size={11} style={{ color: '#008000' }} />
     </div>
   ),
   error: (
     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(217,0,0,0.15)' }}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D90000" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <Icon name="close" size={11} style={{ color: '#D90000' }} />
     </div>
   ),
   info: (
     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-glow)' }}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <Icon name="alert" size={11} style={{ color: 'var(--accent)' }} />
     </div>
   ),
 }
@@ -96,9 +97,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 className="w-6 h-6 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors hover:bg-[var(--surface-hover)]"
                 style={{ color: 'var(--text-muted)' }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+                <Icon name="close" size={10} />
               </button>
             </m.div>
           ))}

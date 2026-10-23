@@ -12,6 +12,7 @@ import type { Offer } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import EurHint from '@/components/EurHint'
 import ShareButton from '@/components/ui/ShareButton'
+import Icon, { iconForText } from '@/components/ui/Icon'
 
 export type TranslatedOffers = Record<string, { title: string; description: string; features: string }>
 type Translated = TranslatedOffers
@@ -156,15 +157,13 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t }: {
   const features = tr ? tr.features.split('\n').filter(Boolean) : (offer.features ?? [])
 
   return (
-    <div
-      className="card p-6 h-full flex flex-col overflow-hidden"
-      style={highlighted ? { border: '1px solid var(--accent)' } : undefined}
-    >
+    <div className="card p-6 h-full flex flex-col overflow-hidden" data-highlighted={highlighted ? '' : undefined}>
       {offer.image && (
         <div className="relative -mx-6 -mt-6 mb-5" style={{ aspectRatio: '16 / 9' }}>
           <Image src={offer.image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" style={{ objectFit: 'cover' }} />
         </div>
       )}
+      {!offer.image && <Icon name={iconForText(`${title} ${description}`)} size={30} className="mb-4" style={{ color: 'var(--brand, var(--accent))' }} />}
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="font-display font-semibold text-xl" style={{ color: 'var(--text)' }}>{title}</h3>
         <ShareButton
@@ -184,9 +183,7 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t }: {
         <ul className="space-y-2 mb-5">
           {features.map((f) => (
             <li key={f} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5" aria-hidden="true">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <Icon name="check" size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
               {f}
             </li>
           ))}
@@ -232,9 +229,7 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
         </p>
         <Link href={`/${locale}/devis`} className="btn-primary mb-16">
           {t.offers.onlineQuoteCta}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
+          <Icon name="arrowRight" size={14} />
         </Link>
       </FadeIn>
 
@@ -278,9 +273,7 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
           </div>
           <Link href={`/${locale}/methode`} className="btn-secondary flex-shrink-0">
             {t.offers.methodCta}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
+            <Icon name="arrowRight" size={14} />
           </Link>
         </div>
       </FadeIn>

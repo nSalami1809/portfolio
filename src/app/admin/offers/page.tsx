@@ -7,15 +7,16 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import type { Offer } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 const EMPTY: Omit<Offer, 'id'> = { title: '', description: '', priceLabel: '', features: [], featured: false, image: '', priceHTMin: undefined, priceHTMax: undefined }
 const GRID = '1rem 2.5rem 1fr 8rem 6rem'
 
 function TrashIcon() {
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+  return <Icon name="trash" size={13} />
 }
 function PencilIcon() {
-  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  return <Icon name="edit" size={13} />
 }
 
 const F = ({ label, req }: { label: string; req?: boolean }) => (
@@ -100,10 +101,7 @@ export default function AdminOffers() {
 
       {/* Search */}
       <div className="relative" style={{ maxWidth: '380px' }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }} aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+        <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
         <input className="input text-sm" style={{ paddingLeft: '2.25rem' }} placeholder="Rechercher…" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Rechercher une offre" />
       </div>
 
@@ -179,9 +177,7 @@ export default function AdminOffers() {
       {filtered.length === 0 && !editingId && (
         <div className="card no-lift p-12 text-center">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--accent-glow)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ color: 'var(--accent)' }} aria-hidden="true">
-              <path d="M20 12V8H6a2 2 0 010-4h12v4"/><path d="M4 6v12a2 2 0 002 2h14v-4"/><path d="M18 12a2 2 0 000 4h4v-4Z"/>
-            </svg>
+            <Icon name="wallet" size={20} style={{ color: 'var(--accent)' }} />
           </div>
           <p className="font-display font-semibold text-lg mb-2" style={{ color: 'var(--text)' }}>Aucune offre</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
@@ -214,9 +210,7 @@ export default function AdminOffers() {
                     {o.image ? (
                       <Image src={o.image} alt="" fill sizes="32px" style={{ objectFit: 'cover' }} />
                     ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ color: 'var(--text-subtle)' }} aria-hidden="true">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-                      </svg>
+                      <Icon name="image" size={14} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ color: 'var(--text-subtle)' }} />
                     )}
                   </div>
 

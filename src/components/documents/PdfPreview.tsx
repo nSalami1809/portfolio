@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Document, Page } from 'react-pdf'
+import Icon from '@/components/ui/Icon'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import '@/lib/pdfjs-worker'
@@ -71,7 +72,7 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
             aria-label="Page précédente"
             className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-30"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+            <Icon name="chevronLeft" size={14} />
           </button>
           <span>{pageNumber} / {numPages}</span>
           <button
@@ -81,7 +82,7 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
             aria-label="Page suivante"
             className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-30"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+            <Icon name="chevronRight" size={14} />
           </button>
         </div>
       )}

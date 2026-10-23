@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import Image from 'next/image'
 import { compressImage, uploadFile } from '@/lib/upload'
 import { moveItem } from '@/lib/project-gallery'
+import Icon from '@/components/ui/Icon'
 
 const MAX_MB = 8
 const MAX_SIDE = 1400
@@ -32,7 +33,7 @@ interface Props {
 const svg = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const
 const MonitorIcon = ({ size = 20 }: { size?: number }) => <svg width={size} height={size} {...svg}><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></svg>
 const PhoneIcon = ({ size = 20 }: { size?: number }) => <svg width={size} height={size} {...svg}><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>
-const UploadIcon = () => <svg width={22} height={22} {...svg}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+const UploadIcon = () => <Icon name="upload" size={22} />
 
 const mono = { fontFamily: 'var(--font-poppins)' } as const
 

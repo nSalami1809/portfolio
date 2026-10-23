@@ -5,6 +5,7 @@ import ViewsLineChart from './ViewsLineChart'
 import TrendBadge, { trend } from './TrendBadge'
 import { STATS_RANGES, RANGE_LABELS } from '@/lib/admin-stats'
 import type { StatsRange, ViewsStats } from '@/lib/admin-stats'
+import Icon from '@/components/ui/Icon'
 
 function formatPeriod(stats: ViewsStats): string {
   if (stats.offset === 0) return `${stats.rangeLabel} — jusqu'à aujourd'hui`
@@ -63,7 +64,7 @@ export default function ViewsWidget({ initial }: { initial: ViewsStats }) {
               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)]"
               style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+              <Icon name="chevronLeft" size={12} />
             </button>
             <button
               type="button"
@@ -73,7 +74,7 @@ export default function ViewsWidget({ initial }: { initial: ViewsStats }) {
               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-30 disabled:pointer-events-none"
               style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+              <Icon name="chevronRight" size={12} />
             </button>
           </div>
         </div>

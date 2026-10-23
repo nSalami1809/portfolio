@@ -11,6 +11,7 @@ import { getAssistantStatus } from '@/actions/assistant'
 import { getDailyBriefing } from '@/actions/briefing'
 import { pageKeyForPath } from '@/lib/assistant/page-context'
 import { OPEN_ROBOT_EVENT } from '@/components/admin/CommandPalette'
+import Icon from '@/components/ui/Icon'
 
 const newId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`)
 
@@ -75,7 +76,7 @@ export default function AdminAssistantLauncher() {
         whileTap={{ scale: 0.94 }}
       >
         {open ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          <Icon name="close" size={22} />
         ) : (
           <BotIcon width={26} height={26} aria-hidden="true" />
         )}

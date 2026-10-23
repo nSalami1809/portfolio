@@ -8,6 +8,7 @@ import {
   PRICE_DISCLAIMER, bookingHref, contactHref, fromPriceLabel, normalizeAccessCode, quoteProgress, quoteRequestMessage, serviceCards, trackingHref,
   trackingMessage, type ChatLocale, type QuoteLike,
 } from '@/lib/chat-services'
+import Icon from '@/components/ui/Icon'
 
 // Small panels of the visitor chat. They show the site's real data (offers, the quote
 // being tracked) and send nothing by themselves: every button either opens a page or
@@ -179,9 +180,7 @@ export function ThumbButtons({ rating, locale, onRate }: { rating: 'up' | 'down'
   const t = THUMBS[locale]
   const base = { width: 26, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' } as const
   const icon = (flip: boolean) => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={flip ? { transform: 'rotate(180deg)' } : undefined}>
-      <path d="M7 10v11H3V10zM7 10l4-8a3 3 0 0 1 3 3v3h5.5a2 2 0 0 1 2 2.3l-1.4 8a2 2 0 0 1-2 1.7H7" />
-    </svg>
+    <Icon name="thumbsUp" size={12} style={flip ? { transform: 'rotate(180deg)' } : undefined} />
   )
   return (
     <div className="flex items-center gap-1.5" style={{ paddingLeft: 32 }} data-testid="chat-thumbs">

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { searchQuotesForPalette } from '@/actions/quotes'
 import { buildEntries, moveIndex, type PaletteEntry, type PalettePage, type PaletteQuote } from '@/lib/admin-palette'
+import Icon from '@/components/ui/Icon'
 
 export const OPEN_ROBOT_EVENT = 'nemcopilot:open'
 export const OPEN_PALETTE_EVENT = 'nemcopilot:palette'
@@ -81,7 +82,7 @@ export default function CommandPalette({ pages }: { pages: PalettePage[] }) {
         aria-label="Rechercher et lancer une action (Ctrl K)"
         data-testid="palette-trigger"
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+        <Icon name="search" size={13} />
         <span className="hidden sm:inline">Rechercher</span>
         <kbd className="hidden sm:inline text-[10px] px-1" style={{ border: '1px solid var(--border)' }}>Ctrl K</kbd>
       </button>

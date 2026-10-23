@@ -8,6 +8,7 @@ import FileUpload from '@/components/admin/FileUpload'
 import SignatureSettings from '@/components/admin/SignatureSettings'
 import { DEFAULT_BUSINESS, resolveBusiness } from '@/lib/business'
 import type { BusinessSettings, PersonalInfo, SocialLinks } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 export default function AdminPersonal() {
   const { data, updatePersonal, updateSocials } = usePortfolio()
@@ -294,7 +295,7 @@ export default function AdminPersonal() {
         </button>
         {!dirty && (
           <span className="text-sm flex items-center gap-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <Icon name="check" size={12} />
             Tout est sauvegardé
           </span>
         )}

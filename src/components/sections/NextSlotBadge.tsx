@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getUpcomingAvailability } from '@/actions/bookings'
 import type { Locale } from '@/lib/i18n/locale'
+import Icon from '@/components/ui/Icon'
 
 interface Props {
   locale: Locale
@@ -37,9 +38,7 @@ export default async function NextSlotBadge({ locale, prefix }: Props) {
         style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}
         aria-hidden="true"
       >
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
+        <Icon name="calendar" size={9} />
       </span>
       <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
         {prefix} <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{label} {time}</strong>

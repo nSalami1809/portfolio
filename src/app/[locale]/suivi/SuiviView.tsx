@@ -9,6 +9,7 @@ import { requestRevision } from '@/actions/client-space'
 import { ACCEPT_ATTRIBUTE } from '@/lib/client-files'
 import type { TrackState } from '@/lib/tracking-steps'
 import EurHint from '@/components/EurHint'
+import Icon from '@/components/ui/Icon'
 
 const STATE_COLOR: Record<TrackState, string> = {
   done: '#008000',
@@ -26,10 +27,10 @@ function StepMark({ state }: { state: TrackState }) {
       aria-hidden="true"
     >
       {state === 'done' && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        <Icon name="check" size={14} />
       )}
       {state === 'blocked' && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        <Icon name="close" size={14} />
       )}
       {state === 'current' && <span className="block" style={{ width: 8, height: 8, background: color }} />}
     </span>

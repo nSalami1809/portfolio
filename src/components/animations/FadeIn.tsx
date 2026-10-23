@@ -17,10 +17,10 @@ interface FadeInProps {
 // actually reflows. A smaller offset keeps the reveal visible while
 // cutting its CLS contribution proportionally.
 const OFFSETS: Record<NonNullable<FadeInProps['direction']>, string> = {
-  up: 'translateY(12px)',
-  down: 'translateY(-12px)',
-  left: 'translateX(12px)',
-  right: 'translateX(-12px)',
+  up: 'translateY(16px)',
+  down: 'translateY(-16px)',
+  left: 'translateX(16px)',
+  right: 'translateX(-16px)',
   none: 'none',
 }
 
