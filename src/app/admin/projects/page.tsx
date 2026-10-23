@@ -209,34 +209,42 @@ export default function AdminProjects() {
               {editingId === '__new__' ? 'Nouveau projet' : 'Modifier le projet'}
             </h2>
 
-            <div className="mb-5">
-              <ImageUpload label="Image du projet" value={form.image ?? ''} onChange={(v) => setForm((p) => ({ ...p, image: v, gallery: cleanGallery(p.gallery, v || undefined) }))} size="lg" shape="square" placeholder="Image de couverture" />
-            </div>
+            <section className="mb-6" data-testid="project-images-section">
+              <h3 className="font-display font-semibold text-base" style={{ color: 'var(--text)' }}>Images du projet</h3>
+              <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+                Ajoutez des captures de l&apos;application : la page du projet les montre dans deux onglets, « Ordinateur » (dans une fenêtre de navigateur) et « Mobile » (dans un iPhone).
+              </p>
 
-            <div className="mb-5">
-              <GalleryEditor
-                label="Vue ordinateur"
-                hint="images (couverture comprise). Visibles sur la page du projet, dans l'ordre ci-dessous, après la couverture."
-                value={form.gallery ?? []}
-                onChange={(urls) => setForm((p) => ({ ...p, gallery: urls }))}
-                capacity={galleryCapacity(form.image || undefined)}
-                alreadyCounted={form.image ? 1 : 0}
-                limit={MAX_PROJECT_IMAGES}
-              />
-            </div>
+              <div className="mb-4">
+                <ImageUpload label="Image de couverture" value={form.image ?? ''} onChange={(v) => setForm((p) => ({ ...p, image: v, gallery: cleanGallery(p.gallery, v || undefined) }))} size="lg" shape="square" placeholder="Image de couverture" />
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>Affichée sur la carte du projet, et en première image de la version ordinateur.</p>
+              </div>
 
-            <div className="mb-5">
-              <GalleryEditor
-                label="Vue mobile"
-                hint="captures de téléphone. Affichées dans l'onglet « Mobile » de la page du projet, dans l'ordre ci-dessous."
-                value={form.galleryMobile ?? []}
-                onChange={(urls) => setForm((p) => ({ ...p, galleryMobile: urls }))}
-                capacity={MAX_MOBILE_IMAGES}
-                limit={MAX_MOBILE_IMAGES}
-                portrait
-                id="gallery-mobile"
-              />
-            </div>
+              <div className="grid gap-4 lg:grid-cols-2 items-start">
+                <GalleryEditor
+                  label="Version ordinateur"
+                  description="Captures d'écran affichées dans une fenêtre de navigateur."
+                  tip="Conseil : captures d'écran en paysage (environ 16:10), prises sur ordinateur."
+                  device="desktop"
+                  value={form.gallery ?? []}
+                  onChange={(urls) => setForm((p) => ({ ...p, gallery: urls }))}
+                  capacity={galleryCapacity(form.image || undefined)}
+                  leading={form.image || undefined}
+                  limit={MAX_PROJECT_IMAGES}
+                />
+                <GalleryEditor
+                  label="Version mobile"
+                  description="Captures de téléphone affichées dans un iPhone."
+                  tip="Conseil : captures d'écran de téléphone en portrait, sans les retoucher."
+                  device="phone"
+                  value={form.galleryMobile ?? []}
+                  onChange={(urls) => setForm((p) => ({ ...p, galleryMobile: urls }))}
+                  capacity={MAX_MOBILE_IMAGES}
+                  limit={MAX_MOBILE_IMAGES}
+                  id="gallery-mobile"
+                />
+              </div>
+            </section>
 
             <div className="grid sm:grid-cols-2 gap-x-5 gap-y-4 mb-5">
               <div>

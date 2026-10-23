@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
-  MAX_MOBILE_IMAGES, MAX_PROJECT_IMAGES, cleanGallery, galleryCapacity, isBlobImageUrl, mobileImages, moveItem, projectImages, sanitizeProjectGalleries,
+  MAX_MOBILE_IMAGES, MAX_PROJECT_IMAGES, cleanGallery, galleryCapacity, isBlobImageUrl, mobileImages, moveItem, pictureFit, projectImages, sanitizeProjectGalleries,
 } from '@/lib/project-gallery'
 
 const blob = (n: number | string) => `https://abc123.public.blob.vercel-storage.com/projects/${n}-shot.jpg`
@@ -85,6 +85,20 @@ describe('the mobile view', () => {
     expect(mobileImages({ galleryMobile: [blob(1), 'https://evil.example/x.jpg', blob(1), 'javascript:alert(1)', blob(2)] })).toEqual([blob(1), blob(2)])
     expect(mobileImages({})).toEqual([])
     expect(mobileImages({ galleryMobile: 'x' as unknown as string[] })).toEqual([])
+  })
+})
+
+describe('how a picture fills its frame', () => {
+  it('fills the frame, from the top, for a screenshot (5:4 to 2.6:1)', () => {
+    for (const [w, h] of [[1400, 811], [1400, 823], [1400, 786], [1920, 1080], [1280, 1024], [2600, 1000]]) expect(pictureFit(w, h), `${w}x${h}`).toBe('cover')
+  })
+
+  it('keeps a phone screenshot, a square logo, a diagram or a banner whole', () => {
+    for (const [w, h] of [[369, 800], [393, 852], [1000, 1000], [800, 700], [1200, 400], [3000, 600]]) expect(pictureFit(w, h), `${w}x${h}`).toBe('contain')
+  })
+
+  it('starts on "cover" while the size is not known', () => {
+    for (const [w, h] of [[0, 0], [100, 0], [0, 100], [NaN, 10]]) expect(pictureFit(w, h)).toBe('cover')
   })
 })
 

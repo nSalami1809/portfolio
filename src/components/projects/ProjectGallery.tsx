@@ -1,28 +1,34 @@
 'use client'
 
-import { useCallback, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { fill, type GalleryLabels } from './gallery-text'
+import { BrowserWindow, IPhone } from './DeviceFrames'
+import ProjectPicture from './ProjectPicture'
 import { useSwipe } from './swipe'
 
 // Opened by a click on the main picture; its code is fetched only then.
 const ProjectLightbox = dynamic(() => import('./ProjectLightbox'), { ssr: false })
 
-// Desktop pictures use the page's width; phone screenshots a narrow, tall frame.
+// Desktop pictures sit in a browser window, phone screenshots in a phone, both on a quiet stage.
 const VIEW = {
-  desktop: { ratio: '16/9', maxWidth: undefined, sizes: '(min-width: 1024px) 800px, 100vw', thumb: { width: 96, height: 60 }, thumbSizes: '96px' },
-  mobile: { ratio: '9/19', maxWidth: 340, sizes: '(min-width: 640px) 340px, 100vw', thumb: { width: 54, height: 96 }, thumbSizes: '54px' },
+  desktop: { sizes: '(min-width: 1024px) 760px, 100vw', thumb: { width: 96, height: 56 }, thumbSizes: '96px' },
+  mobile: { sizes: '(min-width: 640px) 300px, 80vw', thumb: { width: 54, height: 96 }, thumbSizes: '54px' },
 } as const
 export type GalleryView = keyof typeof VIEW
 
-const arrowStyle = { background: 'rgba(0,0,0,0.6)', color: '#fff', width: 40, height: 40, border: '1px solid rgba(255,255,255,0.35)' } as const
+const arrowStyle: CSSProperties = { background: 'rgba(15,23,42,0.72)', color: '#fff', width: 40, height: 40, border: '1px solid rgba(255,255,255,0.3)' }
 
-// Detail page of a project with several pictures: the main one, thumbnails under
-// it, arrows, swipe and keyboard. Only the main picture loads at once; the
-// thumbnails are small (96 px wide) and lazy. A picture that fails to load is
-// dropped from the list, and when none loads the `fallback` is shown instead.
-export default function ProjectGallery({ images, title, labels, fallback, view = 'desktop' }: { images: string[]; title: string; labels: GalleryLabels; fallback: ReactNode; view?: GalleryView }) {
+const Chevron = ({ d }: { d: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+)
+
+// Detail page of a project with several pictures: the main one in its device, thumbnails
+// under it, arrows, swipe and keyboard. Only the main picture loads at once; the thumbnails
+// are small and lazy. A picture that fails to load is dropped from the list, and when none
+// loads the `fallback` is shown instead.
+export default function ProjectGallery({ images, title, labels, fallback, view = 'desktop', address }: { images: string[]; title: string; labels: GalleryLabels; fallback: ReactNode; view?: GalleryView; address?: string }) {
   const v = VIEW[view]
   const [index, setIndex] = useState(0)
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set())
@@ -45,46 +51,69 @@ export default function ProjectGallery({ images, title, labels, fallback, view =
   if (count === 0) return <>{fallback}</>
 
   const src = shown[current]
+  const label = fill(labels.imageOf, current + 1, count)
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (count < 2) return
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
     else if (e.key === 'ArrowRight') { e.preventDefault(); go(1) }
   }
 
+  // The picture itself, as a button that opens it full screen.
+  const main = (
+    <button
+      ref={opener}
+      type="button"
+      onClick={() => setOpen(true)}
+      aria-label={`${labels.open} — ${label}`}
+      aria-haspopup="dialog"
+      data-testid="gallery-main"
+      className="absolute inset-0 w-full h-full"
+      style={{ cursor: 'zoom-in' }}
+    >
+      <ProjectPicture key={src} src={src} alt={`${title} — ${label}`} fit="cover" priority={current === 0} sizes={v.sizes} onError={() => markBroken(src)} />
+    </button>
+  )
+
+  const arrows = (side: { prev: CSSProperties; next: CSSProperties }) => count > 1 && (
+    <>
+      <button type="button" onClick={() => go(-1)} aria-label={labels.previous} data-testid="gallery-prev" className="absolute flex items-center justify-center" style={{ ...arrowStyle, top: '50%', transform: 'translateY(-50%)', ...side.prev }}>
+        <Chevron d="M15 18l-6-6 6-6" />
+      </button>
+      <button type="button" onClick={() => go(1)} aria-label={labels.next} data-testid="gallery-next" className="absolute flex items-center justify-center" style={{ ...arrowStyle, top: '50%', transform: 'translateY(-50%)', ...side.next }}>
+        <Chevron d="M9 18l6-6-6-6" />
+      </button>
+    </>
+  )
+
+  const counter = (style: CSSProperties) => count > 1 && (
+    <span aria-live="polite" data-testid="gallery-counter" className="text-xs px-2 py-1" style={{ background: 'rgba(15,23,42,0.72)', color: '#fff', fontFamily: 'var(--font-poppins)', ...style }}>
+      {current + 1} / {count}
+    </span>
+  )
+
   return (
     <>
-      <div role="group" aria-roledescription="carousel" aria-label={labels.label} onKeyDown={onKeyDown} data-testid="project-gallery" data-view={view} style={v.maxWidth ? { maxWidth: v.maxWidth, marginInline: 'auto' } : undefined}>
+      <div role="group" aria-roledescription="carousel" aria-label={labels.label} onKeyDown={onKeyDown} data-testid="project-gallery" data-view={view}>
         <div
-          className="relative w-full rounded-2xl overflow-hidden"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', aspectRatio: v.ratio, touchAction: 'pan-y' }}
+          data-testid="gallery-stage"
+          className="relative"
+          style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', padding: 'clamp(12px, 3.5vw, 32px)', touchAction: 'pan-y' }}
           {...swipe}
         >
-          <button
-            ref={opener}
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label={`${labels.open} — ${fill(labels.imageOf, current + 1, count)}`}
-            aria-haspopup="dialog"
-            data-testid="gallery-main"
-            className="absolute inset-0 w-full h-full"
-            style={{ cursor: 'zoom-in' }}
-          >
-            <Image key={src} src={src} alt={`${title} — ${fill(labels.imageOf, current + 1, count)}`} fill priority={current === 0} sizes={v.sizes} className="object-contain" onError={() => markBroken(src)} />
-          </button>
-
-          {count > 1 && (
-            <>
-              <button type="button" onClick={() => go(-1)} aria-label={labels.previous} data-testid="gallery-prev" className="absolute flex items-center justify-center" style={{ ...arrowStyle, left: 8, top: '50%', transform: 'translateY(-50%)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
-              </button>
-              <button type="button" onClick={() => go(1)} aria-label={labels.next} data-testid="gallery-next" className="absolute flex items-center justify-center" style={{ ...arrowStyle, right: 8, top: '50%', transform: 'translateY(-50%)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
-              </button>
-              <span aria-live="polite" data-testid="gallery-counter" className="absolute text-xs px-2 py-1" style={{ right: 8, bottom: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', fontFamily: 'var(--font-poppins)' }}>
-                {current + 1} / {count}
-              </span>
-            </>
+          {view === 'desktop' ? (
+            <BrowserWindow address={address ?? title}>
+              <div className="relative" style={{ aspectRatio: '7/4', background: '#fff' }}>
+                {main}
+                {arrows({ prev: { left: 8 }, next: { right: 8 } })}
+                {counter({ position: 'absolute', right: 8, bottom: 8 })}
+              </div>
+            </BrowserWindow>
+          ) : (
+            <IPhone>{main}</IPhone>
           )}
+
+          {view === 'mobile' && arrows({ prev: { left: 8 }, next: { right: 8 } })}
+          {view === 'mobile' && count > 1 && <div className="flex justify-center mt-4">{counter({})}</div>}
         </div>
 
         {count > 1 && (
@@ -109,7 +138,7 @@ export default function ProjectGallery({ images, title, labels, fallback, view =
                       background: 'var(--surface-hover)',
                     }}
                   >
-                    <Image src={thumb} alt="" fill loading="lazy" sizes={v.thumbSizes} className="object-contain" onError={() => markBroken(thumb)} />
+                    <Image src={thumb} alt="" fill loading="lazy" sizes={v.thumbSizes} style={{ objectFit: 'cover', objectPosition: 'top center' }} onError={() => markBroken(thumb)} />
                   </button>
                 </li>
               )

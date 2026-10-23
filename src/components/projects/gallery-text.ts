@@ -10,6 +10,7 @@ export interface GalleryLabels {
   imageOf: string
   showImage: string
   views: string
+  viewApp: string
   desktop: string
   mobile: string
 }

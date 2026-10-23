@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
+import ProjectPicture from '@/components/projects/ProjectPicture'
 import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import type { Project } from '@/types'
@@ -140,13 +140,11 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
                     className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden"
                     style={{ background: 'var(--surface-hover)' }}
                   >
-                    <Image
+                    <ProjectPicture
                       src={project.image}
                       alt={project.title}
-                      fill
                       loading="lazy"
                       sizes="(min-width: 640px) 50vw, 100vw"
-                      className="object-contain"
                     />
                   </div>
                 ) : (

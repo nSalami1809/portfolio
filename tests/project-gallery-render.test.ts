@@ -54,10 +54,15 @@ describe('the gallery on the project page', () => {
     for (const thumb of thumbs) expect(thumb).toMatch(/loading="lazy"/)
   })
 
-  it('shows a thumbnail whole, whatever the proportions of the picture', () => {
+  it('fills each thumbnail edge to edge, from the top of the picture', () => {
     const thumbs = [...out.matchAll(/<img[^>]*sizes="96px"[^>]*>/g)].map((m) => m[0])
     expect(thumbs).toHaveLength(3)
-    for (const thumb of thumbs) expect(thumb).toMatch(/class="object-contain"/)
+    for (const thumb of thumbs) expect(thumb).toMatch(/object-fit:cover;object-position:top center/)
+  })
+
+  it('shows the main picture filling its frame from the top: no empty bands at the sides', () => {
+    const main = [...out.matchAll(/<img[^>]*alt="Projet démo — Image 1 sur 3"[^>]*>/g)].map((m) => m[0])[0]
+    expect(main).toMatch(/object-fit:cover;object-position:top center/)
   })
 
   it('is written in the visitor\'s language', () => {
@@ -72,14 +77,21 @@ describe('the desktop and mobile views', () => {
   const media = (desktop: string[], mobile: string[]) => html(h(ProjectMedia, { desktop, mobile, title: 'Projet démo', labels, fallback: h('p', null, 'vide') }))
   const phones = [blob(11), blob(12), blob(13)]
 
-  it('shows two tabs, desktop first and selected, with the number of pictures of each', () => {
+  it('says what the tabs are for, shows two tabs with an icon each, desktop first and selected, and no counts', () => {
     const out = media([blob(1), blob(2)], phones)
+    expect(out).toContain('Voir l’application sur')
     expect(out).toContain('role="tablist"')
+    expect(out).toContain('aria-labelledby="project-view-caption"')
     expect(out).toMatch(/id="project-view-tab-desktop"[^>]*aria-selected="true"/)
     expect(out).toMatch(/id="project-view-tab-mobile"[^>]*aria-selected="false"/)
     expect(out).toContain('Ordinateur')
-    expect(out).toContain('(2)')
-    expect(out).toContain('(3)')
+    expect(out).toContain('Mobile')
+    // one icon in each tab
+    const tabs = [...out.matchAll(/<button[^>]*role="tab"[^>]*>(.*?)<\/button>/g)].map((m) => m[1])
+    expect(tabs).toHaveLength(2)
+    for (const tab of tabs) expect(tab).toContain('<svg')
+    // no numbers in parentheses
+    expect(out).not.toMatch(/\(\d+\)/)
     expect(out).toContain('role="tabpanel"')
     expect(out).toContain('aria-labelledby="project-view-tab-desktop"')
   })
@@ -101,18 +113,35 @@ describe('the desktop and mobile views', () => {
     expect(mobileOnly.match(/data-testid="gallery-thumb"/g)).toHaveLength(3)
   })
 
-  it('draws the phone view in a narrow, tall frame, centred, and the desktop one in 16/9', () => {
+  it('draws the phone view in an iPhone: Dynamic Island, side buttons, 393 × 852 screen', () => {
     const phone = media([], phones)
-    expect(phone).toContain('aspect-ratio:9/19')
-    expect(phone).toContain('max-width:340px')
-    expect(media([blob(1), blob(2)], [])).toContain('aspect-ratio:16/9')
+    expect(phone).toContain('data-testid="gallery-phone"')
+    expect(phone).toContain('data-testid="gallery-island"')
+    expect(phone).toContain('aspect-ratio:393/852')
+    expect(phone).toContain('aspect-ratio:126/37')
+    expect(phone).not.toContain('gallery-window')
+    // the island and the home indicator never catch a click
+    expect(phone.match(/pointer-events:none/g)!.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('draws the desktop view in a browser window: traffic lights, address bar with the site\'s address', () => {
+    const out = html(h(ProjectMedia, { desktop: [blob(1), blob(2)], mobile: [], title: 'Projet démo', labels, fallback: null, address: 'new-erahub.vercel.app' }))
+    expect(out).toContain('data-testid="gallery-window"')
+    for (const colour of ['#ff5f57', '#febc2e', '#28c840']) expect(out).toContain(colour)
+    expect(out).toContain('new-erahub.vercel.app')
+    expect(out).toContain('aspect-ratio:7/4')
+    expect(out).not.toContain('gallery-phone')
+  })
+
+  it('falls back on the project\'s title when it has no live address', () => {
+    expect(media([blob(1), blob(2)], [])).toMatch(/<span[^>]*>Projet démo<\/span>/)
   })
 
   it('is written in English too', () => {
     const out = html(h(ProjectMedia, { desktop: [blob(1)], mobile: phones, title: 'Demo', labels: en.projects.gallery, fallback: null }))
     expect(out).toContain('Desktop')
     expect(out).toContain('Mobile')
-    expect(out).toContain('Project views')
+    expect(out).toContain('View the app on')
   })
 
   const base = { slug: 'd', title: 'D', description: 'c', longDescription: 'l', category: 'Web', tags: ['x'], year: '2026', status: 'completed' as const }
@@ -224,13 +253,34 @@ describe('the editor in the back-office', () => {
   const admin = readFileSync(join(__dirname, '..', 'src', 'app', 'admin', 'projects', 'page.tsx'), 'utf8')
   const editor = readFileSync(join(__dirname, '..', 'src', 'components', 'admin', 'GalleryEditor.tsx'), 'utf8')
 
-  it('keeps the cover field and adds a desktop and a mobile gallery below it', () => {
-    expect(admin).toContain('<ImageUpload label="Image du projet"')
+  it('keeps the cover field and adds a desktop and a mobile panel below it, under one explained section', () => {
+    expect(admin).toContain('<ImageUpload label="Image de couverture"')
     expect(admin.match(/<GalleryEditor/g)).toHaveLength(2)
-    expect(admin).toContain('label="Vue ordinateur"')
-    expect(admin).toContain('label="Vue mobile"')
-    expect(admin.indexOf('<ImageUpload label="Image du projet"')).toBeLessThan(admin.indexOf('<GalleryEditor'))
-    expect(admin.indexOf('label="Vue ordinateur"')).toBeLessThan(admin.indexOf('label="Vue mobile"'))
+    expect(admin).toContain('label="Version ordinateur"')
+    expect(admin).toContain('label="Version mobile"')
+    expect(admin).toContain('device="desktop"')
+    expect(admin).toContain('device="phone"')
+    expect(admin).toContain('data-testid="project-images-section"')
+    expect(admin.indexOf('<ImageUpload label="Image de couverture"')).toBeLessThan(admin.indexOf('<GalleryEditor'))
+    expect(admin.indexOf('label="Version ordinateur"')).toBeLessThan(admin.indexOf('label="Version mobile"'))
+  })
+
+  it('shows the cover as the first, read-only image of the desktop panel', () => {
+    expect(admin).toMatch(/leading=\{form\.image \|\| undefined\}/)
+    expect(editor).toContain("data-testid={`${id}-cover`}")
+    expect(editor).toContain('Modifiable plus haut')
+  })
+
+  it('takes files by dropping them on the panel as well as by clicking, and says so', () => {
+    expect(editor).toContain('onDrop={onDrop}')
+    expect(editor).toContain('Glissez vos captures ici ou cliquez pour parcourir')
+    expect(editor).toContain('e.dataTransfer.files')
+    // dropping is refused once the panel is full
+    expect(editor).toMatch(/if \(room > 0\) void addFiles/)
+  })
+
+  it('numbers the pictures in the order the visitor sees them', () => {
+    expect(editor).toMatch(/String\(i \+ 1 \+ \(leading \? 1 : 0\)\)/)
   })
 
   it('saves the mobile gallery cleaned too', () => {

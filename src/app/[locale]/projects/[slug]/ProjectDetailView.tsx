@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import ProjectPicture from '@/components/projects/ProjectPicture'
 import type { Project } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -14,6 +14,12 @@ const statusColor: Record<string, string> = {
   completed: '#008000',
   'in-progress': '#E45742',
   concept: '#6B7280',
+}
+
+// What an address bar shows: the host of the live site, without protocol or www.
+function siteAddress(url?: string): string | undefined {
+  if (!url) return undefined
+  try { return new URL(url).host.replace(/^www./, '') } catch { return undefined }
 }
 
 export default function ProjectDetailView({ project, locale, t, statusLabel }: { project: Project; locale: Locale; t: Dictionary['projects']; statusLabel: Record<string, string> }) {
@@ -106,6 +112,7 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
                   desktop={images}
                   mobile={phoneImages}
                   title={project.title}
+                  address={siteAddress(project.liveUrl)}
                   labels={t.gallery}
                   fallback={
                     <div className="w-full flex items-center justify-center" style={{ aspectRatio: '16/9', background: 'var(--surface)', border: '1px solid var(--border)' }}>
@@ -124,13 +131,11 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
               }}
             >
               {images[0] ? (
-                <Image
+                <ProjectPicture
                   src={images[0]}
                   alt={project.title}
-                  fill
                   priority
                   sizes="(min-width: 1024px) 800px, 100vw"
-                  className="object-contain"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3">

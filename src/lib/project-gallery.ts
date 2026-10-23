@@ -49,6 +49,18 @@ export function mobileImages(project: { galleryMobile?: string[] }): string[] {
   return cleanGallery(project.galleryMobile)
 }
 
+/**
+ * How a picture sits in a frame of screen proportions. A screenshot (about 5:4 to 2.6:1) fills
+ * the frame edge to edge, from its top, with no empty bands. Anything else (a phone screenshot,
+ * a logo, a diagram, a very wide banner) stays whole instead of being cut; its empty bands are
+ * filled by a blurred copy of itself (see ProjectPicture).
+ */
+export function pictureFit(width: number, height: number): 'cover' | 'contain' {
+  if (!(width > 0) || !(height > 0)) return 'cover'
+  const ratio = width / height
+  return ratio >= 1.25 && ratio <= 2.6 ? 'cover' : 'contain'
+}
+
 /** Swaps two neighbours; out of range returns the list untouched. */
 export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
   if (from < 0 || from >= list.length || to < 0 || to >= list.length || from === to) return [...list]
