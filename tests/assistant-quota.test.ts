@@ -145,8 +145,11 @@ describe('classifyModelError', () => {
     const c = classifyModelError(apiError(429, 'You exceeded your current quota', '{"error":{"status":"RESOURCE_EXHAUSTED","message":"Quota exceeded for metric: generate_content_free_tier_requests, limit: 250, PerDay"}}'), NOW)
     expect(c.kind).toBe('quota_daily')
     expect(c.retryAt?.toISOString()).toBe('2026-10-18T07:00:00.000Z')
-    expect(c.message).toMatch(/minuit/)
-    expect(c.message).toMatch(/aucune facturation/i)
+    expect(c.message).toMatch(/^Votre quota NemCopilotIA du jour est atteint/)
+    expect(c.message).toMatch(/08:00 \(heure de Libreville\)/)
+    expect(c.message).toMatch(/rien n'est facturé/i)
+    // the provider behind the assistant is never named in what the owner reads
+    expect(c.message).not.toMatch(/gemini|google|pacifique/i)
   })
 
   it('reads the retry delay of a per-minute limit', () => {

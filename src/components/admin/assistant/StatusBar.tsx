@@ -29,7 +29,7 @@ function ModelRow({ m }: { m: ModelStatus }) {
         <div className="h-full transition-all" style={{ width: `${pct}%`, background: pct >= 90 ? '#D90000' : 'var(--accent)' }} />
       </div>
       <p className="mt-0.5" style={{ color: 'var(--text-subtle)' }}>
-        {m.id} · limite de Google : {m.official.rpd} par jour, {m.official.rpm} par minute
+        plafond du quota : {m.official.rpd} par jour, {m.official.rpm} par minute
         {m.blockedUntil ? ' · en pause' : ''}
       </p>
     </li>
@@ -70,7 +70,7 @@ export default function StatusBar({ status, onExpire }: { status: AssistantStatu
             {status.models.map((m) => <ModelRow key={m.role} m={m} />)}
           </ul>
           <p className="mt-3" style={{ color: 'var(--text-subtle)' }}>
-            Renouvellement à {time.format(new Date(status.nextReset))} (Libreville). Les plafonds restent sous les limites de Google (marge de sécurité) et chaque requête est comptée, y compris celles des outils. Aucune facturation n&apos;est activée.
+            Renouvellement à {time.format(new Date(status.nextReset))} (Libreville). Les plafonds restent sous les limites du quota (marge de sécurité) et chaque requête est comptée, y compris celles des outils. Aucune facturation n&apos;est activée.
           </p>
         </div>
       )}

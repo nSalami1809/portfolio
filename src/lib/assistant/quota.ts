@@ -82,7 +82,7 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
     return {
       kind: local.scope === 'daily' ? 'quota_daily' : 'rate_limit',
       retryAt: local.retryAt,
-      message: local.message ?? 'Quota gratuit atteint : NemCopilotIA en pause.',
+      message: local.message ?? 'Votre quota NemCopilotIA est atteint : NemCopilotIA en pause.',
       modelId,
       local: true,
     }
@@ -98,7 +98,7 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
         kind: 'quota_daily',
         retryAt,
         modelId,
-        message: `Le quota gratuit quotidien de Gemini est atteint. Il se renouvelle à minuit (heure du Pacifique), soit vers ${formatLibrevilleTime(retryAt)} à Libreville. NemCopilotIA reste en pause d'ici là : aucune facturation n'est activée.`,
+        message: `Votre quota NemCopilotIA du jour est atteint. Il se renouvelle automatiquement vers ${formatLibrevilleTime(retryAt)} (heure de Libreville). NemCopilotIA reste en pause d'ici là : rien n'est facturé.`,
       }
     }
     const hinted = /retry(?:Delay|[ _-]?after)?["':\s=in]*"?(\d+(?:\.\d+)?)\s*s/i.exec(text)
@@ -108,18 +108,18 @@ export function classifyModelError(err: unknown, now: Date = new Date()): Classi
       kind: 'rate_limit',
       retryAt,
       modelId,
-      message: `Limite de débit gratuite de Gemini atteinte (par minute ou par jour). Réessayez vers ${formatLibrevilleTime(retryAt)}. Si cela se reproduit, le quota quotidien est épuisé : il se renouvelle à minuit, heure du Pacifique.`,
+      message: `Votre quota NemCopilotIA est atteint pour le moment (trop de demandes rapprochées). Réessayez vers ${formatLibrevilleTime(retryAt)}. Si cela se reproduit, le quota du jour est épuisé : il se renouvelle automatiquement chaque jour.`,
     }
   }
 
   if (status === 401 || status === 403 || /API key|API_KEY_INVALID|PERMISSION_DENIED|LoadAPIKey/i.test(text)) {
-    return { kind: 'auth', message: "La clé API Google est absente ou refusée. Vérifiez GOOGLE_GENERATIVE_AI_API_KEY dans les variables d'environnement." }
+    return { kind: 'auth', message: "La clé d'accès de NemCopilotIA est absente ou refusée. Vérifiez la clé IA dans les variables d'environnement du serveur." }
   }
   if (status === 404 || /model.*not found|not found.*model|is not supported/i.test(text)) {
-    return { kind: 'model', message: "Le modèle Gemini configuré n'est pas disponible pour cette clé. Vérifiez ASSISTANT_MODEL (modèles gratuits uniquement)." }
+    return { kind: 'model', message: "Le modèle configuré pour NemCopilotIA n'est pas disponible pour cette clé. Vérifiez ASSISTANT_MODEL (modèles gratuits uniquement)." }
   }
   if ((typeof status === 'number' && status >= 500) || /UNAVAILABLE|overloaded|temporarily/i.test(text)) {
-    return { kind: 'unavailable', message: 'Gemini est momentanément indisponible. Réessayez dans un instant.' }
+    return { kind: 'unavailable', message: 'NemCopilotIA est momentanément indisponible. Réessayez dans un instant.' }
   }
   return { kind: 'other', message: "Une erreur est survenue pendant la génération. Réessayez ; si elle persiste, consultez les journaux du serveur." }
 }

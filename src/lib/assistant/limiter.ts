@@ -50,7 +50,7 @@ export function mongoLimiterStore(): LimiterStore {
     getBlock: async (modelId) => {
       const { state } = await assistantCollections()
       const doc = await state.findOne({ _id: blockDocId(modelId) })
-      return doc?.blockedUntil ? { until: doc.blockedUntil, message: doc.message ?? 'Quota gratuit atteint : assistant en pause.' } : null
+      return doc?.blockedUntil ? { until: doc.blockedUntil, message: doc.message ?? 'Votre quota NemCopilotIA est atteint : assistant en pause.' } : null
     },
   }
 }

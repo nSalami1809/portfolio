@@ -69,8 +69,10 @@ describe('acquireRequest', () => {
     expect(err).toBeInstanceOf(LocalQuotaError)
     expect(err).toMatchObject({ scope: 'daily', modelId: LITE })
     expect(err.retryAt.toISOString()).toBe(nextPacificMidnight(w.now()).toISOString())
-    expect(err.message).toMatch(/minuit/)
-    expect(err.message).toMatch(/Aucune facturation/)
+    expect(err.message).toMatch(/^Votre quota NemCopilotIA du jour est atteint/)
+    expect(err.message).toMatch(/heure de Libreville/)
+    expect(err.message).toMatch(/Rien n'est facturé/)
+    expect(err.message).not.toMatch(/gemini|google|pacifique/i)
   })
 
   it('refuses without taking any slot while Google\'s own pause is running, and ignores an expired one', async () => {

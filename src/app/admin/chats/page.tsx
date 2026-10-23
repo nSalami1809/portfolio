@@ -69,7 +69,7 @@ export default function AdminChats() {
 
       {instant && (
         <p className="text-xs mb-4 px-3 py-2" data-testid="instant-stats" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-          <strong style={{ color: 'var(--text)' }}>{instant.today}</strong> question{instant.today > 1 ? 's' : ''} répondue{instant.today > 1 ? 's' : ''} sans IA aujourd&apos;hui ({instant.last7Days} sur 7 jours) : autant de requêtes Gemini gratuites non dépensées.
+          <strong style={{ color: 'var(--text)' }}>{instant.today}</strong> question{instant.today > 1 ? 's' : ''} répondue{instant.today > 1 ? 's' : ''} sans IA aujourd&apos;hui ({instant.last7Days} sur 7 jours) : autant de requêtes du quota NemCopilotIA non dépensées.
         </p>
       )}
 

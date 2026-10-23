@@ -8,7 +8,7 @@ import {
   ModelNotAllowedError, type AssistantLimits, type FreeLimits,
 } from '@/lib/assistant/config'
 import { assistantCollections, blockDocId, readDayUsage } from '@/lib/assistant/limiter'
-import { BLOCKING_KINDS, classifyModelError, nextPacificMidnight, pacificDayKey, type ClassifiedError } from '@/lib/assistant/quota'
+import { BLOCKING_KINDS, classifyModelError, formatLibrevilleTime, nextPacificMidnight, pacificDayKey, type ClassifiedError } from '@/lib/assistant/quota'
 
 const DAY_MS = 86_400_000
 
@@ -79,13 +79,13 @@ export async function preflight(now: Date = new Date()): Promise<Preflight> {
 
   const chat = await modelStatus('chat', chatId, now)
   if (chat.blockedUntil) {
-    return { ok: false, status: 429, code: 'blocked', message: chat.blockMessage ?? "NemCopilotIA est en pause : quota gratuit atteint.", retryAt: new Date(chat.blockedUntil) }
+    return { ok: false, status: 429, code: 'blocked', message: chat.blockMessage ?? "Votre quota NemCopilotIA est atteint : NemCopilotIA est en pause.", retryAt: new Date(chat.blockedUntil) }
   }
   if (chat.usedToday >= chat.dailyCap) {
     const retryAt = nextPacificMidnight(now)
     return {
       ok: false, status: 429, code: 'daily_cap', retryAt,
-      message: `Quota gratuit du jour atteint pour ${chat.id} (${chat.dailyCap} requêtes, marge de sécurité incluse). Il se renouvelle à minuit, heure du Pacifique. Aucune facturation n'est activée.`,
+      message: `Votre quota NemCopilotIA du jour est atteint (${chat.dailyCap} requêtes, marge de sécurité incluse). Il se renouvelle automatiquement vers ${formatLibrevilleTime(retryAt)} (heure de Libreville). Rien n'est facturé.`,
     }
   }
 
@@ -171,7 +171,7 @@ export async function getStatus(now: Date = new Date()): Promise<AssistantStatus
     tokensToday: { input: tokens?.inputTokens ?? 0, output: tokens?.outputTokens ?? 0 },
     paused,
     pausedUntil: chat?.blockedUntil ?? (full ? nextPacificMidnight(now).toISOString() : null),
-    pauseMessage: chat?.blockMessage ?? (full && chat ? `Quota gratuit du jour atteint pour ${chat.id} : il se renouvelle à minuit, heure du Pacifique.` : null),
+    pauseMessage: chat?.blockMessage ?? (full && chat ? `Votre quota NemCopilotIA du jour est atteint : il se renouvelle automatiquement vers ${formatLibrevilleTime(nextPacificMidnight(now))} (heure de Libreville).` : null),
     nextReset: nextPacificMidnight(now).toISOString(),
   }
 }

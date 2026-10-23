@@ -56,7 +56,7 @@ export async function acquireRequest(store: LimiterStore, modelId: string, caps:
     const nextMinute = (minute + 1) * 60_000
     const waitMs = nextMinute - t.getTime() + 50
     if (waited + waitMs > maxWaitMs) {
-      throw new LocalQuotaError(modelId, 'minute', new Date(nextMinute), `Trop de requêtes en une minute pour ${modelId} (maximum ${caps.rpm}, marge de sécurité incluse). Réessaie dans quelques secondes.`)
+      throw new LocalQuotaError(modelId, 'minute', new Date(nextMinute), `Votre quota NemCopilotIA de la minute est atteint (maximum ${caps.rpm}, marge de sécurité incluse). Réessaie dans quelques secondes.`)
     }
     await sleep(waitMs)
     waited += waitMs
@@ -67,7 +67,7 @@ export async function acquireRequest(store: LimiterStore, modelId: string, caps:
     const retryAt = nextPacificMidnight(now())
     throw new LocalQuotaError(
       modelId, 'daily', retryAt,
-      `Quota gratuit du jour atteint pour ${modelId} (${caps.rpd} requêtes, marge de sécurité incluse). Il se renouvelle à minuit, heure du Pacifique, soit vers ${formatLibrevilleTime(retryAt)} à Libreville. Aucune facturation n'est activée.`,
+      `Votre quota NemCopilotIA du jour est atteint (${caps.rpd} requêtes, marge de sécurité incluse). Il se renouvelle automatiquement vers ${formatLibrevilleTime(retryAt)} (heure de Libreville). Rien n'est facturé.`,
     )
   }
 }
