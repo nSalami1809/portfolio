@@ -7,6 +7,8 @@ import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import FadeIn from '@/components/animations/FadeIn'
 import ShareButton from '@/components/ui/ShareButton'
+import ProjectGallery from '@/components/projects/ProjectGallery'
+import { projectImages } from '@/lib/project-gallery'
 
 const statusColor: Record<string, string> = {
   completed: '#008000',
@@ -15,6 +17,8 @@ const statusColor: Record<string, string> = {
 }
 
 export default function ProjectDetailView({ project, locale, t, statusLabel }: { project: Project; locale: Locale; t: Dictionary['projects']; statusLabel: Record<string, string> }) {
+  // One picture or none: the page is exactly what it has always been.
+  const images = projectImages(project)
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
       {/* Back */}
@@ -33,7 +37,7 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
 
       <div className="grid lg:grid-cols-[1fr_320px] gap-12 items-start">
         {/* Main */}
-        <div>
+        <div className="min-w-0">
           <FadeIn delay={0.05}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
               <div className="flex flex-wrap items-center gap-3">
@@ -95,6 +99,20 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
 
           {/* Image / placeholder */}
           <FadeIn delay={0.2}>
+            {images.length > 1 ? (
+              <div className="mb-10">
+                <ProjectGallery
+                  images={images}
+                  title={project.title}
+                  labels={t.gallery}
+                  fallback={
+                    <div className="w-full flex items-center justify-center" style={{ aspectRatio: '16/9', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                      <p className="text-sm" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.previewUnavailable}</p>
+                    </div>
+                  }
+                />
+              </div>
+            ) : (
             <div
               className="relative w-full rounded-2xl overflow-hidden mb-10"
               style={{
@@ -103,9 +121,9 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
                 aspectRatio: '16/9',
               }}
             >
-              {project.image ? (
+              {images[0] ? (
                 <Image
-                  src={project.image}
+                  src={images[0]}
                   alt={project.title}
                   fill
                   priority
@@ -128,6 +146,7 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
                 </div>
               )}
             </div>
+            )}
           </FadeIn>
 
           {/* Tags */}

@@ -4,6 +4,7 @@ import { updateTag } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import { requireAdmin } from '@/lib/require-admin'
 import { fetchPortfolio, fetchPortfolioFresh } from '@/lib/portfolio-data'
+import { sanitizeProjectGalleries } from '@/lib/project-gallery'
 import type { PortfolioData } from '@/types'
 
 const DOC_ID = 'main'
@@ -15,10 +16,13 @@ const DOC_ID = 'main'
 export async function publishPortfolio(data: PortfolioData): Promise<void> {
   await requireAdmin()
 
+  // Project galleries only keep Vercel Blob URLs, once each, within the limit.
+  const clean = Array.isArray(data.projects) ? { ...data, projects: sanitizeProjectGalleries(data.projects) } : data
+
   const db = await getDb()
   await db.collection('portfolio').updateOne(
     { _id: DOC_ID as unknown as never },
-    { $set: { ...data, _id: DOC_ID as unknown as never, updatedAt: new Date() } },
+    { $set: { ...clean, _id: DOC_ID as unknown as never, updatedAt: new Date() } },
     { upsert: true },
   )
   // Immediate expiration for every reader tagged 'portfolio' (pages, API

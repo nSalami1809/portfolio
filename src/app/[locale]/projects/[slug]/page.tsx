@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultProjects } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
+import { sanitizeProjectGalleries } from '@/lib/project-gallery'
 import { jsonLdScript } from '@/lib/json-ld'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
@@ -28,7 +29,9 @@ export async function generateStaticParams() {
 async function getProject(slug: string) {
   const portfolio = await fetchPortfolioSafe('projects/[slug]/page')
   const projects = portfolio?.projects ?? defaultProjects
-  return projects.find((p) => p.slug === slug) ?? null
+  const project = projects.find((p) => p.slug === slug)
+  // Only valid gallery pictures reach the page (and its payload).
+  return project ? sanitizeProjectGalleries([project])[0] : null
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {

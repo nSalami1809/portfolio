@@ -58,6 +58,9 @@ export interface Project {
   liveUrl?: string
   githubUrl?: string
   image?: string
+  // More pictures of the project, shown after the cover on the detail page only.
+  // The cover counts in the limit (see lib/project-gallery.ts).
+  gallery?: string[]
   caseStudyContext?: string
   caseStudySolution?: string
   caseStudyResults?: string

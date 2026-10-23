@@ -6,6 +6,8 @@ import { m, AnimatePresence } from 'framer-motion'
 import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
+import GalleryEditor from '@/components/admin/GalleryEditor'
+import { cleanGallery } from '@/lib/project-gallery'
 import type { Project } from '@/types'
 
 const CATEGORIES = ['Web', 'DevOps', 'Backend', 'Frontend', 'Mobile', 'IA / ML', 'Autre']
@@ -86,6 +88,8 @@ export default function AdminProjects() {
   const confirmEdit = () => {
     if (!form.title.trim()) return
     const category = form.category.trim() || 'Autre'
+    const gallery = cleanGallery(form.gallery, form.image || undefined)
+    const saved = { ...form, category, gallery: gallery.length ? gallery : undefined }
     const base = form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     const makeSlug = (b: string) => {
       let s = b
@@ -94,10 +98,10 @@ export default function AdminProjects() {
       return s
     }
     if (editingId === '__new__') {
-      persist([{ slug: makeSlug(base), ...form, category }, ...projects])
+      persist([{ slug: makeSlug(base), ...saved }, ...projects])
       toast('Projet ajouté')
     } else {
-      persist(projects.map((x) => x.slug === editingId ? { ...x, ...form, category } : x))
+      persist(projects.map((x) => x.slug === editingId ? { ...x, ...saved } : x))
       toast('Projet mis à jour')
     }
     setEditingId(null)
@@ -205,7 +209,11 @@ export default function AdminProjects() {
             </h2>
 
             <div className="mb-5">
-              <ImageUpload label="Image du projet" value={form.image ?? ''} onChange={(v) => setForm((p) => ({ ...p, image: v }))} size="lg" shape="square" placeholder="Image de couverture" />
+              <ImageUpload label="Image du projet" value={form.image ?? ''} onChange={(v) => setForm((p) => ({ ...p, image: v, gallery: cleanGallery(p.gallery, v || undefined) }))} size="lg" shape="square" placeholder="Image de couverture" />
+            </div>
+
+            <div className="mb-5">
+              <GalleryEditor cover={form.image || undefined} value={form.gallery ?? []} onChange={(urls) => setForm((p) => ({ ...p, gallery: urls }))} />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-x-5 gap-y-4 mb-5">

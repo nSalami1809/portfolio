@@ -158,6 +158,15 @@ const fr = {
     caseStudyContext: 'Contexte',
     caseStudySolution: 'Solution',
     caseStudyResults: 'Résultats',
+    gallery: {
+      label: 'Images du projet',
+      previous: 'Image précédente',
+      next: 'Image suivante',
+      open: 'Agrandir l’image',
+      close: 'Fermer',
+      imageOf: 'Image {n} sur {total}',
+      showImage: 'Afficher l’image {n}',
+    },
   },
   documents: {
     label: 'Documents',
@@ -722,6 +731,15 @@ const en: typeof fr = {
     caseStudyContext: 'Context',
     caseStudySolution: 'Solution',
     caseStudyResults: 'Results',
+    gallery: {
+      label: 'Project images',
+      previous: 'Previous image',
+      next: 'Next image',
+      open: 'Enlarge image',
+      close: 'Close',
+      imageOf: 'Image {n} of {total}',
+      showImage: 'Show image {n}',
+    },
   },
   documents: {
     label: 'Documents',
