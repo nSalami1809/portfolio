@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
-  MAX_PROJECT_IMAGES, cleanGallery, galleryCapacity, isBlobImageUrl, moveItem, projectImages, sanitizeProjectGalleries,
+  MAX_MOBILE_IMAGES, MAX_PROJECT_IMAGES, cleanGallery, galleryCapacity, isBlobImageUrl, mobileImages, moveItem, projectImages, sanitizeProjectGalleries,
 } from '@/lib/project-gallery'
 
 const blob = (n: number | string) => `https://abc123.public.blob.vercel-storage.com/projects/${n}-shot.jpg`
@@ -72,6 +72,22 @@ describe('a project without a gallery is untouched', () => {
   })
 })
 
+describe('the mobile view', () => {
+  it('holds up to six phone screenshots of its own, with no cover, and is kept apart from the desktop view', () => {
+    expect(MAX_MOBILE_IMAGES).toBe(6)
+    const many = Array.from({ length: 9 }, (_, i) => blob(`m${i}`))
+    expect(mobileImages({ galleryMobile: many })).toEqual(many.slice(0, 6))
+    const project = { image: blob('cover'), gallery: [blob(1)], galleryMobile: many }
+    expect(projectImages(project)).toEqual([blob('cover'), blob(1)])
+  })
+
+  it('drops invalid entries and duplicates, and does not break on anything else', () => {
+    expect(mobileImages({ galleryMobile: [blob(1), 'https://evil.example/x.jpg', blob(1), 'javascript:alert(1)', blob(2)] })).toEqual([blob(1), blob(2)])
+    expect(mobileImages({})).toEqual([])
+    expect(mobileImages({ galleryMobile: 'x' as unknown as string[] })).toEqual([])
+  })
+})
+
 describe('reordering', () => {
   it('moves a picture to another place, keeping the others in order', () => {
     expect(moveItem(['a', 'b', 'c', 'd'], 1, 0)).toEqual(['b', 'a', 'c', 'd'])
@@ -107,6 +123,17 @@ describe('what publishing keeps', () => {
     expect(out[1]).toEqual({ slug: 'b', title: 'B', image: '' })
     expect('gallery' in out[1]).toBe(false)
     expect(out[2]).toBe(projects[2])
+  })
+
+  it('normalises the mobile gallery the same way and drops it when nothing valid is left', () => {
+    const out = sanitizeProjectGalleries([
+      { slug: 'a', image: blob('cover'), galleryMobile: [blob(1), 'https://evil.example/x.jpg', blob(2), blob(1)] },
+      { slug: 'b', image: blob('cover'), galleryMobile: ['https://evil.example/x.jpg'] },
+      { slug: 'c', image: blob('cover'), gallery: [blob(5)], galleryMobile: [blob(6)] },
+    ])
+    expect(out[0]).toEqual({ slug: 'a', image: blob('cover'), galleryMobile: [blob(1), blob(2)] })
+    expect('galleryMobile' in out[1]).toBe(false)
+    expect(out[2]).toEqual({ slug: 'c', image: blob('cover'), gallery: [blob(5)], galleryMobile: [blob(6)] })
   })
 
   it('is wired into the publish action', () => {

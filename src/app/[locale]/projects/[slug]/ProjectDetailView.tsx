@@ -7,8 +7,8 @@ import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import FadeIn from '@/components/animations/FadeIn'
 import ShareButton from '@/components/ui/ShareButton'
-import ProjectGallery from '@/components/projects/ProjectGallery'
-import { projectImages } from '@/lib/project-gallery'
+import ProjectMedia from '@/components/projects/ProjectMedia'
+import { mobileImages, projectImages } from '@/lib/project-gallery'
 
 const statusColor: Record<string, string> = {
   completed: '#008000',
@@ -19,6 +19,7 @@ const statusColor: Record<string, string> = {
 export default function ProjectDetailView({ project, locale, t, statusLabel }: { project: Project; locale: Locale; t: Dictionary['projects']; statusLabel: Record<string, string> }) {
   // One picture or none: the page is exactly what it has always been.
   const images = projectImages(project)
+  const phoneImages = mobileImages(project)
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
       {/* Back */}
@@ -99,10 +100,11 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
 
           {/* Image / placeholder */}
           <FadeIn delay={0.2}>
-            {images.length > 1 ? (
+            {images.length > 1 || phoneImages.length > 0 ? (
               <div className="mb-10">
-                <ProjectGallery
-                  images={images}
+                <ProjectMedia
+                  desktop={images}
+                  mobile={phoneImages}
                   title={project.title}
                   labels={t.gallery}
                   fallback={

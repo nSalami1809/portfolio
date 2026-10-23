@@ -9,13 +9,21 @@ import { useSwipe } from './swipe'
 // Opened by a click on the main picture; its code is fetched only then.
 const ProjectLightbox = dynamic(() => import('./ProjectLightbox'), { ssr: false })
 
+// Desktop pictures use the page's width; phone screenshots a narrow, tall frame.
+const VIEW = {
+  desktop: { ratio: '16/9', maxWidth: undefined, sizes: '(min-width: 1024px) 800px, 100vw', thumb: { width: 96, height: 60 }, thumbSizes: '96px' },
+  mobile: { ratio: '9/19', maxWidth: 340, sizes: '(min-width: 640px) 340px, 100vw', thumb: { width: 54, height: 96 }, thumbSizes: '54px' },
+} as const
+export type GalleryView = keyof typeof VIEW
+
 const arrowStyle = { background: 'rgba(0,0,0,0.6)', color: '#fff', width: 40, height: 40, border: '1px solid rgba(255,255,255,0.35)' } as const
 
 // Detail page of a project with several pictures: the main one, thumbnails under
 // it, arrows, swipe and keyboard. Only the main picture loads at once; the
 // thumbnails are small (96 px wide) and lazy. A picture that fails to load is
 // dropped from the list, and when none loads the `fallback` is shown instead.
-export default function ProjectGallery({ images, title, labels, fallback }: { images: string[]; title: string; labels: GalleryLabels; fallback: ReactNode }) {
+export default function ProjectGallery({ images, title, labels, fallback, view = 'desktop' }: { images: string[]; title: string; labels: GalleryLabels; fallback: ReactNode; view?: GalleryView }) {
+  const v = VIEW[view]
   const [index, setIndex] = useState(0)
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set())
   const [open, setOpen] = useState(false)
@@ -45,10 +53,10 @@ export default function ProjectGallery({ images, title, labels, fallback }: { im
 
   return (
     <>
-      <div role="group" aria-roledescription="carousel" aria-label={labels.label} onKeyDown={onKeyDown} data-testid="project-gallery">
+      <div role="group" aria-roledescription="carousel" aria-label={labels.label} onKeyDown={onKeyDown} data-testid="project-gallery" data-view={view} style={v.maxWidth ? { maxWidth: v.maxWidth, marginInline: 'auto' } : undefined}>
         <div
           className="relative w-full rounded-2xl overflow-hidden"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', aspectRatio: '16/9', touchAction: 'pan-y' }}
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', aspectRatio: v.ratio, touchAction: 'pan-y' }}
           {...swipe}
         >
           <button
@@ -61,7 +69,7 @@ export default function ProjectGallery({ images, title, labels, fallback }: { im
             className="absolute inset-0 w-full h-full"
             style={{ cursor: 'zoom-in' }}
           >
-            <Image key={src} src={src} alt={`${title} — ${fill(labels.imageOf, current + 1, count)}`} fill priority={current === 0} sizes="(min-width: 1024px) 800px, 100vw" className="object-contain" onError={() => markBroken(src)} />
+            <Image key={src} src={src} alt={`${title} — ${fill(labels.imageOf, current + 1, count)}`} fill priority={current === 0} sizes={v.sizes} className="object-contain" onError={() => markBroken(src)} />
           </button>
 
           {count > 1 && (
@@ -81,7 +89,7 @@ export default function ProjectGallery({ images, title, labels, fallback }: { im
 
         {count > 1 && (
           // width 0 + min-width 100%: the row scrolls inside the page's width instead of widening the page to fit six thumbnails
-          <ul className="flex gap-2 mt-3 list-none p-0 overflow-x-auto" style={{ scrollbarWidth: 'thin', width: 0, minWidth: '100%' }}>
+          <ul className="flex gap-2 mt-3 list-none p-0 overflow-x-auto" style={{ scrollbarWidth: 'thin', width: 0, minWidth: '100%', justifyContent: view === 'mobile' ? 'safe center' : undefined }}>
             {shown.map((thumb, i) => {
               const selected = i === current
               return (
@@ -94,14 +102,14 @@ export default function ProjectGallery({ images, title, labels, fallback }: { im
                     data-testid="gallery-thumb"
                     className="relative block overflow-hidden"
                     style={{
-                      width: 96,
-                      height: 60,
+                      width: v.thumb.width,
+                      height: v.thumb.height,
                       border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
                       opacity: selected ? 1 : 0.65,
                       background: 'var(--surface-hover)',
                     }}
                   >
-                    <Image src={thumb} alt="" fill loading="lazy" sizes="96px" className="object-cover" onError={() => markBroken(thumb)} />
+                    <Image src={thumb} alt="" fill loading="lazy" sizes={v.thumbSizes} className="object-contain" onError={() => markBroken(thumb)} />
                   </button>
                 </li>
               )

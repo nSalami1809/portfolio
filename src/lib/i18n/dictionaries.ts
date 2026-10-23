@@ -166,6 +166,9 @@ const fr = {
       close: 'Fermer',
       imageOf: 'Image {n} sur {total}',
       showImage: 'Afficher l’image {n}',
+      views: 'Vues du projet',
+      desktop: 'Ordinateur',
+      mobile: 'Mobile',
     },
   },
   documents: {
@@ -739,6 +742,9 @@ const en: typeof fr = {
       close: 'Close',
       imageOf: 'Image {n} of {total}',
       showImage: 'Show image {n}',
+      views: 'Project views',
+      desktop: 'Desktop',
+      mobile: 'Mobile',
     },
   },
   documents: {

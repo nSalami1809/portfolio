@@ -42,6 +42,13 @@ export function projectImages(project: { image?: string; gallery?: string[] }): 
   return [...(cover ? [cover] : []), ...cleanGallery(project.gallery, cover)]
 }
 
+/** The phone view: up to six pictures of its own, no cover. */
+export const MAX_MOBILE_IMAGES = 6
+
+export function mobileImages(project: { galleryMobile?: string[] }): string[] {
+  return cleanGallery(project.galleryMobile)
+}
+
 /** Swaps two neighbours; out of range returns the list untouched. */
 export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
   if (from < 0 || from >= list.length || to < 0 || to >= list.length || from === to) return [...list]
@@ -52,14 +59,12 @@ export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
 }
 
 /** Publishing: normalises the gallery of every project; the rest of the data is untouched. */
-export function sanitizeProjectGalleries<T extends { image?: string; gallery?: string[] }>(projects: T[]): T[] {
+export function sanitizeProjectGalleries<T extends { image?: string; gallery?: string[]; galleryMobile?: string[] }>(projects: T[]): T[] {
   return projects.map((p) => {
-    if (p.gallery === undefined) return p
+    if (p.gallery === undefined && p.galleryMobile === undefined) return p
+    const { gallery: _gallery, galleryMobile: _mobile, ...rest } = p
     const gallery = cleanGallery(p.gallery, p.image || undefined)
-    if (gallery.length === 0) {
-      const { gallery: _dropped, ...rest } = p
-      return rest as T
-    }
-    return { ...p, gallery }
+    const galleryMobile = cleanGallery(p.galleryMobile)
+    return { ...rest, ...(gallery.length ? { gallery } : {}), ...(galleryMobile.length ? { galleryMobile } : {}) } as T
   })
 }

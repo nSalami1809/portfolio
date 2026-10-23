@@ -9,6 +9,9 @@ export interface GalleryLabels {
   close: string
   imageOf: string
   showImage: string
+  views: string
+  desktop: string
+  mobile: string
 }
 
 export const fill = (template: string, n: number, total: number) => template.replace('{n}', String(n)).replace('{total}', String(total))

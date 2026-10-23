@@ -7,7 +7,7 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import ImageUpload from '@/components/admin/ImageUpload'
 import GalleryEditor from '@/components/admin/GalleryEditor'
-import { cleanGallery } from '@/lib/project-gallery'
+import { MAX_MOBILE_IMAGES, MAX_PROJECT_IMAGES, cleanGallery, galleryCapacity } from '@/lib/project-gallery'
 import type { Project } from '@/types'
 
 const CATEGORIES = ['Web', 'DevOps', 'Backend', 'Frontend', 'Mobile', 'IA / ML', 'Autre']
@@ -89,7 +89,8 @@ export default function AdminProjects() {
     if (!form.title.trim()) return
     const category = form.category.trim() || 'Autre'
     const gallery = cleanGallery(form.gallery, form.image || undefined)
-    const saved = { ...form, category, gallery: gallery.length ? gallery : undefined }
+    const galleryMobile = cleanGallery(form.galleryMobile)
+    const saved = { ...form, category, gallery: gallery.length ? gallery : undefined, galleryMobile: galleryMobile.length ? galleryMobile : undefined }
     const base = form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     const makeSlug = (b: string) => {
       let s = b
@@ -213,7 +214,28 @@ export default function AdminProjects() {
             </div>
 
             <div className="mb-5">
-              <GalleryEditor cover={form.image || undefined} value={form.gallery ?? []} onChange={(urls) => setForm((p) => ({ ...p, gallery: urls }))} />
+              <GalleryEditor
+                label="Vue ordinateur"
+                hint="images (couverture comprise). Visibles sur la page du projet, dans l'ordre ci-dessous, après la couverture."
+                value={form.gallery ?? []}
+                onChange={(urls) => setForm((p) => ({ ...p, gallery: urls }))}
+                capacity={galleryCapacity(form.image || undefined)}
+                alreadyCounted={form.image ? 1 : 0}
+                limit={MAX_PROJECT_IMAGES}
+              />
+            </div>
+
+            <div className="mb-5">
+              <GalleryEditor
+                label="Vue mobile"
+                hint="captures de téléphone. Affichées dans l'onglet « Mobile » de la page du projet, dans l'ordre ci-dessous."
+                value={form.galleryMobile ?? []}
+                onChange={(urls) => setForm((p) => ({ ...p, galleryMobile: urls }))}
+                capacity={MAX_MOBILE_IMAGES}
+                limit={MAX_MOBILE_IMAGES}
+                portrait
+                id="gallery-mobile"
+              />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-x-5 gap-y-4 mb-5">

@@ -61,6 +61,9 @@ export interface Project {
   // More pictures of the project, shown after the cover on the detail page only.
   // The cover counts in the limit (see lib/project-gallery.ts).
   gallery?: string[]
+  // Phone screenshots, shown in their own "Mobile" view next to the desktop one
+  // (cover + gallery). Up to six, in order.
+  galleryMobile?: string[]
   caseStudyContext?: string
   caseStudySolution?: string
   caseStudyResults?: string
