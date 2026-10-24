@@ -1058,7 +1058,7 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
               )}
               {error && (
                 <div style={{ marginLeft: 32 }}>
-                  <HandoffLinks locale={locale} lastQuestion={lastVisitorText(messages)} whatsapp={personal.whatsapp} />
+                  <HandoffLinks locale={locale} lastQuestion={lastVisitorText(messages)} whatsapp={personal.whatsapp} ownerName={personal.name} />
                 </div>
               )}
             </div>

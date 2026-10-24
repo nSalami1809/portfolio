@@ -8,6 +8,9 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 import FadeIn from '@/components/animations/FadeIn'
 import ShareButton from '@/components/ui/ShareButton'
 import ProjectMedia from '@/components/projects/ProjectMedia'
+import WhatsAppButton from '@/components/ui/WhatsAppButton'
+import MoreProjects from '@/components/projects/MoreProjects'
+import type { MoreProjects as MoreProjectsData } from '@/lib/related-projects'
 import { mobileImages, projectImages } from '@/lib/project-gallery'
 import Icon from '@/components/ui/Icon'
 
@@ -23,7 +26,7 @@ function siteAddress(url?: string): string | undefined {
   try { return new URL(url).host.replace(/^www./, '') } catch { return undefined }
 }
 
-export default function ProjectDetailView({ project, locale, t, statusLabel }: { project: Project; locale: Locale; t: Dictionary['projects']; statusLabel: Record<string, string> }) {
+export default function ProjectDetailView({ project, locale, t, statusLabel, contact, more }: { project: Project; locale: Locale; t: Dictionary['projects']; statusLabel: Record<string, string>; contact?: { href: string; title: string; cta: string }; more?: MoreProjectsData }) {
   // One picture or none: the page is exactly what it has always been.
   const images = projectImages(project)
   const phoneImages = mobileImages(project)
@@ -235,6 +238,14 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
             ))}
           </div>
 
+          {/* A project in the same spirit: straight to WhatsApp, the message already written */}
+          {contact?.href && (
+            <div className="card p-5">
+              <p className="font-display font-semibold text-base mb-3" style={{ color: 'var(--text)' }}>{contact.title}</p>
+              <WhatsAppButton href={contact.href} label={contact.cta} fullWidth size="sm" />
+            </div>
+          )}
+
           {/* Nav projets */}
           <div className="card p-5">
             <Link
@@ -248,6 +259,8 @@ export default function ProjectDetailView({ project, locale, t, statusLabel }: {
           </div>
         </FadeIn>
       </div>
+
+      {more && <MoreProjects data={more} locale={locale} labels={{ previous: t.previousProject, next: t.nextProject, related: t.relatedProjects }} />}
     </div>
   )
 }

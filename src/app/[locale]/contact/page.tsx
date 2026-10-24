@@ -4,6 +4,8 @@ import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
 import Icon from '@/components/ui/Icon'
+import { fetchPortfolioSafe } from '@/lib/portfolio-data'
+import { whatsappLink } from '@/lib/whatsapp'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params
@@ -16,6 +18,9 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
+  const personal = (await fetchPortfolioSafe('contact/page'))?.personal
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+  const whatsappHref = whatsappLink(personal?.whatsapp, { kind: 'general' }, locale, personal?.name, `${siteUrl}/${locale}/contact`)
 
   return (
     <div className="relative">
@@ -43,6 +48,9 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                   value: 'nemrodsalami1809@gmail.com',
                   href: 'mailto:nemrodsalami1809@gmail.com',
                 },
+                ...(whatsappHref
+                  ? [{ icon: <Icon name="whatsapp" size={18} />, label: t.whatsapp.contactLabel, value: t.whatsapp.contactValue, href: whatsappHref }]
+                  : []),
                 {
                   icon: (
                     <Icon name="location" size={18} />

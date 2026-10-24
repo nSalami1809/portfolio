@@ -15,6 +15,7 @@ import { dropPendingToolCalls } from '@/lib/chat-messages'
 import { instantAnswer } from '@/lib/instant-answers'
 import { instantResponse, splitLastTurn } from '@/lib/instant-response'
 import { countInstantAnswer } from '@/lib/chat-instant-stats'
+import { whatsappLink as buildWhatsappLink } from '@/lib/whatsapp'
 
 const MAX_ATTEMPTS = 20
 const WINDOW_S = 10 * 60 // 10 minutes
@@ -130,13 +131,7 @@ function buildSystemPrompt(data: PortfolioData, locale: string): string {
 - Statut : ${personal.name} travaille en prestataire indépendant. Ne parle jamais d'entreprise, de société ou de garanties légales particulières, et n'invente aucune mention légale (numéro d'immatriculation, NIF…).
 - Ces conditions sont les conditions STANDARD : pour tout cas particulier (délai précis, remise, paiement échelonné, autre mode de paiement), dis que cela se discute avec ${personal.name} et propose un rendez-vous ou la page Contact ; ne promets jamais rien au-delà de ce qui est écrit ici.`
 
-  const whatsappPrefillMessage = locale === 'en'
-    ? "Hi Nawaf \u{1F44B}\n\nI'm reaching out via your portfolio's AI assistant about a project I'd like to present to you. I'd love to chat and see how we could bring it to life.\n\nThanks!"
-    : "Bonjour Nawaf \u{1F44B}\n\nJe vous contacte via l'IA de votre portfolio pour un projet que j'aimerais vous présenter. Je souhaiterais échanger avec vous afin de voir comment nous pourrions le concrétiser.\n\nMerci !"
-
-  const whatsappLink = personal.whatsapp
-    ? `https://wa.me/${personal.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappPrefillMessage)}`
-    : ''
+  const whatsappLink = buildWhatsappLink(personal.whatsapp, { kind: 'chat' }, locale === 'en' ? 'en' : 'fr', personal.name)
 
   const whatsappText = personal.whatsapp
     ? `WhatsApp : ${personal.whatsapp} (lien direct à utiliser EXACTEMENT tel quel, message pré-rempli inclus : ${whatsappLink})`

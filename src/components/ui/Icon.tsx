@@ -76,6 +76,18 @@ export function iconForText(text: string, fallback: IconName = 'layers'): IconNa
   return rules.find(([re]) => re.test(t))?.[1] ?? fallback
 }
 
+/** The icon of a commitment (lead time, deposit, revisions, warranty, source code, signed papers), from its label in French or English. */
+export function iconForCommitment(label: string): IconName {
+  const l = label.toLowerCase()
+  if (/délai|delai|lead time/.test(l)) return 'clock'
+  if (/acompte|deposit/.test(l)) return 'wallet'
+  if (/révision|revision/.test(l)) return 'pen'
+  if (/garantie|warranty/.test(l)) return 'shield'
+  if (/code source|source code/.test(l)) return 'code'
+  if (/signé|signed/.test(l)) return 'signature'
+  return 'check'
+}
+
 interface Props {
   name: IconName
   size?: number

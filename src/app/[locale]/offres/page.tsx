@@ -64,7 +64,7 @@ export default async function OffersPage({ params }: { params: Promise<{ locale:
       {offers.length > 0 && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       )}
-      <OffersView offers={offers} translated={translated} />
+      <OffersView offers={offers} translated={translated} whatsapp={portfolio?.personal?.whatsapp} ownerName={portfolio?.personal?.name} />
     </>
   )
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { m, AnimatePresence } from 'framer-motion'
+import { m } from 'framer-motion'
 import type { PersonalInfo, SocialLinks } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -43,14 +43,6 @@ function TypingCursor() {
 }
 
 export default function HeroSection({ personal, socials, locale, t, nextSlotBadge }: Props) {
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   const line1 = t.heroGreeting
   const lastName = personal.name.split(' ').slice(-1)[0]
   const firstNames = personal.name.split(' ').slice(0, -1).join(' ')
@@ -247,46 +239,6 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
           </m.div>
         </m.div>
       </div>
-
-      {/* Scroll indicator */}
-      <AnimatePresence>
-        {!scrolled && (
-          <m.a
-            href="#apropos"
-            aria-label={t.heroScrollAria}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 cursor-pointer group z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 8, 0] }}
-            exit={{ opacity: 0, transition: { duration: 0.25 } }}
-            transition={{
-              opacity: { delay: 1.5 },
-              y: { delay: 1.5, duration: 2, repeat: Infinity, ease: 'easeInOut' },
-            }}
-          >
-            <span
-              className="text-xs font-semibold tracking-widest transition-colors duration-200 group-hover:opacity-100"
-              style={{ color: 'var(--accent-light)', fontFamily: 'var(--font-poppins)' }}
-            >
-              {t.heroScroll}
-            </span>
-            <div
-              className="relative w-7 h-11 rounded-full flex justify-center pt-2.5 transition-transform duration-200 group-hover:scale-110"
-              style={{
-                border: '2px solid var(--accent)',
-                background: 'var(--glass-bg)',
-                boxShadow: '0 0 20px var(--accent-glow), inset 0 1px 0 var(--glass-highlight)',
-              }}
-            >
-              <m.div
-                animate={{ y: [0, 14, 0], opacity: [1, 0, 1] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: 'var(--accent)' }}
-              />
-            </div>
-          </m.a>
-        )}
-      </AnimatePresence>
     </section>
   )
 }

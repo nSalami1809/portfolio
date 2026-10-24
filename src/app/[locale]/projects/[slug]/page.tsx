@@ -3,6 +3,8 @@ import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultProjects } from '@/data/defaultData'
 import { translateFields } from '@/lib/translate'
 import { sanitizeProjectGalleries } from '@/lib/project-gallery'
+import { whatsappLink } from '@/lib/whatsapp'
+import { moreProjects, type ProjectLink } from '@/lib/related-projects'
 import { jsonLdScript } from '@/lib/json-ld'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
@@ -79,6 +81,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   })
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+  // "A project in the same spirit?": WhatsApp, with the project's title and page already in the message
+  const portfolio = await fetchPortfolioSafe('projects/[slug]/page')
+  const personal = portfolio?.personal
+  // The list as visitors see it (same order as /projects), reduced to what a link needs.
+  const links: ProjectLink[] = (portfolio?.projects ?? defaultProjects).map((p) => ({ slug: p.slug, title: p.title, category: p.category, tags: p.tags ?? [], image: p.image || undefined }))
+  const more = moreProjects({ slug: project.slug, title: project.title, category: project.category, tags: project.tags ?? [], image: project.image || undefined }, links)
+  const contact = {
+    href: whatsappLink(personal?.whatsapp, { kind: 'project', title: translated.title }, locale, personal?.name, `${siteUrl}/${locale}/projects/${slug}`),
+    title: t.whatsapp.projectTitle,
+    cta: t.whatsapp.projectCta,
+  }
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
@@ -101,6 +114,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         locale={locale}
         t={t.projects}
         statusLabel={t.status}
+        contact={contact}
+        more={more}
       />
     </>
   )

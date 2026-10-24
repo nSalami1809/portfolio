@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
+import { whatsappLink } from '@/lib/whatsapp'
 import { defaultOffers } from '@/data/defaultData'
 import DevisView from './DevisView'
 import { pageMeta } from '@/lib/seo'
@@ -22,5 +23,11 @@ export default async function DevisPage({ params }: { params: Promise<{ locale: 
   const t = getDictionary(locale)
   const portfolio = await fetchPortfolioSafe('devis/page')
 
-  return <DevisView t={t.devis} offers={portfolio?.offers ?? defaultOffers} />
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+  const contact = {
+    href: whatsappLink(portfolio?.personal?.whatsapp, { kind: 'quote' }, locale, portfolio?.personal?.name, `${siteUrl}/${locale}/devis`),
+    hint: t.whatsapp.quoteHint,
+    cta: t.whatsapp.quoteCta,
+  }
+  return <DevisView t={t.devis} offers={portfolio?.offers ?? defaultOffers} contact={contact} />
 }

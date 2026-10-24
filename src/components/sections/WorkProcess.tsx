@@ -4,22 +4,10 @@ import Disclosure from '@/components/ui/Disclosure'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import type { Locale } from '@/lib/i18n/locale'
 import type { WorkTerms } from '@/lib/business'
-import Icon, { iconForText, type IconName } from '@/components/ui/Icon'
+import Icon, { iconForCommitment, iconForText, type IconName } from '@/components/ui/Icon'
 
 // Used when a step's own words say nothing: the usual run of a project.
 const STEP_ICONS: IconName[] = ['invoice', 'signature', 'code', 'delivery', 'support', 'shield']
-
-// What each commitment is about, from its label (French or English); the list varies with the settings.
-function commitmentIcon(label: string): IconName {
-  const l = label.toLowerCase()
-  if (/délai|delai|lead time/.test(l)) return 'clock'
-  if (/acompte|deposit/.test(l)) return 'wallet'
-  if (/révision|revision/.test(l)) return 'pen'
-  if (/garantie|warranty/.test(l)) return 'shield'
-  if (/code source|source code/.test(l)) return 'code'
-  if (/signé|signed/.test(l)) return 'signature'
-  return 'check'
-}
 
 interface Props {
   t: Dictionary['work']
@@ -77,7 +65,7 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
           {commitments.map((c, i) => (
             <FadeIn key={c.label} delay={Math.min(i * 0.06, 0.3)}>
               <div className="card p-6 h-full">
-                <Icon name={commitmentIcon(c.label)} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
+                <Icon name={iconForCommitment(c.label)} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
                 <p className="font-display font-bold text-3xl mb-1" style={{ color: 'var(--accent)' }}>{c.value}</p>
                 <p className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{c.label}</p>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{c.hint}</p>

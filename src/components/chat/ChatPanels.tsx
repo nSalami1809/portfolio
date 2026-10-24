@@ -9,6 +9,7 @@ import {
   trackingMessage, type ChatLocale, type QuoteLike,
 } from '@/lib/chat-services'
 import Icon from '@/components/ui/Icon'
+import { whatsappLink } from '@/lib/whatsapp'
 
 // Small panels of the visitor chat. They show the site's real data (offers, the quote
 // being tracked) and send nothing by themselves: every button either opens a page or
@@ -153,9 +154,9 @@ export function QuoteProgress({ quote, locale }: { quote: QuoteLike; locale: Cha
 }
 
 /** Ways to reach the owner directly, shown when the bot cannot help or is unavailable. */
-export function HandoffLinks({ locale, lastQuestion, whatsapp, title }: { locale: ChatLocale; lastQuestion: string; whatsapp?: string; title?: boolean }) {
+export function HandoffLinks({ locale, lastQuestion, whatsapp, ownerName, title }: { locale: ChatLocale; lastQuestion: string; whatsapp?: string; ownerName?: string; title?: boolean }) {
   const t = S[locale]
-  const wa = whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : ''
+  const wa = whatsappLink(whatsapp, { kind: 'chat', question: lastQuestion }, locale === 'en' ? 'en' : 'fr', ownerName)
   return (
     <div className="p-3 space-y-2" style={{ border: '1px solid var(--brand, var(--accent))', background: 'var(--surface-hover)' }} data-testid="chat-handoff">
       {title !== false && <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{t.handoffTitle}</p>}

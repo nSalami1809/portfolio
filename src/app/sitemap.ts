@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { LOCALES } from '@/lib/i18n/locale'
+import { GUIDES } from '@/data/guides'
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
 
@@ -39,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entry('/offres', 'monthly', 0.8),
     ...entry('/methode', 'monthly', 0.7),
     ...entry('/devis', 'monthly', 0.6),
+    ...entry('/guides', 'monthly', 0.6),
     ...entry('/resume', 'monthly', 0.7),
     ...entry('/blog', 'weekly', 0.7),
     ...entry('/documents', 'weekly', 0.6),
@@ -48,6 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entry('/cgv', 'yearly', 0.3),
   ]
 
+  for (const g of GUIDES) entries.push(...entry(`/guides/${g.slug}`, 'monthly', 0.6, new Date(g.updated)))
   for (const p of portfolio?.projects ?? []) entries.push(...entry(`/projects/${p.slug}`, 'monthly', 0.5))
   for (const p of (portfolio?.blog ?? []).filter((post) => post.published)) {
     const date = new Date(p.date)

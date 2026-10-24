@@ -11,12 +11,15 @@ import type { Offer } from '@/types'
 import EurHint from '@/components/EurHint'
 import Disclosure from '@/components/ui/Disclosure'
 import Icon from '@/components/ui/Icon'
+import WhatsAppButton from '@/components/ui/WhatsAppButton'
 
 // QuoteView (qrcode dependency) is only needed once a quote actually exists
 // — lazy-loaded so it never adds weight to visitors filling the form.
 const QuoteView = dynamic(() => import('@/components/chat/QuoteView'), { ssr: false })
 
 interface Props {
+  // A question before the quote: straight to WhatsApp ('' href when no number is set)
+  contact?: { href: string; hint: string; cta: string }
   t: Dictionary['devis']
   // Resolved server-side by the page — the public context no longer carries the offers.
   offers: Offer[]
@@ -56,7 +59,7 @@ function tierLabel(t: Dictionary['devis'], tier: Tier): string {
 interface Selection { qty: number; tier: Tier }
 const DEFAULT_SELECTION: Selection = { qty: 0, tier: 'standard' }
 
-export default function DevisView({ t, offers }: Props) {
+export default function DevisView({ t, offers, contact }: Props) {
   const locale = useLocale()
   // Only offers with a full min/max range set can be picked here — offers
   // priced "sur devis" (priceLabel only) stay chat/contact-only.
@@ -180,8 +183,17 @@ export default function DevisView({ t, offers }: Props) {
         <FadeIn>
           <p className="section-label mb-3">{t.label}</p>
           <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2.5rem,6vw,4rem)' }}>{t.title}</h1>
-          <p className="text-lg mb-12" style={{ color: 'var(--text-muted)', maxWidth: 560 }}>{t.subtitle}</p>
+          <p className="text-lg mb-8" style={{ color: 'var(--text-muted)', maxWidth: 560 }}>{t.subtitle}</p>
         </FadeIn>
+
+        {contact?.href && (
+          <FadeIn>
+            <div className="card p-4 mb-10 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{contact.hint}</p>
+              <WhatsAppButton href={contact.href} label={contact.cta} size="sm" />
+            </div>
+          </FadeIn>
+        )}
 
         {createdQuote ? (
           <FadeIn>

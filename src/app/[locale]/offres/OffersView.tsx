@@ -13,6 +13,9 @@ import type { Locale } from '@/lib/i18n/locale'
 import EurHint from '@/components/EurHint'
 import ShareButton from '@/components/ui/ShareButton'
 import Icon, { iconForText } from '@/components/ui/Icon'
+import WhatsAppButton from '@/components/ui/WhatsAppButton'
+import OfferFinder from '@/components/offers/OfferFinder'
+import { whatsappLink } from '@/lib/whatsapp'
 
 export type TranslatedOffers = Record<string, { title: string; description: string; features: string }>
 type Translated = TranslatedOffers
@@ -143,8 +146,11 @@ function OffersHero({ offers, translated, t, ctaLabel, onRequest }: {
   )
 }
 
-function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t }: {
+function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t, whatsappHref, whatsappLabel }: {
   offer: Offer
+  // '' when no WhatsApp number is set: the button then does not appear
+  whatsappHref: string
+  whatsappLabel: string
   tr?: { title: string; description: string; features: string }
   ctaLabel: string
   onRequest: (title: string) => void
@@ -195,6 +201,7 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t }: {
       <button onClick={() => onRequest(title)} className="btn-primary w-full justify-center text-sm">
         {ctaLabel}
       </button>
+      <WhatsAppButton href={whatsappHref} label={whatsappLabel} fullWidth size="sm" className="mt-2 text-sm" />
     </div>
   )
 }
@@ -206,9 +213,13 @@ interface OffersViewProps {
   // in an effect — so the first paint showed the wrong cards, then swapped.
   offers: Offer[]
   translated: TranslatedOffers
+  whatsapp?: string
+  ownerName?: string
 }
 
-export default function OffersView({ offers, translated }: OffersViewProps) {
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.vercel.app'
+
+export default function OffersView({ offers, translated, whatsapp, ownerName }: OffersViewProps) {
   const locale = useLocale()
   const t = useDictionary()
 
@@ -216,6 +227,8 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
   const regular = offers.filter((o) => !o.featured)
 
   const requestQuote = (title: string) => openChatWithMessage(t.offers.ctaMessage(title))
+  // one pre-filled WhatsApp message per offer: its title and its price, and the page it comes from
+  const whatsappFor = (o: Offer) => whatsappLink(whatsapp, { kind: 'offer', title: translated[o.id]?.title || o.title, price: o.priceLabel }, locale, ownerName, `${SITE}/${locale}/offres`)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
@@ -239,6 +252,18 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
         <>
           <OffersHero offers={offers} translated={translated} t={t.offers} ctaLabel={t.offers.cta} onRequest={requestQuote} />
 
+          {/* Three questions, one advised offer: rules over the offers below, no model. */}
+          <FadeIn>
+            <OfferFinder
+              offers={offers}
+              translated={translated}
+              t={t.finder}
+              locale={locale}
+              onRequestQuote={requestQuote}
+              whatsappFor={(title, summary) => whatsappLink(whatsapp, { kind: 'finder', offer: title || undefined, answers: summary }, locale, ownerName, `${SITE}/${locale}/offres`)}
+            />
+          </FadeIn>
+
           {special.length > 0 && (
             <div className="mb-16">
               <FadeIn>
@@ -247,7 +272,7 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {special.map((o, i) => (
                   <FadeIn key={o.id} delay={Math.min(i * 0.07, 0.28)}>
-                    <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} highlighted locale={locale} t={t.offers} />
+                    <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} highlighted locale={locale} t={t.offers} whatsappHref={whatsappFor(o)} whatsappLabel={t.whatsapp.offerCta} />
                   </FadeIn>
                 ))}
               </div>
@@ -257,7 +282,7 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {regular.map((o, i) => (
               <FadeIn key={o.id} delay={Math.min(i * 0.07, 0.28)}>
-                <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} locale={locale} t={t.offers} />
+                <OfferCard offer={o} tr={translated[o.id]} ctaLabel={t.offers.cta} onRequest={requestQuote} locale={locale} t={t.offers} whatsappHref={whatsappFor(o)} whatsappLabel={t.whatsapp.offerCta} />
               </FadeIn>
             ))}
           </div>
@@ -271,10 +296,16 @@ export default function OffersView({ offers, translated }: OffersViewProps) {
             <h2 className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>{t.offers.methodTitle}</h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{t.offers.methodText}</p>
           </div>
-          <Link href={`/${locale}/methode`} className="btn-secondary flex-shrink-0">
-            {t.offers.methodCta}
-            <Icon name="arrowRight" size={14} />
-          </Link>
+          <div className="flex flex-wrap gap-3 flex-shrink-0">
+            <Link href={`/${locale}/methode`} className="btn-secondary">
+              {t.offers.methodCta}
+              <Icon name="arrowRight" size={14} />
+            </Link>
+            <Link href={`/${locale}/guides`} className="btn-secondary" data-testid="offers-guides-link">
+              {t.guides.title}
+              <Icon name="arrowRight" size={14} />
+            </Link>
+          </div>
         </div>
       </FadeIn>
     </div>

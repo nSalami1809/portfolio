@@ -3,7 +3,7 @@ import { createElement as h } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import Icon, { ICON_NAMES, iconForText } from '@/components/ui/Icon'
+import Icon, { ICON_NAMES, iconForCommitment, iconForText } from '@/components/ui/Icon'
 
 const html = (el: ReturnType<typeof h>) => renderToStaticMarkup(el)
 
@@ -72,6 +72,27 @@ describe('which icon says what, from its own words', () => {
   it('falls back on what it is given when the words say nothing', () => {
     expect(iconForText('???', 'heart')).toBe('heart')
     expect(iconForText('???')).toBe('layers')
+  })
+})
+
+describe('the icon of a commitment', () => {
+  it.each([
+    ['Délai standard', 'clock'], ['Standard lead time', 'clock'],
+    ['Acompte à la signature', 'wallet'], ['Deposit at signature', 'wallet'],
+    ['Cycles de révision', 'pen'], ['Revision rounds', 'pen'],
+    ['Garantie après livraison', 'shield'], ['Warranty after delivery', 'shield'],
+    ['Code source', 'code'], ['Source code', 'code'],
+    ['Tout est signé', 'signature'], ['Everything is signed', 'signature'],
+    ['Quelque chose d’autre', 'check'],
+  ])('"%s" gets "%s"', (label, name) => {
+    expect(iconForCommitment(label)).toBe(name)
+  })
+
+  it('is the one function used by the method page and the guides', () => {
+    const root = join(__dirname, '..', 'src')
+    expect(readFileSync(join(root, 'components', 'sections', 'WorkProcess.tsx'), 'utf8')).toContain('iconForCommitment(c.label)')
+    expect(readFileSync(join(root, 'components', 'guides', 'GuideBody.tsx'), 'utf8')).toContain('iconForCommitment(c.label)')
+    expect(readFileSync(join(root, 'components', 'sections', 'WorkProcess.tsx'), 'utf8')).not.toContain('function commitmentIcon')
   })
 })
 

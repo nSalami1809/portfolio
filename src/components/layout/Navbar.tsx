@@ -66,6 +66,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
       children: [
         { href: `/${locale}/offres`, label: t.workOffers, icon: 'store' as const },
         { href: `/${locale}/methode`, label: t.workMethod, icon: 'target' as const },
+        { href: `/${locale}/guides`, label: t.workGuides, icon: 'blog' as const },
         { href: `/${locale}/contact`, label: t.contact, icon: 'mail' as const },
         { href: `/${locale}/devis`, label: t.workQuote, icon: 'invoice' as const },
         { href: `/${locale}/calendrier`, label: t.workCall, icon: 'calendar' as const },

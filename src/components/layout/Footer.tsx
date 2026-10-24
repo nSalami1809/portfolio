@@ -5,9 +5,8 @@ import { useState } from 'react'
 import type { PersonalInfo, SocialLinks } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { File02Icon } from '@hugeicons/core-free-icons'
-import Icon from '@/components/ui/Icon'
+import Icon, { type IconName } from '@/components/ui/Icon'
+import { whatsappLink } from '@/lib/whatsapp'
 
 function NavItem({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const [hovered, setHovered] = useState(false)
@@ -95,60 +94,35 @@ interface FooterProps {
 export default function Footer({ personal, socials, locale, t, role }: FooterProps) {
   const year = new Date().getFullYear()
 
-  const navLinks = [
-    {
-      href: `/${locale}`,
-      label: t.nav.about,
-      icon: (
-        <Icon name="user" size={13} />
-      ),
-    },
-    {
-      href: `/${locale}/resume`,
-      label: t.nav.resume,
-      icon: (
-        <Icon name="experience" size={13} />
-      ),
-    },
-    {
-      href: `/${locale}/projects`,
-      label: t.nav.projects,
-      icon: (
-        <Icon name="code" size={13} />
-      ),
-    },
-    {
-      href: `/${locale}/offres`,
-      label: t.nav.offers,
-      icon: (
-        <Icon name="tag" size={13} />
-      ),
-    },
-    {
-      href: `/${locale}/blog`,
-      label: t.nav.blog,
-      icon: (
-        <Icon name="blog" size={13} />
-      ),
-    },
-    {
-      href: `/${locale}/documents`,
-      label: t.nav.documents,
-      icon: <HugeiconsIcon icon={File02Icon} size={13} strokeWidth={2} />,
-    },
-    {
-      href: `/${locale}/contact`,
-      label: t.nav.contact,
-      icon: (
-        <Icon name="mail" size={13} />
-      ),
-    },
+  const icon = (name: IconName) => <Icon name={name} size={13} />
+
+  // The portfolio itself: who, what, where to read.
+  const portfolioLinks = [
+    { href: `/${locale}`, label: t.nav.about, icon: icon('about') },
+    { href: `/${locale}/resume`, label: t.nav.resume, icon: icon('experience') },
+    { href: `/${locale}/vision`, label: t.nav.vision, icon: icon('vision') },
+    { href: `/${locale}/projects`, label: t.nav.projects, icon: icon('projects') },
+    { href: `/${locale}/blog`, label: t.nav.blog, icon: icon('blog') },
+    { href: `/${locale}/documents`, label: t.nav.documents, icon: icon('documents') },
+    { href: `/${locale}/playground`, label: t.nav.playground, icon: icon('lab') },
+  ]
+
+  // Everything "Travailler avec moi" holds, in the order of a project: look, understand, price, talk, follow.
+  // The same pages as the menu's drop-down, so the footer is a second way in, not another list.
+  const workLinks = [
+    { href: `/${locale}/offres`, label: t.nav.workOffers, icon: icon('store') },
+    { href: `/${locale}/methode`, label: t.nav.workMethod, icon: icon('target') },
+    { href: `/${locale}/guides`, label: t.nav.workGuides, icon: icon('blog') },
+    { href: `/${locale}/devis`, label: t.nav.workQuote, icon: icon('invoice') },
+    { href: `/${locale}/calendrier`, label: t.nav.workCall, icon: icon('calendar') },
+    { href: `/${locale}/suivi`, label: t.nav.workTrack, icon: icon('delivery') },
+    { href: `/${locale}/contact`, label: t.nav.contact, icon: icon('mail') },
   ]
 
   return (
     <footer aria-label={t.footer.aria} style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
 
           {/* Brand */}
           <div>
@@ -166,15 +140,28 @@ export default function Footer({ personal, socials, locale, t, role }: FooterPro
             </div>
           </div>
 
-          {/* Navigation */}
-          <div>
-            <p className="section-label mb-3">{t.footer.navigation}</p>
+          {/* The portfolio */}
+          <nav aria-label={t.footer.portfolio} data-testid="footer-portfolio">
+            <p className="section-label mb-3">{t.footer.portfolio}</p>
             <ul className="space-y-0.5">
-              {navLinks.map((link) => (
+              {portfolioLinks.map((link) => (
                 <NavItem key={link.href} {...link} />
               ))}
             </ul>
-          </div>
+          </nav>
+
+          {/* Working with me: its own column, with everything the menu entry holds */}
+          <nav aria-label={t.nav.offers} data-testid="footer-work">
+            <p className="section-label mb-1">
+              <Link href={`/${locale}/offres`} className="hover:underline">{t.nav.offers}</Link>
+            </p>
+            <p className="text-xs mb-3" style={{ color: 'var(--text-subtle)' }}>{t.footer.workHint}</p>
+            <ul className="space-y-0.5">
+              {workLinks.map((link) => (
+                <NavItem key={link.href} {...link} />
+              ))}
+            </ul>
+          </nav>
 
           {/* Contact & socials */}
           <div>
@@ -191,7 +178,7 @@ export default function Footer({ personal, socials, locale, t, role }: FooterPro
               )}
               {personal.whatsapp && (
                 <SocialItem
-                  href={`https://wa.me/${personal.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(t.footer.whatsappMessage)}`}
+                  href={whatsappLink(personal.whatsapp, { kind: 'general' }, locale, personal.name)}
                   label="WhatsApp"
                   external
                   icon={
