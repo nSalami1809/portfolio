@@ -27,6 +27,10 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
     // reflow) or an actual window resize triggers a re-render per tick,
     // which reads as stutter rather than a smooth preview.
     let timer: ReturnType<typeof setTimeout> | null = null
+    // First measure right away: the page is only drawn once its width is known, so it is
+    // never drawn at its natural size (wider than a phone) and then drawn again.
+    const first = el.getBoundingClientRect().width
+    if (first) setContainerWidth(Math.min(first, 900))
     const ro = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width
       if (!width) return
@@ -43,7 +47,7 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
   }, [])
 
   return (
-    <div ref={containerRef} className="w-full">
+    <div ref={containerRef} className="w-full min-w-0 overflow-hidden">
       <Document
         file={fileUrl}
         onLoadSuccess={({ numPages: n }) => { setNumPages(n); setPageNumber(1) }}
@@ -51,13 +55,15 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
         loading={<div className="py-20 text-center text-sm" style={{ color: 'var(--text-subtle)' }} />}
         error={<div />}
       >
-        <Page
-          pageNumber={pageNumber}
-          width={containerWidth}
-          renderAnnotationLayer={false}
-          renderTextLayer
-          onLoadError={onError}
-        />
+        {containerWidth && (
+          <Page
+            pageNumber={pageNumber}
+            width={containerWidth}
+            renderAnnotationLayer={false}
+            renderTextLayer
+            onLoadError={onError}
+          />
+        )}
       </Document>
 
       {numPages > 1 && (

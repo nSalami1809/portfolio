@@ -30,9 +30,10 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
         </Link>
       </FadeIn>
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-12 items-start">
+      {/* grid-cols-1 = minmax(0,1fr): without it the single column grows to the PDF page's natural width and the summary and the page overflow the phone's screen */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-12 items-start">
         {/* Main */}
-        <div>
+        <div className="min-w-0">
           <FadeIn delay={0.05}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
               <div className="flex flex-wrap items-center gap-3">
@@ -54,7 +55,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
 
           <FadeIn delay={0.1}>
             <h1
-              className="font-display font-bold mb-6"
+              className="font-display font-bold mb-6 break-words"
               style={{ fontSize: 'clamp(2rem,5vw,3.5rem)', color: 'var(--text)' }}
             >
               {document.title}
@@ -62,7 +63,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
           </FadeIn>
 
           <FadeIn delay={0.15}>
-            <p className="text-lg leading-relaxed mb-8" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-base sm:text-lg leading-relaxed mb-8 break-words whitespace-pre-line" style={{ color: 'var(--text-muted)' }}>
               {document.description}
             </p>
           </FadeIn>
@@ -70,7 +71,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
           <FadeIn delay={0.18}>
             <a
               href={`/api/documents/${document.slug}/download`}
-              className="btn-primary text-base px-8 py-4 mb-10"
+              className="btn-primary text-base px-8 py-4 mb-10 max-sm:w-full max-sm:justify-center"
             >
               <Icon name="upload" size={16} />
               {t.download}

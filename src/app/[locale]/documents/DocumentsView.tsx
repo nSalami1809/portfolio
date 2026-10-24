@@ -101,11 +101,12 @@ export default function DocumentsView({ documents, locale, t }: Props) {
       </FadeIn>
 
       {/* Grid */}
-      <m.div layout className="grid sm:grid-cols-2 gap-6">
+      <m.div layout className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <AnimatePresence mode="popLayout">
           {filtered.map((doc, i) => (
             <m.div
               key={doc.slug}
+              className="min-w-0"
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -123,27 +124,30 @@ export default function DocumentsView({ documents, locale, t }: Props) {
 
                 {/* Thumbnail / icon */}
                 {doc.thumbnailUrl ? (
+                  // The thumbnail is the PDF's whole first page (portrait): it is shown entire, centred
+                  // in a fixed-height panel, never cropped to a landscape band.
                   <div
-                    className="relative w-full aspect-video rounded-xl mb-5 overflow-hidden"
+                    className="flex items-center justify-center w-full h-[22rem] sm:h-[26rem] p-4 mb-5"
                     style={{ background: 'var(--surface-hover)' }}
                   >
                     <Image
                       src={doc.thumbnailUrl}
                       alt={doc.title}
-                      fill
+                      width={600}
+                      height={849}
                       loading="lazy"
                       // Already a small, pre-sized webp generated at upload
                       // time — skip Next's on-demand resize/re-encode (a
                       // cold first-hit per breakpoint) and serve it straight
                       // from Blob's own CDN, which is already fast and cached.
                       unoptimized
-                      sizes="(min-width: 640px) 50vw, 100vw"
-                      className="object-cover object-top"
+                      className="h-auto w-auto max-h-full max-w-full"
+                      style={{ border: '1px solid var(--border)' }}
                     />
                   </div>
                 ) : (
                   <div
-                    className="w-full aspect-video rounded-xl mb-5 flex items-center justify-center overflow-hidden"
+                    className="w-full h-[22rem] sm:h-[26rem] mb-5 flex items-center justify-center overflow-hidden"
                     style={{ background: 'var(--surface-hover)' }}
                     aria-hidden="true"
                   >
@@ -154,12 +158,12 @@ export default function DocumentsView({ documents, locale, t }: Props) {
                 )}
 
                 <h2
-                  className="font-display font-semibold text-xl mb-3 transition-colors duration-200 group-hover:text-[var(--accent)]"
+                  className="font-display font-semibold text-xl mb-3 break-words transition-colors duration-200 group-hover:text-[var(--accent)]"
                   style={{ color: 'var(--text)' }}
                 >
                   {doc.title}
                 </h2>
-                <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm leading-relaxed mb-5 break-words whitespace-pre-line" style={{ color: 'var(--text-muted)' }}>
                   {doc.description}
                 </p>
 
