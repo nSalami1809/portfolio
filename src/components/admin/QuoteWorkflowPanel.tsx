@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { downloadQuotePdf, type AdminQuote, type QuoteItem } from '@/actions/quotes'
+import { downloadQuotePdf, requestTestimonial, markTestimonialAsked, type AdminQuote, type QuoteItem } from '@/actions/quotes'
 import { issueInvoice, markInvoicePaid, cancelInvoice, resendInvoiceEmail, downloadInvoicePdf } from '@/actions/billing'
 import type { Invoice } from '@/lib/invoicing'
 import { markDelivered, createAvenant, updateQuoteDelay, logRevision } from '@/actions/lifecycle'
 import { saveBase64Pdf } from '@/lib/browser-download'
 import { formatLongDate, RECETTE_DAYS, addBusinessDays } from '@/lib/quote-document'
 import { DEFAULT_BUSINESS } from '@/lib/business'
+import { reviewPageUrl, reviewRequestWhatsApp } from '@/lib/review-request'
+import { whatsappUrl } from '@/lib/whatsapp'
 
 interface Props {
   quote: AdminQuote
@@ -76,6 +78,44 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
       if (result.ok) { saveBase64Pdf(result.base64, result.filename); return { ok: true } }
       return { ok: false, error: result.error }
     })
+
+  // Once the client has signed the PV without reserve, the moment to ask for a review. Two ways,
+  // both started by the owner: an e-mail written by the site, or a WhatsApp message written for
+  // them and sent by them. The automatic e-mail at the end of the warranty stays as the safety net.
+  const reviewLocale = quote.locale === 'en' ? 'en' : 'fr'
+  const askByWhatsApp = () => {
+    const url = whatsappUrl(quote.clientTelephone, reviewRequestWhatsApp({ clientName: quote.clientNom, locale: reviewLocale, reviewUrl: reviewPageUrl(window.location.origin, reviewLocale) }))
+    if (!url) { notify('Aucun numéro de téléphone enregistré pour ce client.', 'error'); return }
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+  const reviewBlock = quote.acceptance && !quote.acceptance.reserves ? (
+    <div className="mt-3 p-3 space-y-2" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} data-testid="review-request">
+      <p className="font-semibold" style={{ color: 'var(--text)' }}>Avis du client</p>
+      {quote.testimonialRequestedAt ? (
+        <p>Demande d’avis faite le <strong style={{ color: 'var(--text)' }}>{formatLongDate(quote.testimonialRequestedAt)}</strong>.</p>
+      ) : (
+        <p>Le client a signé sans réserve : c’est le bon moment pour demander un avis. Sinon, la demande part toute seule par e-mail à la fin de la garantie (quand tout est payé).</p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button
+          className="btn-secondary btn-xs"
+          disabled={busy === 'review-mail' || !quote.clientEmail}
+          title={quote.clientEmail ? undefined : 'Aucun e-mail enregistré pour ce client'}
+          onClick={() => confirm(`Envoyer la demande d’avis par e-mail à ${quote.clientNom} ?`) && run('review-mail', () => requestTestimonial(quote.id))}
+        >
+          {busy === 'review-mail' ? 'Envoi…' : quote.testimonialRequestedAt ? 'Redemander par e-mail' : 'Demander par e-mail'}
+        </button>
+        <button className="btn-secondary btn-xs" disabled={!quote.clientTelephone} title={quote.clientTelephone ? 'Ouvre WhatsApp avec le message écrit : vous l’envoyez vous-même' : 'Aucun numéro de téléphone enregistré'} onClick={askByWhatsApp} data-testid="review-whatsapp">
+          Écrire sur WhatsApp
+        </button>
+        {!quote.testimonialRequestedAt && (
+          <button className="btn-secondary btn-xs" disabled={busy === 'review-noted'} onClick={() => run('review-noted', () => markTestimonialAsked(quote.id))} title="À utiliser une fois le message WhatsApp envoyé : évite une seconde demande automatique">
+            J’ai envoyé la demande
+          </button>
+        )}
+      </div>
+    </div>
+  ) : null
 
   const submitAvenant = async () => {
     const ok = await run('avenant', () => createAvenant(quote.id, {
@@ -156,10 +196,13 @@ export default function QuoteWorkflowPanel({ quote, invoices, onChanged, notify 
               <div className="text-xs space-y-1" style={{ color: 'var(--text-muted)' }}>
                 <p>Livré le <strong style={{ color: 'var(--text)' }}>{formatLongDate(quote.delivery.deliveredAt)}</strong>.</p>
                 {quote.acceptance ? (
-                  <p style={{ color: quote.acceptance.reserves ? '#E45742' : '#008000' }}>
-                    Recette signée par {quote.acceptance.name} le {formatLongDate(quote.acceptance.signedAt)}
-                    {quote.acceptance.reserves ? ` — AVEC RÉSERVES : « ${quote.acceptance.reserves} »` : ' — sans réserve.'}
-                  </p>
+                  <>
+                    <p style={{ color: quote.acceptance.reserves ? '#E45742' : '#008000' }}>
+                      Recette signée par {quote.acceptance.name} le {formatLongDate(quote.acceptance.signedAt)}
+                      {quote.acceptance.reserves ? ` — AVEC RÉSERVES : « ${quote.acceptance.reserves} »` : ' — sans réserve.'}
+                    </p>
+                    {reviewBlock}
+                  </>
                 ) : (
                   <>
                     <p>En attente de signature du PV — recette réputée acceptée le {formatLongDate(addBusinessDays(quote.delivery.deliveredAt, RECETTE_DAYS))} à défaut de retour.</p>

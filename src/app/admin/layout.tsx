@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ToastProvider } from '@/components/admin/Toast'
 import { PortfolioProvider } from '@/providers/PortfolioContext'
 import NotificationBell from '@/components/admin/NotificationBell'
@@ -110,6 +110,9 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // <main> is the scroll area now (not the window): a new page starts at the top, as it did before.
+  const mainRef = useRef<HTMLElement>(null)
+  useEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [pathname])
 
   // Pages d'auth — layout minimal sans sidebar
   if (pathname === '/admin/login' || pathname === '/admin/verify') {
@@ -120,13 +123,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <ToastProvider>
     <PortfolioProvider>
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        {/* min-h-[100dvh], not min-h-screen: <main> below scrolls internally,
-            so with a static 100vh the bottom strip of the layout stays parked
-            under mobile Safari's toolbar with no way to scroll it into view. */}
-        <div className="min-h-dvh flex" style={{ background: 'var(--bg-secondary)' }}>
+        {/* The shell is exactly one screen high (h-dvh, the dynamic height: it follows mobile
+            Safari's toolbar, which a static 100vh does not). The side menu therefore stays where
+            it is, and only <main> scrolls. With a min-height the whole page scrolled and took the
+            menu along. */}
+        <div className="h-dvh flex overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
 
           {/* ── Sidebar (desktop: hover to expand · mobile: full overlay) ── */}
-          <DesktopSidebar className="sticky top-0" style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+          <DesktopSidebar style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
             <SidebarLogo />
             <SidebarNav pathname={pathname} />
             <SidebarFooter />
@@ -188,7 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </header>
 
             {/* Content */}
-            <main className={`flex-1 p-4 sm:p-6 lg:p-8 overflow-auto ${showBottomNav(pathname) ? 'pb-24 lg:pb-8' : ''}`}>
+            <main ref={mainRef} className={`flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden ${showBottomNav(pathname) ? 'pb-24 lg:pb-8' : ''}`}>
               <div className={pathname === '/admin/assistant' ? 'max-w-7xl mx-auto' : 'max-w-5xl mx-auto'}>
                 {children}
               </div>

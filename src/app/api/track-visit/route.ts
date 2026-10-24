@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { after } from 'next/server'
 import { getDb } from '@/lib/mongodb'
 import { clientIpFromHeaders } from '@/lib/client-ip'
+import { isBot } from '@/lib/download-guard'
 
 // Lightweight per-instance throttle — deliberately in-memory (no DB round
 // trip, so this beacon never adds latency to page navigation) rather than a
@@ -36,7 +37,7 @@ function ensureIndex() {
 // already excludes the bulk of bot traffic by construction — this catches
 // the ones that do (headless/JS-rendering crawlers, uptime monitors, link
 // previewers) so the count stays a genuine visitor-activity signal.
-const BOT_RE = /bot|spider|crawl|slurp|facebookexternalhit|whatsapp|telegram|preview|monitor|headless|pingdom|lighthouse/i
+// (the filter itself lives in lib/download-guard.ts, shared with the documents' download counter)
 
 // Fire-and-forget page-view counter for the admin dashboard's "Vues"
 // stat — deliberately minimal (no cookies, no IP, no unique-visitor
@@ -44,7 +45,7 @@ const BOT_RE = /bot|spider|crawl|slurp|facebookexternalhit|whatsapp|telegram|pre
 export async function POST(req: NextRequest) {
   try {
     const ua = req.headers.get('user-agent') ?? ''
-    if (BOT_RE.test(ua)) return NextResponse.json({ ok: true })
+    if (isBot(ua)) return NextResponse.json({ ok: true })
 
     const ip = clientIpFromHeaders(req.headers)
     if (isThrottled(ip)) return NextResponse.json({ ok: true })

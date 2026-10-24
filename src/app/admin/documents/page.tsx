@@ -7,6 +7,8 @@ import { usePortfolio } from '@/providers/PortfolioContext'
 import { useToast } from '@/components/admin/Toast'
 import DocumentUpload from '@/components/admin/DocumentUpload'
 import { renderPdfThumbnail } from '@/lib/pdf-thumbnail'
+import { getDocumentDownloadCounts } from '@/actions/document-stats'
+import type { DocumentDownloads } from '@/lib/document-downloads'
 import { uploadFile } from '@/lib/upload'
 import type { PortfolioDocument } from '@/types'
 import Icon from '@/components/ui/Icon'
@@ -59,6 +61,17 @@ export default function AdminDocuments() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<Omit<PortfolioDocument, 'slug'>>({ ...EMPTY })
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [downloads, setDownloads] = useState<Record<string, DocumentDownloads>>({})
+
+  // Downloads per document, loaded once (the blog list does the same with its views).
+  useEffect(() => {
+    let cancelled = false
+    getDocumentDownloadCounts()
+      .then((d) => { if (!cancelled) setDownloads(d) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('')
 
@@ -395,7 +408,17 @@ export default function AdminDocuments() {
                   {/* Content */}
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{d.title}</p>
-                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>{d.category}</p>
+                    <p className="text-xs truncate mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
+                      <span className="truncate">{d.category}</span>
+                      <span
+                        className="inline-flex items-center gap-1 flex-shrink-0"
+                        title={`Téléchargements : ${(downloads[d.slug]?.total ?? 0).toLocaleString('fr-FR')} au total, dont ${(downloads[d.slug]?.last30Days ?? 0).toLocaleString('fr-FR')} sur 30 jours`}
+                        data-testid="download-count"
+                      >
+                        <Icon name="download" size={11} />
+                        {(downloads[d.slug]?.total ?? 0).toLocaleString('fr-FR')}
+                      </span>
+                    </p>
                   </div>
 
                   {/* File type/size */}

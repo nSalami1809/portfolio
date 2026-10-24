@@ -745,6 +745,18 @@ export async function requestTestimonial(id: string): Promise<{ ok: boolean; mes
   return { ok: true, message: 'Demande envoyée.' }
 }
 
+// The owner asked for a review by another channel (WhatsApp, in person…): the quote is marked as
+// asked, which also keeps the automatic request at the end of the warranty from asking twice.
+// Nothing is sent from here.
+export async function markTestimonialAsked(id: string): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin()
+  if (!ObjectId.isValid(id)) return { ok: false, message: 'Devis introuvable.' }
+  const col = await quotesCol()
+  const result = await col.updateOne({ _id: new ObjectId(id) }, { $set: { testimonialRequestedAt: new Date() } })
+  if (result.matchedCount === 0) return { ok: false, message: 'Devis introuvable.' }
+  return { ok: true, message: 'Demande d’avis notée.' }
+}
+
 export async function deleteQuote(id: string): Promise<AdminActionResult> {
   await requireAdmin()
   const col = await quotesCol()

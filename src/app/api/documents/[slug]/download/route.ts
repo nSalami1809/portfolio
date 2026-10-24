@@ -1,6 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultDocuments } from '@/data/defaultData'
+import { clientIpFromHeaders } from '@/lib/client-ip'
+import { createRecountGuard, isBot } from '@/lib/download-guard'
+import { recordDocumentDownload } from '@/lib/document-downloads'
 
 // A document's fileUrl is a Vercel Blob URL on its own subdomain
 // (…public.blob.vercel-storage.com) — cross-origin from the site itself, so
@@ -13,7 +16,10 @@ import { defaultDocuments } from '@/data/defaultData'
 // open proxy/SSRF relay.
 const ALLOWED_HOST_RE = /(^|\.)public\.blob\.vercel-storage\.com$/
 
-export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+// A refresh or a double click does not count twice (see lib/download-guard.ts).
+const isNewDownload = createRecountGuard()
+
+export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const portfolio = await fetchPortfolioSafe('api/documents/download')
   const documents = portfolio?.documents ?? defaultDocuments
@@ -40,6 +46,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   }).catch(() => null)
   if (!upstream || !upstream.ok || !upstream.body) {
     return new NextResponse('Erreur lors de la récupération du document', { status: 502 })
+  }
+
+  // The admin's "downloads" counter: only a download that is really going out, asked by a person (not a
+  // crawler or a link preview), and not the same visitor again within a few minutes. Nothing about the
+  // visitor is kept, and the visitor never waits for it.
+  if (!isBot(req.headers.get('user-agent')) && isNewDownload(`${clientIpFromHeaders(req.headers)}:${slug}`)) {
+    after(() => recordDocumentDownload(slug))
   }
 
   const contentType = document.fileType === 'pdf'
