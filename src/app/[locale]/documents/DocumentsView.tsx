@@ -102,7 +102,8 @@ export default function DocumentsView({ documents, locale, t }: Props) {
 
       {/* Grid */}
       <m.div layout className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <AnimatePresence mode="popLayout">
+        {/* initial={false}: the cards of the first render are drawn as they are in the server HTML. Without it every card was sent with opacity:0 and stayed invisible until the JavaScript had loaded and run (seconds on a phone). Cards that enter later (after a filter) still animate. */}
+        <AnimatePresence mode="popLayout" initial={false}>
           {filtered.map((doc, i) => (
             <m.div
               key={doc.slug}
@@ -113,7 +114,7 @@ export default function DocumentsView({ documents, locale, t }: Props) {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.3) }}
             >
-              <Link href={`/${locale}/documents/${doc.slug}`} className="card block p-6 h-full group">
+              <Link href={`/${locale}/documents/${doc.slug}`} data-spotlight className="card block p-6 h-full group">
                 {/* Category & file type */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="tag">{doc.category}</span>
@@ -135,7 +136,9 @@ export default function DocumentsView({ documents, locale, t }: Props) {
                       alt={doc.title}
                       width={600}
                       height={849}
-                      loading="lazy"
+                      // the first row is on screen at once: loaded right away, the very first one with top priority
+                      loading={i < 2 ? 'eager' : 'lazy'}
+                      fetchPriority={i === 0 ? 'high' : undefined}
                       // Already a small, pre-sized webp generated at upload
                       // time — skip Next's on-demand resize/re-encode (a
                       // cold first-hit per breakpoint) and serve it straight

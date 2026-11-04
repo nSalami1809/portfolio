@@ -102,7 +102,8 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
 
       {/* Grid */}
       <m.div layout className="grid sm:grid-cols-2 gap-6">
-        <AnimatePresence mode="popLayout">
+        {/* initial={false}: the cards of the first render are drawn as they are in the server HTML. Without it every card was sent with opacity:0 and stayed invisible until the JavaScript had loaded and run (seconds on a phone). Cards that enter later (after a filter) still animate. */}
+        <AnimatePresence mode="popLayout" initial={false}>
           {filtered.map((project, i) => (
             <m.div
               key={project.slug}
@@ -112,7 +113,7 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.3) }}
             >
-              <Link href={`/${locale}/projects/${project.slug}`} className="card block p-6 h-full group">
+              <Link href={`/${locale}/projects/${project.slug}`} data-spotlight className="card block p-6 h-full group">
                 {/* Category & status */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="tag">{project.category}</span>
@@ -137,7 +138,9 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
                     <ProjectPicture
                       src={project.image}
                       alt={project.title}
-                      loading="lazy"
+                      // the first row is on screen at once: loaded right away, the very first one with top priority
+                      loading={i < 2 ? 'eager' : 'lazy'}
+                      fetchPriority={i === 0 ? 'high' : undefined}
                       sizes="(min-width: 640px) 50vw, 100vw"
                     />
                   </div>

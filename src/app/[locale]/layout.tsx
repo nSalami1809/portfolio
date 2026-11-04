@@ -7,6 +7,7 @@ import { defaultPersonalInfo, defaultSocials } from '@/data/defaultData'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/animations/PageTransition'
+import SpotlightListener from '@/components/ui/SpotlightListener'
 import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd'
 import { publicPersonal } from '@/lib/public-portfolio'
 
@@ -56,6 +57,7 @@ export default async function LocaleLayout({
       >
         {locale === 'en' ? 'Skip to content' : 'Aller au contenu'}
       </a>
+      <SpotlightListener />
       <Navbar locale={locale} t={t.nav} />
       <PageTransition>
         <main id="main-content" className="pt-20">{children}</main>

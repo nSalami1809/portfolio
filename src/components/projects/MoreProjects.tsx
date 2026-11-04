@@ -11,7 +11,7 @@ export interface MoreProjectsLabels {
 
 function Card({ project, locale }: { project: ProjectLink; locale: string }) {
   return (
-    <Link href={`/${locale}/projects/${project.slug}`} className="card block overflow-hidden h-full" data-testid="related-project">
+    <Link href={`/${locale}/projects/${project.slug}`} data-spotlight className="card block overflow-hidden h-full" data-testid="related-project">
       <div className="relative w-full" style={{ aspectRatio: '16 / 9', background: 'var(--surface-hover)' }}>
         {project.image ? (
           <ProjectPicture src={project.image} alt="" loading="lazy" sizes="(min-width: 640px) 33vw, 100vw" />

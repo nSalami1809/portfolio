@@ -6,7 +6,13 @@ export type Theme = 'dark' | 'light'
 const STORAGE_KEY = 'theme'
 
 function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle('dark', theme === 'dark')
+  const root = document.documentElement
+  // Every card, button and tag has its own colour transition: switching the theme made dozens of them start at
+  // once, which is what made the switch feel heavy. CSS transitions are frozen for the instant of the switch
+  // (see `.theme-switching` in globals.css) and restored two frames later, so the page flips at once.
+  root.classList.add('theme-switching')
+  root.classList.toggle('dark', theme === 'dark')
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')))
 }
 
 // The <html> class is already set correctly before paint by the inline

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import FadeIn from '@/components/animations/FadeIn'
+import ReadingProgress from '@/components/ui/ReadingProgress'
 import JsonLd from '@/components/seo/JsonLd'
 import GuideBody from '@/components/guides/GuideBody'
 import Icon from '@/components/ui/Icon'
@@ -63,6 +64,7 @@ export default async function GuidePage({ params }: { params: Promise<{ locale: 
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
+      <ReadingProgress />
       <JsonLd data={articleLd} />
 
       <FadeIn>

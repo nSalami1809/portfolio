@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
+import ReadingProgress from '@/components/ui/ReadingProgress'
 import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -75,6 +76,7 @@ export default function BlogPostView({ post, locale, t }: { post: BlogPost; loca
   const dateLocale = locale === 'en' ? 'en-US' : 'fr-FR'
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
+      <ReadingProgress />
       <FadeIn>
         <Link
           href={`/${locale}/blog`}

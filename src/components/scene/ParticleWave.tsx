@@ -53,7 +53,8 @@ function FrameLimiter({ active }: { active: boolean }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => {
     if (!active) return
-    const id = setInterval(invalidate, 1000 / TARGET_FPS)
+    // nothing is drawn while the tab is hidden: no CPU/GPU/battery spent on a background nobody can see
+    const id = setInterval(() => { if (!document.hidden) invalidate() }, 1000 / TARGET_FPS)
     return () => clearInterval(id)
   }, [invalidate, active])
   return null

@@ -142,6 +142,100 @@ html {
   overflow-x: hidden;
 }
 
+/* ── Spotlight: a soft teal light under the mouse on the cards marked data-spotlight ─────────────────────────────────
+   Painted as a background layer UNDER the content (no overlay, nothing tinted), only on a real mouse. The position is
+   written into --mx/--my by SpotlightListener; before the first move it is simply centred. */
+@media (hover: hover) and (pointer: fine) {
+  [data-spotlight]:hover {
+    background:
+      radial-gradient(300px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--brand, var(--accent)) 13%, transparent), transparent 70%),
+      linear-gradient(135deg, var(--glass-bg-strong), var(--glass-bg));
+  }
+}
+
+/* ── Technology ribbon: pure CSS, transform only ─────────────────────────────────────────────────────────────────── */
+.tech-marquee {
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+.tech-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: tech-marquee 55s linear infinite;
+}
+.tech-marquee:hover .tech-marquee-track { animation-play-state: paused; }
+.tech-marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tech-marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.1rem 1.5rem;
+  white-space: nowrap;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+.tech-marquee-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--brand, var(--accent));
+}
+@keyframes tech-marquee {
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tech-marquee { -webkit-mask-image: none; mask-image: none; }
+  .tech-marquee-track { animation: none; width: auto; justify-content: center; }
+  .tech-marquee-group { flex-wrap: wrap; justify-content: center; }
+  .tech-marquee-group[aria-hidden='true'] { display: none; }
+}
+
+/* ── Reading progress: driven by the page's scroll, no JavaScript ───────────────────────────────────────────────── */
+.reading-progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  .reading-progress {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 70;
+    background: var(--brand, var(--accent));
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    animation: reading-progress linear both;
+    animation-timeline: scroll(root block);
+    pointer-events: none;
+  }
+}
+@keyframes reading-progress {
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading-progress { animation: none; display: none; }
+}
+
+/* Held for two frames while the theme is switched (see useTheme): no colour transition runs, so the switch is instant. */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
 body {
   background-color: var(--bg);
   color: var(--text);
