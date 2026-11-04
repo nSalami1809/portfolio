@@ -114,7 +114,7 @@ export default function DocumentsView({ documents, locale, t }: Props) {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.3) }}
             >
-              <Link href={`/${locale}/documents/${doc.slug}`} data-spotlight className="card block p-6 h-full group">
+              <Link href={`/${locale}/documents/${doc.slug}`} className="card block p-6 h-full group">
                 {/* Category & file type */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="tag">{doc.category}</span>

@@ -35,7 +35,7 @@ export default async function GuidesPage({ params }: { params: Promise<{ locale:
           return (
             <li key={guide.slug}>
               <FadeIn delay={Math.min(i * 0.08, 0.3)}>
-                <Link href={`/${locale}/guides/${guide.slug}`} data-spotlight className="card p-6 h-full flex flex-col" data-testid="guide-card">
+                <Link href={`/${locale}/guides/${guide.slug}`} className="card p-6 h-full flex flex-col" data-testid="guide-card">
                   <Icon name="blog" size={28} className="mb-4" style={{ color: 'var(--brand, var(--accent))' }} />
                   <h2 className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--text)' }}>{g.title}</h2>
                   <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: 'var(--text-muted)' }}>{g.description}</p>

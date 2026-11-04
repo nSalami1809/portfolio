@@ -172,7 +172,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       />
 
       {/* ── Ruban des technologies ── */}
-      <TechMarquee items={skills.flatMap((s) => s.items)} label={t.home.stackTitle} />
+      <TechMarquee items={skills.flatMap((s) => s.items.map((name) => ({ name, icon: s.icons?.[name] })))} label={t.home.stackTitle} />
 
       {/* ── À PROPOS ── */}
       <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
@@ -200,7 +200,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <div className="grid grid-cols-2 gap-4">
                 {t.home.stats.map(({ value, label }, i) => (
                   <FadeIn key={label} delay={0.1 + i * 0.08}>
-                    <div data-spotlight className="card p-6 text-center h-full">
+                    <div className="card p-6 text-center h-full">
                       <Icon name={STAT_ICONS[i % STAT_ICONS.length]} size={26} className="mx-auto mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
                       <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}><CountUp value={value} /></p>
                       <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
@@ -226,7 +226,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {skills.map((skill, i) => (
               <FadeIn key={skill.id} delay={Math.min(i * 0.07, 0.28)}>
-                <div data-spotlight className="card p-6 h-full">
+                <div className="card p-6 h-full">
                   <Icon name={iconForText(skill.category, 'cpu')} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
                   <p className="font-display font-semibold text-base mb-4" style={{ color: 'var(--accent)' }}>
                     {skill.category}
@@ -289,7 +289,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {t.work.homeSteps.map((step, i) => (
               <li key={step.title}>
                 <FadeIn delay={Math.min(i * 0.07, 0.28)}>
-                  <div data-spotlight className="card p-6 h-full">
+                  <div className="card p-6 h-full">
                     <div className="flex items-center justify-between mb-4" aria-hidden="true">
                       <Icon name={iconForText(step.title, STEP_ICONS[i % STEP_ICONS.length])} size={30} style={{ color: 'var(--brand, var(--accent))' }} />
                       <span className="step-number">{String(i + 1).padStart(2, '0')}</span>

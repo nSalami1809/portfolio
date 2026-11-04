@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import ProjectPicture from '@/components/projects/ProjectPicture'
+import ProjectFolders from '@/components/projects/ProjectFolders'
 import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import type { Project } from '@/types'
@@ -34,6 +35,30 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
   const [active, setActive] = useState(t.all)
   const [query, setQuery] = useState('')
 
+  // "See the category" (folders): the page scrolls to the list FIRST, while it is still, and the list is filtered once the
+  // page has arrived. Filtering while the page scrolls moves the target under it (the page shrinks and the cards move),
+  // and the scroll ended back at the top.
+  const seeCategory = (category: string) => {
+    const list = document.getElementById('projects-list')
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const apply = () => { if (category !== active) setActive(category) }
+    if (!list || reduce || Math.abs(list.getBoundingClientRect().top - 96) < 4) {
+      list?.scrollIntoView({ behavior: 'auto', block: 'start' })
+      apply()
+      return
+    }
+    let done = false
+    const arrived = () => {
+      if (done) return
+      done = true
+      window.removeEventListener('scrollend', arrived)
+      apply()
+    }
+    window.addEventListener('scrollend', arrived, { once: true })
+    window.setTimeout(arrived, 1200) // browsers without "scrollend", or a scroll that was interrupted
+    list.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const filtered = useMemo(() => {
     const byCategory = active === t.all ? projects : projects.filter((p) => p.category === active)
     const q = query.trim().toLowerCase()
@@ -60,6 +85,16 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
           </p>
         </FadeIn>
       </div>
+
+      {/* One folder per category; "See the category" filters the list below and brings it into view */}
+      <ProjectFolders
+        projects={projects}
+        locale={locale}
+        t={t}
+        onSeeCategory={seeCategory}
+      />
+
+      <div id="projects-list" className="scroll-mt-24" />
 
       {/* Search */}
       <FadeIn>
@@ -113,7 +148,7 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25, delay: Math.min(i * 0.05, 0.3) }}
             >
-              <Link href={`/${locale}/projects/${project.slug}`} data-spotlight className="card block p-6 h-full group">
+              <Link href={`/${locale}/projects/${project.slug}`} className="card block p-6 h-full group">
                 {/* Category & status */}
                 <div className="flex items-center justify-between mb-5">
                   <span className="tag">{project.category}</span>

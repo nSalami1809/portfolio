@@ -164,7 +164,7 @@ function OfferCard({ offer, tr, ctaLabel, onRequest, highlighted, locale, t, wha
   const features = tr ? tr.features.split('\n').filter(Boolean) : (offer.features ?? [])
 
   return (
-    <div data-spotlight className="card p-6 h-full flex flex-col overflow-hidden" data-highlighted={highlighted ? '' : undefined}>
+    <div className="card p-6 h-full flex flex-col overflow-hidden" data-highlighted={highlighted ? '' : undefined}>
       {offer.image && (
         <div className="relative -mx-6 -mt-6 mb-5" style={{ aspectRatio: '16 / 9' }}>
           <Image src={offer.image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" style={{ objectFit: 'cover' }} />

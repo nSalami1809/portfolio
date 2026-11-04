@@ -40,7 +40,7 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
           {steps.map((step, i) => (
             <li key={step.title}>
               <FadeIn delay={Math.min(i * 0.06, 0.3)}>
-                <div data-spotlight className="card p-6 h-full">
+                <div className="card p-6 h-full">
                   <div className="flex items-center justify-between mb-4" aria-hidden="true">
                     <Icon name={iconForText(step.title, STEP_ICONS[i % STEP_ICONS.length])} size={30} style={{ color: 'var(--brand, var(--accent))' }} />
                     <span className="step-number">{String(i + 1).padStart(2, '0')}</span>
@@ -64,7 +64,7 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {commitments.map((c, i) => (
             <FadeIn key={c.label} delay={Math.min(i * 0.06, 0.3)}>
-              <div data-spotlight className="card p-6 h-full">
+              <div className="card p-6 h-full">
                 <Icon name={iconForCommitment(c.label)} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
                 <p className="font-display font-bold text-3xl mb-1" style={{ color: 'var(--accent)' }}>{c.value}</p>
                 <p className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{c.label}</p>
@@ -110,7 +110,6 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
                 href={`/api/exemples/${sample.key}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-spotlight
                 className="card p-6 h-full flex flex-col"
               >
                 <Icon name="documents" size={26} className="mb-4" style={{ color: 'var(--accent)' }} />

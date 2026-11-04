@@ -34,7 +34,11 @@ describe('CountUp', () => {
 })
 
 describe('TechMarquee', () => {
-  const html = renderToStaticMarkup(h(TechMarquee, { items: ['React', 'Next.js', 'Docker', 'MongoDB', 'React', ' Node.js '], label: 'Technologies' }))
+  const logo = 'https://x.public.blob.vercel-storage.com/images/react.png'
+  const html = renderToStaticMarkup(h(TechMarquee, {
+    items: [{ name: 'React', icon: logo }, { name: 'Next.js' }, { name: 'Docker' }, { name: 'MongoDB' }, { name: 'React', icon: logo }, { name: ' Node.js ' }],
+    label: 'Technologies',
+  }))
 
   it('lists each technology once per copy, without duplicates', () => {
     const copies = html.split('<ul').length - 1
@@ -52,7 +56,20 @@ describe('TechMarquee', () => {
   })
 
   it('shows nothing when there are too few technologies to make a ribbon', () => {
-    expect(renderToStaticMarkup(h(TechMarquee, { items: ['React', 'Docker'], label: 'x' }))).toBe('')
+    expect(renderToStaticMarkup(h(TechMarquee, { items: [{ name: 'React' }, { name: 'Docker' }], label: 'x' }))).toBe('')
+  })
+
+  it('shows the logo of each technology in a square tile (no dot) and only where a logo exists', () => {
+    expect((html.match(/tech-marquee-logo/g) ?? []).length).toBe(2) // React, once per copy; the others have no logo
+    expect(html).not.toContain('tech-marquee-dot')
+    expect(html).toMatch(/<img[^>]*alt=""[^>]*width="20"[^>]*height="20"/) // same size as the stack cards: one download
+    const css = read('app', 'globals.css')
+    expect(css).toMatch(/\.tech-marquee-logo \{[\s\S]*?width: 28px;[\s\S]*?height: 28px;[\s\S]*?background: rgba\(255, 255, 255, 0\.92\);/)
+    expect(css).not.toMatch(/\.tech-marquee-logo \{[^}]*border-radius/)
+  })
+
+  it('gets the logos saved with the skills on the home page', () => {
+    expect(read('app', '[locale]', 'page.tsx')).toMatch(/s\.items\.map\(\(name\) => \(\{ name, icon: s\.icons\?\.\[name\] \}\)\)/)
   })
 
   it('is pure CSS: it animates a transform, pauses on hover and stands still for reduced motion', () => {
@@ -70,31 +87,15 @@ describe('TechMarquee', () => {
   })
 })
 
-describe('spotlight on cards', () => {
-  const css = read('app', 'globals.css')
-
-  it('is painted under the content, on a real mouse only', () => {
-    expect(css).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{\s*\[data-spotlight\]:hover \{\s*background:\s*radial-gradient\(300px circle at var\(--mx, 50%\) var\(--my, 50%\)/)
-    expect(css).toMatch(/linear-gradient\(135deg, var\(--glass-bg-strong\), var\(--glass-bg\)\);\s*\}\s*\}/) // the card's own background stays below the light
-  })
-
-  it('has one listener for the whole site, added only when there is a mouse', () => {
-    const src = read('components', 'ui', 'SpotlightListener.tsx')
-    expect(src).toContain("matchMedia('(hover: hover) and (pointer: fine)')")
-    expect(src.match(/addEventListener/g)).toHaveLength(1)
-    expect(src).toContain('requestAnimationFrame')
-    expect(read('app', '[locale]', 'layout.tsx')).toContain('<SpotlightListener />')
-  })
-
-  it('marks the showcase cards, not the forms', () => {
+describe('no mouse spotlight on the cards (removed on purpose)', () => {
+  it('leaves no trace in the markup, the styles or the layout', () => {
+    expect(read('app', 'globals.css')).not.toContain('data-spotlight')
+    expect(read('app', '[locale]', 'layout.tsx')).not.toContain('Spotlight')
     for (const file of [
       ['app', '[locale]', 'projects', 'ProjectsView.tsx'], ['app', '[locale]', 'documents', 'DocumentsView.tsx'],
       ['app', '[locale]', 'guides', 'page.tsx'], ['components', 'projects', 'MoreProjects.tsx'],
       ['app', '[locale]', 'offres', 'OffersView.tsx'], ['components', 'sections', 'WorkProcess.tsx'], ['app', '[locale]', 'page.tsx'],
-    ]) expect(read(...file), file.join('/')).toContain('data-spotlight')
-    for (const file of [['app', '[locale]', 'devis', 'DevisView.tsx'], ['components', 'sections', 'ContactForm.tsx'], ['app', '[locale]', 'suivi', 'SuiviView.tsx']]) {
-      expect(read(...file), file.join('/')).not.toContain('data-spotlight')
-    }
+    ]) expect(read(...file), file.join('/')).not.toContain('data-spotlight')
   })
 })
 
