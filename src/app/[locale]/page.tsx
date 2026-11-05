@@ -1,9 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
-import TechMarquee from '@/components/sections/TechMarquee'
 import FeaturedProjects, { FeaturedProjectsSkeleton } from '@/components/sections/FeaturedProjects'
 import CountUp from '@/components/ui/CountUp'
 import TestimonialsMarquee from '@/components/sections/TestimonialsMarquee'
@@ -25,6 +23,8 @@ import {
   defaultTestimonials,
 } from '@/data/defaultData'
 import Icon, { iconForText, type IconName } from '@/components/ui/Icon'
+import TechLogo from '@/components/ui/TechLogo'
+import { HOME_STACK } from '@/data/home-stack'
 
 // The four figures of the About block, in the order of the dictionary: years, projects, technologies, commitment.
 // Used when a step's own words say nothing: the usual run of a project.
@@ -178,9 +178,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <FeaturedProjects projects={portfolio?.projects ?? defaultProjects} locale={locale} t={t.home} />
       </Suspense>
 
-      {/* ── Ruban des technologies ── */}
-      <TechMarquee items={skills.flatMap((s) => s.items.map((name) => ({ name, icon: s.icons?.[name] })))} label={t.home.stackTitle} />
-
       {/* ── À PROPOS ── */}
       <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -224,7 +221,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
-      {/* ── STACK TECHNIQUE ── */}
+      {/* ── STACK TECHNIQUE: the only stack block of the page — twelve key technologies, four groups (data/home-stack.ts) ── */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <FadeIn className="text-center mb-16">
@@ -233,52 +230,28 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </FadeIn>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {skills.map((skill, i) => (
-              <FadeIn key={skill.id} delay={Math.min(i * 0.07, 0.28)}>
+            {HOME_STACK.map((group, i) => (
+              <FadeIn key={group.id} delay={Math.min(i * 0.07, 0.28)}>
                 <div className="card p-6 h-full">
-                  <Icon name={iconForText(skill.category, 'cpu')} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
-                  <p className="font-display font-semibold text-base mb-4" style={{ color: 'var(--accent)' }}>
-                    {skill.category}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {skill.items.map((item) => {
-                      const icon = skill.icons?.[item]
+                  <Icon name={group.icon} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
+                  <h3 className="font-display font-semibold text-base mb-4" style={{ color: 'var(--accent)' }}>
+                    {group.label[locale]}
+                  </h3>
+                  <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
+                    {group.items.map((item) => {
+                      const name = typeof item.name === 'string' ? item.name : item.name[locale]
                       return (
-                        <div
-                          key={item}
-                          className="flex items-center gap-2 rounded-lg"
-                          style={{
-                            background: 'var(--surface-hover)',
-                            border: '1px solid var(--border)',
-                            padding: '0.4rem 0.8rem',
-                          }}
+                        <li
+                          key={name}
+                          className="flex items-center gap-2"
+                          style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', padding: '0.4rem 0.8rem', color: 'var(--text-muted)' }}
                         >
-                          {icon && (
-                            <span
-                              className="flex items-center justify-center rounded-md flex-shrink-0"
-                              style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.92)' }}
-                            >
-                              <Image
-                                src={icon}
-                                alt=""
-                                aria-hidden="true"
-                                width={20}
-                                height={20}
-                                loading="lazy"
-                                className="w-5 h-5 object-contain"
-                              />
-                            </span>
-                          )}
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}
-                          >
-                            {item}
-                          </span>
-                        </div>
+                          {item.icon ? <Icon name={item.icon} size={18} className="flex-shrink-0" /> : <TechLogo name={name} />}
+                          <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-poppins)' }}>{name}</span>
+                        </li>
                       )
                     })}
-                  </div>
+                  </ul>
                 </div>
               </FadeIn>
             ))}

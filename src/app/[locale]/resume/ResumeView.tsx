@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import TechLogo from '@/components/ui/TechLogo'
 import FadeIn from '@/components/animations/FadeIn'
 import type { PersonalInfo, Experience, Education, Skill } from '@/types'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -125,7 +126,6 @@ export default function ResumeView({ personal, experiences, educations, skills, 
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {skill.items.map((item) => {
-                    const icon = skill.icons?.[item]
                     return (
                       <div
                         key={item}
@@ -134,24 +134,10 @@ export default function ResumeView({ personal, experiences, educations, skills, 
                           background: 'var(--surface-hover)',
                           border: '1px solid var(--border)',
                           padding: '0.4rem 0.8rem',
+                          color: 'var(--text-muted)',
                         }}
                       >
-                        {icon && (
-                          <span
-                            className="flex items-center justify-center rounded-md flex-shrink-0"
-                            style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.92)' }}
-                          >
-                            <Image
-                              src={icon}
-                              alt=""
-                              aria-hidden="true"
-                              width={20}
-                              height={20}
-                              loading="lazy"
-                              className="w-5 h-5 object-contain"
-                            />
-                          </span>
-                        )}
+                        <TechLogo name={item} />
                         <span className="text-sm font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
                           {item}
                         </span>

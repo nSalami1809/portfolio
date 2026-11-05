@@ -96,7 +96,7 @@ describe('featured projects', () => {
   it('sits right after the hero, in its own Suspense boundary, and reads the existing projects', () => {
     const page = read('src', 'app', '[locale]', 'page.tsx')
     expect(page.indexOf('<FeaturedProjects')).toBeGreaterThan(page.indexOf('<HeroSection'))
-    expect(page.indexOf('<FeaturedProjects')).toBeLessThan(page.indexOf('<TechMarquee'))
+    expect(page.indexOf('<FeaturedProjects')).toBeLessThan(page.indexOf('id="apropos"'))
     expect(page).toContain('projects={portfolio?.projects ?? defaultProjects}')
     expect(page).toMatch(/<Suspense fallback=\{<FeaturedProjectsSkeleton \/>\}>/)
   })
@@ -141,5 +141,65 @@ describe('hero buttons', () => {
     expect(hero).toMatch(/\/projects`\} className="btn-secondary"/)
     expect(hero).toMatch(/\/resume`\} className="btn-secondary"/)
     expect(hero).not.toContain('underline-offset-4')
+  })
+})
+
+describe('one single stack block, twelve key technologies in four groups', () => {
+  it('the ribbon under the hero is gone, the grouped section is the only one', () => {
+    const page = read('src', 'app', '[locale]', 'page.tsx')
+    expect(page).not.toContain('TechMarquee')
+    expect(page).toContain('HOME_STACK.map(')
+    expect(page).not.toContain('skills.map(')
+    expect(() => read('src', 'components', 'sections', 'TechMarquee.tsx')).toThrow()
+    expect(read('src', 'app', 'globals.css')).not.toContain('tech-marquee')
+  })
+
+  it('has Frontend, Backend, DevOps and AI, with 10 to 12 technologies in all', async () => {
+    const { HOME_STACK } = await import('@/data/home-stack')
+    expect(HOME_STACK.map((g) => g.id)).toEqual(['frontend', 'backend', 'devops', 'ai'])
+    const total = HOME_STACK.reduce((n, g) => n + g.items.length, 0)
+    expect(total).toBeGreaterThanOrEqual(10)
+    expect(total).toBeLessThanOrEqual(12)
+  })
+
+  it('gives every technology a logo or a generic icon, and never lists Git, GitHub and GitHub Actions together', async () => {
+    const { HOME_STACK } = await import('@/data/home-stack')
+    const { techLogo } = await import('@/lib/tech-logos')
+    const names = HOME_STACK.flatMap((g) => g.items.map((i) => ({ name: typeof i.name === 'string' ? i.name : i.name.fr, icon: i.icon })))
+    for (const { name, icon } of names) expect(icon || techLogo(name), name).toBeTruthy()
+    expect(names.filter((n) => /^git/i.test(n.name)).length).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('technology logos', () => {
+  it('find the right file whatever the spelling, even the misspelling in the data', async () => {
+    const { techLogo } = await import('@/lib/tech-logos')
+    expect(techLogo('Next.js')).toBe('/tech/nextdotjs.svg')
+    expect(techLogo('NODE JS')).toBe('/tech/nodedotjs.svg')
+    expect(techLogo('Boostrap')).toBe('/tech/bootstrap.svg')
+    expect(techLogo('GitHub Actions')).toBe('/tech/githubactions.svg')
+    expect(techLogo('REST / GraphQL')).toBe('/tech/graphql.svg')
+    expect(techLogo('R.A.G')).toBeNull()
+    expect(techLogo('Power Bi')).toBeNull()
+  })
+
+  it('every logo the lookup points to exists, and is one flat single-colour shape (no colours of its own)', async () => {
+    const { readdirSync } = await import('node:fs')
+    const files = readdirSync(join(root, 'public', 'tech'))
+    const src = read('src', 'lib', 'tech-logos.ts')
+    const used = [...src.matchAll(/:\s*'([a-z0-9]+)',/g)].map((m) => `${m[1]}.svg`)
+    for (const f of new Set(used)) expect(files, f).toContain(f)
+    for (const f of files) {
+      const svg = read('public', 'tech', f)
+      expect(svg, f).not.toMatch(/fill="#|stroke="#|<image|<style|<script/i)
+    }
+  })
+
+  it('are painted in the text colour, the same size everywhere, with no picture uploaded in the admin', () => {
+    expect(read('src', 'app', 'globals.css')).toMatch(/\.tech-logo \{[\s\S]*?background-color: currentColor;[\s\S]*?mask: var\(--tech-logo\)/)
+    const resume = read('src', 'app', '[locale]', 'resume', 'ResumeView.tsx')
+    expect(resume).toContain('<TechLogo name={item} />')
+    expect(resume).not.toContain('skill.icons')
+    expect(read('src', 'app', '[locale]', 'page.tsx')).not.toContain('.icons')
   })
 })
