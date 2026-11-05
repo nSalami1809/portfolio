@@ -45,7 +45,6 @@ export const metadata: Metadata = {
     template: '%s | Nawaf Nemrod SALAMI',
   },
   description: 'Développeur web fullstack et DevOps basé à Libreville, Gabon. Je conçois et déploie des applications modernes, robustes et élégantes.',
-  keywords: ['développeur web', 'fullstack', 'DevOps', 'Next.js', 'React', 'Node.js', 'Docker', 'Kubernetes', 'Gabon', 'Libreville'],
   authors: [{ name: 'Nawaf Nemrod SALAMI' }],
   openGraph: {
     type: 'website',

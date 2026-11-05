@@ -48,7 +48,7 @@ export default async function LocaleLayout({
     <div lang={locale} style={{ display: 'contents' }}>
       <BreadcrumbJsonLd locale={locale} t={t.nav} />
       {/* Visible only once focused, so keyboard and screen-reader users can
-          jump past the nine-item nav on every page. */}
+          jump past the header menu on every page. */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2"
