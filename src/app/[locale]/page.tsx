@@ -221,7 +221,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* ── STACK TECHNIQUE: the only stack block of the page — twelve key technologies, four groups (data/home-stack.ts) ── */}
-      <section className="py-24">
+      <section id="stack" className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <FadeIn className="text-center mb-16">
             <p className="section-label mb-4">{t.home.stackLabel}</p>
