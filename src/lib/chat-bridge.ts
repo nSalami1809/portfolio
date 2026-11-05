@@ -14,3 +14,13 @@ export function onOpenChatRequest(handler: (text: string) => void): () => void {
   window.addEventListener(OPEN_CHAT_EVENT, listener)
   return () => window.removeEventListener(OPEN_CHAT_EVENT, listener)
 }
+
+// Whether the chat widget itself is mounted and listening. While it is still being downloaded, a request to open the chat is
+// kept by the loader and handed over as a prop; once it is mounted, the widget's own listener answers instead.
+let widgetMounted = false
+export function setChatWidgetMounted(mounted: boolean) {
+  widgetMounted = mounted
+}
+export function isChatWidgetMounted() {
+  return widgetMounted
+}

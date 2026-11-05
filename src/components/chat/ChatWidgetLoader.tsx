@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname } from 'next/navigation'
-import { onOpenChatRequest, openChatWithMessage } from '@/lib/chat-bridge'
+import { isChatWidgetMounted, onOpenChatRequest, openChatWithMessage } from '@/lib/chat-bridge'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ChatBotIcon } from '@hugeicons/core-free-icons'
 import { TEASER_TEXT, teaserAllowed } from '@/lib/chat-services'
@@ -46,7 +46,7 @@ const TEASER_KEY = 'nemcopilot-invite-seen'
 const TEASER_DELAY_MS = 9000
 const TEASER_VISIBLE_MS = 22000 // long enough to read the three questions and pick one
 
-function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: string | null }) {
+function InviteBubble({ locale, pathname, onShow }: { locale: 'fr' | 'en'; pathname: string | null; onShow: () => void }) {
   const [visible, setVisible] = useState(false)
   const allowed = teaserAllowed(pathname)
 
@@ -58,6 +58,7 @@ function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: str
     const show = setTimeout(() => {
       try { sessionStorage.setItem(TEASER_KEY, '1') } catch { /* ignore */ }
       setVisible(true)
+      onShow() // the visitor is being invited to use it: get the chat ready so that a tap on a question answers at once
     }, TEASER_DELAY_MS)
     const hide = setTimeout(() => setVisible(false), TEASER_DELAY_MS + TEASER_VISIBLE_MS)
     // Opening the chat (by its button or the panel itself) makes the invitation pointless.
@@ -75,7 +76,7 @@ function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: str
       document.removeEventListener('click', onClick, true)
       stopBridge()
     }
-  }, [allowed])
+  }, [allowed, onShow])
 
   if (!allowed || !visible) return null
   const t = TEASER_TEXT[locale]
@@ -167,8 +168,7 @@ export default function ChatWidgetLoader() {
   const [loaded, setLoaded] = useState(false)
   const [autoOpen, setAutoOpen] = useState(false)
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
-  // Read synchronously inside the bridge listener — `loaded` would be stale
-  // there, and this decides whether the mounted widget already owns the event.
+  // Read synchronously (state would be stale inside a listener): has the download of the chat been started?
   const loadedRef = useRef(false)
 
   const load = useCallback(() => {
@@ -177,27 +177,39 @@ export default function ChatWidgetLoader() {
   }, [])
 
   // Warm the chunk once the browser has nothing better to do, so a visitor who
-  // *does* click later gets an instant panel instead of a network wait. The
-  // generous timeout keeps it off the critical path on slow devices.
+  // *does* click later gets an instant panel instead of a network wait.
+  // …but only once the visitor shows a first sign of life (move, touch, key, scroll). Loading it on its own a few
+  // seconds after arrival cost ~500KB of script (the AI SDK and zod) parsed and run right in the busiest moment of the
+  // page, for visitors who never open the chat. A click on the bubble still loads it on demand (see below).
   useEffect(() => {
     if (loadedRef.current) return
-    const idle = window.requestIdleCallback
-    if (typeof idle === 'function') {
-      const handle = idle(() => load(), { timeout: IDLE_TIMEOUT_MS })
-      return () => window.cancelIdleCallback?.(handle)
+    let handle: number | undefined
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const events = ['pointermove', 'pointerdown', 'touchstart', 'keydown', 'scroll'] as const
+    const stop = () => events.forEach((e) => window.removeEventListener(e, onSign))
+    const onSign = () => {
+      stop()
+      const idle = window.requestIdleCallback
+      if (typeof idle === 'function') handle = idle(() => load(), { timeout: IDLE_TIMEOUT_MS })
+      else timer = setTimeout(load, 300)
     }
-    const t = setTimeout(load, IDLE_TIMEOUT_MS)
-    return () => clearTimeout(t)
+    events.forEach((e) => window.addEventListener(e, onSign, { passive: true }))
+    return () => {
+      stop()
+      if (handle !== undefined) window.cancelIdleCallback?.(handle)
+      if (timer) clearTimeout(timer)
+    }
   }, [load])
 
   // Other pages (e.g. the Offers page's "Request a quote" buttons) open the
   // chat with a pre-filled message. While the widget is still unloaded there
   // is no listener for that event, so the loader picks it up, mounts the
-  // widget and hands the text over as a prop. Once mounted, the widget's own
-  // listener owns these — hence the ref check, which stops a double send.
+  // widget and hands the text over as a prop. The same goes while the widget is
+  // loaded but not yet mounted (the chunk is still arriving): a tap in that window
+  // used to be lost. Once mounted, the widget's own listener owns these.
   useEffect(() => {
     return onOpenChatRequest((text) => {
-      if (loadedRef.current) return
+      if (isChatWidgetMounted()) return // the mounted widget answers on its own
       setPendingMessage(text)
       setAutoOpen(true)
       load()
@@ -210,7 +222,7 @@ export default function ChatWidgetLoader() {
   if (!loaded) {
     return (
       <>
-        <InviteBubble locale={locale} pathname={pathname} />
+        <InviteBubble locale={locale} pathname={pathname} onShow={load} />
         <ChatBubbleStub
           label={TOGGLE_LABEL[locale]}
           onClick={() => {
@@ -224,7 +236,7 @@ export default function ChatWidgetLoader() {
 
   return (
     <>
-      <InviteBubble locale={locale} pathname={pathname} />
+      <InviteBubble locale={locale} pathname={pathname} onShow={load} />
       <ChatWidget autoOpen={autoOpen} initialMessage={pendingMessage} />
     </>
   )

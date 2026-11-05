@@ -13,7 +13,7 @@ import { getPublicOffers } from '@/actions/offers'
 import type { Offer } from '@/types'
 import { usePortfolio } from '@/providers/portfolio-core'
 import { useLocale, useDictionary } from '@/lib/i18n/useLocale'
-import { onOpenChatRequest } from '@/lib/chat-bridge'
+import { onOpenChatRequest, setChatWidgetMounted } from '@/lib/chat-bridge'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { BotIcon, BotAvatar, type BotMood } from './BotIcon'
@@ -431,11 +431,16 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
   // Lets other pages (e.g. the Offers page's "Request a quote" buttons) open
   // the widget and start the conversation without lifting chat state up.
   useEffect(() => {
-    return onOpenChatRequest((text) => {
+    setChatWidgetMounted(true) // from now on this listener answers, not the loader
+    const stop = onOpenChatRequest((text) => {
       setOpen(true)
       setJustOpened(true)
       dispatch(text)
     })
+    return () => {
+      stop()
+      setChatWidgetMounted(false)
+    }
   }, [dispatch])
 
   const toggleOpen = () => {

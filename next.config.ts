@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_PDFJS_VERSION: pdfjsVersion },
 
   experimental: {
+    // Tried and rejected: experimental.inlineCss (CSS written into the HTML). In a Lighthouse A/B on the same pages it made the
+    // first paint ~300ms LATER (a heavier document to download before anything shows), so the stylesheet stays a separate file.
     serverActions: {
       bodySizeLimit: '5mb',
     },

@@ -125,7 +125,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </PortfolioStaticProvider>
         </MotionProvider>
         <ServiceWorkerRegister />
-        <Analytics />
+        {/* Only on Vercel, where the platform serves the script: anywhere else it is a 404 that shows up as a console error */}
+        {process.env.VERCEL ? <Analytics /> : null}
         <SpeedInsights />
       </body>
     </html>
