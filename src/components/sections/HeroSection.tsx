@@ -163,21 +163,29 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
 
           <m.p
             variants={item}
-            className="text-lg leading-relaxed mb-10 max-w-lg"
+            className="text-lg leading-relaxed mb-8 max-w-xl"
             style={{ color: 'var(--text-muted)' }}
           >
-            {personal.bio}
+            {t.heroSummary}
           </m.p>
 
-          <m.div variants={item} className="flex flex-wrap gap-4 mb-10">
-            <Link href={`/${locale}/projects`} className="btn-primary">
-              {t.heroCtaProjects}
+          <m.div variants={item} className="flex flex-wrap gap-4 mb-5">
+            <Link href={`/${locale}/devis`} className="btn-primary">
+              {t.heroCtaQuote}
               <Icon name="arrowRight" size={16} />
             </Link>
-            <Link href={`/${locale}/contact`} className="btn-secondary">
-              {t.heroCtaContact}
+            <Link href={`/${locale}/projects`} className="btn-secondary">
+              {t.heroCtaProjects}
             </Link>
           </m.div>
+
+          {/* For recruiters: a visible way to the experience page, without competing with the quote */}
+          <m.p variants={item} className="mb-10 text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>
+            <Link href={`/${locale}/resume`} className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline" style={{ color: 'var(--text-muted)' }}>
+              {t.heroRecruit}
+              <Icon name="arrowRight" size={13} />
+            </Link>
+          </m.p>
 
           {/* Socials — purely decorative and below the headline, so this one
               opts back in to an entrance animation with its own `initial`

@@ -186,6 +186,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 <p>{t.home.aboutP1}</p>
+                {/* The detailed profile (AI, databases…) lives here: the hero only keeps two sentences */}
+                {translatedPersonal.bio && <p>{translatedPersonal.bio}</p>}
                 <p>{t.home.aboutP2}</p>
               </div>
               <div className="mt-8">

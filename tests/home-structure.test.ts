@@ -37,3 +37,37 @@ describe('header navigation', () => {
     expect(getDictionary('en').nav.resources).toBe('Resources')
   })
 })
+
+describe('hero', () => {
+  const hero = read('src', 'components', 'sections', 'HeroSection.tsx')
+
+  it('puts the instant quote first and the projects second', () => {
+    expect(hero.indexOf('/devis`')).toBeGreaterThan(-1)
+    expect(hero.indexOf('/devis`')).toBeLessThan(hero.indexOf('/projects`'))
+    expect(hero).toContain('{t.heroCtaQuote}')
+    expect(hero).toContain('{t.heroCtaProjects}')
+  })
+
+  it('keeps a visible way for recruiters to the experience page', () => {
+    expect(hero).toContain('/resume`')
+    expect(hero).toContain('{t.heroRecruit}')
+  })
+
+  it('shows two sentences, not the long profile (which moves to the About block)', () => {
+    expect(hero).toContain('{t.heroSummary}')
+    expect(hero).not.toContain('personal.bio')
+    for (const locale of ['fr', 'en'] as const) {
+      const summary = getDictionary(locale).home.heroSummary
+      expect(summary.split(/\.\s/).length, locale).toBeLessThanOrEqual(2)
+      expect(summary.length, locale).toBeLessThan(260)
+    }
+    expect(read('src', 'app', '[locale]', 'page.tsx')).toContain('translatedPersonal.bio')
+  })
+
+  it('has the same title as the one search engines show', async () => {
+    const { HOME_COPY } = await import('@/lib/seo')
+    for (const locale of ['fr', 'en'] as const) {
+      expect(getDictionary(locale).home.heroRoleLabel).toBe(HOME_COPY[locale].title)
+    }
+  })
+})
