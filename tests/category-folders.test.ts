@@ -138,7 +138,7 @@ describe('CategoryFolders as the server sends it', () => {
 describe('code and style', () => {
   const component = read('components', 'ui', 'CategoryFolders.tsx')
   const css = read('app', 'globals.css')
-  const folderCss = css.slice(css.indexOf('/* ── Project folders'), css.indexOf('/* ── Technology ribbon'))
+  const folderCss = css.slice(css.indexOf('/* ── Project folders'), css.indexOf('/* ── Technology logo'))
 
   it('requests the pictures only after the first opening, right away once wanted', () => {
     expect(component).toMatch(/if \(next\) setPictures\(true\)/)
