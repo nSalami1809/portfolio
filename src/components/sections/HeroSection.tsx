@@ -169,7 +169,8 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
             {t.heroSummary}
           </m.p>
 
-          <m.div variants={item} className="flex flex-wrap gap-4 mb-5">
+          {/* The quote first (clients), the projects, and for recruiters a button of the same kind to the experience page */}
+          <m.div variants={item} className="flex flex-wrap gap-4 mb-10">
             <Link href={`/${locale}/devis`} className="btn-primary">
               {t.heroCtaQuote}
               <Icon name="arrowRight" size={16} />
@@ -177,15 +178,10 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
             <Link href={`/${locale}/projects`} className="btn-secondary">
               {t.heroCtaProjects}
             </Link>
-          </m.div>
-
-          {/* For recruiters: a visible way to the experience page, without competing with the quote */}
-          <m.p variants={item} className="mb-10 text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>
-            <Link href={`/${locale}/resume`} className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline" style={{ color: 'var(--text-muted)' }}>
+            <Link href={`/${locale}/resume`} className="btn-secondary">
               {t.heroRecruit}
-              <Icon name="arrowRight" size={13} />
             </Link>
-          </m.p>
+          </m.div>
 
           {/* Socials — purely decorative and below the headline, so this one
               opts back in to an entrance animation with its own `initial`

@@ -117,3 +117,29 @@ describe('featured projects', () => {
     }
   })
 })
+
+describe('the chosen featured projects', () => {
+  const mk = (slug: string, o: Record<string, unknown> = {}) => ({ slug, status: 'completed' as const, image: undefined as string | undefined, caseStudyContext: undefined as string | undefined, caseStudyResults: undefined as string | undefined, ...o })
+
+  it('are TSWE, FPBG and Yamna, in that order', async () => {
+    const { FEATURED_PROJECT_SLUGS, pickFeaturedProjects } = await import('@/lib/featured-projects')
+    expect(FEATURED_PROJECT_SLUGS).toEqual(['tswe', 'fpbg', 'yam-na'])
+    const list = [mk('chatbot-assistant-ia', { image: 'x', caseStudyContext: 'c', caseStudyResults: 'r' }), mk('yam-na'), mk('fpbg'), mk('tswe')]
+    expect(pickFeaturedProjects(list).map((p) => p.slug)).toEqual(['tswe', 'fpbg', 'yam-na'])
+  })
+
+  it('keep their place even when in progress, and a missing one is replaced by the best-explained other project', async () => {
+    const { pickFeaturedProjects } = await import('@/lib/featured-projects')
+    const list = [mk('autre', { image: 'x' }), mk('tswe', { status: 'in-progress' }), mk('yam-na'), mk('concept', { status: 'concept', image: 'x' })]
+    expect(pickFeaturedProjects(list).map((p) => p.slug)).toEqual(['tswe', 'yam-na', 'autre'])
+  })
+})
+
+describe('hero buttons', () => {
+  it('the recruiter button looks like the projects button (same kind, same row)', () => {
+    const hero = read('src', 'components', 'sections', 'HeroSection.tsx')
+    expect(hero).toMatch(/\/projects`\} className="btn-secondary"/)
+    expect(hero).toMatch(/\/resume`\} className="btn-secondary"/)
+    expect(hero).not.toContain('underline-offset-4')
+  })
+})
