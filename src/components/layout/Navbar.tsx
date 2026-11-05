@@ -8,8 +8,6 @@ import { m, AnimatePresence } from 'framer-motion'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import ThemeToggle from './ThemeToggle'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { File02Icon } from '@hugeicons/core-free-icons'
 import Icon from '@/components/ui/Icon'
 
 interface NavbarProps {
@@ -28,75 +26,50 @@ export default function Navbar({ locale, t }: NavbarProps) {
   // Dropdown opened by a tap (touch screens have no hover) or a click.
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
+  // Four entries at the first level (the logo is the way home). Each dropdown gathers what belongs together; the quote
+  // itself is the button on the right, always visible.
   const links = [
     {
-      href: `/${locale}`,
-      label: t.about,
-      icon: (
-        <Icon name="about" size={14} />
-      ),
+      href: `/${locale}/projects`,
+      label: t.projects,
+      icon: <Icon name="cpu" size={14} />,
     },
     {
       href: `/${locale}/resume`,
       label: t.resume,
-      icon: (
-        <Icon name="server" size={14} />
-      ),
-    },
-    {
-      href: `/${locale}/vision`,
-      label: t.vision,
-      icon: (
-        <Icon name="vision" size={14} />
-      ),
-    },
-    {
-      href: `/${locale}/projects`,
-      label: t.projects,
-      icon: (
-        <Icon name="cpu" size={14} />
-      ),
-    },
-    {
-      href: `/${locale}/offres`,
-      label: t.offers,
-      // Everything about working together lives under one entry: the price
-      // list and method, the instant quote, booking a call, tracking a
-      // project, and the terms of sale.
       children: [
-        { href: `/${locale}/offres`, label: t.workOffers, icon: 'store' as const },
-        { href: `/${locale}/methode`, label: t.workMethod, icon: 'target' as const },
-        { href: `/${locale}/guides`, label: t.workGuides, icon: 'blog' as const },
-        { href: `/${locale}/contact`, label: t.contact, icon: 'mail' as const },
-        { href: `/${locale}/devis`, label: t.workQuote, icon: 'invoice' as const },
-        { href: `/${locale}/calendrier`, label: t.workCall, icon: 'calendar' as const },
-        { href: `/${locale}/suivi`, label: t.workTrack, icon: 'delivery' as const },
-        { href: `/${locale}/cgv`, label: t.workTerms, icon: 'shield' as const },
+        { href: `/${locale}/resume`, label: t.resume, icon: 'experience' as const },
+        { href: `/${locale}/vision`, label: t.vision, icon: 'vision' as const },
       ],
-      icon: (
-        <Icon name="tag" size={14} />
-      ),
+      icon: <Icon name="server" size={14} />,
     },
     {
       href: `/${locale}/blog`,
-      label: t.blog,
-      icon: (
-        <Icon name="blog" size={14} />
-      ),
+      label: t.resources,
+      children: [
+        { href: `/${locale}/blog`, label: t.blog, icon: 'blog' as const },
+        { href: `/${locale}/guides`, label: t.workGuides, icon: 'blog' as const },
+        { href: `/${locale}/documents`, label: t.documents, icon: 'documents' as const },
+        { href: `/${locale}/playground`, label: t.playground, icon: 'lab' as const },
+      ],
+      icon: <Icon name="blog" size={14} />,
     },
     {
-      href: `/${locale}/documents`,
-      label: t.documents,
-      icon: <HugeiconsIcon icon={File02Icon} size={14} strokeWidth={2} />,
-    },
-    {
-      href: `/${locale}/playground`,
-      label: t.playground,
-      icon: (
-        <Icon name="lab" size={14} />
-      ),
+      href: `/${locale}/offres`,
+      label: t.workOffers,
+      // Working together: the price list and method, a call, tracking a project, the terms of sale.
+      children: [
+        { href: `/${locale}/offres`, label: t.workOffers, icon: 'store' as const },
+        { href: `/${locale}/methode`, label: t.workMethod, icon: 'target' as const },
+        { href: `/${locale}/calendrier`, label: t.workCall, icon: 'calendar' as const },
+        { href: `/${locale}/contact`, label: t.contact, icon: 'mail' as const },
+        { href: `/${locale}/suivi`, label: t.workTrack, icon: 'delivery' as const },
+        { href: `/${locale}/cgv`, label: t.workTerms, icon: 'shield' as const },
+      ],
+      icon: <Icon name="tag" size={14} />,
     },
   ]
+  const quoteHref = `/${locale}/devis`
 
   const otherLocale = locale === 'fr' ? 'en' : 'fr'
   const restOfPath = (pathname ?? '').replace(/^\/(fr|en)/, '') || '/'
@@ -275,8 +248,14 @@ export default function Navbar({ locale, t }: NavbarProps) {
             <ThemeToggle ariaLabel={t.themeToggle} />
           </div>
 
-          {/* Right controls (mobile/tablet only — desktop has these inside the pill above) */}
-          <div className="flex items-center gap-2 xl:hidden col-start-3 justify-self-end">
+          {/* Right column: the quote button, always there; on mobile/tablet also the theme and language controls and the
+              menu (on desktop those sit inside the pill above) */}
+          <div className="flex items-center gap-2 col-start-3 justify-self-end">
+            <Link href={quoteHref} className="btn-primary text-sm px-4 py-2.5 max-[380px]:px-3">
+              <Icon name="invoice" size={14} className="max-[380px]:hidden" />
+              {t.quote}
+            </Link>
+            <span className="flex items-center gap-2 xl:hidden">
             <ThemeToggle ariaLabel={t.themeToggle} />
 
             {/* Language switcher */}
@@ -314,6 +293,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
                 style={{ background: 'var(--text)' }}
               />
             </button>
+            </span>
           </div>
         </nav>
       </header>
