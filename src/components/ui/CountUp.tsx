@@ -6,8 +6,8 @@ import { useEffect, useRef } from 'react'
 export function parseCountable(value: string): { prefix: string; n: number; suffix: string } | null {
   const m = /^([^\d]*)(\d{1,6})([^\d]*)$/.exec(value.trim())
   if (!m) return null
-  // A figure glued to letters ("Bac+5", "24h") is a label, not a quantity to count up to
-  if (/[A-Za-zÀ-ÿ]/.test(m[1])) return null
+  // A figure with letters around it ("Bac+5", "24h", "1 mois") is a label or a duration, not a quantity to count up to
+  if (/[A-Za-zÀ-ÿ]/.test(m[1]) || /[A-Za-zÀ-ÿ]/.test(m[3])) return null
   return { prefix: m[1], n: Number(m[2]), suffix: m[3] }
 }
 

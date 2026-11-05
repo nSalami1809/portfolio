@@ -16,6 +16,8 @@ describe('CountUp', () => {
     expect(parseCountable('24/7')).toBeNull() // two numbers: a label, not a count
     expect(parseCountable('Bac+5')).toBeNull()
     expect(parseCountable('Sur mesure')).toBeNull()
+    expect(parseCountable('1 mois')).toBeNull() // a duration is not counted up to
+    expect(parseCountable('24h')).toBeNull()
     expect(parseCountable('')).toBeNull()
   })
 
@@ -28,7 +30,7 @@ describe('CountUp', () => {
   })
 
   it('is used for the four figures of the home page', () => {
-    expect(read('app', '[locale]', 'page.tsx')).toMatch(/<CountUp value=\{value\} \/>/)
+    expect(read('app', '[locale]', 'page.tsx')).toMatch(/<CountUp value=\{value\[locale\]\} \/>/)
   })
 })
 

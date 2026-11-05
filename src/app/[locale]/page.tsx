@@ -25,11 +25,10 @@ import {
 import Icon, { iconForText, type IconName } from '@/components/ui/Icon'
 import TechLogo from '@/components/ui/TechLogo'
 import { HOME_STACK } from '@/data/home-stack'
+import { HOME_STATS } from '@/data/home-stats'
 
-// The four figures of the About block, in the order of the dictionary: years, projects, technologies, commitment.
 // Used when a step's own words say nothing: the usual run of a project.
 const STEP_ICONS: IconName[] = ['invoice', 'signature', 'code', 'delivery']
-const STAT_ICONS: IconName[] = ['calendar', 'projectDone', 'layers', 'heart']
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
@@ -204,13 +203,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
             <div>
               <div className="grid grid-cols-2 gap-4">
-                {t.home.stats.map(({ value, label }, i) => (
-                  <FadeIn key={label} delay={0.1 + i * 0.08}>
+                {HOME_STATS.map(({ icon, value, label }, i) => (
+                  <FadeIn key={label[locale]} delay={0.1 + i * 0.08}>
                     <div className="card p-6 text-center h-full">
-                      <Icon name={STAT_ICONS[i % STAT_ICONS.length]} size={26} className="mx-auto mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
-                      <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}><CountUp value={value} /></p>
+                      <Icon name={icon} size={26} className="mx-auto mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
+                      <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}><CountUp value={value[locale]} /></p>
                       <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-                        {label}
+                        {label[locale]}
                       </p>
                     </div>
                   </FadeIn>

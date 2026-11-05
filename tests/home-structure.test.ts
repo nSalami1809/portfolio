@@ -203,3 +203,37 @@ describe('technology logos', () => {
     expect(read('src', 'app', '[locale]', 'page.tsx')).not.toContain('.icons')
   })
 })
+
+describe('the figures of the About block', () => {
+  it('are the four checkable facts, in both languages, and the two empty ones are gone', async () => {
+    const { HOME_STATS } = await import('@/data/home-stats')
+    expect(HOME_STATS.map((s) => s.value.fr)).toEqual(['3+', '10+', '1 mois', 'Offert'])
+    expect(HOME_STATS.map((s) => s.value.en)).toEqual(['3+', '10+', '1 month', 'Free'])
+    for (const s of HOME_STATS) for (const l of ['fr', 'en'] as const) expect(s.label[l].length, s.label.fr).toBeGreaterThan(3)
+    const all = JSON.stringify(HOME_STATS)
+    expect(all).not.toMatch(/Implication|Involvement|Technologies|100%/)
+  })
+
+  it('come from one configuration file, not from the dictionary', () => {
+    const page = read('src', 'app', '[locale]', 'page.tsx')
+    expect(page).toContain('HOME_STATS.map(')
+    expect(page).not.toContain('t.home.stats')
+    expect(read('src', 'lib', 'i18n', 'dictionaries.ts')).not.toMatch(/Implication|Involvement/)
+  })
+
+  it('never count up a duration or a word, only a number with a sign', async () => {
+    const { parseCountable } = await import('@/components/ui/CountUp')
+    const { HOME_STATS } = await import('@/data/home-stats')
+    expect(HOME_STATS.map((s) => parseCountable(s.value.fr) !== null)).toEqual([true, true, false, false])
+  })
+
+  it('are written once in the page for a screen reader (the animated copy is hidden from it), and the final value is in the HTML without JavaScript', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { createElement: h } = await import('react')
+    const CountUp = (await import('@/components/ui/CountUp')).default
+    const html = renderToStaticMarkup(h(CountUp, { value: '10+' }))
+    expect(html.match(/aria-hidden="true"/g)?.length).toBe(1)
+    expect(html.match(/10\+/g)?.length).toBe(2) // the visible one (hidden from readers) + the one for readers
+    expect(html).toContain('class="sr-only"')
+  })
+})
