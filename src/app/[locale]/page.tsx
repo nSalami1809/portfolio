@@ -61,6 +61,8 @@ async function TranslatedTestimonials({
   projectLabel,
   linkedinLabel,
   projectTitles,
+  pauseLabel,
+  playLabel,
 }: {
   testimonials: Testimonial[]
   fieldsPromise: Promise<{ text: string; role: string; company: string }[]>
@@ -70,6 +72,8 @@ async function TranslatedTestimonials({
   projectLabel: string
   linkedinLabel: string
   projectTitles: Record<string, string>
+  pauseLabel: string
+  playLabel: string
 }) {
   const fields = await fieldsPromise
   const translated = testimonials.map((tm, i) => ({
@@ -81,7 +85,7 @@ async function TranslatedTestimonials({
     linkedinLabel: linkedinLabel.replace('{name}', tm.name),
   }))
   return (
-    <TestimonialsMarquee testimonials={translated} locale={locale} verifiedLabel={verifiedLabel} />
+    <TestimonialsMarquee testimonials={translated} locale={locale} verifiedLabel={verifiedLabel} pauseLabel={pauseLabel} playLabel={playLabel} />
   )
 }
 
@@ -329,6 +333,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 verifiedLabel={t.home.testimonialsVerified}
                 projectLabel={t.home.testimonialsProject}
                 linkedinLabel={t.home.testimonialsLinkedin}
+                pauseLabel={t.home.testimonialsPause}
+                playLabel={t.home.testimonialsPlay}
                 projectTitles={Object.fromEntries((portfolio?.projects ?? defaultProjects).map((p) => [p.slug, p.title]))}
               />
             </Suspense>

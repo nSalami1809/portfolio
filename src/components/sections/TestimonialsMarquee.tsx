@@ -21,10 +21,13 @@ function VerifiedBadge({ slug, locale, label }: { slug: string; locale: Locale; 
   )
 }
 
-function TestimonialCard({ tm, fixedWidth, locale, verifiedLabel }: { tm: PublicTestimonial; fixedWidth?: boolean; locale: Locale; verifiedLabel: string }) {
+function TestimonialCard({ tm, fixedWidth, locale, verifiedLabel, duplicate }: { tm: PublicTestimonial; fixedWidth?: boolean; locale: Locale; verifiedLabel: string; duplicate?: boolean }) {
   const linkedin = safeLinkedinUrl(tm.linkedinUrl)
   return (
     <div
+      // the loop shows each card several times: only the first copy is read out and reachable with the keyboard
+      aria-hidden={duplicate || undefined}
+      inert={duplicate || undefined}
       className={`rounded-2xl p-5 ${fixedWidth ? 'flex-shrink-0' : 'h-full'}`}
       style={{ width: fixedWidth ? 320 : undefined, background: 'var(--surface)', border: '1px solid var(--border)' }}
     >
@@ -78,7 +81,7 @@ function useHydrated() {
   return useSyncExternalStore(noSubscribe, () => true, () => false)
 }
 
-type RowProps = { items: PublicTestimonial[]; direction: 'left' | 'right'; locale: Locale; verifiedLabel: string }
+type RowProps = { items: PublicTestimonial[]; direction: 'left' | 'right'; locale: Locale; verifiedLabel: string; paused: boolean }
 
 function buildTrack(items: PublicTestimonial[]) {
   // With very few testimonials, a single pass is narrower than the viewport
@@ -93,7 +96,7 @@ function buildTrack(items: PublicTestimonial[]) {
 }
 
 // Mouse / trackpad: a pure CSS transform loop, paused on hover.
-function MarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
+function MarqueeRow({ items, direction, locale, verifiedLabel, paused }: RowProps) {
   const { base, track } = buildTrack(items)
   const hydrated = useHydrated()
   const durationS = Math.max(10, Math.round((base.length * CARD_UNIT) / SPEED_PX_PER_S))
@@ -102,10 +105,10 @@ function MarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
     <div className="marquee-viewport">
       <div
         className="marquee-track flex gap-4"
-        style={hydrated ? { animation: `marquee-${direction} ${durationS}s linear infinite` } : undefined}
+        style={hydrated ? { animation: `marquee-${direction} ${durationS}s linear infinite`, animationPlayState: paused ? 'paused' : undefined } : undefined}
       >
         {(hydrated ? track : items).map((tm, i) => (
-          <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth locale={locale} verifiedLabel={verifiedLabel} />
+          <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth locale={locale} verifiedLabel={verifiedLabel} duplicate={hydrated && i >= items.length} />
         ))}
       </div>
     </div>
@@ -119,12 +122,15 @@ function MarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
 // resumes a moment after it lifts. The track holds two identical copies, so
 // wrapping the position by exactly one copy's width is invisible, both for the
 // automatic drift and for a swipe that reaches either end.
-function TouchMarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) {
+function TouchMarqueeRow({ items, direction, locale, verifiedLabel, paused }: RowProps) {
   const { base, track } = buildTrack(items)
   const hydrated = useHydrated()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const held = useRef(false)
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // read by the drift loop without restarting it
+  const pausedRef = useRef(paused)
+  useEffect(() => { pausedRef.current = paused }, [paused])
 
   useEffect(() => {
     if (!hydrated) return
@@ -157,6 +163,8 @@ function TouchMarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) 
           const wrapped = wrap(el.scrollLeft, p)
           if (wrapped !== el.scrollLeft) el.scrollLeft = wrapped
           pos = wrapped
+        } else if (pausedRef.current) {
+          pos = el.scrollLeft // standing still: nothing moves by itself
         } else {
           pos = wrap(pos + (direction === 'left' ? 1 : -1) * SPEED_PX_PER_S * dt, p)
           el.scrollLeft = pos
@@ -184,7 +192,7 @@ function TouchMarqueeRow({ items, direction, locale, verifiedLabel }: RowProps) 
     <div ref={scrollerRef} className="marquee-scroller" onTouchStart={hold} onTouchEnd={release} onTouchCancel={release}>
       <div className="marquee-track flex gap-4">
         {(hydrated ? track : items).map((tm, i) => (
-          <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth locale={locale} verifiedLabel={verifiedLabel} />
+          <TestimonialCard key={`${tm.id}-${i}`} tm={tm} fixedWidth locale={locale} verifiedLabel={verifiedLabel} duplicate={hydrated && i >= items.length} />
         ))}
       </div>
     </div>
@@ -204,9 +212,17 @@ function useNoHoverPointer() {
   return noHover
 }
 
-export default function TestimonialsMarquee({ testimonials, locale, verifiedLabel = 'Vérifié' }: { testimonials: PublicTestimonial[]; locale: Locale; verifiedLabel?: string }) {
+export default function TestimonialsMarquee({
+  testimonials,
+  locale,
+  verifiedLabel = 'Vérifié',
+  pauseLabel = 'Mettre en pause le défilement',
+  playLabel = 'Reprendre le défilement',
+}: { testimonials: PublicTestimonial[]; locale: Locale; verifiedLabel?: string; pauseLabel?: string; playLabel?: string }) {
   const reducedMotion = usePrefersReducedMotion()
   const noHover = useNoHoverPointer()
+  const hydrated = useHydrated()
+  const [paused, setPaused] = useState(false)
 
   // Motion-sensitive visitors get a plain, fully-readable grid instead of the
   // auto-scrolling rows.
@@ -224,8 +240,17 @@ export default function TestimonialsMarquee({ testimonials, locale, verifiedLabe
 
   return (
     <div className="space-y-4">
-      <Row items={row1} direction="left" locale={locale} verifiedLabel={verifiedLabel} />
-      {row2.length > 0 && <Row items={row2} direction="right" locale={locale} verifiedLabel={verifiedLabel} />}
+      {/* Moving content must be stoppable (WCAG 2.2.2): one button for both rows */}
+      {hydrated && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-end">
+          <button type="button" onClick={() => setPaused((p) => !p)} aria-pressed={paused} className="btn-secondary btn-sm">
+            <Icon name={paused ? 'play' : 'pause'} size={14} />
+            {paused ? playLabel : pauseLabel}
+          </button>
+        </div>
+      )}
+      <Row items={row1} direction="left" locale={locale} verifiedLabel={verifiedLabel} paused={paused} />
+      {row2.length > 0 && <Row items={row2} direction="right" locale={locale} verifiedLabel={verifiedLabel} paused={paused} />}
     </div>
   )
 }
