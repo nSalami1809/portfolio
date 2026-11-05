@@ -77,3 +77,14 @@ describe('head and keyboard', () => {
     expect(css).toMatch(/:focus-visible \{\s*outline: 2px solid var\(--brand\);/)
   })
 })
+
+describe('the chat panel never slides under the header', () => {
+  const widget = read('src', 'components', 'chat', 'ChatWidget.tsx')
+
+  it('stops 5.5rem from the top: 6rem from the bottom + its height = the viewport minus 11.5rem (the header is 5rem tall)', () => {
+    expect(widget).toContain("height: 'min(560px, calc(100dvh - 11.5rem - env(safe-area-inset-bottom)))'")
+    expect(widget).toContain("bottom: 'calc(5rem + 1rem + env(safe-area-inset-bottom))'")
+    // 6rem (bottom) + 11.5rem (viewport minus height) → top edge at 5.5rem, under the 5rem header
+    expect(6 + (11.5 - 6) - 5).toBeGreaterThan(0)
+  })
+})

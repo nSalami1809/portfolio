@@ -538,7 +538,10 @@ export default function ChatWidget({ autoOpen = false, initialMessage = null }: 
               // dvh tracks the *visible* viewport, so the panel shrinks with
               // mobile Safari's toolbar and with the soft keyboard instead of
               // pushing its own input field off-screen.
-              height: 'min(560px, calc(100dvh - 8rem))',
+              // The panel sits 6rem above the bottom edge and must stop BELOW the fixed header (5rem tall, drawn above
+              // the chat): 5.5rem from the top = 100dvh - 6rem - 5.5rem, minus the iPhone home-indicator inset that
+              // `bottom` already adds. Before, its top (title bar, close button) ended up hidden under the header.
+              height: 'min(560px, calc(100dvh - 11.5rem - env(safe-area-inset-bottom)))',
               background: 'var(--glass-bg)',
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
