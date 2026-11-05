@@ -1,9 +1,15 @@
 import type { NextConfig } from 'next'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+// The installed pdf.js version goes into the URL of its worker file (src/lib/pdfjs-worker-url.ts)
+const pdfjsVersion: string = JSON.parse(readFileSync(join(process.cwd(), 'node_modules', 'pdfjs-dist', 'package.json'), 'utf8')).version
 
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
+  env: { NEXT_PUBLIC_PDFJS_VERSION: pdfjsVersion },
 
   experimental: {
     serverActions: {
@@ -81,6 +87,12 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: securityHeaders,
+      },
+      {
+        // The PDF engine's worker (1.2 MB): its URL carries the library version (src/lib/pdfjs-worker.ts), so it never changes
+        // behind a given URL and a returning visitor does not download or even revalidate it.
+        source: '/pdfjs/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ]
   },

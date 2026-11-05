@@ -10,13 +10,31 @@ import '@/lib/pdfjs-worker'
 interface Props {
   fileUrl: string
   onError: () => void
+  /** The page is drawn on screen (used to swap the instant picture for the real viewer) */
+  onRendered?: () => void
+  /** The file, already on its way (started at the same time as the engine, so the two downloads overlap); null = could not, read it from the URL */
+  prefetched?: Promise<Uint8Array | null>
 }
 
-export default function PdfPreview({ fileUrl, onError }: Props) {
+// A phone has no use for selectable text in a preview (the download is one tap away) and the text layer is a lot of DOM to build.
+const coarsePointer = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
+export default function PdfPreview({ fileUrl, onError, onRendered, prefetched }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState<number>()
   const [numPages, setNumPages] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
+  const [file, setFile] = useState<string | { data: Uint8Array } | null>(prefetched ? null : fileUrl)
+  const [textLayer] = useState(() => !coarsePointer())
+  // Drawing at more than 2x the screen's pixels is invisible and costs a third more on a 3x phone
+  const [dpr] = useState(() => Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1))
+
+  useEffect(() => {
+    if (!prefetched) return
+    let live = true
+    prefetched.then((bytes) => { if (live) setFile(bytes ? { data: bytes.slice() } : fileUrl) })
+    return () => { live = false }
+  }, [prefetched, fileUrl])
 
   useEffect(() => {
     const el = containerRef.current
@@ -48,8 +66,8 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
 
   return (
     <div ref={containerRef} className="w-full min-w-0 overflow-hidden">
-      <Document
-        file={fileUrl}
+      {file && <Document
+        file={file}
         onLoadSuccess={({ numPages: n }) => { setNumPages(n); setPageNumber(1) }}
         onLoadError={onError}
         loading={<div className="py-20 text-center text-sm" style={{ color: 'var(--text-subtle)' }} />}
@@ -60,11 +78,13 @@ export default function PdfPreview({ fileUrl, onError }: Props) {
             pageNumber={pageNumber}
             width={containerWidth}
             renderAnnotationLayer={false}
-            renderTextLayer
+            renderTextLayer={textLayer}
+            devicePixelRatio={dpr}
+            onRenderSuccess={() => onRendered?.()}
             onLoadError={onError}
           />
         )}
-      </Document>
+      </Document>}
 
       {numPages > 1 && (
         <div

@@ -5,24 +5,32 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import Icon from '@/components/ui/Icon'
-import { countLabel, fanPose, groupFolders, MIN_FOLDERS, type Folder, type FolderProject } from '@/lib/project-folders'
+import { countLabel, fanPose, groupFolders, MIN_FOLDERS, type Folder, type FolderItemData } from '@/lib/category-folders'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import type { IconName } from '@/components/ui/Icon'
+
+// The texts of a folder row: every section that has folders (projects, blog, documents) carries these six in its dictionary.
+export type FolderTexts = Pick<Dictionary['projects'], 'foldersLabel' | 'foldersHint' | 'folderOne' | 'folderMany' | 'folderOpenAria' | 'folderSeeAll'>
 
 interface Props {
-  projects: FolderProject[]
+  items: FolderItemData[]
+  /** Where a card leads: /{locale}/{base}/{slug} */
+  base: 'projects' | 'blog' | 'documents'
+  /** Shown on a card that has no picture */
+  emptyIcon?: IconName
   locale: Locale
-  t: Dictionary['projects']
+  t: FolderTexts
   /** "See the category": the list below is filtered on it */
   onSeeCategory: (category: string) => void
 }
 
-// One folder per category, above the list. Flat and square like the rest of the site. The folder is drawn by the server
+// One folder per category, above the list (projects, blog and documents share it). Flat and square like the rest of the site. The folder is drawn by the server
 // (closed), so it is on screen before any JavaScript runs. It opens on mouse hover, on a tap, or with the keyboard, and
-// the cards that come out are links to the projects themselves.
+// the cards that come out are links to the items themselves.
 // Weight: no library, only CSS transforms; and the pictures of the cards are NOT requested until the folder is opened
 // for the first time, so a visitor who never opens one downloads none of them.
-function FolderItem({ folder, locale, t, onSeeCategory }: { folder: Folder } & Omit<Props, 'projects'>) {
+function FolderItem({ folder, base, emptyIcon, locale, t, onSeeCategory }: { folder: Folder } & Omit<Props, 'items'>) {
   const [open, setOpen] = useState(false)
   const [pictures, setPictures] = useState(false)
   const root = useRef<HTMLDivElement>(null)
@@ -77,14 +85,14 @@ function FolderItem({ folder, locale, t, onSeeCategory }: { folder: Folder } & O
             return (
               <Link
                 key={p.slug}
-                href={`/${locale}/projects/${p.slug}`}
+                href={`/${locale}/${base}/${p.slug}`}
                 className="folder-card"
                 style={{ '--x': pose.x, '--y': pose.y, '--r': `${pose.r}deg`, '--d': `${i * 60}ms` } as React.CSSProperties}
               >
                 {pictures && p.image ? (
                   <Image src={p.image} alt="" fill sizes="96px" loading="eager" style={{ objectFit: 'cover', objectPosition: 'top center' }} />
                 ) : (
-                  <span className="folder-card-empty" aria-hidden="true"><Icon name="layers" size={18} /></span>
+                  <span className="folder-card-empty" aria-hidden="true"><Icon name={emptyIcon ?? 'layers'} size={18} /></span>
                 )}
                 <span className="folder-card-title">{p.title}</span>
               </Link>
@@ -100,18 +108,18 @@ function FolderItem({ folder, locale, t, onSeeCategory }: { folder: Folder } & O
   )
 }
 
-export default function ProjectFolders({ projects, locale, t, onSeeCategory }: Props) {
-  const folders = groupFolders(projects)
+export default function CategoryFolders({ items, base, emptyIcon, locale, t, onSeeCategory }: Props) {
+  const folders = groupFolders(items)
   if (folders.length < MIN_FOLDERS) return null
 
   return (
     <FadeIn>
-      <section className="mb-14" aria-labelledby="project-folders-title">
-        <p id="project-folders-title" className="section-label mb-2">{t.foldersLabel}</p>
+      <section className="mb-14" aria-labelledby={`${base}-folders-title`}>
+        <p id={`${base}-folders-title`} className="section-label mb-2">{t.foldersLabel}</p>
         <p className="text-sm mb-6" style={{ color: 'var(--text-subtle)' }}>{t.foldersHint}</p>
         <div className="folders">
           {folders.map((folder) => (
-            <FolderItem key={folder.category} folder={folder} locale={locale} t={t} onSeeCategory={onSeeCategory} />
+            <FolderItem key={folder.category} folder={folder} base={base} emptyIcon={emptyIcon} locale={locale} t={t} onSeeCategory={onSeeCategory} />
           ))}
         </div>
       </section>

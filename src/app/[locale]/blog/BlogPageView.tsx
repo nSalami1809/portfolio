@@ -6,6 +6,8 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import ParticleWaveClient from '@/components/scene/ParticleWaveClient'
 import ShareButton from '@/components/ui/ShareButton'
+import CategoryFolders from '@/components/ui/CategoryFolders'
+import { useSeeCategory } from '@/hooks/useSeeCategory'
 import type { BlogPost } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -29,6 +31,12 @@ export default function BlogPageView({ posts, locale, t }: Props) {
   )
   const [active, setActive] = useState(t.all)
   const [query, setQuery] = useState('')
+  // One folder per category; "See the category" scrolls to the list and filters it
+  const seeCategory = useSeeCategory('blog-list', active, setActive)
+  const folderItems = useMemo(
+    () => posts.map((p) => ({ slug: p.slug, title: p.title, category: p.category, image: p.coverImage || undefined })),
+    [posts],
+  )
 
   const filtered = useMemo(() => {
     const byCategory = active === t.all ? posts : posts.filter((p) => p.category === active)
@@ -81,6 +89,10 @@ export default function BlogPageView({ posts, locale, t }: Props) {
           </FadeIn>
         ) : (
           <>
+            <CategoryFolders items={folderItems} base="blog" emptyIcon="documents" locale={locale} t={t} onSeeCategory={seeCategory} />
+
+            <div id="blog-list" className="scroll-mt-24" />
+
             <FadeIn delay={0.05}>
               <div className="relative mb-6 max-w-sm">
                 <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-subtle)' }} />

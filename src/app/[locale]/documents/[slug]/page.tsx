@@ -9,6 +9,7 @@ import DocumentDetailView from './DocumentDetailView'
 import NotFoundMessage from '@/components/NotFoundMessage'
 import { LOCALES } from '@/lib/i18n/locale'
 import { pageMeta } from '@/lib/seo'
+import { PREFETCH_MAX_BYTES, warmupScript } from '@/lib/document-warmup'
 
 // Regenerate at most once every 30s, matching every sibling route;
 // invalidated instantly on admin publish via updateTag('portfolio').
@@ -85,6 +86,10 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
   return (
     <>
       {blobOrigin && <link rel="preconnect" href={blobOrigin} crossOrigin="anonymous" />}
+      {/* Starts the file and the PDF engine's worker downloading before any JavaScript runs (see lib/document-warmup.ts) */}
+      {document.fileType === 'pdf' && document.fileSize > 0 && document.fileSize <= PREFETCH_MAX_BYTES && (
+        <script dangerouslySetInnerHTML={{ __html: warmupScript(document.fileUrl) }} />
+      )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <DocumentDetailView
         document={{ ...document, ...translated }}

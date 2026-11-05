@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import ProjectPicture from '@/components/projects/ProjectPicture'
-import ProjectFolders from '@/components/projects/ProjectFolders'
+import CategoryFolders from '@/components/ui/CategoryFolders'
+import { useSeeCategory } from '@/hooks/useSeeCategory'
 import { m, AnimatePresence } from 'framer-motion'
 import FadeIn from '@/components/animations/FadeIn'
 import type { Project } from '@/types'
@@ -35,29 +36,8 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
   const [active, setActive] = useState(t.all)
   const [query, setQuery] = useState('')
 
-  // "See the category" (folders): the page scrolls to the list FIRST, while it is still, and the list is filtered once the
-  // page has arrived. Filtering while the page scrolls moves the target under it (the page shrinks and the cards move),
-  // and the scroll ended back at the top.
-  const seeCategory = (category: string) => {
-    const list = document.getElementById('projects-list')
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const apply = () => { if (category !== active) setActive(category) }
-    if (!list || reduce || Math.abs(list.getBoundingClientRect().top - 96) < 4) {
-      list?.scrollIntoView({ behavior: 'auto', block: 'start' })
-      apply()
-      return
-    }
-    let done = false
-    const arrived = () => {
-      if (done) return
-      done = true
-      window.removeEventListener('scrollend', arrived)
-      apply()
-    }
-    window.addEventListener('scrollend', arrived, { once: true })
-    window.setTimeout(arrived, 1200) // browsers without "scrollend", or a scroll that was interrupted
-    list.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  // "See the category" (folders): scroll to the list, then filter it (see the hook)
+  const seeCategory = useSeeCategory('projects-list', active, setActive)
 
   const filtered = useMemo(() => {
     const byCategory = active === t.all ? projects : projects.filter((p) => p.category === active)
@@ -87,8 +67,9 @@ export default function ProjectsView({ projects, locale, t, statusLabel }: Props
       </div>
 
       {/* One folder per category; "See the category" filters the list below and brings it into view */}
-      <ProjectFolders
-        projects={projects}
+      <CategoryFolders
+        items={projects}
+        base="projects"
         locale={locale}
         t={t}
         onSeeCategory={seeCategory}

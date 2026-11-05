@@ -80,7 +80,7 @@ export default function DocumentDetailView({ document, locale, t }: { document: 
 
           {/* Preview */}
           <FadeIn delay={0.2}>
-            <DocumentPreview fileUrl={document.fileUrl} fileType={document.fileType} title={document.title} t={t} />
+            <DocumentPreview fileUrl={document.fileUrl} fileType={document.fileType} title={document.title} thumbnailUrl={document.thumbnailUrl} t={t} />
           </FadeIn>
         </div>
 

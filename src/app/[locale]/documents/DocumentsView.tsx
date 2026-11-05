@@ -11,6 +11,8 @@ import type { PortfolioDocument } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import Icon from '@/components/ui/Icon'
+import CategoryFolders from '@/components/ui/CategoryFolders'
+import { useSeeCategory } from '@/hooks/useSeeCategory'
 
 // A grid card only needs these fields (see documents/page.tsx).
 export type DocumentCardData = Pick<PortfolioDocument, 'slug' | 'title' | 'description' | 'category' | 'fileType' | 'fileSize' | 'thumbnailUrl'>
@@ -34,6 +36,12 @@ export default function DocumentsView({ documents, locale, t }: Props) {
   )
   const [active, setActive] = useState(t.all)
   const [query, setQuery] = useState('')
+  // One folder per category; "See the category" scrolls to the list and filters it
+  const seeCategory = useSeeCategory('documents-list', active, setActive)
+  const folderItems = useMemo(
+    () => documents.map((d) => ({ slug: d.slug, title: d.title, category: d.category, image: d.thumbnailUrl || undefined })),
+    [documents],
+  )
 
   const filtered = useMemo(() => {
     const byCategory = active === t.all ? documents : documents.filter((d) => d.category === active)
@@ -60,6 +68,11 @@ export default function DocumentsView({ documents, locale, t }: Props) {
           </p>
         </FadeIn>
       </div>
+
+      {/* One folder per category; "See the category" filters the list below and brings it into view */}
+      <CategoryFolders items={folderItems} base="documents" emptyIcon="documents" locale={locale} t={t} onSeeCategory={seeCategory} />
+
+      <div id="documents-list" className="scroll-mt-24" />
 
       {/* Search */}
       <FadeIn>

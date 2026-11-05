@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import SpeedInsights from '@/components/analytics/SpeedInsights'
 import './globals.css'
 import { PortfolioStaticProvider } from '@/providers/portfolio-core'
 import { emptyPublicPortfolio, slimPublicPortfolio } from '@/lib/public-portfolio'
@@ -126,6 +127,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </MotionProvider>
         <ServiceWorkerRegister />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

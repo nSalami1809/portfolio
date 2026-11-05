@@ -3,8 +3,8 @@ import { createElement as h } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import ProjectFolders from '@/components/projects/ProjectFolders'
-import { countLabel, fanPose, groupFolders, MAX_COVERS, MIN_FOLDERS } from '@/lib/project-folders'
+import CategoryFolders from '@/components/ui/CategoryFolders'
+import { countLabel, fanPose, groupFolders, MAX_COVERS, MIN_FOLDERS } from '@/lib/category-folders'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 
 const read = (...p: string[]) => readFileSync(join(__dirname, '..', 'src', ...p), 'utf8')
@@ -59,24 +59,32 @@ describe('countLabel', () => {
 })
 
 describe('texts', () => {
-  it('exist in French and in English, without functions (they cross to a client component)', () => {
+  it('exist in French and in English for projects, blog and documents, without functions (they cross to a client component)', () => {
     for (const locale of ['fr', 'en'] as const) {
-      const t = getDictionary(locale).projects
-      for (const key of ['foldersLabel', 'foldersHint', 'folderOne', 'folderMany', 'folderOpenAria', 'folderSeeAll'] as const) {
-        expect(typeof t[key], `${locale}.${key}`).toBe('string')
-        expect(t[key].length).toBeGreaterThan(3)
+      for (const section of ['projects', 'blog', 'documents'] as const) {
+        const t = getDictionary(locale)[section]
+        for (const key of ['foldersLabel', 'foldersHint', 'folderOne', 'folderMany', 'folderOpenAria', 'folderSeeAll'] as const) {
+          expect(typeof t[key], `${locale}.${section}.${key}`).toBe('string')
+          expect(t[key].length).toBeGreaterThan(3)
+        }
+        expect(t.folderOne).toContain('{n}')
+        expect(t.folderMany).toContain('{n}')
+        expect(t.folderOpenAria).toContain('{name}')
       }
-      expect(t.folderOne).toContain('{n}')
-      expect(t.folderMany).toContain('{n}')
-      expect(t.folderOpenAria).toContain('{name}')
     }
+  })
+
+  it('count the right things: articles for the blog, documents for the documents', () => {
+    expect(getDictionary('fr').blog.folderMany).toBe('{n} articles')
+    expect(getDictionary('fr').documents.folderMany).toBe('{n} documents')
+    expect(getDictionary('en').blog.folderOne).toBe('{n} article')
   })
 })
 
-describe('ProjectFolders as the server sends it', () => {
+describe('CategoryFolders as the server sends it', () => {
   const t = getDictionary('fr').projects
   const projects = [P('a', 'Web', img(1)), P('b', 'Web', img(2)), P('c', 'DevOps', img(3))]
-  const render = (list = projects) => renderToStaticMarkup(h(ProjectFolders, { projects: list, locale: 'fr', t, onSeeCategory: () => {} }))
+  const render = (list = projects) => renderToStaticMarkup(h(CategoryFolders, { items: list, base: 'projects', locale: 'fr', t, onSeeCategory: () => {} }))
   const html = render()
 
   it('is on the page from the start: one closed folder per category with its count', () => {
@@ -105,6 +113,17 @@ describe('ProjectFolders as the server sends it', () => {
     expect(first.indexOf('class="folder-fan"')).toBeLessThan(first.indexOf('class="folder-see"'))
   })
 
+  it('leads the cards to the right section: blog articles, documents, projects', () => {
+    const blog = renderToStaticMarkup(h(CategoryFolders, { items: projects, base: 'blog', locale: 'en', t: getDictionary('en').blog, onSeeCategory: () => {} }))
+    expect(blog).toContain('href="/en/blog/a"')
+    expect(blog).toContain('2 articles')
+    expect(blog).toContain('id="blog-folders-title"')
+    const docs = renderToStaticMarkup(h(CategoryFolders, { items: projects, base: 'documents', emptyIcon: 'documents', locale: 'fr', t: getDictionary('fr').documents, onSeeCategory: () => {} }))
+    expect(docs).toContain('href="/fr/documents/c"')
+    expect(docs).toContain('1 document<')
+    expect(html).toContain('id="projects-folders-title"')
+  })
+
   it('names each folder button for assistive technology', () => {
     expect(html).toContain('aria-label="Ouvrir le dossier Web"')
     expect(html).toContain(`>${t.folderSeeAll}<`)
@@ -117,7 +136,7 @@ describe('ProjectFolders as the server sends it', () => {
 })
 
 describe('code and style', () => {
-  const component = read('components', 'projects', 'ProjectFolders.tsx')
+  const component = read('components', 'ui', 'CategoryFolders.tsx')
   const css = read('app', 'globals.css')
   const folderCss = css.slice(css.indexOf('/* ── Project folders'), css.indexOf('/* ── Technology ribbon'))
 
@@ -147,21 +166,26 @@ describe('code and style', () => {
     expect(folderCss).toMatch(/prefers-reduced-motion: reduce\) \{[\s\S]*?\.folder-card,[\s\S]*?transition: none;/)
   })
 
-  it('sits above the search and the list on the projects page, and "See the category" filters the list', () => {
-    const view = read('app', '[locale]', 'projects', 'ProjectsView.tsx')
-    expect(view.indexOf('<ProjectFolders')).toBeLessThan(view.indexOf('type="search"'))
-    expect(view).toContain('onSeeCategory={seeCategory}')
-    expect(view).toMatch(/const apply = \(\) => \{ if \(category !== active\) setActive\(category\) \}/)
-    expect(view).toContain('id="projects-list"')
+  it('sits above the search and the list on the projects, blog and documents pages, and "See the category" filters the list', () => {
+    for (const [dir, file, id] of [['projects', 'ProjectsView', 'projects-list'], ['blog', 'BlogPageView', 'blog-list'], ['documents', 'DocumentsView', 'documents-list']] as const) {
+      const view = read('app', '[locale]', dir, file + '.tsx')
+      expect(view.indexOf('<CategoryFolders'), dir).toBeGreaterThan(-1)
+      expect(view.indexOf('<CategoryFolders'), dir).toBeLessThan(view.indexOf('type="search"'))
+      expect(view, dir).toContain('onSeeCategory={seeCategory}')
+      expect(view, dir).toContain(`useSeeCategory('${id}', active, setActive)`)
+      expect(view, dir).toContain(`id="${id}"`)
+      expect(view, dir).toContain(`base="${dir}"`)
+    }
   })
 
   it('scrolls to the list FIRST and filters it on arrival (filtering while scrolling ended back at the top)', () => {
-    const view = read('app', '[locale]', 'projects', 'ProjectsView.tsx')
-    const scrollAt = view.indexOf("list.scrollIntoView({ behavior: 'smooth', block: 'start' })")
+    const hook = read('hooks', 'useSeeCategory.ts')
+    const scrollAt = hook.indexOf("list.scrollIntoView({ behavior: 'smooth', block: 'start' })")
     expect(scrollAt).toBeGreaterThan(-1)
-    expect(view).toContain("window.addEventListener('scrollend', arrived, { once: true })")
-    expect(view).toMatch(/window\.setTimeout\(arrived, 1200\)/) // browsers without scrollend, or an interrupted scroll
-    expect(view).toMatch(/!list \|\| reduce \|\|/) // reduced motion: instant, no animation
-    expect(view).not.toMatch(/onExitComplete|pendingScroll/)
+    expect(hook).toContain('const apply = () => { if (category !== active) setActive(category) }')
+    expect(hook).toContain("window.addEventListener('scrollend', arrived, { once: true })")
+    expect(hook).toContain('window.setTimeout(arrived, 1200)') // browsers without scrollend, or an interrupted scroll
+    expect(hook).toContain('!list || reduce ||') // reduced motion: instant, no animation
+    expect(hook).not.toMatch(/onExitComplete|pendingScroll/)
   })
 })
