@@ -134,9 +134,18 @@ export function lastVisitorText(messages: { role: string; parts: { type: string;
   return ''
 }
 
-export const TEASER_TEXT: Record<ChatLocale, { text: string; close: string }> = {
-  fr: { text: 'Une question, un tarif, un devis ? NemCopilotIA répond tout de suite.', close: "Fermer l'invitation" },
-  en: { text: 'A question, a price, a quote? NemCopilotIA answers right away.', close: 'Dismiss the invitation' },
+export const TEASER_TEXT: Record<ChatLocale, { text: string; close: string; questions: string[] }> = {
+  fr: {
+    text: 'Une question, un tarif, un devis ? NemCopilotIA répond tout de suite.',
+    close: "Fermer l'invitation",
+    // Each one is sent to the assistant as it is when tapped
+    questions: ['Combien coûte un site vitrine ?', 'Quels sont les délais ?', 'Comment se passe un projet ?'],
+  },
+  en: {
+    text: 'A question, a price, a quote? NemCopilotIA answers right away.',
+    close: 'Dismiss the invitation',
+    questions: ['How much does a showcase website cost?', 'What are the delivery times?', 'How does a project run?'],
+  },
 }
 
 /** Pages where an unprompted invitation would get in the way (signing, delivery acceptance). */

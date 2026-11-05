@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname } from 'next/navigation'
-import { onOpenChatRequest } from '@/lib/chat-bridge'
+import { onOpenChatRequest, openChatWithMessage } from '@/lib/chat-bridge'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ChatBotIcon } from '@hugeicons/core-free-icons'
 import { TEASER_TEXT, teaserAllowed } from '@/lib/chat-services'
@@ -44,7 +44,7 @@ const TOGGLE_LABEL = { fr: 'Ouvrir NemCopilotIA', en: 'Open NemCopilotIA' } as c
 // or the visitor closes it. Dependency-free, like the stub, so it costs no extra chunk.
 const TEASER_KEY = 'nemcopilot-invite-seen'
 const TEASER_DELAY_MS = 9000
-const TEASER_VISIBLE_MS = 16000
+const TEASER_VISIBLE_MS = 22000 // long enough to read the three questions and pick one
 
 function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: string | null }) {
   const [visible, setVisible] = useState(false)
@@ -87,21 +87,38 @@ function InviteBubble({ locale, pathname }: { locale: 'fr' | 'en'; pathname: str
       style={{
         right: '1.25rem',
         bottom: 'calc(5.25rem + env(safe-area-inset-bottom))',
-        maxWidth: 'min(260px, calc(100vw - 2.5rem))',
+        maxWidth: 'min(290px, calc(100vw - 2.5rem))',
         background: 'var(--bg)',
         color: 'var(--text)',
         border: '1px solid var(--brand, var(--accent))',
         boxShadow: '4px 4px 0 var(--brand, var(--accent))',
       }}
     >
-      <button
-        type="button"
-        className="text-left text-xs leading-snug"
-        style={{ fontFamily: 'var(--font-poppins)' }}
-        onClick={() => document.querySelector<HTMLElement>('[data-chat-toggle]')?.click()}
-      >
-        {t.text}
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          className="text-left text-xs leading-snug"
+          style={{ fontFamily: 'var(--font-poppins)' }}
+          onClick={() => document.querySelector<HTMLElement>('[data-chat-toggle]')?.click()}
+        >
+          {t.text}
+        </button>
+        {/* Three questions to start with: one tap sends it to the assistant */}
+        <ul className="flex flex-col gap-1.5 list-none p-0 m-0">
+          {t.questions.map((q) => (
+            <li key={q}>
+              <button
+                type="button"
+                className="w-full text-left text-xs px-2.5 py-1.5 hover:bg-[var(--surface-hover)]"
+                style={{ fontFamily: 'var(--font-poppins)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                onClick={() => { setVisible(false); openChatWithMessage(q) }}
+              >
+                {q}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
       <button type="button" aria-label={t.close} onClick={() => setVisible(false)} className="flex-shrink-0 text-sm leading-none px-1" style={{ color: 'var(--text-subtle)' }}>×</button>
     </div>
   )
