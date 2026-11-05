@@ -150,7 +150,7 @@ export function EmailCopyButton({ accessCode, clientEmail, locale }: { accessCod
     return (
       <>
         <button type="button" disabled={state === 'sending'} onClick={() => send(clientEmail)} className="btn-secondary btn-sm" style={small}>{state === 'sending' ? t.emailSending : t.emailTo(clientEmail)}</button>
-        {state === 'error' && <p role="alert" className="text-xs w-full" style={{ color: '#D90000' }}>{message}</p>}
+        {state === 'error' && <p role="alert" className="text-xs w-full" style={{ color: 'var(--danger-text)' }}>{message}</p>}
       </>
     )
   }
@@ -160,7 +160,7 @@ export function EmailCopyButton({ accessCode, clientEmail, locale }: { accessCod
       <label htmlFor={`quote-email-${accessCode}`} className="sr-only">{t.emailLabel}</label>
       <input id={`quote-email-${accessCode}`} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.emailLabel} autoComplete="email" className="input text-sm flex-1" style={{ minWidth: 0 }} />
       <button type="submit" disabled={state === 'sending' || !email.trim()} className="btn-primary btn-sm" style={small}>{state === 'sending' ? t.emailSending : t.emailSend}</button>
-      {state === 'error' && <p role="alert" className="text-xs w-full" style={{ color: '#D90000' }}>{message}</p>}
+      {state === 'error' && <p role="alert" className="text-xs w-full" style={{ color: 'var(--danger-text)' }}>{message}</p>}
     </form>
   )
 }

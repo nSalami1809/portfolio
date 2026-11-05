@@ -77,7 +77,7 @@ export default function AcceptanceCard({ token, quote, onSigned }: Props) {
           <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
             {T('Signée par', 'Signed by')} {quote.acceptance.name} {T('le', 'on')} {day(quote.acceptance.signedAt)}.
           </p>
-          {error && <p className="text-sm mb-3" style={{ color: '#D90000' }}>{error}</p>}
+          {error && <p className="text-sm mb-3" style={{ color: 'var(--danger-text)' }}>{error}</p>}
           <button onClick={handleDownload} disabled={downloading} className="btn-secondary btn-sm">
             {downloading ? T('Génération…', 'Generating…') : T('Télécharger le procès-verbal (PDF)', 'Download the acceptance report (PDF)')}
           </button>
@@ -136,7 +136,7 @@ export default function AcceptanceCard({ token, quote, onSigned }: Props) {
         </div>
 
         {error && (
-          <p className="text-sm px-4 py-3 mt-4" style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)' }}>{error}</p>
+          <p className="text-sm px-4 py-3 mt-4" style={{ background: 'rgba(217,0,0,0.1)', color: 'var(--danger-text)', border: '1px solid rgba(217,0,0,0.25)' }}>{error}</p>
         )}
         <button onClick={handleSign} disabled={!canSubmit || submitting} className="btn-primary mt-5">
           {submitting ? T('Signature en cours…', 'Signing…') : T('Signer le procès-verbal', 'Sign the acceptance report')}

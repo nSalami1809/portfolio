@@ -88,3 +88,21 @@ describe('the chat panel never slides under the header', () => {
     expect(6 + (11.5 - 6) - 5).toBeGreaterThan(0)
   })
 })
+
+describe('status colours used for text', () => {
+  it('success and error text colours pass AA on every background, in both themes', () => {
+    for (const [name, t] of [['light', light], ['dark', dark]] as const) {
+      for (const fg of ['success-text', 'danger-text']) {
+        for (const bg of ['bg', 'bg-secondary', 'surface', 'surface-hover']) {
+          expect(ratio(t[fg], t[bg]), `${name}: ${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5)
+        }
+      }
+    }
+  })
+
+  it('the footer availability line and the delivered-project badge use them, not the plain green', () => {
+    expect(read('src', 'components', 'layout', 'Footer.tsx')).toContain("color: 'var(--success-text)'")
+    expect(read('src', 'components', 'sections', 'TestimonialsMarquee.tsx')).toContain("color: 'var(--success-text)'")
+    expect(read('src', 'components', 'sections', 'ContactForm.tsx')).not.toContain("color: '#D90000'")
+  })
+})

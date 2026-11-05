@@ -185,7 +185,7 @@ export default function CodePlayground({ t }: Props) {
           {status !== 'idle' && !running && (
             <span
               className="flex items-center gap-1.5 text-xs font-medium"
-              style={{ color: status === 'done' ? '#008000' : '#D90000', fontFamily: 'var(--font-poppins)' }}
+              style={{ color: status === 'done' ? 'var(--success-text)' : 'var(--danger-text)', fontFamily: 'var(--font-poppins)' }}
             >
               {status === 'done' ? (
                 <Icon name="check" size={13} />

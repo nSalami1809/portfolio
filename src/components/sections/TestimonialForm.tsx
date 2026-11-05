@@ -36,7 +36,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
         className="card p-10 text-center flex flex-col items-center justify-center gap-4"
       >
         <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2" style={{ background: 'rgba(0,128,0,0.1)' }}>
-          <Icon name="check" size={28} style={{ color: '#008000' }} />
+          <Icon name="check" size={28} style={{ color: 'var(--success-text)' }} />
         </div>
         <h3 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>{t.successTitle}</h3>
         <p style={{ color: 'var(--text-muted)' }}>{t.successText}</p>
@@ -109,7 +109,7 @@ export default function TestimonialForm({ t }: { t: Dictionary['testimonialPage'
       {status === 'error' && (
         <p
           className="text-sm px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
+          style={{ background: 'rgba(217,0,0,0.1)', color: 'var(--danger-text)', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
         >
           {errorMsg}
         </p>

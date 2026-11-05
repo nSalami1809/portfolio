@@ -13,7 +13,7 @@ function VerifiedBadge({ slug, locale, label }: { slug: string; locale: Locale; 
     <Link
       href={`/${locale}/projects/${slug}`}
       className="inline-flex items-center gap-1 text-xs font-medium mb-2.5 hover:underline"
-      style={{ color: '#008000' }}
+      style={{ color: 'var(--success-text)' }}
     >
       <Icon name="shield" size={12} />
       {label}

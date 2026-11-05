@@ -134,7 +134,7 @@ export default function Footer({ personal, socials, locale, t, role }: FooterPro
             </p>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 flex-shrink-0" style={{ background: '#008000' }} />
-              <span className="text-xs" style={{ color: '#008000', fontFamily: 'var(--font-poppins)' }}>
+              <span className="text-xs" style={{ color: 'var(--success-text)', fontFamily: 'var(--font-poppins)' }}>
                 {t.footer.available}
               </span>
             </div>

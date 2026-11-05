@@ -246,7 +246,7 @@ export default function CalendarView({ initialYear, initialMonth, initialMonthSl
                       <input required type="email" inputMode="email" autoComplete="email" value={form.clientEmail} onChange={(e) => setForm((p) => ({ ...p, clientEmail: e.target.value }))} placeholder={tc.emailPlaceholder} className="input text-sm" />
                       <input type="tel" inputMode="tel" autoComplete="tel" value={form.clientTelephone} onChange={(e) => setForm((p) => ({ ...p, clientTelephone: e.target.value }))} maxLength={30} placeholder={tc.phonePlaceholder} className="input text-sm" />
                       <textarea value={form.message} onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))} placeholder={tc.messagePlaceholder} rows={3} className="input text-sm" style={{ resize: 'vertical' }} />
-                      {error && <p className="text-xs" style={{ color: '#D90000' }}>{error}</p>}
+                      {error && <p className="text-xs" style={{ color: 'var(--danger-text)' }}>{error}</p>}
                       <button type="submit" disabled={submitting} className="btn-primary w-full justify-center text-sm">
                         {submitting ? tc.booking : tc.confirm}
                       </button>

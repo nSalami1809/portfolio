@@ -123,7 +123,7 @@ export function QuoteTracker({ locale, busy, onAsk, onBack }: { locale: ChatLoca
         onChange={(e) => { setValue(e.target.value); setTouched(true) }}
         placeholder="ABC234" aria-invalid={invalid} className="input text-sm w-full" style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}
       />
-      {invalid && <p role="alert" className="text-xs" style={{ color: '#D90000' }}>{t.trackInvalid}</p>}
+      {invalid && <p role="alert" className="text-xs" style={{ color: 'var(--danger-text)' }}>{t.trackInvalid}</p>}
       <div className="flex flex-wrap gap-2">
         {code ? <a className="btn-primary btn-sm" style={small} href={trackingHref(locale, code)} target="_blank" rel="noopener noreferrer">{t.trackOpen}</a> : <span className="btn-primary btn-sm opacity-40" style={small} aria-disabled="true">{t.trackOpen}</span>}
         <button type="button" disabled={!code || busy} onClick={() => code && onAsk(trackingMessage(locale, code))} className="btn-secondary btn-sm" style={small}>{t.trackAsk}</button>
@@ -138,7 +138,7 @@ export function QuoteProgress({ quote, locale }: { quote: QuoteLike; locale: Cha
   return (
     <div className="mt-3" data-testid="chat-quote-progress" aria-label={t.progress}>
       {declined ? (
-        <p className="text-xs font-semibold" style={{ color: '#D90000' }}>{t.declined}</p>
+        <p className="text-xs font-semibold" style={{ color: 'var(--danger-text)' }}>{t.declined}</p>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-0.5" role="list">

@@ -199,7 +199,7 @@ export default function DevisView({ t, offers, contact }: Props) {
           <FadeIn>
             <div className="card p-8 text-center mb-10">
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(0,128,0,0.1)' }}>
-                <Icon name="check" size={24} style={{ color: '#008000' }} />
+                <Icon name="check" size={24} style={{ color: 'var(--success-text)' }} />
               </div>
               <p className="font-display font-bold text-lg mb-1" style={{ color: 'var(--text)' }}>{createdQuote.numero}</p>
               <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{fmt(createdQuote.totalTTC)} TTC<EurHint fcfa={createdQuote.totalTTC} /></p>
@@ -210,7 +210,7 @@ export default function DevisView({ t, offers, contact }: Props) {
           <FadeIn>
             <div className="card p-8 text-center mb-10">
               {lookupError ? (
-                <p className="text-sm" style={{ color: '#D90000' }}>{lookupError}</p>
+                <p className="text-sm" style={{ color: 'var(--danger-text)' }}>{lookupError}</p>
               ) : (
                 <>
                   <div className="w-6 h-6 rounded-full border-2 animate-spin mx-auto mb-4" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
@@ -374,7 +374,7 @@ export default function DevisView({ t, offers, contact }: Props) {
               )}
 
               {formError && (
-                <p className="text-sm px-4 py-3" style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)' }}>{formError}</p>
+                <p className="text-sm px-4 py-3" style={{ background: 'rgba(217,0,0,0.1)', color: 'var(--danger-text)', border: '1px solid rgba(217,0,0,0.25)' }}>{formError}</p>
               )}
 
               <button type="submit" disabled={submitting} className="btn-primary w-full justify-center">
@@ -399,7 +399,7 @@ export default function DevisView({ t, offers, contact }: Props) {
                 {lookupSearching ? t.lookupSearching : t.lookupButton}
               </button>
             </div>
-            {lookupError && <p className="text-sm mt-3" style={{ color: '#D90000' }}>{lookupError}</p>}
+            {lookupError && <p className="text-sm mt-3" style={{ color: 'var(--danger-text)' }}>{lookupError}</p>}
           </div>
         </FadeIn>
       </div>

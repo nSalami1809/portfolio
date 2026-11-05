@@ -15,6 +15,9 @@
   /* AA (4.5:1) on every light background, including the grey ones (bg-secondary, surface-hover) */
   --text-muted: #4B5563;
   --text-subtle: #5F6673;
+  /* status colours for TEXT (AA on every background); the plain #008000 / #D90000 stay for shapes and borders */
+  --success-text: #007A00;
+  --danger-text: #C20000;
   --accent: #111111;
   --accent-hover: #000000;
   --accent-light: #4B5563;
@@ -72,6 +75,8 @@
   --text: #FFFFFF;
   --text-muted: #C7C7C7;
   --text-subtle: #999999;
+  --success-text: #4ADE80;
+  --danger-text: #FF7A7A;
   --accent: #FFFFFF;
   --accent-hover: #E5E5E5;
   --accent-light: #9CA3AF;

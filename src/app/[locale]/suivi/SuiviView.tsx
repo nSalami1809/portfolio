@@ -256,7 +256,7 @@ export default function SuiviView() {
                     <button className="btn-primary btn-sm" onClick={sendRevision} disabled={revisionBusy || revisionNote.trim().length < 10}>
                       {revisionBusy ? t.revisionsSending : t.revisionsSend}
                     </button>
-                    {revisionMsg && <span className="text-sm" role="status" style={{ color: revisionMsg.ok ? '#008000' : '#D90000' }}>{revisionMsg.text}</span>}
+                    {revisionMsg && <span className="text-sm" role="status" style={{ color: revisionMsg.ok ? 'var(--success-text)' : 'var(--danger-text)' }}>{revisionMsg.text}</span>}
                   </div>
                 </>
               ) : (
@@ -286,7 +286,7 @@ export default function SuiviView() {
                   {uploadBusy ? t.filesUploading : t.filesPick}
                   <input type="file" accept={ACCEPT_ATTRIBUTE} className="sr-only" disabled={uploadBusy} onChange={(e) => { sendFile(e.target.files?.[0]); e.target.value = '' }} />
                 </label>
-                {uploadMsg && <span className="text-sm" role="status" style={{ color: uploadMsg.ok ? '#008000' : '#D90000' }}>{uploadMsg.text}</span>}
+                {uploadMsg && <span className="text-sm" role="status" style={{ color: uploadMsg.ok ? 'var(--success-text)' : 'var(--danger-text)' }}>{uploadMsg.text}</span>}
               </div>
             </div>
           )}

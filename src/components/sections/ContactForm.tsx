@@ -80,7 +80,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
           className="w-16 h-16 rounded-full flex items-center justify-center mb-2"
           style={{ background: 'rgba(0,128,0,0.1)' }}
         >
-          <Icon name="check" size={28} style={{ color: '#008000' }} />
+          <Icon name="check" size={28} style={{ color: 'var(--success-text)' }} />
         </div>
         <h3 className="font-display font-bold text-2xl" style={{ color: 'var(--text)' }}>
           {t.successTitle}
@@ -138,15 +138,15 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
             {emailTouched && form.email.length > 0 && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 {emailError ? (
-                  <Icon name="closeCircle" size={16} style={{ color: '#D90000' }} />
+                  <Icon name="closeCircle" size={16} style={{ color: 'var(--danger-text)' }} />
                 ) : (
-                  <Icon name="success" size={16} style={{ color: '#008000' }} />
+                  <Icon name="success" size={16} style={{ color: 'var(--success-text)' }} />
                 )}
               </span>
             )}
           </div>
           {emailError && (
-            <p id="cf-email-error" role="alert" className="mt-1.5 text-xs flex items-center gap-1.5" style={{ color: '#D90000', fontFamily: 'var(--font-poppins)' }}>
+            <p id="cf-email-error" role="alert" className="mt-1.5 text-xs flex items-center gap-1.5" style={{ color: 'var(--danger-text)', fontFamily: 'var(--font-poppins)' }}>
               <Icon name="alert" size={11} />
               {emailError}
             </p>
@@ -235,7 +235,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
       {status === 'error' && (
         <p
           className="text-sm px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(217,0,0,0.1)', color: '#D90000', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
+          style={{ background: 'rgba(217,0,0,0.1)', color: 'var(--danger-text)', border: '1px solid rgba(217,0,0,0.25)', fontFamily: 'var(--font-poppins)' }}
         >
           {errorMsg}
         </p>
