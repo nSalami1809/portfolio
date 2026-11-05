@@ -35,10 +35,11 @@ describe('the teal brand colour', () => {
     expect(ratio(token(dark, '--brand')!, token(dark, '--brand-contrast')!)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it('colours focus, selection, labels and form focus, and only those globally', () => {
+  it('colours focus, selection and form focus globally; the section labels are quiet (muted text), no longer teal', () => {
     expect(css).toMatch(/:focus-visible\s*{[^}]*var\(--brand\)/)
     expect(css).toMatch(/::selection\s*{[^}]*var\(--brand\)/)
-    expect(css).toMatch(/\.section-label\s*{[^}]*color:\s*var\(--brand\)/)
+    expect(css).toMatch(/\.section-label\s*{[^}]*color:\s*var\(--text-muted\)/)
+    expect(css).not.toMatch(/\.section-label\s*{[^}]*(text-transform|var\(--brand\))/)
     expect(css).toMatch(/\.input:focus\s*{[^}]*var\(--brand\)/)
     // main buttons stay black and white
     expect(css).toMatch(/\.btn-primary\s*{\s*background:\s*var\(--accent\)/)

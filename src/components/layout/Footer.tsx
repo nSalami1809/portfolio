@@ -16,17 +16,16 @@ function NavItem({ href, label, icon }: { href: string; label: string; icon: Rea
         href={href}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200"
+        className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors duration-150"
         style={{
-          color: hovered ? 'var(--accent)' : 'var(--text-muted)',
-          background: hovered ? 'var(--accent-glow)' : 'transparent',
-          transform: hovered ? 'translateX(3px)' : 'translateX(0)',
+          color: hovered ? 'var(--text)' : 'var(--text-muted)',
+          background: hovered ? 'var(--surface-hover)' : 'transparent',
           fontFamily: 'var(--font-poppins)',
         }}
       >
         <span
           className="flex-shrink-0 transition-colors duration-200"
-          style={{ color: hovered ? 'var(--accent)' : 'var(--text-subtle)' }}
+          style={{ color: hovered ? 'var(--text)' : 'var(--text-subtle)' }}
         >
           {icon}
         </span>
@@ -55,21 +54,20 @@ function SocialItem({
       rel={external ? 'noopener noreferrer' : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all duration-200 group"
+      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors duration-150 group"
       style={{
         color: hovered ? 'var(--text)' : 'var(--text-muted)',
-        background: hovered ? 'var(--surface)' : 'transparent',
-        border: hovered ? '1px solid var(--border)' : '1px solid transparent',
-        transform: hovered ? 'translateX(3px)' : 'translateX(0)',
+        background: hovered ? 'var(--surface-hover)' : 'transparent',
+        border: '1px solid transparent',
         fontFamily: 'var(--font-poppins)',
       }}
     >
       <span
-        className="flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0 transition-all duration-200"
+        className="flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0 transition-colors duration-150"
         style={{
-          background: hovered ? 'var(--accent-glow)' : 'var(--surface)',
-          color: hovered ? 'var(--accent)' : 'var(--text-subtle)',
-          border: hovered ? '1px solid var(--glass-border)' : '1px solid var(--border)',
+          background: 'var(--surface)',
+          color: hovered ? 'var(--text)' : 'var(--text-subtle)',
+          border: '1px solid var(--border)',
         }}
       >
         {icon}
@@ -126,9 +124,7 @@ export default function Footer({ personal, socials, locale, t, role }: FooterPro
 
           {/* Brand */}
           <div>
-            <div className="font-display font-bold text-2xl mb-3" style={{ color: 'var(--text)' }}>
-              <span style={{ color: 'var(--accent)' }}>N</span>·S
-            </div>
+            <div className="font-display font-semibold text-2xl mb-3" style={{ color: 'var(--text)' }}>N·S</div>
             <p className="text-sm leading-relaxed max-w-xs mb-4" style={{ color: 'var(--text-muted)' }}>
               {role}
             </p>

@@ -113,7 +113,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
           WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
           boxShadow: scrolled ? 'inset 0 1px 0 var(--glass-highlight)' : 'none',
         }}
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter,box-shadow] duration-300"
       >
         {/* Three columns (logo | links | controls) with equal outer columns, so
             the link pill sits in the true centre of the page whatever its width. */}

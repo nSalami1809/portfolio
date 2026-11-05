@@ -39,14 +39,14 @@ export default async function FeaturedProjects({ projects, locale, t }: { projec
   )
 
   return (
-    <section id="projets-phares" aria-labelledby="featured-title" className="py-24">
+    <section id="projets-phares" aria-labelledby="featured-title" className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <FadeIn className="text-center mb-14">
-          <p className="section-label mb-4">{t.featuredLabel}</p>
+        <FadeIn className="mb-12">
+          <p className="section-label mb-3">{t.featuredLabel}</p>
           <h2 id="featured-title" className="section-title">{t.featuredTitle}</h2>
         </FadeIn>
 
-        <ul className="grid lg:grid-cols-3 gap-6 list-none p-0 m-0 mb-10">
+        <ul className="grid lg:grid-cols-3 gap-4 list-none p-0 m-0 mb-10">
           {picked.map((p, i) => {
             const f = fields[i]
             const need = f.caseStudyContext.trim() || f.description
@@ -54,8 +54,7 @@ export default async function FeaturedProjects({ projects, locale, t }: { projec
             const hasCase = Boolean(f.caseStudyContext.trim() || result || f.caseStudySolution.trim())
             return (
               <li key={p.slug}>
-                <FadeIn delay={Math.min(i * 0.07, 0.28)} className="h-full">
-                  <article className="card p-6 h-full flex flex-col">
+                <article className="card p-6 h-full flex flex-col">
                     {p.image ? (
                       <div className="relative w-full aspect-video mb-5 overflow-hidden" style={{ background: 'var(--surface-hover)' }}>
                         <ProjectPicture src={p.image} alt={f.title} loading="lazy" sizes="(min-width: 1024px) 33vw, 100vw" />
@@ -64,12 +63,12 @@ export default async function FeaturedProjects({ projects, locale, t }: { projec
 
                     <h3 className="font-display font-semibold text-xl mb-4" style={{ color: 'var(--text)' }}>{f.title}</h3>
 
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.featuredNeed}</p>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.featuredNeed}</p>
                     <p className="text-sm leading-relaxed mb-4 line-clamp-4" style={{ color: 'var(--text-muted)' }}>{need}</p>
 
                     {result && (
                       <>
-                        <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.featuredResult}</p>
+                        <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>{t.featuredResult}</p>
                         <p className="text-sm leading-relaxed mb-4 line-clamp-3" style={{ color: 'var(--text-muted)' }}>{result}</p>
                       </>
                     )}
@@ -88,18 +87,15 @@ export default async function FeaturedProjects({ projects, locale, t }: { projec
                       <Icon name="arrowRight" size={14} />
                     </Link>
                   </article>
-                </FadeIn>
               </li>
             )
           })}
         </ul>
 
-        <div className="text-center">
-          <Link href={`/${locale}/projects`} className="btn-secondary">
-            {t.featuredAll}
-            <Icon name="arrowRight" size={14} />
-          </Link>
-        </div>
+        <Link href={`/${locale}/projects`} className="btn-secondary">
+          {t.featuredAll}
+          <Icon name="arrowRight" size={14} />
+        </Link>
       </div>
     </section>
   )

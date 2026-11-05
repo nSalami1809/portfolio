@@ -3,6 +3,8 @@ import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import FeaturedProjects, { FeaturedProjectsSkeleton } from '@/components/sections/FeaturedProjects'
+import QuotePreview, { QuotePreviewSkeleton } from '@/components/sections/QuotePreview'
+import { quotePreviewOffers } from '@/lib/quote-preview'
 import CountUp from '@/components/ui/CountUp'
 import TestimonialsMarquee from '@/components/sections/TestimonialsMarquee'
 import NextSlotBadge, { NEXT_SLOT_BADGE_HEIGHT } from '@/components/sections/NextSlotBadge'
@@ -19,18 +21,16 @@ import { pageMeta, HOME_COPY } from '@/lib/seo'
 import { publicPersonal } from '@/lib/public-portfolio'
 import {
   defaultProjects,
+  defaultOffers,
   defaultPersonalInfo,
   defaultSocials,
   defaultSkills,
   defaultTestimonials,
 } from '@/data/defaultData'
-import Icon, { iconForText, type IconName } from '@/components/ui/Icon'
+import Icon from '@/components/ui/Icon'
 import TechLogo from '@/components/ui/TechLogo'
 import { HOME_STACK } from '@/data/home-stack'
 import { HOME_STATS } from '@/data/home-stats'
-
-// Used when a step's own words say nothing: the usual run of a project.
-const STEP_ICONS: IconName[] = ['invoice', 'signature', 'code', 'delivery']
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
 export const revalidate = 30
@@ -111,6 +111,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const socials      = portfolio?.socials      ?? defaultSocials
   const skills       = tidySkills(portfolio?.skills ?? defaultSkills)
   // The ones about a delivered job (linked to a project) come first
+  const offers = portfolio?.offers ?? defaultOffers
   const testimonials = deliveredFirst(portfolio?.testimonials ?? defaultTestimonials)
 
   // Deliberately NOT awaited here: this promise is handed to the Suspense
@@ -181,6 +182,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         socials={socials}
         locale={locale}
         t={t.home}
+        aside={
+          quotePreviewOffers(offers).length >= 2 ? (
+            <Suspense fallback={<QuotePreviewSkeleton />}>
+              <QuotePreview offers={offers} locale={locale} t={t.home} provider={{ name: translatedPersonal.name, role: t.home.heroRoleLabel }} />
+            </Suspense>
+          ) : undefined
+        }
         nextSlotBadge={
           <Suspense fallback={<div aria-hidden="true" style={{ height: NEXT_SLOT_BADGE_HEIGHT }} />}>
             <NextSlotBadge locale={locale} prefix={t.home.nextSlotPrefix} />
@@ -194,7 +202,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </Suspense>
 
       {/* ── À PROPOS ── */}
-      <section id="apropos" className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+      <section id="apropos" className="py-16 md:py-24" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <FadeIn>
@@ -217,101 +225,87 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
             </FadeIn>
 
-            <div>
-              <div className="grid grid-cols-2 gap-4">
-                {HOME_STATS.map(({ icon, value, label }, i) => (
-                  <FadeIn key={label[locale]} delay={0.1 + i * 0.08}>
-                    <div className="card p-6 text-center h-full">
-                      <Icon name={icon} size={26} className="mx-auto mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
-                      <p className="font-display font-bold text-4xl mb-2" style={{ color: 'var(--accent)' }}><CountUp value={value[locale]} /></p>
-                      <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>
-                        {label[locale]}
-                      </p>
-                    </div>
-                  </FadeIn>
-                ))}
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              {HOME_STATS.map(({ icon, value, label }) => (
+                <div key={label[locale]} className="card p-6 text-center h-full">
+                  <Icon name={icon} size={26} className="mx-auto mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
+                  <p className="font-display font-semibold text-4xl mb-2" style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>
+                    <CountUp value={value[locale]} />
+                  </p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-poppins)' }}>{label[locale]}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* ── STACK TECHNIQUE: the only stack block of the page — twelve key technologies, four groups (data/home-stack.ts) ── */}
-      <section id="stack" className="py-24">
+      <section id="stack" className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <FadeIn className="text-center mb-16">
-            <p className="section-label mb-4">{t.home.stackLabel}</p>
+          <FadeIn className="mb-12">
+            <p className="section-label mb-3">{t.home.stackLabel}</p>
             <h2 className="section-title">{t.home.stackTitle}</h2>
           </FadeIn>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {HOME_STACK.map((group, i) => (
-              <FadeIn key={group.id} delay={Math.min(i * 0.07, 0.28)}>
-                <div className="card p-6 h-full">
-                  <Icon name={group.icon} size={28} className="mb-3" style={{ color: 'var(--brand, var(--accent))' }} />
-                  <h3 className="font-display font-semibold text-base mb-4" style={{ color: 'var(--accent)' }}>
-                    {group.label[locale]}
-                  </h3>
-                  <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
-                    {group.items.map((item) => {
-                      const name = typeof item.name === 'string' ? item.name : item.name[locale]
-                      return (
-                        <li
-                          key={name}
-                          className="flex items-center gap-2"
-                          style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', padding: '0.4rem 0.8rem', color: 'var(--text-muted)' }}
-                        >
-                          {item.icon ? <Icon name={item.icon} size={18} className="flex-shrink-0" /> : <TechLogo name={name} />}
-                          <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-poppins)' }}>{name}</span>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </div>
-              </FadeIn>
+          {/* Widths follow what each group holds (four, three, three and two technologies) */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_0.85fr] gap-4">
+            {HOME_STACK.map((group) => (
+              <div key={group.id} className="card p-6 h-full">
+                <h3 className="font-display font-semibold text-base mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                  <Icon name={group.icon} size={18} className="flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
+                  {group.label[locale]}
+                </h3>
+                <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
+                  {group.items.map((item) => {
+                    const name = typeof item.name === 'string' ? item.name : item.name[locale]
+                    return (
+                      <li
+                        key={name}
+                        className="flex items-center gap-2"
+                        style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', padding: '0.4rem 0.8rem', color: 'var(--text-muted)' }}
+                      >
+                        {item.icon ? <Icon name={item.icon} size={18} className="flex-shrink-0" /> : <TechLogo name={name} />}
+                        <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-poppins)' }}>{name}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── MÉTHODE ── */}
-      <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+      <section className="py-16 md:py-24" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <FadeIn className="text-center mb-14">
-            <p className="section-label mb-4">{t.work.homeLabel}</p>
+          <FadeIn className="mb-12">
+            <p className="section-label mb-3">{t.work.homeLabel}</p>
             <h2 className="section-title mb-4">{t.work.homeTitle}</h2>
-            <p className="max-w-xl mx-auto" style={{ color: 'var(--text-muted)' }}>{t.work.homeText}</p>
+            <p className="max-w-xl" style={{ color: 'var(--text-muted)' }}>{t.work.homeText}</p>
           </FadeIn>
-          <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 list-none p-0 m-0 mb-10">
+          <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 list-none p-0 m-0 mb-10">
             {t.work.homeSteps.map((step, i) => (
-              <li key={step.title}>
-                <FadeIn delay={Math.min(i * 0.07, 0.28)}>
-                  <div className="card p-6 h-full">
-                    <div className="flex items-center justify-between mb-4" aria-hidden="true">
-                      <Icon name={iconForText(step.title, STEP_ICONS[i % STEP_ICONS.length])} size={30} style={{ color: 'var(--brand, var(--accent))' }} />
-                      <span className="step-number">{String(i + 1).padStart(2, '0')}</span>
-                    </div>
-                    <h3 className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{step.title}</h3>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.text}</p>
-                  </div>
-                </FadeIn>
+              <li key={step.title} className="card p-6 h-full">
+                <span className="step-number block mb-4" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                <h3 className="font-display font-semibold text-base mb-2" style={{ color: 'var(--text)' }}>{step.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{step.text}</p>
               </li>
             ))}
           </ol>
-          <div className="text-center">
-            <Link href={`/${locale}/methode`} className="btn-secondary">
-              {t.work.homeCta}
-              <Icon name="arrowRight" size={14} />
-            </Link>
-          </div>
+          <Link href={`/${locale}/methode`} className="btn-secondary">
+            {t.work.homeCta}
+            <Icon name="arrowRight" size={14} />
+          </Link>
         </div>
       </section>
 
       {/* ── TÉMOIGNAGES ── */}
-      <section className="py-24 overflow-hidden">
+      <section className="py-16 md:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <FadeIn className="text-center mb-16">
-            <p className="section-label mb-4">{t.home.testimonialsLabel}</p>
+          <FadeIn className="mb-10">
+            <p className="section-label mb-3">{t.home.testimonialsLabel}</p>
             <h2 className="section-title mb-6">{t.home.testimonialsTitle}</h2>
             {testimonials.length === 0 && (
               <p className="mb-6" style={{ color: 'var(--text-muted)' }}>{t.home.testimonialsEmpty}</p>
@@ -343,7 +337,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-24" style={{ background: 'var(--bg-secondary)' }}>
+      <section className="py-16 md:py-24" style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto px-6 text-center">
           <FadeIn>
             <div
@@ -356,7 +350,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {t.home.ctaText}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href={`/${locale}/contact`} className="btn-primary">{t.home.ctaButton1}</Link>
+                <Link href={`/${locale}/devis`} className="btn-primary">{t.home.ctaButton1}</Link>
                 <Link href={`/${locale}/contact`} className="btn-secondary">{t.home.ctaButton2}</Link>
               </div>
             </div>

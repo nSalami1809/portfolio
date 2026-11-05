@@ -22,7 +22,7 @@ interface Props {
 
 // A figure that counts up when it scrolls into view. The server HTML (and the first client render) carry the FINAL
 // value, so nothing is hidden, nothing shifts and search engines read the real number. Like FadeIn, only a figure that
-// is still below the screen when the page is ready is reset to 0 and counted up; one already on screen stays as it is.
+// is counted up from 0 when it comes into view (one already on screen at load counts at once).
 // No React state: the text is written straight into the node on each frame, so counting never re-renders anything.
 export default function CountUp({ value, className, style }: Props) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -33,9 +33,6 @@ export default function CountUp({ value, className, style }: Props) {
     if (!el || !parsed) return
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     if (reduce || typeof IntersectionObserver === 'undefined') return
-    const rect = el.getBoundingClientRect()
-    if (rect.top < window.innerHeight && rect.bottom > 0) return // already on screen: leave the real value
-
     const { prefix, n, suffix } = parsed
     const write = (v: number) => { el.textContent = `${prefix}${Math.round(v)}${suffix}` }
     write(0)
