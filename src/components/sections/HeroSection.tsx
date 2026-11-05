@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { m } from 'framer-motion'
 import type { PersonalInfo, SocialLinks } from '@/types'
 import type { Locale } from '@/lib/i18n/locale'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import Icon from '@/components/ui/Icon'
+import PhotoLightbox from '@/components/ui/PhotoLightbox'
 
 const container = {
   hidden: {},
@@ -113,14 +113,11 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
         <m.div variants={container} initial={false} animate="show">
           {personal.photo && (
             <m.div variants={item} className="mb-6">
-              <Image
+              <PhotoLightbox
                 src={personal.photo}
                 alt={personal.name}
-                width={80}
-                height={80}
-                priority
-                className="w-20 h-20 rounded-full object-cover"
-                style={{ border: '2px solid var(--accent)', boxShadow: '0 0 0 4px var(--accent-glow)' }}
+                openLabel={t.heroPhotoOpen}
+                closeLabel={t.heroPhotoClose}
               />
             </m.div>
           )}
