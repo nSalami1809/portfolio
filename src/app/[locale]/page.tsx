@@ -12,6 +12,8 @@ import { jsonLdScript } from '@/lib/json-ld'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { isLocale, DEFAULT_LOCALE, type Locale } from '@/lib/i18n/locale'
 import type { Testimonial } from '@/types'
+import { deliveredFirst } from '@/lib/testimonials'
+import { tidySkills, tidyText } from '@/lib/text-tidy'
 import type { Metadata } from 'next'
 import { pageMeta, HOME_COPY } from '@/lib/seo'
 import { publicPersonal } from '@/lib/public-portfolio'
@@ -56,18 +58,27 @@ async function TranslatedTestimonials({
   fieldsPromise,
   locale,
   verifiedLabel,
+  projectLabel,
+  linkedinLabel,
+  projectTitles,
 }: {
   testimonials: Testimonial[]
   fieldsPromise: Promise<{ text: string; role: string; company: string }[]>
   locale: Locale
   verifiedLabel: string
+  /** "Delivered project: {project}" and "LinkedIn profile of {name}" (placeholders filled here) */
+  projectLabel: string
+  linkedinLabel: string
+  projectTitles: Record<string, string>
 }) {
   const fields = await fieldsPromise
   const translated = testimonials.map((tm, i) => ({
     ...tm,
-    text: fields[i].text,
+    text: tidyText(fields[i].text),
     role: fields[i].role,
     company: fields[i].company,
+    verifiedText: tm.projectSlug && projectTitles[tm.projectSlug] ? projectLabel.replace('{project}', projectTitles[tm.projectSlug]) : undefined,
+    linkedinLabel: linkedinLabel.replace('{name}', tm.name),
   }))
   return (
     <TestimonialsMarquee testimonials={translated} locale={locale} verifiedLabel={verifiedLabel} />
@@ -81,7 +92,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     ...pageMeta({ locale, title, description }),
     // The home page carries the full "Name — role" title, without the "| Name" suffix.
-    title: { absolute: `Nawaf Nemrod Salami — ${title}` },
+    title: { absolute: `Nawaf Nemrod SALAMI — ${title}` },
   }
 }
 
@@ -94,8 +105,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const personal     = portfolio?.personal     ?? defaultPersonalInfo
   const socials      = portfolio?.socials      ?? defaultSocials
-  const skills       = portfolio?.skills       ?? defaultSkills
-  const testimonials = portfolio?.testimonials ?? defaultTestimonials
+  const skills       = tidySkills(portfolio?.skills ?? defaultSkills)
+  // The ones about a delivered job (linked to a project) come first
+  const testimonials = deliveredFirst(portfolio?.testimonials ?? defaultTestimonials)
 
   // Deliberately NOT awaited here: this promise is handed to the Suspense
   // boundary further down so the rest of the page never waits on it.
@@ -190,7 +202,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <div className="space-y-4 text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 <p>{t.home.aboutP1}</p>
                 {/* The detailed profile (AI, databases…) lives here: the hero only keeps two sentences */}
-                {translatedPersonal.bio && <p>{translatedPersonal.bio}</p>}
+                {translatedPersonal.bio && <p>{tidyText(translatedPersonal.bio)}</p>}
                 <p>{t.home.aboutP2}</p>
               </div>
               <div className="mt-8">
@@ -315,6 +327,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 fieldsPromise={testimonialFieldsPromise}
                 locale={locale}
                 verifiedLabel={t.home.testimonialsVerified}
+                projectLabel={t.home.testimonialsProject}
+                linkedinLabel={t.home.testimonialsLinkedin}
+                projectTitles={Object.fromEntries((portfolio?.projects ?? defaultProjects).map((p) => [p.slug, p.title]))}
               />
             </Suspense>
           </FadeIn>

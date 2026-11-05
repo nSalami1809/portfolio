@@ -1,7 +1,7 @@
 import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, SiteSettings, SocialLinks, VisionData, BlogPost, Offer, Availability, PortfolioDocument } from '@/types'
 
 export const defaultPersonalInfo: PersonalInfo = {
-  name: 'Nawaf Nemrod Salami',
+  name: 'Nawaf Nemrod SALAMI',
   role: 'Développeur Web Fullstack & DevOps',
   bio: 'Je conçois et déploie des applications web modernes, de l\'interface utilisateur jusqu\'à l\'infrastructure cloud. Passionné par les systèmes robustes et les expériences élégantes.',
   email: 'nemrodsalami1809@gmail.com',

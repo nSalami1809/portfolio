@@ -4,7 +4,7 @@ import { translateFields } from '@/lib/translate'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { ogCard, OG_SIZE } from '@/lib/og-card'
 
-export const alt = 'Projet — Nawaf Nemrod Salami'
+export const alt = 'Projet — Nawaf Nemrod SALAMI'
 export const size = OG_SIZE
 export const contentType = 'image/png'
 export const revalidate = 3600
@@ -17,7 +17,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const portfolio = await fetchPortfolioSafe('projects/og')
   const project = (portfolio?.projects ?? defaultProjects).find((p) => p.slug === slug)
 
-  if (!project) return ogCard({ kicker: locale === 'en' ? 'Project' : 'Projet', title: 'Nawaf Nemrod Salami' })
+  if (!project) return ogCard({ kicker: locale === 'en' ? 'Project' : 'Projet', title: 'Nawaf Nemrod SALAMI' })
 
   // Same fields as the page itself, so the cached translation is reused.
   const t = await translateFields(`project:${slug}`, locale, {

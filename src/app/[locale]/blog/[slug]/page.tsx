@@ -86,7 +86,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ local
     description: translated.excerpt,
     image: post.coverImage || undefined,
     datePublished: post.date,
-    author: { '@type': 'Person', name: post.author || 'Nawaf Nemrod Salami' },
+    author: { '@type': 'Person', name: post.author || 'Nawaf Nemrod SALAMI' },
     mainEntityOfPage: `${siteUrl}/${locale}/blog/${slug}`,
   }
 

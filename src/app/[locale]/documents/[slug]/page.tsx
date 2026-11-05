@@ -77,7 +77,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
     name: translated.title,
     description: translated.description,
     datePublished: document.date,
-    author: { '@type': 'Person', name: 'Nawaf Nemrod Salami' },
+    author: { '@type': 'Person', name: 'Nawaf Nemrod SALAMI' },
     encodingFormat: document.fileType === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     url: `${siteUrl}/${locale}/documents/${slug}`,
     mainEntityOfPage: `${siteUrl}/${locale}/documents/${slug}`,

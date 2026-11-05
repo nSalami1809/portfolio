@@ -176,6 +176,13 @@ export default function AdminTestimonials() {
                 <StarRatingInput value={form.rating ?? 5} onChange={(rating) => setForm((p) => ({ ...p, rating }))} size={20} />
               </div>
               <div className="sm:col-span-2">
+                <F label="LinkedIn (optionnel)" />
+                <input className="input text-sm" type="url" value={form.linkedinUrl ?? ''} onChange={(e) => setForm((p) => ({ ...p, linkedinUrl: e.target.value.trim() || undefined }))} placeholder="https://www.linkedin.com/in/…" />
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+                  Une petite icône LinkedIn s&apos;affiche à côté du nom, si l&apos;adresse est bien en https://…linkedin.com.
+                </p>
+              </div>
+              <div className="sm:col-span-2">
                 <F label="Projet lié (avis vérifié)" />
                 <select
                   className="input text-sm"
@@ -188,7 +195,7 @@ export default function AdminTestimonials() {
                   ))}
                 </select>
                 <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
-                  Si renseigné, un badge « Vérifié » et un lien vers ce projet s&apos;affichent sur la carte publique.
+                  Si renseigné, la carte publique indique « Mission livrée : projet » avec un lien, et le témoignage passe en premier.
                 </p>
               </div>
               <div className="sm:col-span-2">

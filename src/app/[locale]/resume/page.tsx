@@ -7,6 +7,7 @@ import { defaultPersonalInfo, defaultExperiences, defaultEducations, defaultSkil
 import ResumeView from './ResumeView'
 import { publicPersonal } from '@/lib/public-portfolio'
 import { pageMeta } from '@/lib/seo'
+import { tidySkills } from '@/lib/text-tidy'
 
 // Regenerate at most once every 30s — same trade-off as the homepage and
 // /offres: an admin publish can take up to 30s to show here instead of the
@@ -31,7 +32,7 @@ export default async function ResumePage({ params }: { params: Promise<{ locale:
   const personal = portfolio?.personal ?? defaultPersonalInfo
   const experiences = portfolio?.experiences ?? defaultExperiences
   const educations = portfolio?.educations ?? defaultEducations
-  const skills = portfolio?.skills ?? defaultSkills
+  const skills = tidySkills(portfolio?.skills ?? defaultSkills)
 
   const translatedExperiences = await Promise.all(
     experiences.map(async (exp) => {

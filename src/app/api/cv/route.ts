@@ -3,7 +3,7 @@ import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 
 // Builds a clean "FirstLast.pdf" filename from the admin's full name —
 // derived from data instead of hardcoded, so it stays correct if the name
-// ever changes (e.g. "Nawaf Nemrod Salami" -> "NawafSalami.pdf").
+// ever changes (e.g. "Nawaf Nemrod SALAMI" -> "NawafSalami.pdf").
 // Combining diacritical marks block (U+0300-U+036F), built from char codes to
 // avoid embedding literal combining characters directly in source.
 const DIACRITICS_RE = new RegExp(`[${String.fromCharCode(0x0300)}-${String.fromCharCode(0x036f)}]`, 'g')

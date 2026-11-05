@@ -99,7 +99,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     description: translated.description,
     image: project.image || undefined,
     datePublished: project.year,
-    author: { '@type': 'Person', name: 'Nawaf Nemrod Salami' },
+    author: { '@type': 'Person', name: 'Nawaf Nemrod SALAMI' },
     keywords: project.tags.length ? project.tags.join(', ') : undefined,
     url: project.liveUrl || `${siteUrl}/${locale}/projects/${slug}`,
     mainEntityOfPage: `${siteUrl}/${locale}/projects/${slug}`,

@@ -69,7 +69,7 @@ export function ogCard({ kicker, title, subtitle, tags = [] }: OgCardOptions) {
         )}
 
         <div style={{ display: 'flex', position: 'absolute', bottom: '48px', left: '80px', fontSize: '22px', color: '#a3a3a3' }}>
-          Nawaf Nemrod Salami
+          Nawaf Nemrod SALAMI
         </div>
         <div style={{ display: 'flex', position: 'absolute', bottom: '48px', right: '80px', fontSize: '32px', fontWeight: 700, color: '#ffffff' }}>
           <span style={{ color: '#d4d4d4' }}>N</span>·S

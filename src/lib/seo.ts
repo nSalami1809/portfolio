@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
 import type { Locale } from '@/lib/i18n/locale'
 
 const OG_LOCALE: Record<Locale, string> = { fr: 'fr_FR', en: 'en_US' }
-const SITE_NAME = 'Nawaf Nemrod Salami'
+const SITE_NAME = 'Nawaf Nemrod SALAMI'
 
 function alternatesFor(locale: Locale, path = ''): NonNullable<Metadata['alternates']> {
   return {

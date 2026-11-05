@@ -4,8 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
-import StarRating from '@/components/ui/StarRating'
-import type { Testimonial } from '@/types'
+import { safeLinkedinUrl, type PublicTestimonial } from '@/lib/testimonials'
 import type { Locale } from '@/lib/i18n/locale'
 import Icon from '@/components/ui/Icon'
 
@@ -22,7 +21,8 @@ function VerifiedBadge({ slug, locale, label }: { slug: string; locale: Locale; 
   )
 }
 
-function TestimonialCard({ tm, fixedWidth, locale, verifiedLabel }: { tm: Testimonial; fixedWidth?: boolean; locale: Locale; verifiedLabel: string }) {
+function TestimonialCard({ tm, fixedWidth, locale, verifiedLabel }: { tm: PublicTestimonial; fixedWidth?: boolean; locale: Locale; verifiedLabel: string }) {
+  const linkedin = safeLinkedinUrl(tm.linkedinUrl)
   return (
     <div
       className={`rounded-2xl p-5 ${fixedWidth ? 'flex-shrink-0' : 'h-full'}`}
@@ -40,7 +40,14 @@ function TestimonialCard({ tm, fixedWidth, locale, verifiedLabel }: { tm: Testim
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{tm.name}</p>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)', fontFamily: 'var(--font-space-grotesk)' }}>{tm.name}</p>
+            {linkedin && (
+              <a href={linkedin} target="_blank" rel="noopener noreferrer" aria-label={tm.linkedinLabel ?? 'LinkedIn'} className="flex-shrink-0 hover:opacity-80" style={{ color: 'var(--text-muted)', lineHeight: 0 }}>
+                <Icon name="linkedin" size={14} />
+              </a>
+            )}
+          </div>
           {(tm.role || tm.company) && (
             <p className="text-xs truncate" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
               {[tm.role, tm.company].filter(Boolean).join(' · ')}
@@ -48,10 +55,7 @@ function TestimonialCard({ tm, fixedWidth, locale, verifiedLabel }: { tm: Testim
           )}
         </div>
       </div>
-      <div className="mb-2.5">
-        <StarRating rating={tm.rating ?? 5} />
-      </div>
-      {tm.projectSlug && <VerifiedBadge slug={tm.projectSlug} locale={locale} label={verifiedLabel} />}
+      {tm.projectSlug && <VerifiedBadge slug={tm.projectSlug} locale={locale} label={tm.verifiedText ?? verifiedLabel} />}
       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
         &ldquo;{tm.text}&rdquo;
       </p>
@@ -74,9 +78,9 @@ function useHydrated() {
   return useSyncExternalStore(noSubscribe, () => true, () => false)
 }
 
-type RowProps = { items: Testimonial[]; direction: 'left' | 'right'; locale: Locale; verifiedLabel: string }
+type RowProps = { items: PublicTestimonial[]; direction: 'left' | 'right'; locale: Locale; verifiedLabel: string }
 
-function buildTrack(items: Testimonial[]) {
+function buildTrack(items: PublicTestimonial[]) {
   // With very few testimonials, a single pass is narrower than the viewport
   // on wide screens — the loop would then show a big empty gap once the
   // (too-short) track scrolls past. Repeat the set until it's comfortably
@@ -200,7 +204,7 @@ function useNoHoverPointer() {
   return noHover
 }
 
-export default function TestimonialsMarquee({ testimonials, locale, verifiedLabel = 'Vérifié' }: { testimonials: Testimonial[]; locale: Locale; verifiedLabel?: string }) {
+export default function TestimonialsMarquee({ testimonials, locale, verifiedLabel = 'Vérifié' }: { testimonials: PublicTestimonial[]; locale: Locale; verifiedLabel?: string }) {
   const reducedMotion = usePrefersReducedMotion()
   const noHover = useNoHoverPointer()
 

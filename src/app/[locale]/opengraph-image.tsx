@@ -2,7 +2,7 @@ import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { HOME_COPY } from '@/lib/seo'
 import { ogCard, OG_SIZE } from '@/lib/og-card'
 
-export const alt = 'Nawaf Nemrod Salami — Fullstack & DevOps'
+export const alt = 'Nawaf Nemrod SALAMI — Fullstack & DevOps'
 export const size = OG_SIZE
 export const contentType = 'image/png'
 
@@ -12,7 +12,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   return ogCard({
     kicker: locale === 'en' ? 'Available for missions' : 'Disponible pour missions',
-    title: 'Nawaf Nemrod Salami',
+    title: 'Nawaf Nemrod SALAMI',
     subtitle: HOME_COPY[locale].title,
     tags: ['Next.js', 'TypeScript', 'Docker', 'Kubernetes', 'Node.js'],
   })

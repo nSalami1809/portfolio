@@ -45,7 +45,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ locale:
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${xml(`Nawaf Nemrod Salami — ${t.blog.title}`)}</title>
+    <title>${xml(`Nawaf Nemrod SALAMI — ${t.blog.title}`)}</title>
     <link>${BASE}/${locale}/blog</link>
     <description>${xml(t.blog.subtitle)}</description>
     <language>${locale}</language>

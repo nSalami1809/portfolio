@@ -106,6 +106,8 @@ export interface Testimonial {
   // Admin-only link to a real Project — when set, the public card shows a
   // "Vérifié" badge and links to that project as proof the review is real.
   projectSlug?: string
+  // Public link to the person's LinkedIn profile (optional): shown as a small link on the card
+  linkedinUrl?: string
 }
 
 export interface Offer {
