@@ -4,6 +4,7 @@ import Image from 'next/image'
 import FadeIn from '@/components/animations/FadeIn'
 import HeroSection from '@/components/sections/HeroSection'
 import TechMarquee from '@/components/sections/TechMarquee'
+import FeaturedProjects, { FeaturedProjectsSkeleton } from '@/components/sections/FeaturedProjects'
 import CountUp from '@/components/ui/CountUp'
 import TestimonialsMarquee from '@/components/sections/TestimonialsMarquee'
 import NextSlotBadge, { NEXT_SLOT_BADGE_HEIGHT } from '@/components/sections/NextSlotBadge'
@@ -17,6 +18,7 @@ import type { Metadata } from 'next'
 import { pageMeta, HOME_COPY } from '@/lib/seo'
 import { publicPersonal } from '@/lib/public-portfolio'
 import {
+  defaultProjects,
   defaultPersonalInfo,
   defaultSocials,
   defaultSkills,
@@ -170,6 +172,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </Suspense>
         }
       />
+
+      {/* ── PROJETS PHARES: three of the /projects list, own boundary so the hero never waits for their translations ── */}
+      <Suspense fallback={<FeaturedProjectsSkeleton />}>
+        <FeaturedProjects projects={portfolio?.projects ?? defaultProjects} locale={locale} t={t.home} />
+      </Suspense>
 
       {/* ── Ruban des technologies ── */}
       <TechMarquee items={skills.flatMap((s) => s.items.map((name) => ({ name, icon: s.icons?.[name] })))} label={t.home.stackTitle} />

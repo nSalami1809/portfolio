@@ -71,3 +71,49 @@ describe('hero', () => {
     }
   })
 })
+
+describe('featured projects', () => {
+  const base = { image: undefined as string | undefined, caseStudyContext: undefined as string | undefined, caseStudyResults: undefined as string | undefined }
+  const p = (slug: string, o: Record<string, unknown> = {}) => ({ slug, status: 'completed' as const, ...base, ...o })
+
+  it('takes at most three, the ones that explain themselves best first, never a concept', async () => {
+    const { pickFeaturedProjects } = await import('@/lib/featured-projects')
+    const list = [
+      p('a'), p('b', { image: 'x', caseStudyContext: 'c', caseStudyResults: 'r' }), p('c', { status: 'concept', image: 'x', caseStudyContext: 'c' }),
+      p('d', { image: 'x' }), p('e', { image: 'x', caseStudyContext: 'c' }), p('f', { status: 'in-progress', image: 'x', caseStudyContext: 'c' }),
+    ]
+    expect(pickFeaturedProjects(list).map((x) => x.slug)).toEqual(['b', 'e', 'd'])
+    expect(pickFeaturedProjects(list, 5).map((x) => x.slug)).not.toContain('c')
+  })
+
+  it('keeps the order of the list among equals, and copes with fewer than three', async () => {
+    const { pickFeaturedProjects } = await import('@/lib/featured-projects')
+    expect(pickFeaturedProjects([p('x'), p('y'), p('z')]).map((q) => q.slug)).toEqual(['x', 'y', 'z'])
+    expect(pickFeaturedProjects([p('only')]).length).toBe(1)
+    expect(pickFeaturedProjects([])).toEqual([])
+  })
+
+  it('sits right after the hero, in its own Suspense boundary, and reads the existing projects', () => {
+    const page = read('src', 'app', '[locale]', 'page.tsx')
+    expect(page.indexOf('<FeaturedProjects')).toBeGreaterThan(page.indexOf('<HeroSection'))
+    expect(page.indexOf('<FeaturedProjects')).toBeLessThan(page.indexOf('<TechMarquee'))
+    expect(page).toContain('projects={portfolio?.projects ?? defaultProjects}')
+    expect(page).toMatch(/<Suspense fallback=\{<FeaturedProjectsSkeleton \/>\}>/)
+  })
+
+  it('shows the need, the result only when there is one, the stack and the link to the case study', () => {
+    const src = read('src', 'components', 'sections', 'FeaturedProjects.tsx')
+    expect(src).toContain('{t.featuredNeed}')
+    expect(src).toContain('{result && (')
+    expect(src).toContain('p.tags.slice(0, 5)')
+    expect(src).toContain('/projects/${p.slug}')
+    expect(src).toContain('<ProjectPicture')
+  })
+
+  it('has its texts in both languages', () => {
+    for (const locale of ['fr', 'en'] as const) {
+      const h = getDictionary(locale).home
+      for (const k of ['featuredLabel', 'featuredTitle', 'featuredNeed', 'featuredResult', 'featuredCase', 'featuredProject', 'featuredAll'] as const) expect(h[k], `${locale}.${k}`).toBeTruthy()
+    }
+  })
+})
