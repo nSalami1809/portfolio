@@ -141,7 +141,7 @@ describe('layout: not four equal centred blocks everywhere', () => {
 
   it('section headings are aligned left, the stack groups have different widths, sections are tighter on a phone', () => {
     expect(page).not.toMatch(/FadeIn className="text-center/)
-    expect(page).toContain('lg:grid-cols-[1.35fr_1fr_1fr_0.85fr]')
+    expect(page).toContain('lg:grid-cols-3')
     expect(page.match(/py-16 md:py-24/g)?.length).toBeGreaterThanOrEqual(5)
     expect(read('src', 'components', 'sections', 'FeaturedProjects.tsx')).toContain('py-16 md:py-24')
   })

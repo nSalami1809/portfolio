@@ -7,5 +7,5 @@ import { techLogo } from '@/lib/tech-logos'
 export default function TechLogo({ name, size = 18 }: { name: string; size?: number }) {
   const src = techLogo(name)
   if (!src) return null
-  return <span aria-hidden="true" className="tech-logo" style={{ width: size, height: size, ['--tech-logo' as string]: `url(${src})` }} />
+  return <span aria-hidden="true" className="tech-logo" style={{ width: size, height: size, WebkitMaskImage: `url(${src})`, maskImage: `url(${src})` }} />
 }

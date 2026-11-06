@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import BackLink from '@/components/ui/BackLink'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { defaultPersonalInfo } from '@/data/defaultData'
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale'
@@ -186,6 +187,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
+      <BackLink locale={locale} />
       <h1 className="section-title mb-4" style={{ fontSize: 'clamp(2rem,5vw,3rem)' }}>
         {isEn ? 'Terms of sale' : 'Conditions générales de vente'}
       </h1>

@@ -251,6 +251,16 @@ export default function Navbar({ locale, t }: NavbarProps) {
           {/* Right column: the quote button, always there; on mobile/tablet also the theme and language controls and the
               menu (on desktop those sit inside the pill above) */}
           <div className="flex items-center gap-2 col-start-3 justify-self-end">
+            <Link
+              href={`/${locale}`}
+              aria-label={t.home}
+              title={t.home}
+              aria-current={pathname === `/${locale}` ? 'page' : undefined}
+              className="flex items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150 hover:bg-[var(--surface-hover)]"
+              style={{ color: pathname === `/${locale}` ? 'var(--accent)' : 'var(--text-muted)' }}
+            >
+              <Icon name="home" size={20} />
+            </Link>
             <Link href={quoteHref} className="btn-primary text-sm px-4 py-2.5 max-[380px]:px-3">
               <Icon name="invoice" size={14} className="max-[380px]:hidden" />
               {t.quote}

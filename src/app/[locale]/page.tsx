@@ -29,7 +29,6 @@ import {
 } from '@/data/defaultData'
 import Icon from '@/components/ui/Icon'
 import TechLogo from '@/components/ui/TechLogo'
-import { HOME_STACK } from '@/data/home-stack'
 import { HOME_STATS } from '@/data/home-stats'
 
 // Regenerate at most once every 30s; invalidated instantly on admin publish via revalidatePath
@@ -240,7 +239,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
-      {/* ── STACK TECHNIQUE: the only stack block of the page — twelve key technologies, four groups (data/home-stack.ts) ── */}
+      {/* ── STACK TECHNIQUE: the only stack block of the page — every skill, grouped by category ── */}
       <section id="stack" className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <FadeIn className="mb-12">
@@ -248,28 +247,24 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <h2 className="section-title">{t.home.stackTitle}</h2>
           </FadeIn>
 
-          {/* Widths follow what each group holds (four, three, three and two technologies) */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_0.85fr] gap-4">
-            {HOME_STACK.map((group) => (
+          {/* Every skill saved in the admin, with its logo (same data and look as the Experience page) */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {skills.map((group) => (
               <div key={group.id} className="card p-6 h-full">
-                <h3 className="font-display font-semibold text-base mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Icon name={group.icon} size={18} className="flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-                  {group.label[locale]}
+                <h3 className="font-display font-semibold text-base mb-4" style={{ color: 'var(--text)' }}>
+                  {group.category}
                 </h3>
                 <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
-                  {group.items.map((item) => {
-                    const name = typeof item.name === 'string' ? item.name : item.name[locale]
-                    return (
-                      <li
-                        key={name}
-                        className="flex items-center gap-2"
-                        style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', padding: '0.4rem 0.8rem', color: 'var(--text-muted)' }}
-                      >
-                        {item.icon ? <Icon name={item.icon} size={18} className="flex-shrink-0" /> : <TechLogo name={name} />}
-                        <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-poppins)' }}>{name}</span>
-                      </li>
-                    )
-                  })}
+                  {group.items.map((name) => (
+                    <li
+                      key={name}
+                      className="flex items-center gap-2"
+                      style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', padding: '0.4rem 0.8rem', color: 'var(--text-muted)' }}
+                    >
+                      <TechLogo name={name} />
+                      <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-poppins)' }}>{name}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}

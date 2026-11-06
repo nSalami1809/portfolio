@@ -144,30 +144,15 @@ describe('hero buttons', () => {
   })
 })
 
-describe('one single stack block, twelve key technologies in four groups', () => {
+describe('one single stack block, every skill with its logo', () => {
   it('the ribbon under the hero is gone, the grouped section is the only one', () => {
     const page = read('src', 'app', '[locale]', 'page.tsx')
     expect(page).not.toContain('TechMarquee')
-    expect(page).toContain('HOME_STACK.map(')
-    expect(page).not.toContain('skills.map(')
+    expect(page).not.toContain('HOME_STACK')
+    expect(page).toContain('skills.map(')
+    expect(page).toContain('<TechLogo name={name} />')
     expect(() => read('src', 'components', 'sections', 'TechMarquee.tsx')).toThrow()
     expect(read('src', 'app', 'globals.css')).not.toContain('tech-marquee')
-  })
-
-  it('has Frontend, Backend, DevOps and AI, with 10 to 12 technologies in all', async () => {
-    const { HOME_STACK } = await import('@/data/home-stack')
-    expect(HOME_STACK.map((g) => g.id)).toEqual(['frontend', 'backend', 'devops', 'ai'])
-    const total = HOME_STACK.reduce((n, g) => n + g.items.length, 0)
-    expect(total).toBeGreaterThanOrEqual(10)
-    expect(total).toBeLessThanOrEqual(12)
-  })
-
-  it('gives every technology a logo or a generic icon, and never lists Git, GitHub and GitHub Actions together', async () => {
-    const { HOME_STACK } = await import('@/data/home-stack')
-    const { techLogo } = await import('@/lib/tech-logos')
-    const names = HOME_STACK.flatMap((g) => g.items.map((i) => ({ name: typeof i.name === 'string' ? i.name : i.name.fr, icon: i.icon })))
-    for (const { name, icon } of names) expect(icon || techLogo(name), name).toBeTruthy()
-    expect(names.filter((n) => /^git/i.test(n.name)).length).toBeLessThanOrEqual(1)
   })
 })
 
@@ -196,7 +181,7 @@ describe('technology logos', () => {
   })
 
   it('are painted in the text colour, the same size everywhere, with no picture uploaded in the admin', () => {
-    expect(read('src', 'app', 'globals.css')).toMatch(/\.tech-logo \{[\s\S]*?background-color: currentColor;[\s\S]*?mask: var\(--tech-logo\)/)
+    expect(read('src', 'app', 'globals.css')).toMatch(/\.tech-logo \{[\s\S]*?background-color: currentColor;[\s\S]*?mask-size: contain/)
     const resume = read('src', 'app', '[locale]', 'resume', 'ResumeView.tsx')
     expect(resume).toContain('<TechLogo name={item} />')
     expect(resume).not.toContain('skill.icons')

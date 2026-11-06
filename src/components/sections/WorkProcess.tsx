@@ -132,10 +132,16 @@ export default function WorkProcess({ t, terms, locale, className = 'space-y-28'
               <Link href={`/${locale}/devis`} className="btn-primary">{t.ctaQuote}</Link>
               <Link href={`/${locale}/calendrier`} className="btn-secondary">{t.ctaCall}</Link>
             </div>
-            <p className="mt-6 text-sm flex flex-wrap justify-center gap-x-6 gap-y-2">
-              <Link href={`/${locale}/suivi`} className="hover:underline" style={{ color: 'var(--text-subtle)' }}>{t.ctaTrack}</Link>
-              <Link href={`/${locale}/cgv`} className="hover:underline" style={{ color: 'var(--text-subtle)' }}>{t.ctaTerms}</Link>
-            </p>
+            <div className="mt-4 flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href={`/${locale}/suivi`} className="btn-secondary">
+                <Icon name="delivery" size={14} />
+                {t.ctaTrack}
+              </Link>
+              <Link href={`/${locale}/cgv`} className="btn-secondary">
+                <Icon name="shield" size={14} />
+                {t.ctaTerms}
+              </Link>
+            </div>
           </div>
         </FadeIn>
       </section>
