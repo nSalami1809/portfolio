@@ -29,7 +29,7 @@ export const HOME_STATS: HomeStat[] = [
   },
   {
     icon: 'shield',
-    value: { fr: 'Offert', en: 'Free' },
-    label: { fr: 'Corrections garanties le 1er mois après livraison', en: 'Fixes guaranteed in the first month after delivery' },
+    value: { fr: '2 cycles', en: '2 rounds' },
+    label: { fr: 'De correction offerts', en: 'Of fixes included, free' },
   },
 ]

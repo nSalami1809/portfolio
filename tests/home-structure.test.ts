@@ -192,8 +192,8 @@ describe('technology logos', () => {
 describe('the figures of the About block', () => {
   it('are the four checkable facts, in both languages, and the two empty ones are gone', async () => {
     const { HOME_STATS } = await import('@/data/home-stats')
-    expect(HOME_STATS.map((s) => s.value.fr)).toEqual(['3+', '10+', '1 mois', 'Offert'])
-    expect(HOME_STATS.map((s) => s.value.en)).toEqual(['3+', '10+', '1 month', 'Free'])
+    expect(HOME_STATS.map((s) => s.value.fr)).toEqual(['3+', '10+', '1 mois', '2 cycles'])
+    expect(HOME_STATS.map((s) => s.value.en)).toEqual(['3+', '10+', '1 month', '2 rounds'])
     for (const s of HOME_STATS) for (const l of ['fr', 'en'] as const) expect(s.label[l].length, s.label.fr).toBeGreaterThan(3)
     const all = JSON.stringify(HOME_STATS)
     expect(all).not.toMatch(/Implication|Involvement|Technologies|100%/)

@@ -256,10 +256,16 @@ export default function Navbar({ locale, t }: NavbarProps) {
               aria-label={t.home}
               title={t.home}
               aria-current={pathname === `/${locale}` ? 'page' : undefined}
-              className="flex items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150 hover:bg-[var(--surface-hover)]"
-              style={{ color: pathname === `/${locale}` ? 'var(--accent)' : 'var(--text-muted)' }}
+              className="flex items-center justify-center gap-2 h-11 w-11 xl:w-auto xl:px-4 text-sm font-medium transition-colors duration-150"
+              style={{
+                border: '1px solid var(--border)',
+                background: pathname === `/${locale}` ? 'var(--accent)' : 'var(--glass-bg)',
+                color: pathname === `/${locale}` ? 'var(--accent-contrast)' : 'var(--text)',
+                fontFamily: 'var(--font-poppins)',
+              }}
             >
-              <Icon name="home" size={20} />
+              <Icon name="home" size={18} />
+              <span className="hidden xl:inline">{t.home}</span>
             </Link>
             <Link href={quoteHref} className="btn-primary text-sm px-4 py-2.5 max-[380px]:px-3">
               <Icon name="invoice" size={14} className="max-[380px]:hidden" />

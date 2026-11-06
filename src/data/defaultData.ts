@@ -3,7 +3,7 @@ import type { PersonalInfo, Project, Experience, Education, Skill, Testimonial, 
 export const defaultPersonalInfo: PersonalInfo = {
   name: 'Nawaf Nemrod SALAMI',
   role: 'Développeur Web Fullstack & DevOps',
-  bio: 'Je conçois et déploie des applications web modernes, de l\'interface utilisateur jusqu\'à l\'infrastructure cloud. Passionné par les systèmes robustes et les expériences élégantes.',
+  bio: "Je conçois et développe des solutions technologiques innovantes : applications web et mobiles, logiciels d'entreprise (ERP/CRM), plateformes SaaS, systèmes intelligents intégrant l'IA générative, le RAG et les agents autonomes, ainsi que des solutions d'automatisation, de traitement de données et d'infrastructure Cloud. Mon objectif : transformer les besoins métier en produits numériques performants, évolutifs et durables.",
   email: 'nemrodsalami1809@gmail.com',
   location: 'Libreville, Gabon — Disponible en remote',
   photo: '',
