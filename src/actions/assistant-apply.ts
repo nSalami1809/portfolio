@@ -1,6 +1,6 @@
 'use server'
 
-import { updateTag } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { requireAdmin } from '@/lib/require-admin'
 import { readPortfolioWithVersion } from '@/lib/portfolio-data'
 import { replacePortfolioKey } from '@/lib/portfolio-write'
@@ -25,6 +25,11 @@ function refreshPublicSite() {
     updateTag('portfolio')
   } catch (err) {
     console.error('assistant-apply: updateTag failed, relying on the 30s cache fallback', err)
+  }
+  try {
+    revalidatePath('/', 'layout')
+  } catch (err) {
+    console.error('assistant-apply: revalidatePath failed, relying on the 30s page fallback', err)
   }
 }
 

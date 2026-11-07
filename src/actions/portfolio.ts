@@ -1,6 +1,6 @@
 'use server'
 
-import { updateTag } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { getDb } from '@/lib/mongodb'
 import { requireAdmin } from '@/lib/require-admin'
 import { fetchPortfolio, fetchPortfolioFresh } from '@/lib/portfolio-data'
@@ -37,6 +37,13 @@ export async function publishPortfolio(data: PortfolioData): Promise<void> {
     updateTag('portfolio')
   } catch (err) {
     console.error('publishPortfolio: updateTag failed, relying on the 30s cache fallback', err)
+  }
+  // The data cache above is not enough on its own: the already-rendered public pages (home, about…) kept serving the
+  // previous version until a second visit after the 30s window. Purge them too, so the next visit shows the edit.
+  try {
+    revalidatePath('/', 'layout')
+  } catch (err) {
+    console.error('publishPortfolio: revalidatePath failed, relying on the 30s page fallback', err)
   }
 }
 
