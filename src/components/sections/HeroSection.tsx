@@ -80,7 +80,7 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
             <m.h1
               variants={item}
               className="font-display font-semibold leading-[1.05] mb-6 max-w-3xl"
-              style={{ fontSize: 'clamp(2.25rem, 5.2vw, 4.25rem)', letterSpacing: '-0.03em', color: 'var(--text)' }}
+              style={{ fontSize: 'clamp(1.9rem, 4vw, 3.25rem)', letterSpacing: '-0.03em', color: 'var(--text)' }}
             >
               {t.heroTitle}
             </m.h1>

@@ -89,8 +89,8 @@ describe('the hero', () => {
   it('says what the work is, in a headline that is not a greeting; the name sits beside the photo', () => {
     expect(hero).toContain('{t.heroTitle}')
     expect(hero).toContain('{personal.name}')
-    expect(getDictionary('fr').home.heroTitle).toBe('Votre projet web sur mesure, du devis à la livraison')
-    expect(getDictionary('en').home.heroTitle).toBe('Your custom web project, from quote to delivery')
+    expect(getDictionary('fr').home.heroTitle).toBe('Sites web, applications mobiles, logiciels métiers, SaaS et solutions IA : donnons vie à vos projets numériques.')
+    expect(getDictionary('en').home.heroTitle).toBe('Websites, mobile apps, business software, SaaS and AI solutions: let’s bring your digital projects to life.')
     expect(JSON.stringify(getDictionary('fr').home)).not.toContain('Bonjour, je suis')
   })
 

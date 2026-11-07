@@ -165,7 +165,7 @@ const fr = {
     concept: 'Concept',
   } as Record<string, string>,
   home: {
-    heroTitle: 'Votre projet web sur mesure, du devis à la livraison',
+    heroTitle: 'Sites web, applications mobiles, logiciels métiers, SaaS et solutions IA : donnons vie à vos projets numériques.',
     // Same wording as the page title that search engines show (HOME_COPY in lib/seo.ts; a test keeps them equal)
     heroRoleLabel: 'Développeur web fullstack & DevOps à Libreville, Gabon',
     heroSummary: 'Je crée des sites et applications web sur mesure pour les entreprises et les indépendants, de la conception à la mise en ligne. Vous obtenez un devis instantané, un délai moyen d’un mois et un suivi jusqu’à la livraison.',
@@ -869,7 +869,7 @@ const en: typeof fr = {
     concept: 'Concept',
   },
   home: {
-    heroTitle: 'Your custom web project, from quote to delivery',
+    heroTitle: 'Websites, mobile apps, business software, SaaS and AI solutions: let’s bring your digital projects to life.',
     heroRoleLabel: 'Fullstack web developer & DevOps in Libreville, Gabon',
     heroSummary: 'I build custom websites and web applications for businesses and freelancers, from design to launch. You get an instant quote, an average delivery time of one month and follow-up through to delivery.',
     heroRecruit: 'I’m hiring',
