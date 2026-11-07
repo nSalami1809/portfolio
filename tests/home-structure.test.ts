@@ -53,15 +53,15 @@ describe('hero', () => {
     expect(hero).toContain('{t.heroRecruit}')
   })
 
-  it('shows two sentences, not the long profile (which moves to the About block)', () => {
-    expect(hero).toContain('{t.heroSummary}')
-    expect(hero).not.toContain('personal.bio')
+  it('shows the biography written in the back office, and the two standard sentences while it is empty', () => {
+    expect(hero).toContain('personal.bio')
+    expect(hero).toContain('t.heroSummary')
     for (const locale of ['fr', 'en'] as const) {
       const summary = getDictionary(locale).home.heroSummary
       expect(summary.split(/\.\s/).length, locale).toBeLessThanOrEqual(2)
       expect(summary.length, locale).toBeLessThan(260)
     }
-    expect(read('src', 'app', '[locale]', 'page.tsx')).toContain('translatedPersonal.bio')
+    expect(read('src', 'app', '[locale]', 'page.tsx')).toContain('aboutFields.about')
   })
 
   it('has the same title as the one search engines show', async () => {

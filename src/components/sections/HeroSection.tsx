@@ -85,8 +85,9 @@ export default function HeroSection({ personal, socials, locale, t, nextSlotBadg
               {t.heroTitle}
             </m.h1>
 
-            <m.p variants={item} className="text-lg leading-relaxed mb-8 max-w-xl" style={{ color: 'var(--text-muted)' }}>
-              {t.heroSummary}
+            {/* The biography written in the back office; the standard two sentences while it is empty */}
+            <m.p variants={item} className="text-lg leading-relaxed mb-8 max-w-2xl" style={{ color: 'var(--text-muted)' }}>
+              {personal.bio?.trim() || t.heroSummary}
             </m.p>
 
             {/* The quote first (clients), the projects, and for recruiters a button of the same kind to the experience page */}

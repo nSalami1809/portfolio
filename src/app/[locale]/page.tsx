@@ -126,8 +126,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // The bio translation is the only thing the hero genuinely has to wait for.
   // The "next open slot" badge, which needs a bookings query, now renders in
   // its own Suspense boundary inside the hero instead of gating it.
-  const [bioFields] = await translateFieldsBatch(locale, [
+  // The About paragraph is its own field; until it is saved once from the back office, the original text is used.
+  const aboutText = personal.about ?? defaultPersonalInfo.about ?? ''
+  const [bioFields, aboutFields] = await translateFieldsBatch(locale, [
     { key: 'personal:bio', fields: { bio: personal.bio } },
+    { key: 'personal:about', fields: { about: aboutText } },
   ])
   const translatedPersonal = { ...publicPersonal(personal), bio: bioFields.bio }
 
@@ -212,8 +215,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </h2>
               <div className="space-y-4 text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 <p>{t.home.aboutP1}</p>
-                {/* The detailed profile (AI, databases…) lives here: the hero only keeps two sentences */}
-                {translatedPersonal.bio && <p>{tidyText(translatedPersonal.bio)}</p>}
+                {/* The detailed profile (AI, databases…) lives here, edited as "À propos" in the back office */}
+                {aboutFields.about && <p>{tidyText(aboutFields.about)}</p>}
                 <p>{t.home.aboutP2}</p>
               </div>
               <div className="mt-8">

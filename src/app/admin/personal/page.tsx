@@ -7,6 +7,7 @@ import ImageUpload from '@/components/admin/ImageUpload'
 import FileUpload from '@/components/admin/FileUpload'
 import SignatureSettings from '@/components/admin/SignatureSettings'
 import { DEFAULT_BUSINESS, resolveBusiness } from '@/lib/business'
+import { defaultPersonalInfo } from '@/data/defaultData'
 import type { BusinessSettings, PersonalInfo, SocialLinks } from '@/types'
 import Icon from '@/components/ui/Icon'
 
@@ -138,6 +139,24 @@ export default function AdminPersonal() {
               className="input"
               style={{ resize: 'vertical', minHeight: '100px' }}
             />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+              Texte affiché sous le titre, tout en haut de l&apos;accueil.
+            </p>
+          </div>
+          <div>
+            <label className="field-label" htmlFor="pi-about">À propos</label>
+            <textarea
+              id="pi-about"
+              value={personal.about ?? defaultPersonalInfo.about ?? ''}
+              onChange={(e) => handlePersonal({ about: e.target.value })}
+              rows={5}
+              placeholder="Votre profil en quelques lignes…"
+              className="input"
+              style={{ resize: 'vertical', minHeight: '120px' }}
+            />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-poppins)' }}>
+              Paragraphe de la section « À propos » de l&apos;accueil.
+            </p>
           </div>
         </div>
       </section>

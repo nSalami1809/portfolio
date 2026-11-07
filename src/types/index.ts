@@ -1,7 +1,8 @@
 export interface PersonalInfo {
   name: string
   role: string
-  bio: string
+  bio: string // the text under the hero title (back office: "Biographie")
+  about?: string // the profile paragraph of the About block (back office: "À propos")
   email: string
   location: string
   photo: string
