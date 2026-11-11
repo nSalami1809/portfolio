@@ -19,9 +19,10 @@ describe('the profile picture, as the server sends it', () => {
     expect(html).toContain('aria-label="Agrandir"')
   })
 
-  it('keeps the round small picture with its ring, and nothing of the big view is in the page yet', () => {
+  it('keeps the round small picture without any ring around it, and nothing of the big view is in the page yet', () => {
     expect(html).toContain('rounded-full')
-    expect(html).toContain('border:2px solid var(--accent)')
+    expect(html).not.toContain('border:')
+    expect(html).not.toContain('box-shadow')
     expect(html).not.toContain('role="dialog"')
     expect(html).not.toContain('Fermer')
   })

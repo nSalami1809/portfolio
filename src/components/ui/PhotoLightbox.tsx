@@ -132,7 +132,7 @@ export default function PhotoLightbox({ src, alt, openLabel, closeLabel, size = 
           height={size}
           priority
           className="rounded-full object-cover"
-          style={{ width: size, height: size, border: '2px solid var(--accent)', boxShadow: '0 0 0 4px var(--accent-glow)' }}
+          style={{ width: size, height: size }}
         />
       </button>
 
@@ -166,7 +166,6 @@ export default function PhotoLightbox({ src, alt, openLabel, closeLabel, size = 
             style={{
               width: 'min(80vw, 80svh, 420px)',
               background: 'var(--surface)',
-              border: '3px solid var(--accent)',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
               willChange: 'transform',
             }}
