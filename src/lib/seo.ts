@@ -58,10 +58,10 @@ export function pageMeta({ locale, path = '', title, description, image, type = 
 export const HOME_COPY: Record<Locale, { title: string; description: string }> = {
   fr: {
     title: 'Développeur web fullstack & DevOps à Libreville, Gabon',
-    description: `Nawaf Nemrod SALAMI (${ALIAS}) : sites web, applications mobiles, logiciels métiers, SaaS et solutions IA sur mesure. Devis instantané, contrat signé en ligne, suivi jusqu'à la livraison. Libreville, Gabon.`,
+    description: `Nawaf Nemrod SALAMI (${ALIAS}), développeur freelance fullstack & DevOps à Libreville, Gabon : sites web, applications mobiles, logiciels métiers, SaaS et solutions IA sur mesure. Devis instantané en ligne.`,
   },
   en: {
     title: 'Fullstack web developer & DevOps in Libreville, Gabon',
-    description: `Nawaf Nemrod SALAMI (${ALIAS}): custom websites, mobile apps, business software, SaaS and AI solutions. Instant online quote, contract signed online, follow-up through to delivery. Libreville, Gabon.`,
+    description: `Nawaf Nemrod SALAMI (${ALIAS}), freelance fullstack & DevOps developer in Libreville, Gabon: custom websites, mobile apps, business software, SaaS and AI solutions. Instant online quote.`,
   },
 }

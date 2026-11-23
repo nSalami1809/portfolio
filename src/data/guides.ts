@@ -6,6 +6,8 @@
 // never contradict a quote. What is said about payment providers stays true whoever the provider
 // is: no fee, delay or rule of a particular operator is stated.
 
+import { LOCAL_GUIDES } from '@/data/guides-local'
+
 export type GuideBlock =
   | { kind: 'p'; text: string }
   | { kind: 'ul'; items: string[] }
@@ -41,7 +43,7 @@ export interface Guide {
   en: GuideText
 }
 
-export const GUIDES: Guide[] = [
+const BASE_GUIDES: Guide[] = [
   {
     slug: 'combien-coute-un-site-web',
     updated: '2026-10-24',
@@ -373,6 +375,9 @@ export const GUIDES: Guide[] = [
     },
   },
 ]
+
+// Plus the guides written around what people type in a search engine (a website in Libreville, a developer in Gabon, a chatbot…)
+export const GUIDES: Guide[] = [...BASE_GUIDES, ...LOCAL_GUIDES]
 
 export function getGuide(slug: string): Guide | undefined {
   return GUIDES.find((g) => g.slug === slug)
