@@ -56,10 +56,11 @@ describe('the name is written one way: Nawaf Nemrod SALAMI', () => {
       for (const name of readdirSync(dir)) {
         const p = join(dir, name)
         if (statSync(p).isDirectory()) walk(p)
-        else if (/\.(ts|tsx)$/.test(name) && /Nemrod Salami|NEMROD SALAMI/.test(readFileSync(p, 'utf8'))) bad.push(p.replace(root, ''))
+        else if (/\.(ts|tsx)$/.test(name) && name !== 'identity.ts' && /Nemrod Salami|NEMROD SALAMI/.test(readFileSync(p, 'utf8'))) bad.push(p.replace(root, ''))
       }
     }
     walk(join(root, 'src'))
+    // The other spellings people type live in one file (lib/identity.ts), for search engines only; copy everywhere else uses the full name
     expect(bad).toEqual([])
     expect(read('src', 'lib', 'seo.ts')).toContain("SITE_NAME = 'Nawaf Nemrod SALAMI'")
     expect(read('src', 'app', 'layout.tsx')).toContain("template: '%s | Nawaf Nemrod SALAMI'")

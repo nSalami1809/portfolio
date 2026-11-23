@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { tidyText } from '@/lib/text-tidy'
 import { LOCALES, isLocale } from '@/lib/i18n/locale'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
@@ -65,7 +66,7 @@ export default async function LocaleLayout({
         socials={socials}
         locale={locale}
         t={{ nav: t.nav, footer: t.footer }}
-        role={role}
+        role={tidyText(role)}
       />
     </div>
   )

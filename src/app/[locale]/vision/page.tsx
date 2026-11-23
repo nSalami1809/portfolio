@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ALIAS } from '@/lib/identity'
 import { fetchPortfolioSafe } from '@/lib/portfolio-data'
 import { translateFields } from '@/lib/translate'
 import { getDictionary } from '@/lib/i18n/dictionaries'
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale: rawLocale } = await params
   const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const t = getDictionary(locale)
-  return pageMeta({ locale, path: '/vision', title: t.vision.title })
+  return pageMeta({ locale, path: '/vision', title: t.vision.title, description: locale === 'en' ? `The vision and the way of working of Nawaf Nemrod SALAMI (${ALIAS}), fullstack developer in Libreville, Gabon.` : `La vision et la manière de travailler de Nawaf Nemrod SALAMI (${ALIAS}), développeur fullstack à Libreville, Gabon.` })
 }
 
 export default async function VisionPage({ params }: { params: Promise<{ locale: string }> }) {

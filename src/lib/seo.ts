@@ -5,6 +5,7 @@
 // the reference one.
 import type { Metadata } from 'next'
 import type { Locale } from '@/lib/i18n/locale'
+import { ALIAS } from '@/lib/identity'
 
 const OG_LOCALE: Record<Locale, string> = { fr: 'fr_FR', en: 'en_US' }
 const SITE_NAME = 'Nawaf Nemrod SALAMI'
@@ -57,10 +58,10 @@ export function pageMeta({ locale, path = '', title, description, image, type = 
 export const HOME_COPY: Record<Locale, { title: string; description: string }> = {
   fr: {
     title: 'Développeur web fullstack & DevOps à Libreville, Gabon',
-    description: "Sites et applications web sur mesure, devis instantané en ligne, contrat signé en ligne et suivi jusqu'à la livraison. Développeur fullstack et DevOps basé à Libreville, Gabon.",
+    description: `Nawaf Nemrod SALAMI (${ALIAS}) : sites web, applications mobiles, logiciels métiers, SaaS et solutions IA sur mesure. Devis instantané, contrat signé en ligne, suivi jusqu'à la livraison. Libreville, Gabon.`,
   },
   en: {
     title: 'Fullstack web developer & DevOps in Libreville, Gabon',
-    description: 'Custom websites and web applications, instant online quote, contract signed online and follow-up through to delivery. Fullstack and DevOps developer based in Libreville, Gabon.',
+    description: `Nawaf Nemrod SALAMI (${ALIAS}): custom websites, mobile apps, business software, SaaS and AI solutions. Instant online quote, contract signed online, follow-up through to delivery. Libreville, Gabon.`,
   },
 }

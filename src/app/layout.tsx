@@ -12,6 +12,7 @@ import ChatWidgetLoader from '@/components/chat/ChatWidgetLoader'
 import VisitTracker from '@/components/analytics/VisitTracker'
 import MotionProvider from '@/components/MotionProvider'
 import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister'
+import { FULL_NAME, ALIAS } from '@/lib/identity'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -40,11 +41,19 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nawafsalami-itech.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  creator: FULL_NAME,
+  publisher: FULL_NAME,
+  applicationName: FULL_NAME,
+  // Ownership proofs for the search engines' webmaster tools: set the variables in Vercel, nothing is sent when they are empty
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : undefined,
+  },
   title: {
     default: 'Nawaf Nemrod SALAMI — Développeur Fullstack & DevOps',
     template: '%s | Nawaf Nemrod SALAMI',
   },
-  description: 'Développeur web fullstack et DevOps basé à Libreville, Gabon. Je conçois et déploie des applications modernes, robustes et élégantes.',
+  description: `Nawaf Nemrod SALAMI (${ALIAS}), développeur web fullstack et DevOps basé à Libreville, Gabon. Sites web, applications mobiles, logiciels métiers, SaaS et solutions IA.`,
   authors: [{ name: 'Nawaf Nemrod SALAMI' }],
   openGraph: {
     type: 'website',

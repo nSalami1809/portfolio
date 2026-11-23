@@ -18,6 +18,7 @@ import { deliveredFirst } from '@/lib/testimonials'
 import { tidySkills, tidyText } from '@/lib/text-tidy'
 import type { Metadata } from 'next'
 import { pageMeta, HOME_COPY } from '@/lib/seo'
+import { NAME_VARIANTS, GIVEN_NAME, FAMILY_NAME } from '@/lib/identity'
 import { publicPersonal } from '@/lib/public-portfolio'
 import {
   defaultProjects,
@@ -143,8 +144,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         '@type': 'Person',
         '@id': `${siteUrl}/#person`,
         name: personal.name,
-        jobTitle: personal.role,
+        alternateName: NAME_VARIANTS,
+        givenName: GIVEN_NAME,
+        familyName: FAMILY_NAME,
+        jobTitle: tidyText(personal.role),
         description: personal.bio,
+        mainEntityOfPage: { '@id': `${siteUrl}/${locale}#profile` },
         email: personal.email || undefined,
         url: siteUrl,
         image: personal.photo || undefined,
@@ -158,13 +163,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         '@id': `${siteUrl}/#website`,
         url: siteUrl,
         name: personal.name,
+        alternateName: NAME_VARIANTS,
         inLanguage: ['fr', 'en'],
         publisher: { '@id': `${siteUrl}/#person` },
+      },
+      {
+        '@type': 'ProfilePage',
+        '@id': `${siteUrl}/${locale}#profile`,
+        url: `${siteUrl}/${locale}`,
+        name: `${personal.name} — ${tidyText(personal.role)}`,
+        inLanguage: locale,
+        isPartOf: { '@id': `${siteUrl}/#website` },
+        about: { '@id': `${siteUrl}/#person` },
+        mainEntity: { '@id': `${siteUrl}/#person` },
       },
       {
         '@type': 'ProfessionalService',
         '@id': `${siteUrl}/#service`,
         name: personal.name,
+        alternateName: NAME_VARIANTS,
         description: personal.bio,
         url: siteUrl,
         image: personal.photo || undefined,
